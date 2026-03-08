@@ -315,6 +315,7 @@ export default function App(){
   const [adminTab,setAdminTab]=useState('overview');
   const [expandedNarrative,setExpandedNarrative]=useState(null);
   const [adSideTab,setAdSideTab]=useState('dashboard');
+  const [adSubTab,setAdSubTab]=useState('ringkasan');
   const [missionForm,setMissionForm]=useState({type:'EDUKASI',title:'',desc:'',xp:200,format:'',duration:'',platforms:[],targetGender:'all',targetAge:'all',targetTier:'all'});
   const [narrativeActions,setNarrativeActions]=useState({}); // {id: 'DUKUNG'|'TOLAK'|'MONITOR'}
   const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null); // {narrativeId, step, prompt, platform, impactLevel, ...}
@@ -1862,10 +1863,8 @@ export default function App(){
   function DesktopAdmin(){
     const sideItems=[
       {id:'dashboard',label:'Dashboard',icon:'dashboard'},
-      {id:'monitoring',label:'Social & Narasi AI',icon:'monitoring'},
-      {id:'create',label:'Buat Misi',icon:'add_circle'},
+      {id:'narasi',label:'Narasi & Misi',icon:'campaign'},
       {id:'agents',label:'Anggota',icon:'group'},
-      {id:'analytics',label:'Analytics',icon:'analytics'},
     ];
 
     const agentsList=[
@@ -1915,7 +1914,7 @@ export default function App(){
           </div>
           <nav className="flex flex-col gap-1 px-3">
             {sideItems.map(s=>(
-              <button key={s.id} onClick={()=>setAdSideTab(s.id)} style={{
+              <button key={s.id} onClick={()=>{setAdSideTab(s.id);setAdSubTab(s.id==='dashboard'?'ringkasan':s.id==='narasi'?'monitoring':'');}} style={{
                 display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,border:'none',cursor:'pointer',
                 background:adSideTab===s.id?C.primaryLight:'transparent',color:adSideTab===s.id?C.primary:C.textSec,
                 fontSize:13,fontWeight:adSideTab===s.id?700:500,textAlign:'left',transition:'all 200ms',width:'100%',
@@ -1952,6 +1951,20 @@ export default function App(){
 
           {/* ═══ DASHBOARD ═══ */}
           {adSideTab==='dashboard'&&(<div className="flex flex-col gap-5">
+            {/* Sub-tab toggle */}
+            <div className="flex gap-2" style={{background:C.surface,borderRadius:10,padding:4,border:`1px solid ${C.border}`,width:'fit-content'}}>
+              {[{id:'ringkasan',label:'Ringkasan',icon:'dashboard'},{id:'analytics',label:'Analytics',icon:'analytics'}].map(t=>(
+                <button key={t.id} onClick={()=>setAdSubTab(t.id)} style={{
+                  padding:'8px 16px',borderRadius:8,border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,
+                  background:adSubTab===t.id?C.primaryLight:'transparent',color:adSubTab===t.id?C.primary:C.textSec,
+                  fontSize:12,fontWeight:adSubTab===t.id?700:500,transition:'all 200ms',
+                }}>
+                  <MI name={t.icon} size={16} fill={adSubTab===t.id} style={{color:adSubTab===t.id?C.primary:C.textMuted}}/>{t.label}
+                </button>
+              ))}
+            </div>
+
+            {adSubTab==='ringkasan'&&(<>
             {/* Stats Row */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>
               {[{icon:'group',label:'Total Anggota',value:ADMIN_STATS.totalAgents.toLocaleString(),color:C.primary,bg:C.primaryLight,sub:'+24 minggu ini'},
@@ -2080,13 +2093,98 @@ export default function App(){
                 ))}
               </div>
             </DCard>
+            </>)}
+
+            {adSubTab==='analytics'&&(<>
+            {/* Key Metrics */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>
+              {[{label:'Avg Join Rate',value:'68%',icon:'person_add',color:C.primary,sub:'per misi'},
+                {label:'Completion Rate',value:'74%',icon:'task_alt',color:C.green,sub:'misi diselesaikan'},
+                {label:'Avg Engagement',value:'12.3%',icon:'trending_up',color:C.orange,sub:'across platforms'},
+                {label:'Total Reach',value:'2.4M',icon:'public',color:C.purple,sub:'semua platform'},
+              ].map((s,i)=>(
+                <DCard key={i} style={{padding:0}}>
+                  <div style={{padding:16}}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <MI name={s.icon} size={18} style={{color:s.color}}/>
+                      <span style={{fontSize:12,color:C.textMuted}}>{s.label}</span>
+                    </div>
+                    <p style={{fontSize:28,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+                    <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{s.sub}</p>
+                  </div>
+                </DCard>
+              ))}
+            </div>
+
+            {/* Mission Performance */}
+            <DCard title="Performa per Tipe Misi" subtitle="Join rate & engagement berdasarkan tipe">
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+                {[{type:'EDUKASI',join:'72%',engagement:'11.2%',completed:42},{type:'AMPLIFIKASI',join:'65%',engagement:'14.8%',completed:38},
+                  {type:'KRISIS',join:'89%',engagement:'18.5%',completed:12},{type:'KOMUNITAS',join:'54%',engagement:'8.4%',completed:18},
+                  {type:'VISIT',join:'45%',engagement:'22.1%',completed:28},{type:'SOCIAL',join:'78%',engagement:'16.3%',completed:34},
+                ].map((t,i)=>(
+                  <div key={i} style={{background:C.surfaceLight,borderRadius:10,padding:16,border:`1px solid ${C.border}`}}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div style={{width:28,height:28,borderRadius:8,background:typeBg(t.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <MI name={typeIcon(t.type)} size={14} fill style={{color:typeColor(t.type)}}/>
+                      </div>
+                      <span style={{fontSize:12,fontWeight:700,color:typeColor(t.type)}}>{t.type}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.join}</p><p style={{fontSize:9,color:C.textMuted}}>Join Rate</p></div>
+                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.engagement}</p><p style={{fontSize:9,color:C.textMuted}}>Engage</p></div>
+                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.completed}</p><p style={{fontSize:9,color:C.textMuted}}>Selesai</p></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DCard>
+
+            {/* Agent Performance Distribution */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <DCard title="Distribusi Tier Anggota">
+                {[{tier:'Gold',count:186,pct:15,color:C.orange},{tier:'Silver',count:524,pct:42,color:C.primary},{tier:'Bronze',count:537,pct:43,color:C.textMuted}].map((t,i)=>(
+                  <div key={i} className="flex items-center gap-3" style={{marginBottom:12}}>
+                    <span style={{fontSize:13,fontWeight:700,color:t.color,width:60}}>{t.tier}</span>
+                    <div className="flex-1"><ProgressBar progress={t.pct/100} color={t.color} height={8}/></div>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:50,textAlign:'right'}}>{t.count}</span>
+                    <span style={{fontSize:11,color:C.textMuted,width:30}}>{t.pct}%</span>
+                  </div>
+                ))}
+              </DCard>
+              <DCard title="Demografi Usia">
+                {[{age:'18\u201324',count:412,pct:33},{age:'25\u201334',count:498,pct:40},{age:'35\u201344',count:237,pct:19},{age:'45+',count:100,pct:8}].map((a,i)=>(
+                  <div key={i} className="flex items-center gap-3" style={{marginBottom:12}}>
+                    <span style={{fontSize:13,fontWeight:600,color:C.text,width:60}}>{a.age}</span>
+                    <div className="flex-1"><ProgressBar progress={a.pct/100} color={C.primary} height={8}/></div>
+                    <span style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:50,textAlign:'right'}}>{a.count}</span>
+                    <span style={{fontSize:11,color:C.textMuted,width:30}}>{a.pct}%</span>
+                  </div>
+                ))}
+              </DCard>
+            </div>
+            </>)}
           </div>)}
 
-          {/* ═══ SOCIAL MONITORING ═══ */}
-          {adSideTab==='monitoring'&&(<div className="flex flex-col gap-5">
+          {/* ═══ NARASI & MISI ═══ */}
+          {adSideTab==='narasi'&&(<div className="flex flex-col gap-5">
+            {/* Sub-tab toggle */}
+            <div className="flex gap-2" style={{background:C.surface,borderRadius:10,padding:4,border:`1px solid ${C.border}`,width:'fit-content'}}>
+              {[{id:'monitoring',label:'Monitoring Narasi',icon:'monitoring'},{id:'create',label:'Buat Misi',icon:'add_circle'}].map(t=>(
+                <button key={t.id} onClick={()=>setAdSubTab(t.id)} style={{
+                  padding:'8px 16px',borderRadius:8,border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,
+                  background:adSubTab===t.id?C.primaryLight:'transparent',color:adSubTab===t.id?C.primary:C.textSec,
+                  fontSize:12,fontWeight:adSubTab===t.id?700:500,transition:'all 200ms',
+                }}>
+                  <MI name={t.icon} size={16} fill={adSubTab===t.id} style={{color:adSubTab===t.id?C.primary:C.textMuted}}/>{t.label}
+                </button>
+              ))}
+            </div>
+
+            {adSubTab==='monitoring'&&(<>
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
-              <button onClick={()=>setAdSideTab('create')} className="btn-primary" style={{padding:'10px 20px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+              <button onClick={()=>setAdSubTab('create')} className="btn-primary" style={{padding:'10px 20px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
                 <MI name="add_circle" size={18} style={{color:'#0B1120'}}/>Buat Misi Baru
               </button>
               <p style={{fontSize:12,color:C.textMuted}}>Pilih topik di bawah untuk membuat misi dari data sosial media</p>
@@ -2259,7 +2357,7 @@ export default function App(){
                             {name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,traits:['Aktif WhatsApp & Facebook','Admin grup komunitas'],approach:'Pesan formal, forward-friendly.',bestPlatform:'WA, Facebook',reach:'22%'},
                           ],
                         }));
-                        setAdSideTab('create');
+                        setAdSubTab('create');
                         showToast('Draft misi dibuat — edit sesuai kebutuhan');
                       }} style={{
                         width:'100%',marginTop:12,padding:'14px 0',borderRadius:12,border:'none',cursor:'pointer',
@@ -2576,7 +2674,7 @@ export default function App(){
                                 impactLevel:flow.impactLevel,
                                 impactLabel:flow.impactLabel,
                               }));
-                              setAdSideTab('create');
+                              setAdSubTab('create');
                               setNarrativeMissionFlow(null);
                               showToast('Data AI diteruskan ke Editor Misi');
                             }} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
@@ -2592,10 +2690,10 @@ export default function App(){
               </DCard>);
             })}
 
-          </div>)}
+          </>)}
 
           {/* ═══ CREATE MISSION ═══ */}
-          {adSideTab==='create'&&(()=>{
+          {adSubTab==='create'&&(()=>{
             const tc=typeColor(missionForm.type);const tb=typeBg(missionForm.type);const ti=typeIcon(missionForm.type);
             const L=({children,label,icon})=>(<div><div className="flex items-center gap-2 mb-2"><MI name={icon} size={16} style={{color:C.textMuted}}/><label style={{fontSize:12,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>{label}</label></div>{children}</div>);
             const estPeople=missionForm.targetGender==='all'&&missionForm.targetAge==='all'&&missionForm.targetTier==='all'?1247:missionForm.targetTier==='gold'?186:missionForm.targetTier==='silver'?524:537;
@@ -3154,6 +3252,144 @@ export default function App(){
                 </div>
               </DCard>
             </div>
+            {/* ──── ROW 3.5: AI Content Strategy ──── */}
+            {missionForm.title&&!['AMPLIFIKASI'].includes(missionForm.type)&&(
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:20}}>
+                {/* Visual & Mood */}
+                <DCard title="Visual & Mood Board" subtitle="Panduan tampilan konten">
+                  <div className="flex flex-col gap-3">
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                      {[
+                        {label:'Warm & Empathetic',color:'#F59E0B',icon:'favorite',desc:'Tone hangat, peduli'},
+                        {label:'Bold & Urgent',color:'#EF4444',icon:'priority_high',desc:'Tegas, mendesak'},
+                        {label:'Clean & Professional',color:'#3B82F6',icon:'business',desc:'Rapi, terpercaya'},
+                        {label:'Fun & Engaging',color:'#A855F7',icon:'celebration',desc:'Ceria, interaktif'},
+                      ].map((mood,mi)=>{
+                        const sel2=missionForm.mood===mood.label;
+                        return <button key={mi} onClick={()=>setMissionForm(f=>({...f,mood:mood.label}))} style={{
+                          padding:10,borderRadius:8,border:`1.5px solid ${sel2?mood.color:C.border}`,
+                          background:sel2?`${mood.color}10`:C.glass,cursor:'pointer',textAlign:'center',transition:'all 200ms',
+                        }}>
+                          <MI name={mood.icon} size={18} fill={sel2} style={{color:sel2?mood.color:C.textMuted,display:'block',margin:'0 auto 4px'}}/>
+                          <p style={{fontSize:10,fontWeight:700,color:sel2?mood.color:C.textSec}}>{mood.label}</p>
+                          <p style={{fontSize:8,color:C.textMuted}}>{mood.desc}</p>
+                        </button>;
+                      })}
+                    </div>
+                    <L label="Palet Warna" icon="palette">
+                      <div className="flex gap-2">
+                        {['#C9A84C','#22C55E','#3B82F6','#EF4444','#A855F7','#EC4899','#F59E0B','#14B8A6'].map(clr=>(
+                          <div key={clr} onClick={()=>setMissionForm(f=>({...f,brandColors:[...(f.brandColors||[]).includes(clr)?(f.brandColors||[]).filter(c=>c!==clr):[...(f.brandColors||[]),clr]]}))} style={{
+                            width:28,height:28,borderRadius:6,background:clr,cursor:'pointer',
+                            border:(missionForm.brandColors||[]).includes(clr)?'3px solid white':'2px solid transparent',
+                            boxShadow:(missionForm.brandColors||[]).includes(clr)?`0 0 0 2px ${clr}`:undefined,
+                            transition:'all 150ms',
+                          }}/>
+                        ))}
+                      </div>
+                    </L>
+                    <L label="Referensi Visual" icon="image">
+                      <textarea value={missionForm.visualRef||''} onChange={e=>setMissionForm(f=>({...f,visualRef:e.target.value}))} placeholder="Deskripsikan visual yang diinginkan: clean minimalis, pakai foto real, bold typography..." rows={2} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:11,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
+                    </L>
+                  </div>
+                </DCard>
+
+                {/* Tone & Voice */}
+                <DCard title="Tone & Panduan Narasi" subtitle="Gaya bahasa dan pesan kunci">
+                  <div className="flex flex-col gap-3">
+                    <L label="Gaya Bahasa" icon="record_voice_over">
+                      <div className="flex flex-wrap gap-2">
+                        {['Kasual','Formal','Storytelling','Data-driven','Emosional','Humoris'].map(tone=>{
+                          const sel2=missionForm.tone===tone;
+                          return <button key={tone} onClick={()=>setMissionForm(f=>({...f,tone}))} style={{
+                            padding:'6px 12px',borderRadius:6,border:`1px solid ${sel2?C.primary:C.border}`,
+                            background:sel2?C.primaryLight:C.glass,color:sel2?C.primary:C.textSec,
+                            fontSize:11,fontWeight:sel2?700:500,cursor:'pointer',
+                          }}>{tone}</button>;
+                        })}
+                      </div>
+                    </L>
+                    <L label="Pesan Kunci (Key Message)" icon="key">
+                      <textarea value={missionForm.keyMessage||''} onChange={e=>setMissionForm(f=>({...f,keyMessage:e.target.value}))} placeholder="Apa pesan utama yang harus tersampaikan?" rows={2} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:11,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
+                    </L>
+                    <div>
+                      <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>DO&apos;S & DON&apos;TS</p>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                        <div style={{background:`${C.green}08`,borderRadius:8,padding:10,border:`1px solid ${C.green}15`}}>
+                          <p style={{fontSize:10,fontWeight:700,color:C.green,marginBottom:4}}>DO&apos;s</p>
+                          {['Gunakan data & fakta','Sertakan sumber resmi','Ajak interaksi (CTA)','Pakai visual menarik'].map((d,di)=>(
+                            <div key={di} className="flex items-center gap-2" style={{marginBottom:3}}>
+                              <MI name="check" size={10} style={{color:C.green}}/>
+                              <span style={{fontSize:10,color:C.textSec}}>{d}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{background:`${C.red}08`,borderRadius:8,padding:10,border:`1px solid ${C.red}15`}}>
+                          <p style={{fontSize:10,fontWeight:700,color:C.red,marginBottom:4}}>DON&apos;Ts</p>
+                          {['Jangan pakai clickbait','Hindari info belum terverifikasi','Jangan attack personal','Hindari bahasa provokatif'].map((d,di)=>(
+                            <div key={di} className="flex items-center gap-2" style={{marginBottom:3}}>
+                              <MI name="close" size={10} style={{color:C.red}}/>
+                              <span style={{fontSize:10,color:C.textSec}}>{d}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </DCard>
+
+                {/* Hooks, CTA, Schedule */}
+                <DCard title="Hook, CTA & Jadwal" subtitle="Opening, call-to-action, dan waktu posting">
+                  <div className="flex flex-col gap-3">
+                    <L label="Contoh Opening Hook" icon="format_quote">
+                      <div className="flex flex-col gap-2">
+                        {(missionForm.type==='KRISIS'?
+                          ['Klarifikasi: Ini fakta sebenarnya...','Banyak yang salah paham. Thread...','Sebelum kamu share, baca ini dulu']:
+                          missionForm.type==='EDUKASI'?
+                          ['Tau nggak sih? Ternyata...','5 hal yang jarang orang tau tentang...','Thread penting! Yuk bahas...']:
+                          ['Hai guys! Yuk ikutan...','Challenge baru nih! Siapa berani?','Konten seru yang wajib kamu coba']
+                        ).map((hook,hi)=>(
+                          <div key={hi} style={{padding:'8px 10px',background:C.surfaceLight,borderRadius:6,border:`1px solid ${C.borderLight}`,fontSize:11,color:C.text,fontStyle:'italic'}}>{hook}</div>
+                        ))}
+                      </div>
+                    </L>
+                    <L label="CTA (Call to Action)" icon="ads_click">
+                      <div className="flex flex-wrap gap-2">
+                        {['Share ke teman','Comment pendapatmu','Follow untuk update','Simpan untuk nanti','Tag 3 temanmu','Kunjungi link di bio'].map(cta=>{
+                          const sel2=(missionForm.ctas||[]).includes(cta);
+                          return <button key={cta} onClick={()=>setMissionForm(f=>({...f,ctas:sel2?(f.ctas||[]).filter(c=>c!==cta):[...(f.ctas||[]),cta]}))} style={{
+                            padding:'5px 10px',borderRadius:5,border:`1px solid ${sel2?C.primary:C.border}`,
+                            background:sel2?C.primaryLight:C.glass,color:sel2?C.primary:C.textSec,
+                            fontSize:10,fontWeight:sel2?700:500,cursor:'pointer',
+                          }}>{cta}</button>;
+                        })}
+                      </div>
+                    </L>
+                    <L label="Jadwal Posting Optimal" icon="schedule">
+                      <div style={{background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`}}>
+                        <div className="flex items-center gap-3 mb-2">
+                          <MI name="wb_sunny" size={16} style={{color:C.orange}}/>
+                          <div className="flex-1">
+                            <p style={{fontSize:12,fontWeight:700,color:C.text}}>Peak Hours</p>
+                            <p style={{fontSize:10,color:C.textMuted}}>Berdasarkan analisis engagement platform</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          {[{time:'07:00-09:00',label:'Pagi',pct:72,color:C.orange},{time:'12:00-13:00',label:'Siang',pct:65,color:C.primary},{time:'18:00-21:00',label:'Malam',pct:92,color:C.purple}].map((slot,si)=>(
+                            <div key={si} style={{flex:1,textAlign:'center',padding:8,borderRadius:6,background:C.bg,border:`1px solid ${C.borderLight}`}}>
+                              <p style={{fontSize:12,fontWeight:800,color:slot.color,fontFamily:"'JetBrains Mono'"}}>{slot.pct}%</p>
+                              <p style={{fontSize:10,fontWeight:600,color:C.text}}>{slot.time}</p>
+                              <p style={{fontSize:8,color:C.textMuted}}>{slot.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </L>
+                  </div>
+                </DCard>
+              </div>
+            )}
+
             {/* ──── ROW 4: AI Caption Generator (content creation only) ──── */}
             {!['AMPLIFIKASI'].includes(missionForm.type)&&(()=>{
               const alloc=missionForm.personaAlloc||{};
@@ -3332,6 +3568,8 @@ export default function App(){
 
           </div>);})()}
 
+          </div>)}
+
           {/* ═══ AGENTS ═══ */}
           {adSideTab==='agents'&&(<div className="flex flex-col gap-5">
             {/* Filter Row */}
@@ -3370,77 +3608,6 @@ export default function App(){
                 </table>
               </div>
             </DCard>
-          </div>)}
-
-          {/* ═══ ANALYTICS ═══ */}
-          {adSideTab==='analytics'&&(<div className="flex flex-col gap-5">
-            {/* Key Metrics */}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>
-              {[{label:'Avg Join Rate',value:'68%',icon:'person_add',color:C.primary,sub:'per misi'},
-                {label:'Completion Rate',value:'74%',icon:'task_alt',color:C.green,sub:'misi diselesaikan'},
-                {label:'Avg Engagement',value:'12.3%',icon:'trending_up',color:C.orange,sub:'across platforms'},
-                {label:'Total Reach',value:'2.4M',icon:'public',color:C.purple,sub:'semua platform'},
-              ].map((s,i)=>(
-                <DCard key={i} style={{padding:0}}>
-                  <div style={{padding:16}}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <MI name={s.icon} size={18} style={{color:s.color}}/>
-                      <span style={{fontSize:12,color:C.textMuted}}>{s.label}</span>
-                    </div>
-                    <p style={{fontSize:28,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
-                    <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{s.sub}</p>
-                  </div>
-                </DCard>
-              ))}
-            </div>
-
-            {/* Mission Performance */}
-            <DCard title="Performa per Tipe Misi" subtitle="Join rate & engagement berdasarkan tipe">
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                {[{type:'EDUKASI',join:'72%',engagement:'11.2%',completed:42},{type:'AMPLIFIKASI',join:'65%',engagement:'14.8%',completed:38},
-                  {type:'KRISIS',join:'89%',engagement:'18.5%',completed:12},{type:'KOMUNITAS',join:'54%',engagement:'8.4%',completed:18},
-                  {type:'VISIT',join:'45%',engagement:'22.1%',completed:28},{type:'SOCIAL',join:'78%',engagement:'16.3%',completed:34},
-                ].map((t,i)=>(
-                  <div key={i} style={{background:C.surfaceLight,borderRadius:10,padding:16,border:`1px solid ${C.border}`}}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div style={{width:28,height:28,borderRadius:8,background:typeBg(t.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <MI name={typeIcon(t.type)} size={14} fill style={{color:typeColor(t.type)}}/>
-                      </div>
-                      <span style={{fontSize:12,fontWeight:700,color:typeColor(t.type)}}>{t.type}</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.join}</p><p style={{fontSize:9,color:C.textMuted}}>Join Rate</p></div>
-                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.engagement}</p><p style={{fontSize:9,color:C.textMuted}}>Engage</p></div>
-                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.completed}</p><p style={{fontSize:9,color:C.textMuted}}>Selesai</p></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </DCard>
-
-            {/* Agent Performance Distribution */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-              <DCard title="Distribusi Tier Anggota">
-                {[{tier:'Gold',count:186,pct:15,color:C.orange},{tier:'Silver',count:524,pct:42,color:C.primary},{tier:'Bronze',count:537,pct:43,color:C.textMuted}].map((t,i)=>(
-                  <div key={i} className="flex items-center gap-3" style={{marginBottom:12}}>
-                    <span style={{fontSize:13,fontWeight:700,color:t.color,width:60}}>{t.tier}</span>
-                    <div className="flex-1"><ProgressBar progress={t.pct/100} color={t.color} height={8}/></div>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:50,textAlign:'right'}}>{t.count}</span>
-                    <span style={{fontSize:11,color:C.textMuted,width:30}}>{t.pct}%</span>
-                  </div>
-                ))}
-              </DCard>
-              <DCard title="Demografi Usia">
-                {[{age:'18–24',count:412,pct:33},{age:'25–34',count:498,pct:40},{age:'35–44',count:237,pct:19},{age:'45+',count:100,pct:8}].map((a,i)=>(
-                  <div key={i} className="flex items-center gap-3" style={{marginBottom:12}}>
-                    <span style={{fontSize:13,fontWeight:600,color:C.text,width:60}}>{a.age}</span>
-                    <div className="flex-1"><ProgressBar progress={a.pct/100} color={C.primary} height={8}/></div>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:50,textAlign:'right'}}>{a.count}</span>
-                    <span style={{fontSize:11,color:C.textMuted,width:30}}>{a.pct}%</span>
-                  </div>
-                ))}
-              </DCard>
-            </div>
           </div>)}
 
           {/* ═══ MISSION DETAIL (Admin) ═══ */}
