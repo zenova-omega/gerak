@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
 /* ─── ICON ───────────────────────────────────────────────────────── */
 function MI({ name, size=24, fill=false, style={} }) {
@@ -331,12 +331,21 @@ export default function App(){
   const [selectedAdMission,setSelectedAdMission]=useState(null); // mission id for admin detail view
   const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
   const [logoutConfirm,setLogoutConfirm]=useState(false);
+  // joinedMissions: {missionId: {status:'TERDAFTAR'|'SUBMITTED'|'REVIEW'|'SELESAI', joinedAt, submittedAt?}}
+  const [joinedMissions,setJoinedMissions]=useState({
+    1:{status:'SELESAI',joinedAt:'2 Mar 2026',submittedAt:'4 Mar 2026'},
+    3:{status:'REVIEW',joinedAt:'3 Mar 2026',submittedAt:'5 Mar 2026'},
+    5:{status:'TERDAFTAR',joinedAt:'7 Mar 2026'},
+    7:{status:'TERDAFTAR',joinedAt:'8 Mar 2026'},
+    8:{status:'SUBMITTED',joinedAt:'6 Mar 2026',submittedAt:'7 Mar 2026'},
+  });
   const [k,setK]=useState(0);
 
   const nav=useCallback(s=>{setScreen(s);setK(n=>n+1)},[]);
   const showToast=useCallback(m=>{setToast(m);setTimeout(()=>setToast(null),2000)},[]);
   const copyText=useCallback(async t=>{try{await navigator.clipboard.writeText(t)}catch{}showToast('Tersalin!')},[showToast]);
-  const openM=useCallback(m=>{setSel(m);setConsent(false);setStarted(false);nav('detail')},[nav]);
+  const openM=useCallback(m=>{setSel(m);setConsent(false);setStarted(false);setUploaded(false);nav('detail')},[nav]);
+  const joinMission=useCallback((mId)=>{setJoinedMissions(p=>({...p,[mId]:{status:'TERDAFTAR',joinedAt:'8 Mar 2026'}}));showToast('Berhasil mendaftar misi!')},[showToast]);
   const startM=useCallback(()=>{if(!consent)return;setStarted(true);setTimeout(()=>{nav('misi');setSel(null)},1200)},[consent,nav]);
   const filtered=filter==='Semua'?MISSIONS:filter==='Selesai'?MISSIONS.filter(m=>m.status==='SELESAI'):MISSIONS.filter(m=>m.type===filter.toUpperCase());
 
@@ -502,14 +511,80 @@ export default function App(){
         </button>
       </Card>
 
-      {/* Active Missions */}
+      {/* ── Misi Saya (Joined Missions Pipeline) ── */}
+      {Object.keys(joinedMissions).length>0&&(
+      <div className="stagger-6" style={{marginBottom:20}}>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Saya <Tip text="Misi yang sudah kamu ikuti. Upload konten sebelum deadline!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
+          <span style={{fontSize:11,fontWeight:700,color:C.primary,background:C.primaryLight,borderRadius:6,padding:'2px 8px'}}>{Object.keys(joinedMissions).length} misi</span>
+        </div>
+        {/* Status Summary */}
+        <div className="grid grid-cols-4 gap-2" style={{marginBottom:12}}>
+          {[
+            {l:'Terdaftar',v:Object.values(joinedMissions).filter(j=>j.status==='TERDAFTAR').length,c:C.orange,icon:'how_to_reg'},
+            {l:'Submitted',v:Object.values(joinedMissions).filter(j=>j.status==='SUBMITTED').length,c:C.teal,icon:'upload_file'},
+            {l:'Review',v:Object.values(joinedMissions).filter(j=>j.status==='REVIEW').length,c:C.purple,icon:'rate_review'},
+            {l:'Selesai',v:Object.values(joinedMissions).filter(j=>j.status==='SELESAI').length,c:C.green,icon:'check_circle'},
+          ].map((s,i)=>(
+            <div key={i} style={{background:C.surface,borderRadius:8,padding:'8px 4px',textAlign:'center',border:`1px solid ${C.border}`}}>
+              <MI name={s.icon} size={14} style={{color:s.c}}/>
+              <p style={{fontSize:16,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+              <p style={{fontSize:8,color:C.textMuted,fontWeight:600}}>{s.l}</p>
+            </div>
+          ))}
+        </div>
+        {/* Mission Cards - prioritize those needing action */}
+        <div className="flex flex-col gap-2">
+          {Object.entries(joinedMissions)
+            .map(([mid,j])=>({...j,mission:MISSIONS.find(m=>m.id===parseInt(mid))}))
+            .filter(j=>j.mission)
+            .sort((a,b)=>{const ord={TERDAFTAR:0,SUBMITTED:1,REVIEW:2,SELESAI:3};return ord[a.status]-ord[b.status]})
+            .map(j=>{
+              const m=j.mission;const tc=typeColor(m.type);
+              const stMap={TERDAFTAR:{label:'Upload Konten',color:C.orange,bg:C.orangeLight,icon:'upload',action:true},SUBMITTED:{label:'Menunggu Review',color:C.teal,bg:C.tealLight,icon:'hourglass_top',action:false},REVIEW:{label:'Sedang Direview',color:C.purple,bg:C.purpleLight,icon:'rate_review',action:false},SELESAI:{label:'Selesai',color:C.green,bg:C.greenLight,icon:'check_circle',action:false}};
+              const st=stMap[j.status];
+              return(
+              <Card key={m.id} onClick={()=>openM(m)} style={{padding:12}}>
+                <div className="flex items-center gap-3">
+                  <div style={{width:36,height:36,borderRadius:10,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <MI name={typeIcon(m.type)} size={16} fill style={{color:tc}}/>
+                  </div>
+                  <div className="flex-1" style={{minWidth:0}}>
+                    <h4 style={{fontSize:12,fontWeight:700,color:C.text,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{m.title}</h4>
+                    <div className="flex items-center gap-2" style={{marginTop:3}}>
+                      <span style={{fontSize:10,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
+                      <span style={{fontSize:9,color:C.textMuted}}>{m.deadline}</span>
+                    </div>
+                  </div>
+                  <div style={{textAlign:'right',flexShrink:0}}>
+                    <div className="flex items-center gap-1" style={{background:st.bg,borderRadius:6,padding:'4px 8px'}}>
+                      <MI name={st.icon} size={12} fill={j.status==='SELESAI'} style={{color:st.color}}/>
+                      <span style={{fontSize:9,fontWeight:700,color:st.color,whiteSpace:'nowrap'}}>{st.label}</span>
+                    </div>
+                    {j.status==='TERDAFTAR'&&(
+                      <p style={{fontSize:8,color:C.orange,fontWeight:600,marginTop:3}}>Deadline: {m.deadline}</p>
+                    )}
+                  </div>
+                </div>
+                {/* Progress bar for pipeline */}
+                <div className="flex items-center gap-1" style={{marginTop:8}}>
+                  {['TERDAFTAR','SUBMITTED','REVIEW','SELESAI'].map((s,i)=>(
+                    <div key={s} style={{flex:1,height:3,borderRadius:2,background:['TERDAFTAR','SUBMITTED','REVIEW','SELESAI'].indexOf(j.status)>=i?st.color:`${C.border}`}}/>
+                  ))}
+                </div>
+              </Card>);
+            })}
+        </div>
+      </div>)}
+
+      {/* Active Missions (not joined) */}
       <div className="stagger-6" style={{marginBottom:20}}>
         <div className="flex justify-between items-center mb-3">
           <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif <Tip text="Misi yang sedang berjalan. Tap untuk lihat detail dan mulai mengerjakan."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <button onClick={()=>nav('misi')} style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
         </div>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 scroll-peek">
-          {MISSIONS.filter(m=>m.status!=='SELESAI').slice(0,4).map(m=>(
+          {MISSIONS.filter(m=>m.status!=='SELESAI'&&!joinedMissions[m.id]).slice(0,4).map(m=>(
             <Card key={m.id} onClick={()=>openM(m)} style={{minWidth:220,flexShrink:0,padding:14}}>
               <div className="flex items-center gap-2 mb-2">
                 <div style={{width:26,height:26,borderRadius:8,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -600,7 +675,15 @@ export default function App(){
                 <MI name="schedule" size={12} style={{verticalAlign:'middle',marginRight:1,color:urgent?C.red:daysLeft<=5?C.orange:C.textMuted}}/>{daysLeft}h
               </span>}
             </div>
-            {!done&&<span className="btn-primary" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'6px 14px',fontSize:11,fontWeight:700,color:'#0B1120'}}>IKUT</span>}
+            {!done&&!joinedMissions[m.id]&&<span className="btn-primary" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'6px 14px',fontSize:11,fontWeight:700,color:'#0B1120'}}>IKUT</span>}
+            {!done&&joinedMissions[m.id]&&(()=>{const jst=joinedMissions[m.id].status;return(
+              <span style={{borderRadius:8,padding:'5px 12px',fontSize:10,fontWeight:700,
+                background:jst==='TERDAFTAR'?C.orangeLight:jst==='SUBMITTED'?C.tealLight:jst==='REVIEW'?C.purpleLight:C.greenLight,
+                color:jst==='TERDAFTAR'?C.orange:jst==='SUBMITTED'?C.teal:jst==='REVIEW'?C.purple:C.green,
+                display:'flex',alignItems:'center',gap:3}}>
+                <MI name={jst==='TERDAFTAR'?'cloud_upload':jst==='SUBMITTED'?'hourglass_top':'rate_review'} size={12}/>
+                {jst==='TERDAFTAR'?'Upload':jst==='SUBMITTED'?'Submitted':'Review'}
+              </span>);})()}
             {done&&<span style={{fontSize:11,fontWeight:600,color:C.green}}><MI name="check_circle" size={14} fill style={{verticalAlign:'middle',marginRight:2}}/> Selesai</span>}
           </div>
         </Card>
@@ -1086,6 +1169,36 @@ export default function App(){
         </div>}
       </div>
 
+      {/* Pending Uploads - missions joined but not yet submitted */}
+      {(()=>{
+        const pending=Object.entries(joinedMissions).filter(([,j])=>j.status==='TERDAFTAR').map(([mid,j])=>({...j,mission:MISSIONS.find(m=>m.id===parseInt(mid))})).filter(j=>j.mission);
+        if(!pending.length)return null;
+        return(
+        <Card className="stagger-2" style={{borderLeft:`3px solid ${C.orange}`,padding:14}}>
+          <div className="flex items-center gap-2 mb-3">
+            <MI name="cloud_upload" size={16} style={{color:C.orange}}/>
+            <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Perlu Upload</h3>
+            <span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:C.orange,background:C.orangeLight,padding:'2px 8px',borderRadius:4}}>{pending.length} misi</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {pending.map(j=>{
+              const m=j.mission;
+              return(
+              <div key={m.id} onClick={()=>openM(m)} className="flex items-center gap-3 tap-bounce" style={{background:C.surfaceLight,borderRadius:8,padding:'10px 12px',border:`1px solid ${C.border}`,cursor:'pointer'}}>
+                <div style={{width:32,height:32,borderRadius:8,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <MI name={typeIcon(m.type)} size={14} fill style={{color:typeColor(m.type)}}/>
+                </div>
+                <div className="flex-1" style={{minWidth:0}}>
+                  <p style={{fontSize:11,fontWeight:700,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{m.title}</p>
+                  <p style={{fontSize:9,color:C.orange,fontWeight:600}}>Deadline: {m.deadline}</p>
+                </div>
+                <MI name="arrow_forward_ios" size={12} style={{color:C.textMuted}}/>
+              </div>);
+            })}
+          </div>
+        </Card>);
+      })()}
+
       {/* Overview Stats */}
       <div className="stagger-2 grid grid-cols-4 gap-2">
         {[{l:'Views',v:totalViews,icon:'visibility',c:C.primary},{l:'Likes',v:totalLikes,icon:'favorite',c:C.pink},{l:'Shares',v:totalShares,icon:'share',c:C.teal},{l:'Avg Rate',v:avgRate,icon:'trending_up',c:C.orange}].map((s,i)=>(
@@ -1308,16 +1421,28 @@ export default function App(){
   /* ─── DETAIL MISI (Stepped Flow) ─────────────────────────────────── */
   function DetailMisi(){
     const m=sel||MISSIONS[0];const tc=typeColor(m.type);
-    const [step,setStep]=useState(0);
+    const jm=joinedMissions[m.id]; // joined mission state
+    const isJoined=!!jm;
+    const [step,setStep]=useState(()=>{
+      if(!jm)return 0; // not joined = briefing
+      if(jm.status==='TERDAFTAR')return 1; // joined but not uploaded = kit/upload
+      if(jm.status==='SUBMITTED'||jm.status==='REVIEW')return 3; // submitted = review
+      return 0; // SELESAI = show briefing/summary
+    });
     const [linkVal,setLinkVal]=useState('');
     const [aiChecking,setAiChecking]=useState(false);
     const [aiResult,setAiResult]=useState(null);
-    const done=m.status==='SELESAI';
+    const done=m.status==='SELESAI'||(jm&&jm.status==='SELESAI');
 
-    const steps=[
+    const steps=isJoined?[
       {label:'Briefing',icon:'description'},
       {label:'Kit & Contoh',icon:'inventory_2'},
-      {label:'Submit',icon:'upload'},
+      {label:'Upload',icon:'cloud_upload'},
+      {label:'Review',icon:'verified'},
+    ]:[
+      {label:'Briefing',icon:'description'},
+      {label:'Kit & Contoh',icon:'inventory_2'},
+      {label:'Upload',icon:'cloud_upload'},
       {label:'Review',icon:'verified'},
     ];
 
@@ -1340,7 +1465,7 @@ export default function App(){
           <span style={{marginLeft:'auto',background:typeBg(m.type),color:tc,borderRadius:6,padding:'3px 8px',fontSize:10,fontWeight:700}}>{m.status}</span>
         </div>
         <h2 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.2,marginBottom:6}}>{m.title}</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span style={{background:C.goldLight,color:C.gold,borderRadius:8,padding:'4px 12px',fontSize:13,fontWeight:800,fontFamily:"'JetBrains Mono'",border:'1px solid rgba(251,191,36,0.2)'}}>+{m.xp} XP</span>
           {m.bonus&&<span style={{background:C.greenLight,color:C.green,borderRadius:8,padding:'4px 10px',fontSize:11,fontWeight:700,border:'1px solid rgba(34,197,94,0.2)'}}>+{m.bonus} bonus</span>}
           <span style={{fontSize:11,color:C.textMuted}}>
@@ -1350,6 +1475,18 @@ export default function App(){
             <MI name="schedule" size={14} style={{verticalAlign:'middle',marginRight:2}}/>{m.deadline}
           </span>
         </div>
+        {/* Joined Status Banner */}
+        {isJoined&&(
+          <div style={{marginTop:10,padding:'8px 12px',borderRadius:8,background:jm.status==='TERDAFTAR'?C.orangeLight:jm.status==='SUBMITTED'?C.tealLight:jm.status==='REVIEW'?C.purpleLight:C.greenLight,border:`1px solid ${jm.status==='TERDAFTAR'?C.orange+'30':jm.status==='SUBMITTED'?C.teal+'30':jm.status==='REVIEW'?C.purple+'30':C.green+'30'}`,display:'flex',alignItems:'center',gap:8}}>
+            <MI name={jm.status==='TERDAFTAR'?'how_to_reg':jm.status==='SUBMITTED'?'upload_file':jm.status==='REVIEW'?'rate_review':'check_circle'} size={16} fill={jm.status==='SELESAI'} style={{color:jm.status==='TERDAFTAR'?C.orange:jm.status==='SUBMITTED'?C.teal:jm.status==='REVIEW'?C.purple:C.green}}/>
+            <div className="flex-1">
+              <p style={{fontSize:11,fontWeight:700,color:jm.status==='TERDAFTAR'?C.orange:jm.status==='SUBMITTED'?C.teal:jm.status==='REVIEW'?C.purple:C.green}}>
+                {jm.status==='TERDAFTAR'?'Terdaftar — Upload konten sebelum deadline':jm.status==='SUBMITTED'?'Konten sudah disubmit — Menunggu review':jm.status==='REVIEW'?'Konten sedang direview admin':'Misi selesai!'}
+              </p>
+              <p style={{fontSize:9,color:C.textMuted,marginTop:1}}>Bergabung: {jm.joinedAt}{jm.submittedAt?` · Submit: ${jm.submittedAt}`:''}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Step Indicator */}
@@ -1965,15 +2102,25 @@ export default function App(){
       {/* ══════════ FIXED BOTTOM CTA ══════════ */}
       {!done&&(
         <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,maxWidth:'100vw',padding:'10px 16px 28px',background:'rgba(15,15,26,0.9)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`,zIndex:20}}>
-          {step===0?(
-            <button onClick={()=>{if(consent)setStep(1)}} disabled={!consent} className={consent?'btn-primary':''} style={{
+          {step===0&&!isJoined?(
+            /* Not joined yet → "Ikut Misi" registers the member */
+            <button onClick={()=>{if(consent){joinMission(m.id);setStep(1)}}} disabled={!consent} className={consent?'btn-primary':''} style={{
               width:'100%',padding:'14px 0',borderRadius:12,border:'none',
               background:consent?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(255,255,255,0.06)',color:consent?'#0B1120':C.textMuted,
               fontSize:15,fontWeight:700,cursor:consent?'pointer':'not-allowed',
               opacity:consent?1:0.5,transition:'all 200ms',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
               boxShadow:consent?'0 4px 15px rgba(201,168,76,0.3)':'none',
             }}>
-              <MI name="rocket_launch" size={18} style={{color:consent?'#0B1120':C.textMuted}}/> Mulai Misi
+              <MI name="how_to_reg" size={18} style={{color:consent?'#0B1120':C.textMuted}}/> Ikut Misi
+            </button>
+          ):step===0&&isJoined?(
+            /* Already joined, viewing briefing again → go to kit */
+            <button onClick={()=>setStep(1)} className="btn-primary" style={{
+              width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',
+              color:'#0B1120',fontSize:15,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+              boxShadow:'0 4px 15px rgba(201,168,76,0.3)',
+            }}>
+              Lihat Kit & Contoh <MI name="arrow_forward" size={18} style={{color:'#0B1120'}}/>
             </button>
           ):step===1?(
             <button onClick={()=>setStep(2)} className="btn-primary" style={{
@@ -1981,10 +2128,10 @@ export default function App(){
               color:'#0B1120',fontSize:15,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
               boxShadow:'0 4px 15px rgba(201,168,76,0.3)',
             }}>
-              Lanjut ke Submit <MI name="arrow_forward" size={18} style={{color:'#0B1120'}}/>
+              Upload Konten <MI name="cloud_upload" size={18} style={{color:'#0B1120'}}/>
             </button>
           ):step===2?(
-            <button onClick={()=>{if(uploaded)setStep(3)}} disabled={!uploaded} className={uploaded?'btn-primary':''} style={{
+            <button onClick={()=>{if(uploaded){setJoinedMissions(p=>({...p,[m.id]:{...p[m.id],status:'SUBMITTED',submittedAt:'8 Mar 2026'}}));setStep(3)}}} disabled={!uploaded} className={uploaded?'btn-primary':''} style={{
               width:'100%',padding:'14px 0',borderRadius:12,border:'none',
               background:uploaded?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(255,255,255,0.06)',color:uploaded?'#0B1120':C.textMuted,
               fontSize:15,fontWeight:700,cursor:uploaded?'pointer':'not-allowed',
@@ -1994,6 +2141,12 @@ export default function App(){
               <MI name="send" size={18} style={{color:uploaded?'#0B1120':C.textMuted}}/> Kirim untuk Review
             </button>
           ):null}
+          {/* Deadline reminder for joined missions */}
+          {isJoined&&jm.status==='TERDAFTAR'&&step<3&&(
+            <p style={{textAlign:'center',fontSize:10,color:C.orange,fontWeight:600,marginTop:6}}>
+              <MI name="schedule" size={11} style={{verticalAlign:'middle',marginRight:2}}/>Deadline upload: {m.deadline}
+            </p>
+          )}
         </div>
       )}
     </div>);}
@@ -3925,6 +4078,14 @@ export default function App(){
           {adSideTab==='missionDetail'&&(()=>{
             const m=MISSIONS.find(x=>x.id===selectedAdMission)||MISSIONS[0];
             const tc=typeColor(m.type);
+            // Registered members (joined but haven't uploaded yet)
+            const registeredMembers=[
+              {agent:'Maya Sari',avatar:'MS',joinedAt:'7 Mar 2026',tier:'Gold',platform:'instagram'},
+              {agent:'Reza Pratama',avatar:'RP',joinedAt:'7 Mar 2026',tier:'Silver',platform:'tiktok'},
+              {agent:'Nadia Putri',avatar:'NP',joinedAt:'8 Mar 2026',tier:'Bronze',platform:'x'},
+              {agent:'Dimas Aditya',avatar:'DA',joinedAt:'8 Mar 2026',tier:'Silver',platform:'tiktok'},
+            ];
+            // Submitted posts (uploaded content)
             const missionPosts=[
               {agent:'Arif Santoso',avatar:'AS',platform:'tiktok',title:'Tips Aman Pakai WiFi Publik',link:'tiktok.com/@arifsantoso_/video/123',date:'6 Mar 2026',views:'128.4K',likes:'12.3K',comments:'1.2K',shares:'4.5K',rate:14.2,status:'SELESAI',xp:m.xp},
               {agent:'Rina Dewi',avatar:'RD',platform:'instagram',title:'Cara Cek Fakta Berita Online',link:'instagram.com/p/ABC123',date:'5 Mar 2026',views:'45.8K',likes:'5.6K',comments:'342',shares:'1.8K',rate:11.8,status:'SELESAI',xp:m.xp},
@@ -3959,18 +4120,20 @@ export default function App(){
                   </div>
                   <p style={{fontSize:13,color:C.textSec,lineHeight:1.5}}>{m.desc}</p>
                 </div>
-                {/* Mission Stats */}
-                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:0,borderBottom:`1px solid ${C.borderLight}`}}>
+                {/* Mission Pipeline Stats */}
+                <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:0,borderBottom:`1px solid ${C.borderLight}`}}>
                   {[
-                    {l:'Partisipan',v:m.participants.toString(),c:C.primary},
-                    {l:'Selesai',v:completedCount.toString(),c:C.green},
-                    {l:'Review',v:reviewCount.toString(),c:C.orange},
-                    {l:'Reach Total',v:m.analytics?.reach||'—',c:C.teal},
-                    {l:'Engagement',v:m.analytics?.engagement||'—',c:C.purple},
+                    {l:'Terdaftar',v:registeredMembers.length.toString(),c:C.orange,icon:'how_to_reg'},
+                    {l:'Uploaded',v:missionPosts.length.toString(),c:C.teal,icon:'upload_file'},
+                    {l:'Review',v:reviewCount.toString(),c:C.purple,icon:'rate_review'},
+                    {l:'Selesai',v:completedCount.toString(),c:C.green,icon:'check_circle'},
+                    {l:'Reach Total',v:m.analytics?.reach||'—',c:C.primary,icon:'visibility'},
+                    {l:'Engagement',v:m.analytics?.engagement||'—',c:C.pink,icon:'trending_up'},
                   ].map((s,i)=>(
-                    <div key={i} style={{padding:'16px 12px',textAlign:'center',borderRight:i<4?`1px solid ${C.borderLight}`:'none'}}>
-                      <p style={{fontSize:20,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
-                      <p style={{fontSize:10,color:C.textMuted,fontWeight:600,marginTop:2}}>{s.l}</p>
+                    <div key={i} style={{padding:'16px 8px',textAlign:'center',borderRight:i<5?`1px solid ${C.borderLight}`:'none'}}>
+                      <MI name={s.icon} size={14} style={{color:s.c,marginBottom:4}}/>
+                      <p style={{fontSize:18,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                      <p style={{fontSize:9,color:C.textMuted,fontWeight:600,marginTop:2}}>{s.l}</p>
                     </div>
                   ))}
                 </div>
@@ -3990,8 +4153,85 @@ export default function App(){
                 )}
               </DCard>
 
+              {/* Pipeline Funnel */}
+              <DCard title="Pipeline Anggota" subtitle="Funnel: Daftar → Upload → Review → Selesai">
+                <div className="flex items-center gap-3" style={{padding:'8px 0'}}>
+                  {[
+                    {label:'Daftar',count:m.participants,color:C.primary,icon:'how_to_reg'},
+                    {label:'Upload',count:missionPosts.length+registeredMembers.length-registeredMembers.length,color:C.teal,icon:'cloud_upload'},
+                    {label:'Review',count:reviewCount,color:C.purple,icon:'rate_review'},
+                    {label:'Selesai',count:completedCount,color:C.green,icon:'check_circle'},
+                  ].map((s,i,arr)=>(
+                    <React.Fragment key={i}>
+                      <div style={{flex:1,textAlign:'center'}}>
+                        <div style={{width:48,height:48,borderRadius:'50%',background:`${s.color}15`,border:`2px solid ${s.color}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
+                          <span style={{fontSize:18,fontWeight:800,color:s.color,fontFamily:"'JetBrains Mono'"}}>{s.count}</span>
+                        </div>
+                        <p style={{fontSize:10,fontWeight:700,color:s.color}}>{s.label}</p>
+                        {i>0&&<p style={{fontSize:9,color:C.textMuted,marginTop:2}}>{arr[0].count>0?Math.round(s.count/arr[0].count*100):0}%</p>}
+                      </div>
+                      {i<arr.length-1&&<MI name="arrow_forward" size={16} style={{color:C.textMuted,flexShrink:0}}/>}
+                    </React.Fragment>
+                  ))}
+                </div>
+                {/* Conversion bar */}
+                <div style={{marginTop:8,background:C.surfaceLight,borderRadius:6,height:8,overflow:'hidden',display:'flex'}}>
+                  <div style={{width:`${m.participants>0?(registeredMembers.length/m.participants)*100:0}%`,background:C.orange,transition:'width 600ms'}}/>
+                  <div style={{width:`${m.participants>0?((missionPosts.length-completedCount-reviewCount)/m.participants)*100:0}%`,background:C.teal,transition:'width 600ms'}}/>
+                  <div style={{width:`${m.participants>0?(reviewCount/m.participants)*100:0}%`,background:C.purple,transition:'width 600ms'}}/>
+                  <div style={{width:`${m.participants>0?(completedCount/m.participants)*100:0}%`,background:C.green,transition:'width 600ms'}}/>
+                </div>
+                <div className="flex gap-4 mt-2" style={{justifyContent:'center'}}>
+                  {[{l:'Menunggu',c:C.orange},{l:'Upload',c:C.teal},{l:'Review',c:C.purple},{l:'Selesai',c:C.green}].map(s=>(
+                    <div key={s.l} className="flex items-center gap-1">
+                      <div style={{width:8,height:8,borderRadius:2,background:s.c}}/>
+                      <span style={{fontSize:9,color:C.textMuted}}>{s.l}</span>
+                    </div>
+                  ))}
+                </div>
+              </DCard>
+
+              {/* Registered Members (not uploaded yet) */}
+              <DCard title="Anggota Terdaftar" subtitle={`${registeredMembers.length} anggota belum upload konten`}>
+                <div style={{overflowX:'auto'}}>
+                  <table style={{width:'100%',borderCollapse:'collapse'}}>
+                    <thead>
+                      <tr>{['Anggota','Tier','Platform','Bergabung','Status','Aksi'].map(h=>(
+                        <th key={h} style={{padding:'10px 12px',fontSize:11,fontWeight:700,color:C.textMuted,textAlign:'left',borderBottom:`1px solid ${C.border}`,textTransform:'uppercase',letterSpacing:0.5,whiteSpace:'nowrap'}}>{h}</th>
+                      ))}</tr>
+                    </thead>
+                    <tbody>
+                      {registeredMembers.map((mem,i)=>(
+                        <tr key={i} style={{borderBottom:`1px solid ${C.borderLight}`}}>
+                          <td style={{padding:'12px'}}>
+                            <div className="flex items-center gap-2">
+                              <div style={{width:32,height:32,borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.orange}}>{mem.avatar}</div>
+                              <span style={{fontSize:13,fontWeight:600,color:C.text}}>{mem.agent}</span>
+                            </div>
+                          </td>
+                          <td style={{padding:'12px'}}><span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,background:mem.tier==='Gold'?C.goldLight:mem.tier==='Silver'?C.surfaceLight:C.orangeLight,color:mem.tier==='Gold'?C.gold:mem.tier==='Silver'?C.textSec:C.orange}}>{mem.tier}</span></td>
+                          <td style={{padding:'12px'}}>
+                            <div className="flex items-center gap-2">
+                              <SocialIcon platform={mem.platform} size={14} color={pColor(mem.platform)}/>
+                              <span style={{fontSize:12,color:C.text}}>{pName(mem.platform)}</span>
+                            </div>
+                          </td>
+                          <td style={{padding:'12px',fontSize:12,color:C.textSec}}>{mem.joinedAt}</td>
+                          <td style={{padding:'12px'}}><span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:4,background:C.orangeLight,color:C.orange}}>Menunggu Upload</span></td>
+                          <td style={{padding:'12px'}}>
+                            <button onClick={()=>showToast(`Reminder dikirim ke ${mem.agent}`)} style={{fontSize:11,fontWeight:600,color:C.primary,background:C.primaryLight,border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>
+                              <MI name="notifications_active" size={12} style={{verticalAlign:'middle',marginRight:3}}/>Remind
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </DCard>
+
               {/* Submissions Table */}
-              <DCard title="Postingan Anggota" subtitle={`${missionPosts.length} submission untuk misi ini`}>
+              <DCard title="Konten yang Disubmit" subtitle={`${missionPosts.length} submission untuk misi ini`}>
                 <div style={{overflowX:'auto'}}>
                   <table style={{width:'100%',borderCollapse:'collapse'}}>
                     <thead>
