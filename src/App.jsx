@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Globe from 'react-globe.gl';
+import ForceGraph3D from 'react-force-graph-3d';
 
 /* ─── ICON ───────────────────────────────────────────────────────── */
 function MI({ name, size=24, fill=false, style={} }) {
@@ -330,6 +331,7 @@ export default function App(){
   const [narrativeActions,setNarrativeActions]=useState({}); // {id: 'DUKUNG'|'TOLAK'|'MONITOR'}
   const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null); // {narrativeId, step, prompt, platform, impactLevel, ...}
   const [selectedAdMission,setSelectedAdMission]=useState(null); // mission id for admin detail view
+  const [monitorView,setMonitorView]=useState('network'); // 'network' | 'globe' | 'timeline'
   const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
   const [logoutConfirm,setLogoutConfirm]=useState(false);
   // joinedMissions: {missionId: {status:'TERDAFTAR'|'SUBMITTED'|'REVIEW'|'SELESAI', joinedAt, submittedAt?}}
@@ -4192,245 +4194,341 @@ export default function App(){
                 </div>
               </DCard>
 
-              {/* ═══ 3D GLOBE — Social Media Monitoring ═══ */}
+              {/* ═══ 3D SOCIAL MEDIA MONITORING ═══ */}
               {(()=>{
-                // Build arcs from social interactions (likes/shares between agents)
-                const arcs=[];
+                // Build arcs & graph data from social interactions
+                const arcs=[];const graphLinks=[];const interactionMap={};
                 missionPosts.forEach(post=>{
+                  interactionMap[post.agent]={likes:post.likedBy?.length||0,shares:post.sharedBy?.length||0,total:(post.likedBy?.length||0)+(post.sharedBy?.length||0)};
                   (post.likedBy||[]).forEach(liker=>{
-                    const likerPost=missionPosts.find(p=>p.agent===liker);
-                    if(likerPost&&likerPost.agent!==post.agent){
-                      arcs.push({startLat:likerPost.lat,startLng:likerPost.lng,endLat:post.lat,endLng:post.lng,color:['rgba(201,168,76,0.6)','rgba(201,168,76,0.15)'],label:`${liker} → liked → ${post.agent}`,type:'like'});
+                    const lp=missionPosts.find(p=>p.agent===liker);
+                    if(lp&&lp.agent!==post.agent){
+                      arcs.push({startLat:lp.lat,startLng:lp.lng,endLat:post.lat,endLng:post.lng,color:['rgba(201,168,76,0.6)','rgba(201,168,76,0.15)'],label:`${liker} → liked → ${post.agent}`,type:'like'});
+                      graphLinks.push({source:lp.agent,target:post.agent,type:'like',color:'rgba(236,72,153,0.5)'});
                     }
                   });
                   (post.sharedBy||[]).forEach(sharer=>{
-                    const sharerPost=missionPosts.find(p=>p.agent===sharer);
-                    if(sharerPost&&sharerPost.agent!==post.agent){
-                      arcs.push({startLat:sharerPost.lat,startLng:sharerPost.lng,endLat:post.lat,endLng:post.lng,color:['rgba(45,212,191,0.7)','rgba(45,212,191,0.15)'],label:`${sharer} → shared → ${post.agent}`,type:'share'});
+                    const sp=missionPosts.find(p=>p.agent===sharer);
+                    if(sp&&sp.agent!==post.agent){
+                      arcs.push({startLat:sp.lat,startLng:sp.lng,endLat:post.lat,endLng:post.lng,color:['rgba(45,212,191,0.7)','rgba(45,212,191,0.15)'],label:`${sharer} → shared → ${post.agent}`,type:'share'});
+                      graphLinks.push({source:sp.agent,target:post.agent,type:'share',color:'rgba(45,212,191,0.5)'});
                     }
                   });
                 });
-                // Points for each post location
                 const points=missionPosts.map(p=>({lat:p.lat,lng:p.lng,agent:p.agent,city:p.city,platform:p.platform,title:p.title,views:p.views,rate:p.rate,status:p.status,size:Math.max(0.3,p.rate/20),color:p.status==='SELESAI'?C.green:p.status==='REVIEW'?C.orange:C.red}));
+                // Force graph data
+                const graphNodes=missionPosts.map(p=>{const ti=interactionMap[p.agent]||{total:0};return{id:p.agent,avatar:p.avatar,platform:p.platform,city:p.city,title:p.title,views:p.views,rate:p.rate,status:p.status,val:Math.max(3,ti.total*2+p.rate/5),color:pColor(p.platform)};});
+                const graphData={nodes:graphNodes,links:graphLinks};
+                // View mode state is controlled by parent
+                const viewModes=[{id:'network',label:'3D Network',icon:'hub'},{id:'globe',label:'Globe',icon:'public'},{id:'timeline',label:'Timeline',icon:'timeline'}];
 
                 return(<>
-                <DCard title="3D Globe — Peta Konten Aktif" subtitle="Geolokasi post anggota & interaksi sosial antar kota" action={<div className="flex items-center gap-3">
-                  {[{l:'Like',c:'#C9A84C'},{l:'Share',c:'#2DD4BF'}].map(x=>(
-                    <div key={x.l} className="flex items-center gap-1"><div style={{width:10,height:3,borderRadius:2,background:x.c}}/><span style={{fontSize:10,color:C.textMuted}}>{x.l}</span></div>
-                  ))}
-                </div>}>
-                  <div style={{position:'relative',borderRadius:12,overflow:'hidden',background:'radial-gradient(ellipse at center,#0a1628 0%,#060d1a 100%)',border:`1px solid ${C.border}`}}>
-                    <Globe
-                      width={760} height={480}
-                      globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-                      bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-                      backgroundImageUrl=""
-                      backgroundColor="rgba(0,0,0,0)"
-                      atmosphereColor="rgba(201,168,76,0.3)"
-                      atmosphereAltitude={0.2}
-                      pointsData={points}
-                      pointLat="lat" pointLng="lng"
-                      pointAltitude={d=>d.size*0.06}
-                      pointRadius={d=>d.size*0.5}
-                      pointColor="color"
-                      pointLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;font-family:Inter,sans-serif;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
-                        <div style="font-size:13px;font-weight:700;color:#F1F5F9;margin-bottom:4px">${d.agent}</div>
-                        <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">${d.city} · ${d.platform}</div>
-                        <div style="font-size:11px;color:#C9A84C;font-weight:600">${d.title}</div>
-                        <div style="display:flex;gap:12px;margin-top:6px">
-                          <span style="font-size:10px;color:#94A3B8">👁 ${d.views}</span>
-                          <span style="font-size:10px;color:${d.status==='SELESAI'?'#22C55E':d.status==='REVIEW'?'#F59E0B':'#EF4444'};font-weight:600">${d.status}</span>
-                          <span style="font-size:10px;color:#C9A84C;font-weight:700">${d.rate}%</span>
-                        </div>
-                      </div>`}
-                      arcsData={arcs}
-                      arcStartLat="startLat" arcStartLng="startLng"
-                      arcEndLat="endLat" arcEndLng="endLng"
-                      arcColor="color"
-                      arcDashLength={0.4} arcDashGap={0.2} arcDashAnimateTime={2500}
-                      arcStroke={0.5}
-                      arcLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#94A3B8;box-shadow:0 4px 16px rgba(0,0,0,0.4)">${d.label}</div>`}
-                      animateIn={true}
-                      // Camera focused on Indonesia
-                      pointOfView={{lat:-2.5,lng:118,altitude:2.2}}
-                    />
-                    {/* Overlay Stats */}
-                    <div style={{position:'absolute',top:16,left:16,display:'flex',flexDirection:'column',gap:8}}>
-                      <div style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
-                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>Total Post</p>
-                        <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{missionPosts.length}</p>
+                {/* ─── VIEW MODE SELECTOR ─── */}
+                <DCard style={{padding:0}}>
+                  <div style={{padding:'16px 24px',borderBottom:`1px solid ${C.borderLight}`}}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 style={{fontSize:16,fontWeight:800,color:C.text}}>Social Media Monitoring</h3>
+                        <p style={{fontSize:11,color:C.textMuted,marginTop:2}}>Visualisasi interaksi konten anggota secara real-time</p>
                       </div>
-                      <div style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
-                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>Kota Aktif</p>
-                        <p style={{fontSize:20,fontWeight:800,color:C.teal,fontFamily:"'JetBrains Mono'"}}>{new Set(missionPosts.map(p=>p.city)).size}</p>
-                      </div>
-                      <div style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
-                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>Interaksi</p>
-                        <p style={{fontSize:20,fontWeight:800,color:'#C9A84C',fontFamily:"'JetBrains Mono'"}}>{arcs.length}</p>
+                      <div className="flex gap-1" style={{background:C.surfaceLight,borderRadius:8,padding:3,border:`1px solid ${C.border}`}}>
+                        {viewModes.map(v=>(
+                          <button key={v.id} onClick={()=>setMonitorView(v.id)} className={monitorView===v.id?'btn-primary':''} style={{
+                            padding:'6px 14px',borderRadius:6,border:'none',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4,
+                            background:monitorView===v.id?'linear-gradient(135deg,#C9A84C,#E8D48B)':'transparent',
+                            color:monitorView===v.id?'#0B1120':C.textMuted,
+                          }}><MI name={v.icon} size={14}/>{v.label}</button>
+                        ))}
                       </div>
                     </div>
-                    {/* City Legend */}
-                    <div style={{position:'absolute',bottom:16,right:16,display:'flex',flexDirection:'column',gap:4}}>
-                      {[...new Set(missionPosts.map(p=>p.city))].map(city=>{
-                        const cp=missionPosts.find(p=>p.city===city);
-                        return(<div key={city} className="flex items-center gap-2" style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:6,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.06)'}}>
-                          <div style={{width:6,height:6,borderRadius:'50%',background:cp.status==='SELESAI'?C.green:cp.status==='REVIEW'?C.orange:C.red}}/>
-                          <span style={{fontSize:10,color:C.textSec,fontWeight:600}}>{city}</span>
-                          <span style={{fontSize:9,color:C.textMuted}}>{cp.agent}</span>
-                        </div>);
-                      })}
-                    </div>
-                  </div>
-                </DCard>
-
-                {/* ═══ CONTENT TIMELINE ═══ */}
-                <DCard title="Timeline Konten" subtitle="Kronologi postingan anggota misi ini">
-                  <div style={{position:'relative',paddingLeft:28}}>
-                    {/* Vertical line */}
-                    <div style={{position:'absolute',left:10,top:0,bottom:0,width:2,background:`linear-gradient(to bottom,${C.primary},${C.border})`,borderRadius:1}}/>
-                    {missionPosts.sort((a,b)=>new Date('2026-03-'+b.date.split(' ')[0])-new Date('2026-03-'+a.date.split(' ')[0])).map((post,i)=>{
-                      const stCol=post.status==='SELESAI'?C.green:post.status==='REVIEW'?C.orange:C.red;
-                      return(
-                      <div key={i} style={{position:'relative',paddingBottom:i<missionPosts.length-1?20:0}}>
-                        {/* Timeline dot */}
-                        <div style={{position:'absolute',left:-22,top:4,width:12,height:12,borderRadius:'50%',background:stCol,border:'2px solid #0B1120',boxShadow:`0 0 8px ${stCol}40`}}/>
-                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,background:C.surfaceLight,borderRadius:10,padding:16,border:`1px solid ${C.border}`}}>
-                          {/* Left: Content Info */}
-                          <div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <div style={{width:28,height:28,borderRadius:8,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:C.primary}}>{post.avatar}</div>
-                              <div>
-                                <p style={{fontSize:13,fontWeight:700,color:C.text}}>{post.agent}</p>
-                                <p style={{fontSize:10,color:C.textMuted}}>{post.city} · {post.date}, {post.time}</p>
-                              </div>
-                              <span style={{marginLeft:'auto',fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:4,background:post.status==='SELESAI'?C.greenLight:post.status==='REVIEW'?C.orangeLight:C.redLight,color:stCol}}>{post.status}</span>
-                            </div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <SocialIcon platform={post.platform} size={14} color={pColor(post.platform)}/>
-                              <p style={{fontSize:12,fontWeight:600,color:C.text}}>{post.title}</p>
-                            </div>
-                            {/* Engagement */}
-                            <div className="flex gap-3">
-                              {[{l:'Views',v:post.views,c:C.primary},{l:'Likes',v:post.likes,c:C.pink},{l:'Comments',v:post.comments,c:C.teal},{l:'Shares',v:post.shares,c:C.orange}].map(s=>(
-                                <div key={s.l} style={{textAlign:'center'}}>
-                                  <p style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
-                                  <p style={{fontSize:8,color:C.textMuted,fontWeight:600}}>{s.l}</p>
-                                </div>
-                              ))}
-                              <div style={{marginLeft:'auto',textAlign:'right'}}>
-                                <p style={{fontSize:16,fontWeight:800,color:post.rate>15?C.green:post.rate>10?C.orange:C.textSec,fontFamily:"'JetBrains Mono'"}}>{post.rate}%</p>
-                                <p style={{fontSize:8,color:C.textMuted,fontWeight:600}}>Rate</p>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Right: Social interactions - who liked & shared */}
-                          <div style={{borderLeft:`1px solid ${C.border}`,paddingLeft:16}}>
-                            <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>Interaksi Antar Anggota</p>
-                            {post.likedBy&&post.likedBy.length>0&&(
-                              <div style={{marginBottom:8}}>
-                                <div className="flex items-center gap-1 mb-2">
-                                  <MI name="favorite" size={12} fill style={{color:C.pink}}/>
-                                  <span style={{fontSize:10,fontWeight:600,color:C.pink}}>Dilike oleh ({post.likedBy.length})</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {post.likedBy.map(name=>{
-                                    const p2=missionPosts.find(p=>p.agent===name);
-                                    return(<span key={name} style={{fontSize:9,fontWeight:600,padding:'2px 8px',borderRadius:4,background:C.primaryLight,color:C.primary,display:'inline-flex',alignItems:'center',gap:3}}>
-                                      {p2&&<SocialIcon platform={p2.platform} size={8} color={C.primary}/>}{name.split(' ')[0]}
-                                    </span>);
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                            {post.sharedBy&&post.sharedBy.length>0&&(
-                              <div>
-                                <div className="flex items-center gap-1 mb-2">
-                                  <MI name="share" size={12} style={{color:C.teal}}/>
-                                  <span style={{fontSize:10,fontWeight:600,color:C.teal}}>Dishare oleh ({post.sharedBy.length})</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {post.sharedBy.map(name=>{
-                                    const p2=missionPosts.find(p=>p.agent===name);
-                                    return(<span key={name} style={{fontSize:9,fontWeight:600,padding:'2px 8px',borderRadius:4,background:C.tealLight,color:C.teal,display:'inline-flex',alignItems:'center',gap:3}}>
-                                      {p2&&<SocialIcon platform={p2.platform} size={8} color={C.teal}/>}{name.split(' ')[0]}
-                                    </span>);
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                            {(!post.likedBy||post.likedBy.length===0)&&(!post.sharedBy||post.sharedBy.length===0)&&(
-                              <p style={{fontSize:11,color:C.textMuted,fontStyle:'italic'}}>Belum ada interaksi</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>);
-                    })}
-                  </div>
-                </DCard>
-
-                {/* ═══ SOCIAL INTERACTION GRAPH ═══ */}
-                <DCard title="Jaringan Interaksi Anggota" subtitle="Siapa yang me-like dan men-share post siapa">
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                    {missionPosts.map(post=>{
-                      const totalInteractions=(post.likedBy?.length||0)+(post.sharedBy?.length||0);
-                      const stCol=post.status==='SELESAI'?C.green:post.status==='REVIEW'?C.orange:C.red;
-                      return(
-                      <div key={post.agent} style={{background:C.surfaceLight,borderRadius:10,padding:14,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
-                        {/* Glow for high interaction */}
-                        {totalInteractions>=4&&<div style={{position:'absolute',top:-20,right:-20,width:60,height:60,borderRadius:'50%',background:'radial-gradient(circle,rgba(201,168,76,0.12),transparent 70%)',pointerEvents:'none'}}/>}
-                        <div className="flex items-center gap-2 mb-3">
-                          <div style={{width:32,height:32,borderRadius:8,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.primary}}>{post.avatar}</div>
-                          <div className="flex-1">
-                            <p style={{fontSize:12,fontWeight:700,color:C.text}}>{post.agent.split(' ')[0]}</p>
-                            <p style={{fontSize:9,color:C.textMuted}}>{post.city}</p>
-                          </div>
-                          <SocialIcon platform={post.platform} size={14} color={pColor(post.platform)}/>
-                        </div>
-                        {/* Interaction Score */}
-                        <div style={{textAlign:'center',marginBottom:10}}>
-                          <div style={{width:48,height:48,borderRadius:'50%',background:`${C.primary}15`,border:`2px solid ${totalInteractions>=4?C.primary:C.border}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto',boxShadow:totalInteractions>=4?`0 0 12px ${C.primary}30`:'none'}}>
-                            <span style={{fontSize:18,fontWeight:800,color:totalInteractions>=4?C.primary:C.textSec,fontFamily:"'JetBrains Mono'"}}>{totalInteractions}</span>
-                          </div>
-                          <p style={{fontSize:9,color:C.textMuted,marginTop:4}}>interaksi</p>
-                        </div>
-                        {/* Like / Share breakdown */}
-                        <div className="flex gap-2">
-                          <div style={{flex:1,background:`${C.pink}10`,borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
-                            <MI name="favorite" size={12} fill style={{color:C.pink}}/>
-                            <p style={{fontSize:13,fontWeight:700,color:C.pink,fontFamily:"'JetBrains Mono'"}}>{post.likedBy?.length||0}</p>
-                            <p style={{fontSize:8,color:C.textMuted}}>Likes</p>
-                          </div>
-                          <div style={{flex:1,background:`${C.teal}10`,borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
-                            <MI name="share" size={12} style={{color:C.teal}}/>
-                            <p style={{fontSize:13,fontWeight:700,color:C.teal,fontFamily:"'JetBrains Mono'"}}>{post.sharedBy?.length||0}</p>
-                            <p style={{fontSize:8,color:C.textMuted}}>Shares</p>
-                          </div>
-                        </div>
-                        {/* Rate badge */}
-                        <div style={{marginTop:8,textAlign:'center'}}>
-                          <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:post.rate>15?C.greenLight:post.rate>10?C.orangeLight:C.surfaceLight,color:post.rate>15?C.green:post.rate>10?C.orange:C.textMuted}}>{post.rate}% eng.</span>
-                          <span style={{fontSize:9,marginLeft:6,fontWeight:600,padding:'2px 6px',borderRadius:4,background:post.status==='SELESAI'?C.greenLight:post.status==='REVIEW'?C.orangeLight:C.redLight,color:stCol}}>{post.status}</span>
-                        </div>
-                      </div>);
-                    })}
-                  </div>
-                  {/* Top Interactions */}
-                  <div style={{marginTop:16,padding:12,background:C.bg,borderRadius:8,border:`1px solid ${C.border}`}}>
-                    <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:8}}>Top Cross-Interaction</p>
-                    <div className="flex flex-col gap-2">
-                      {arcs.slice(0,6).map((arc,i)=>(
-                        <div key={i} className="flex items-center gap-2" style={{fontSize:11,color:C.textSec}}>
-                          <MI name={arc.type==='like'?'favorite':'share'} size={12} fill={arc.type==='like'} style={{color:arc.type==='like'?C.pink:C.teal}}/>
-                          <span style={{fontWeight:600,color:C.text}}>{arc.label.split(' → ')[0]}</span>
-                          <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>
-                          <span style={{color:arc.type==='like'?C.pink:C.teal,fontWeight:600}}>{arc.type==='like'?'liked':'shared'}</span>
-                          <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>
-                          <span style={{fontWeight:600,color:C.text}}>{arc.label.split(' → ')[2]}</span>
+                    {/* Quick Stats Row */}
+                    <div className="flex gap-4 mt-3">
+                      {[{l:'Konten',v:missionPosts.length,c:C.primary},{l:'Kota',v:new Set(missionPosts.map(p=>p.city)).size,c:C.teal},{l:'Interaksi',v:arcs.length,c:'#C9A84C'},{l:'Avg Rate',v:(missionPosts.reduce((s,p)=>s+p.rate,0)/missionPosts.length).toFixed(1)+'%',c:C.green}].map(s=>(
+                        <div key={s.l} className="flex items-center gap-2">
+                          <div style={{width:8,height:8,borderRadius:'50%',background:s.c}}/>
+                          <span style={{fontSize:11,color:C.textMuted}}>{s.l}:</span>
+                          <span style={{fontSize:12,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</span>
                         </div>
                       ))}
                     </div>
                   </div>
+
+                  {/* ─── VIEW: 3D FORCE-DIRECTED NETWORK GRAPH ─── */}
+                  {monitorView==='network'&&(
+                    <div style={{position:'relative',height:520,background:'radial-gradient(ellipse at 50% 50%,#0d1525 0%,#060a14 100%)'}}>
+                      <ForceGraph3D
+                        graphData={graphData}
+                        width={760} height={520}
+                        backgroundColor="rgba(0,0,0,0)"
+                        nodeVal="val"
+                        nodeColor="color"
+                        nodeOpacity={0.95}
+                        nodeResolution={16}
+                        nodeLabel={node=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 16px;font-family:Inter,sans-serif;min-width:220px;box-shadow:0 12px 40px rgba(0,0,0,0.6)">
+                          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                            <div style="width:32px;height:32px;border-radius:8px;background:${node.color}25;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${node.color};border:1px solid ${node.color}40">${node.avatar}</div>
+                            <div>
+                              <div style="font-size:14px;font-weight:700;color:#F1F5F9">${node.id}</div>
+                              <div style="font-size:10px;color:#64748B">${node.city} · ${node.platform}</div>
+                            </div>
+                          </div>
+                          <div style="font-size:12px;color:#C9A84C;font-weight:600;margin-bottom:6px">${node.title}</div>
+                          <div style="display:flex;gap:16px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
+                            <span style="font-size:11px;color:#94A3B8">Views <b style="color:#F1F5F9">${node.views}</b></span>
+                            <span style="font-size:11px;color:#94A3B8">Rate <b style="color:${node.rate>15?'#22C55E':node.rate>10?'#F59E0B':'#94A3B8'}">${node.rate}%</b></span>
+                            <span style="font-size:11px;color:${node.status==='SELESAI'?'#22C55E':node.status==='REVIEW'?'#F59E0B':'#EF4444'};font-weight:600">${node.status}</span>
+                          </div>
+                        </div>`}
+                        linkColor="color"
+                        linkWidth={link=>link.type==='share'?2:1.2}
+                        linkOpacity={0.6}
+                        linkDirectionalParticles={3}
+                        linkDirectionalParticleWidth={link=>link.type==='share'?2.5:1.5}
+                        linkDirectionalParticleColor={link=>link.type==='like'?'#EC4899':'#2DD4BF'}
+                        linkDirectionalParticleSpeed={0.005}
+                        linkLabel={link=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#94A3B8;box-shadow:0 4px 16px rgba(0,0,0,0.4)"><span style="color:${link.type==='like'?'#EC4899':'#2DD4BF'}">${link.type==='like'?'Liked':'Shared'}</span> ${link.source.id||link.source} → ${link.target.id||link.target}</div>`}
+                        enableNodeDrag={true}
+                        enableNavigationControls={true}
+                        showNavInfo={false}
+                      />
+                      {/* Legend */}
+                      <div style={{position:'absolute',top:16,left:16,display:'flex',flexDirection:'column',gap:6}}>
+                        <div style={{background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:8,padding:'10px 14px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                          <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:1,marginBottom:6}}>Platform Nodes</p>
+                          {[{p:'tiktok',c:'#E8E8E8'},{p:'instagram',c:'#E1306C'},{p:'x',c:'#1DA1F2'}].map(x=>(
+                            <div key={x.p} className="flex items-center gap-2" style={{marginBottom:3}}>
+                              <div style={{width:8,height:8,borderRadius:'50%',background:x.c}}/>
+                              <span style={{fontSize:10,color:C.textSec}}>{pName(x.p)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:8,padding:'10px 14px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                          <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:1,marginBottom:6}}>Particle Flows</p>
+                          {[{l:'Like',c:'#EC4899'},{l:'Share',c:'#2DD4BF'}].map(x=>(
+                            <div key={x.l} className="flex items-center gap-2" style={{marginBottom:3}}>
+                              <div style={{width:14,height:3,borderRadius:2,background:x.c}}/>
+                              <span style={{fontSize:10,color:C.textSec}}>{x.l}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Interaction insight */}
+                      <div style={{position:'absolute',bottom:16,left:16,right:16,display:'flex',gap:8}}>
+                        {missionPosts.sort((a,b)=>(interactionMap[b.agent]?.total||0)-(interactionMap[a.agent]?.total||0)).slice(0,3).map((p,i)=>(
+                          <div key={p.agent} style={{flex:1,background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:8,padding:'10px 12px',border:`1px solid ${i===0?'rgba(201,168,76,0.3)':'rgba(255,255,255,0.06)'}`,boxShadow:i===0?'0 0 20px rgba(201,168,76,0.1)':'none'}}>
+                            <div className="flex items-center gap-2 mb-1">
+                              {i===0&&<MI name="emoji_events" size={14} fill style={{color:C.gold}}/>}
+                              <span style={{fontSize:11,fontWeight:700,color:i===0?C.gold:C.text}}>{p.agent.split(' ')[0]}</span>
+                              <SocialIcon platform={p.platform} size={10} color={pColor(p.platform)}/>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span style={{fontSize:9,color:C.pink}}><MI name="favorite" size={10} fill style={{verticalAlign:'middle'}}/> {interactionMap[p.agent]?.likes||0}</span>
+                              <span style={{fontSize:9,color:C.teal}}><MI name="share" size={10} style={{verticalAlign:'middle'}}/> {interactionMap[p.agent]?.shares||0}</span>
+                              <span style={{fontSize:10,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",marginLeft:'auto'}}>{interactionMap[p.agent]?.total||0}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── VIEW: 3D GLOBE ─── */}
+                  {monitorView==='globe'&&(
+                    <div style={{position:'relative',height:520,background:'radial-gradient(ellipse at center,#0a1628 0%,#060d1a 100%)'}}>
+                      <Globe
+                        width={760} height={520}
+                        globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+                        bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                        backgroundImageUrl="" backgroundColor="rgba(0,0,0,0)"
+                        atmosphereColor="rgba(201,168,76,0.3)" atmosphereAltitude={0.2}
+                        pointsData={points}
+                        pointLat="lat" pointLng="lng"
+                        pointAltitude={d=>d.size*0.06} pointRadius={d=>d.size*0.5}
+                        pointColor="color"
+                        pointLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 16px;font-family:Inter,sans-serif;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.6)">
+                          <div style="font-size:14px;font-weight:700;color:#F1F5F9;margin-bottom:4px">${d.agent}</div>
+                          <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">${d.city} · ${d.platform}</div>
+                          <div style="font-size:12px;color:#C9A84C;font-weight:600">${d.title}</div>
+                          <div style="display:flex;gap:12px;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
+                            <span style="font-size:10px;color:#94A3B8">Views <b style="color:#F1F5F9">${d.views}</b></span>
+                            <span style="font-size:10px;color:${d.status==='SELESAI'?'#22C55E':d.status==='REVIEW'?'#F59E0B':'#EF4444'};font-weight:600">${d.status}</span>
+                            <span style="font-size:10px;color:#C9A84C;font-weight:700">${d.rate}%</span>
+                          </div>
+                        </div>`}
+                        ringsData={points.map(p=>({lat:p.lat,lng:p.lng,maxR:p.rate/8,propagationSpeed:2,repeatPeriod:800+Math.random()*400,color:()=>p.color+'80'}))}
+                        ringMaxRadius="maxR" ringPropagationSpeed="propagationSpeed" ringRepeatPeriod="repeatPeriod"
+                        arcsData={arcs}
+                        arcStartLat="startLat" arcStartLng="startLng"
+                        arcEndLat="endLat" arcEndLng="endLng"
+                        arcColor="color" arcDashLength={0.4} arcDashGap={0.2} arcDashAnimateTime={2500} arcStroke={0.5}
+                        arcLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#94A3B8;box-shadow:0 4px 16px rgba(0,0,0,0.4)">${d.label}</div>`}
+                        animateIn={true}
+                        pointOfView={{lat:-2.5,lng:118,altitude:2.2}}
+                      />
+                      {/* Overlay Stats */}
+                      <div style={{position:'absolute',top:16,left:16,display:'flex',flexDirection:'column',gap:6}}>
+                        {[{l:'Total Post',v:missionPosts.length,c:C.primary},{l:'Kota Aktif',v:new Set(missionPosts.map(p=>p.city)).size,c:C.teal},{l:'Interaksi',v:arcs.length,c:'#C9A84C'}].map(s=>(
+                          <div key={s.l} style={{background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                            <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>{s.l}</p>
+                            <p style={{fontSize:20,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {/* City pins legend */}
+                      <div style={{position:'absolute',bottom:16,right:16,display:'flex',flexDirection:'column',gap:4}}>
+                        {[...new Set(missionPosts.map(p=>p.city))].map(city=>{
+                          const cp=missionPosts.find(p=>p.city===city);
+                          return(<div key={city} className="flex items-center gap-2" style={{background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:6,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{width:6,height:6,borderRadius:'50%',background:cp.color||C.green}}/>
+                            <span style={{fontSize:10,color:C.textSec,fontWeight:600}}>{city}</span>
+                            <span style={{fontSize:9,color:C.textMuted}}>{cp.agent.split(' ')[0]}</span>
+                          </div>);
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── VIEW: TIMELINE ─── */}
+                  {monitorView==='timeline'&&(
+                    <div style={{padding:24}}>
+                      <div style={{position:'relative',paddingLeft:32}}>
+                        <div style={{position:'absolute',left:12,top:0,bottom:0,width:2,background:`linear-gradient(to bottom,${C.primary},${C.border})`,borderRadius:1}}/>
+                        {[...missionPosts].sort((a,b)=>parseInt(b.date.split(' ')[0])-parseInt(a.date.split(' ')[0])).map((post,i)=>{
+                          const stCol=post.status==='SELESAI'?C.green:post.status==='REVIEW'?C.orange:C.red;
+                          const ti=interactionMap[post.agent]||{likes:0,shares:0,total:0};
+                          return(
+                          <div key={i} style={{position:'relative',paddingBottom:i<missionPosts.length-1?20:0}}>
+                            <div style={{position:'absolute',left:-24,top:6,width:14,height:14,borderRadius:'50%',background:stCol,border:'3px solid #0B1120',boxShadow:`0 0 10px ${stCol}50`}}/>
+                            <div style={{display:'grid',gridTemplateColumns:'1fr 300px',gap:16,background:C.surfaceLight,borderRadius:12,padding:16,border:`1px solid ${C.border}`,transition:'box-shadow 200ms'}}
+                              onMouseEnter={e=>e.currentTarget.style.boxShadow=`0 4px 24px ${stCol}15`}
+                              onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+                              <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div style={{width:32,height:32,borderRadius:8,background:`${pColor(post.platform)}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:pColor(post.platform),border:`1px solid ${pColor(post.platform)}30`}}>{post.avatar}</div>
+                                  <div className="flex-1">
+                                    <p style={{fontSize:13,fontWeight:700,color:C.text}}>{post.agent}</p>
+                                    <div className="flex items-center gap-2">
+                                      <SocialIcon platform={post.platform} size={10} color={pColor(post.platform)}/>
+                                      <span style={{fontSize:10,color:C.textMuted}}>{post.city} · {post.date}, {post.time}</span>
+                                    </div>
+                                  </div>
+                                  <span style={{fontSize:9,fontWeight:700,padding:'3px 10px',borderRadius:6,background:post.status==='SELESAI'?C.greenLight:post.status==='REVIEW'?C.orangeLight:C.redLight,color:stCol}}>{post.status}</span>
+                                </div>
+                                <p style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:10}}>{post.title}</p>
+                                {/* Content preview placeholder */}
+                                <div style={{background:C.bg,borderRadius:8,height:48,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`,marginBottom:10}}>
+                                  <MI name={post.platform==='x'?'article':'play_circle'} size={20} style={{color:pColor(post.platform),opacity:0.4}}/>
+                                  <span style={{fontSize:11,color:C.textMuted,marginLeft:6}}>{post.platform==='x'?'Thread Preview':'Video/Image Preview'}</span>
+                                </div>
+                                {/* Engagement */}
+                                <div className="flex gap-4">
+                                  {[{l:'Views',v:post.views,ic:'visibility',c:C.primary},{l:'Likes',v:post.likes,ic:'favorite',c:C.pink},{l:'Comments',v:post.comments,ic:'chat_bubble',c:C.teal},{l:'Shares',v:post.shares,ic:'share',c:C.orange}].map(s=>(
+                                    <div key={s.l} className="flex items-center gap-1">
+                                      <MI name={s.ic} size={12} style={{color:s.c}}/>
+                                      <span style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</span>
+                                    </div>
+                                  ))}
+                                  <div style={{marginLeft:'auto',background:post.rate>15?C.greenLight:post.rate>10?C.orangeLight:C.surfaceLight,borderRadius:6,padding:'2px 10px'}}>
+                                    <span style={{fontSize:13,fontWeight:800,color:post.rate>15?C.green:post.rate>10?C.orange:C.textSec,fontFamily:"'JetBrains Mono'"}}>{post.rate}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                              {/* Right: Social interactions */}
+                              <div style={{borderLeft:`1px solid ${C.border}`,paddingLeft:16}}>
+                                <div className="flex items-center justify-between mb-3">
+                                  <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>Interaksi Antar Anggota</p>
+                                  <div style={{background:`${C.primary}15`,borderRadius:6,padding:'2px 8px',border:`1px solid ${C.primary}30`}}>
+                                    <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{ti.total}</span>
+                                  </div>
+                                </div>
+                                {post.likedBy&&post.likedBy.length>0&&(
+                                  <div style={{marginBottom:10}}>
+                                    <div className="flex items-center gap-1 mb-2">
+                                      <MI name="favorite" size={12} fill style={{color:C.pink}}/>
+                                      <span style={{fontSize:10,fontWeight:600,color:C.pink}}>Liked by ({post.likedBy.length})</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {post.likedBy.map(name=>{
+                                        const p2=missionPosts.find(p=>p.agent===name);
+                                        return(<div key={name} className="flex items-center gap-2" style={{background:C.bg,borderRadius:6,padding:'4px 8px',border:`1px solid ${C.border}`}}>
+                                          {p2&&<SocialIcon platform={p2.platform} size={10} color={pColor(p2.platform)}/>}
+                                          <span style={{fontSize:10,fontWeight:600,color:C.text}}>{name.split(' ')[0]}</span>
+                                          {p2&&<span style={{fontSize:8,color:C.textMuted}}>{p2.city}</span>}
+                                        </div>);
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                                {post.sharedBy&&post.sharedBy.length>0&&(
+                                  <div>
+                                    <div className="flex items-center gap-1 mb-2">
+                                      <MI name="share" size={12} style={{color:C.teal}}/>
+                                      <span style={{fontSize:10,fontWeight:600,color:C.teal}}>Shared by ({post.sharedBy.length})</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {post.sharedBy.map(name=>{
+                                        const p2=missionPosts.find(p=>p.agent===name);
+                                        return(<div key={name} className="flex items-center gap-2" style={{background:C.bg,borderRadius:6,padding:'4px 8px',border:`1px solid ${C.border}`}}>
+                                          {p2&&<SocialIcon platform={p2.platform} size={10} color={pColor(p2.platform)}/>}
+                                          <span style={{fontSize:10,fontWeight:600,color:C.text}}>{name.split(' ')[0]}</span>
+                                          {p2&&<span style={{fontSize:8,color:C.textMuted}}>{p2.city}</span>}
+                                        </div>);
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                                {ti.total===0&&<p style={{fontSize:11,color:C.textMuted,fontStyle:'italic'}}>Belum ada interaksi</p>}
+                              </div>
+                            </div>
+                          </div>);
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </DCard>
+
+                {/* ─── INTERACTION LEADERBOARD ─── */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+                  <DCard title="Top Influencer" subtitle="Anggota dengan interaksi tertinggi">
+                    {missionPosts.sort((a,b)=>(interactionMap[b.agent]?.total||0)-(interactionMap[a.agent]?.total||0)).map((post,i)=>{
+                      const ti=interactionMap[post.agent]||{likes:0,shares:0,total:0};
+                      return(
+                      <div key={post.agent} className="flex items-center gap-3" style={{padding:'10px 0',borderBottom:i<missionPosts.length-1?`1px solid ${C.borderLight}`:'none'}}>
+                        <span style={{fontSize:14,fontWeight:800,color:i===0?C.gold:i===1?C.textSec:i===2?C.orange:C.textMuted,fontFamily:"'JetBrains Mono'",width:24,textAlign:'center'}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`}</span>
+                        <div style={{width:32,height:32,borderRadius:8,background:`${pColor(post.platform)}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:pColor(post.platform),border:`1px solid ${pColor(post.platform)}30`}}>{post.avatar}</div>
+                        <div className="flex-1">
+                          <p style={{fontSize:12,fontWeight:700,color:C.text}}>{post.agent}</p>
+                          <div className="flex items-center gap-2">
+                            <span style={{fontSize:9,color:C.pink}}><MI name="favorite" size={9} fill style={{verticalAlign:'middle'}}/> {ti.likes}</span>
+                            <span style={{fontSize:9,color:C.teal}}><MI name="share" size={9} style={{verticalAlign:'middle'}}/> {ti.shares}</span>
+                            <span style={{fontSize:9,color:C.textMuted}}>{post.city}</span>
+                          </div>
+                        </div>
+                        <div style={{textAlign:'right'}}>
+                          <p style={{fontSize:16,fontWeight:800,color:i===0?C.gold:C.primary,fontFamily:"'JetBrains Mono'"}}>{ti.total}</p>
+                          <p style={{fontSize:8,color:C.textMuted}}>interaksi</p>
+                        </div>
+                      </div>);
+                    })}
+                  </DCard>
+
+                  <DCard title="Cross-Interaction Flow" subtitle="Alur like & share antar anggota">
+                    <div className="flex flex-col gap-2">
+                      {arcs.map((arc,i)=>(
+                        <div key={i} className="flex items-center gap-2" style={{background:C.surfaceLight,borderRadius:8,padding:'8px 12px',border:`1px solid ${C.border}`}}>
+                          <div style={{width:24,height:24,borderRadius:6,background:arc.type==='like'?`${C.pink}15`:`${C.teal}15`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <MI name={arc.type==='like'?'favorite':'share'} size={12} fill={arc.type==='like'} style={{color:arc.type==='like'?C.pink:C.teal}}/>
+                          </div>
+                          <span style={{fontSize:11,fontWeight:700,color:C.text}}>{arc.label.split(' → ')[0].split(' ')[0]}</span>
+                          <MI name="arrow_forward" size={12} style={{color:arc.type==='like'?C.pink:C.teal}}/>
+                          <span style={{fontSize:9,fontWeight:700,color:arc.type==='like'?C.pink:C.teal,textTransform:'uppercase',letterSpacing:0.5}}>{arc.type}</span>
+                          <MI name="arrow_forward" size={12} style={{color:arc.type==='like'?C.pink:C.teal}}/>
+                          <span style={{fontSize:11,fontWeight:700,color:C.text}}>{(arc.label.split(' → ')[2]||'').split(' ')[0]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </DCard>
+                </div>
                 </>);
               })()}
 

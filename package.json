@@ -13,6 +13,7 @@
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-force-graph-3d": "^1.29.1",
     "react-globe.gl": "^2.37.0"
   },
   "devDependencies": {
