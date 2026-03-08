@@ -2238,13 +2238,36 @@ export default function App(){
 
                     {/* Deploy / Create Mission Flow */}
                     {userAction&&userAction!=='MONITOR'&&!narrativeMissionFlow&&(
-                      <button onClick={()=>showToast(userAction==='TOLAK'?'Counter-narasi deployed ke semua platform!':'Amplifikasi deployed!')} style={{
+                      <button onClick={()=>{
+                        setMissionForm(f=>({...f,
+                          fromNarasi:true,
+                          narasiTopic:n.topic,
+                          narasiAction:userAction,
+                          type:userAction==='TOLAK'?'KRISIS':'AMPLIFIKASI',
+                          title:userAction==='TOLAK'?`Counter-Narasi: ${n.topic}`:`Amplifikasi: ${n.topic}`,
+                          desc:n.aiSuggestion||'',
+                          xp:userAction==='TOLAK'?300:200,
+                          platforms:n.sources?.slice(0,2).map(s=>s.platform)||['tiktok'],
+                          aiPlatformRec:[
+                            {platform:'tiktok',score:92,reason:'Volume terbesar, audience muda aktif',reach:'~450K'},
+                            {platform:'instagram',score:78,reason:'Engagement visual tinggi',reach:'~280K'},
+                            {platform:'x',score:65,reason:'Counter-narasi cepat',reach:'~120K'},
+                          ],
+                          aiPersonas:[
+                            {name:'Gen-Z Digital Native',age:'18-24',gender:'55% Wanita',emoji:'👩‍💻',color:C.purple,traits:['Aktif TikTok & Instagram','Suka konten visual pendek'],approach:'Bahasa kasual, meme, challenge.',bestPlatform:'TikTok, IG Reels',reach:'38%'},
+                            {name:'Professional Millennial',age:'25-34',gender:'58% Pria',emoji:'👨‍💼',color:C.primary,traits:['Aktif X & LinkedIn','Suka data & fakta'],approach:'Data konkret, thread informatif.',bestPlatform:'X, Instagram',reach:'32%'},
+                            {name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,traits:['Aktif WhatsApp & Facebook','Admin grup komunitas'],approach:'Pesan formal, forward-friendly.',bestPlatform:'WA, Facebook',reach:'22%'},
+                          ],
+                        }));
+                        setAdSideTab('create');
+                        showToast('Draft misi dibuat — edit sesuai kebutuhan');
+                      }} style={{
                         width:'100%',marginTop:12,padding:'14px 0',borderRadius:12,border:'none',cursor:'pointer',
                         background:userAction==='TOLAK'?C.red:C.green,color:'white',fontSize:14,fontWeight:700,
                         display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                       }}>
                         <MI name={userAction==='TOLAK'?'campaign':'trending_up'} size={20} style={{color:'white'}}/>
-                        {userAction==='TOLAK'?'Deploy Counter-Narasi Sekarang':'Deploy Amplifikasi Sekarang'}
+                        {userAction==='TOLAK'?'Buat Misi Counter-Narasi':'Buat Misi Amplifikasi'}
                       </button>
                     )}
                     {!narrativeMissionFlow||narrativeMissionFlow.narrativeId!==n.id?(
@@ -2526,8 +2549,38 @@ export default function App(){
                               </div>
                             </div>
 
-                            <button onClick={()=>{showToast('Misi berhasil dibuat dari narasi!');setNarrativeMissionFlow(null)}} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#22C55E,#16A34A)',color:'white',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(34,197,94,0.3)'}}>
-                              <MI name="rocket_launch" size={18} style={{color:'white'}}/> Deploy Misi Sekarang
+                            <button onClick={()=>{
+                              const flow=narrativeMissionFlow;
+                              const evRec=flow.aiEventRec?.find(e=>e.type===flow.selectedEvent);
+                              const aud=flow.aiAudience;
+                              setMissionForm(f=>({...f,
+                                fromNarasi:true,
+                                narasiTopic:n.topic,
+                                narasiAction:userAction,
+                                type:flow.selectedEvent||'EDUKASI',
+                                title:evRec?.title||'',
+                                desc:flow.prompt||'',
+                                xp:flow.points||200,
+                                platforms:flow.selectedPlatform?[flow.selectedPlatform]:[],
+                                targetGender:aud?.demographics?.male>60?'male':aud?.demographics?.female>60?'female':'all',
+                                targetAge:aud?.ageGroups?.[0]?.age||'all',
+                                targetCities:aud?.topCities||[],
+                                maxPeople:flow.people||0,
+                                aiPlatformRec:flow.aiPlatformRec||[],
+                                aiPersonas:[
+                                  {name:'Gen-Z Digital Native',age:'18-24',gender:'55% Wanita',emoji:'👩‍💻',color:C.purple,traits:['Aktif TikTok & Instagram','Suka konten visual pendek','Mudah share ke teman'],approach:'Gunakan bahasa kasual, meme, challenge.',bestPlatform:'TikTok, Instagram Reels',reach:'38%'},
+                                  {name:'Professional Millennial',age:'25-34',gender:'58% Pria',emoji:'👨‍💼',color:C.primary,traits:['Aktif X & LinkedIn','Suka data & fakta','Influencer di lingkungan kerja'],approach:'Sajikan data konkret, thread informatif.',bestPlatform:'X, Instagram',reach:'32%'},
+                                  {name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,traits:['Aktif WhatsApp & Facebook','Admin grup komunitas','Trusted source'],approach:'Pesan formal terpercaya, forward-friendly.',bestPlatform:'WhatsApp, Facebook',reach:'22%'},
+                                ],
+                                aiAudience:aud,
+                                impactLevel:flow.impactLevel,
+                                impactLabel:flow.impactLabel,
+                              }));
+                              setAdSideTab('create');
+                              setNarrativeMissionFlow(null);
+                              showToast('Data AI diteruskan ke Editor Misi');
+                            }} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                              <MI name="edit_note" size={18} style={{color:'#0B1120'}}/> Lanjutkan ke Editor Misi
                             </button>
                             <button onClick={()=>setNarrativeMissionFlow(f=>({...f,step:3}))} style={{width:'100%',marginTop:8,padding:'10px 0',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer'}}>Kembali ke Impact</button>
                           </div>)}
@@ -2539,113 +2592,6 @@ export default function App(){
               </DCard>);
             })}
 
-            {/* ═══ AI PLATFORM RECOMMENDATION & PERSONA ═══ */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginTop:24}}>
-              {/* Best Platform Recommendation */}
-              <DCard title="Rekomendasi Platform Terbaik" subtitle="Analisis AI berdasarkan data real-time">
-                <div className="flex flex-col gap-3">
-                  {[
-                    {platform:'tiktok',score:95,label:'Terbaik untuk Reach',icon:'trending_up',color:'#E8E8E8',reason:'Volume konten tertinggi, engagement 18.5%, audience muda aktif 18-24',reach:'1.2M',engagement:'18.5%',bestFor:'Video edukasi singkat, counter-narasi viral, challenge campaign'},
-                    {platform:'instagram',score:82,label:'Terbaik untuk Visual',icon:'image',color:'#E1306C',reason:'Engagement visual tinggi 14.2%, cocok infografis & Reels',reach:'890K',engagement:'14.2%',bestFor:'Infografis data, foto reportase, Reels edukatif'},
-                    {platform:'x',score:74,label:'Terbaik untuk Diskusi',icon:'forum',color:'#1DA1F2',reason:'Cocok untuk thread edukatif & quick response narasi',reach:'340K',engagement:'6.8%',bestFor:'Thread fakta, live tweet event, counter hoaks cepat'},
-                    {platform:'facebook',score:61,label:'Terbaik untuk Komunitas',icon:'groups',color:'#1877F2',reason:'Jangkauan komunitas dewasa, grup diskusi aktif',reach:'210K',engagement:'4.2%',bestFor:'Grup edukasi, diskusi panjang, share berita'},
-                  ].map((p,i)=>(
-                    <div key={i} style={{padding:14,borderRadius:12,background:i===0?`${p.color}08`:C.glass,border:`1px solid ${i===0?`${p.color}30`:C.border}`,position:'relative',overflow:'hidden'}}>
-                      {i===0&&<div style={{position:'absolute',top:0,right:0,background:C.green,color:'white',fontSize:9,fontWeight:800,padding:'3px 10px',borderBottomLeftRadius:8}}>TOP PICK</div>}
-                      <div className="flex items-center gap-3 mb-2">
-                        <div style={{width:40,height:40,borderRadius:10,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
-                          <SocialIcon platform={p.platform} size={18} color={p.color}/>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span style={{fontSize:14,fontWeight:700,color:C.text}}>{pName(p.platform)}</span>
-                            <span style={{fontSize:11,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",background:C.primaryLight,padding:'1px 6px',borderRadius:4}}>{p.score}%</span>
-                          </div>
-                          <span style={{fontSize:11,color:C.textMuted}}>{p.label}</span>
-                        </div>
-                        <div style={{textAlign:'right'}}>
-                          <p style={{fontSize:12,fontWeight:700,color:C.text}}>{p.reach}</p>
-                          <p style={{fontSize:10,color:C.green}}>Eng: {p.engagement}</p>
-                        </div>
-                      </div>
-                      <p style={{fontSize:11,color:C.textSec,lineHeight:1.4,marginBottom:6}}>{p.reason}</p>
-                      <div style={{background:C.bg,borderRadius:6,padding:'6px 10px',border:`1px solid ${C.borderLight}`}}>
-                        <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Cocok untuk: </span>
-                        <span style={{fontSize:10,color:C.textSec}}>{p.bestFor}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </DCard>
-
-              {/* AI Persona Recommendation */}
-              <DCard title="Persona & Target Audience" subtitle="Profil audience ideal berdasarkan analisis AI">
-                <div className="flex flex-col gap-4">
-                  {/* Persona Cards */}
-                  {[
-                    {name:'Gen-Z Digital Native',age:'18-24',gender:'55% Wanita',emoji:'👩‍💻',color:C.purple,
-                      traits:['Aktif TikTok & Instagram','Suka konten visual pendek','Mudah share ke teman'],
-                      approach:'Gunakan bahasa kasual, meme, challenge. Hindari teks panjang.',
-                      bestPlatform:'TikTok, Instagram Reels',reach:'38% audience'},
-                    {name:'Professional Millennial',age:'25-34',gender:'58% Pria',emoji:'👨‍💼',color:C.primary,
-                      traits:['Aktif X & LinkedIn','Suka data & fakta','Influencer di lingkungan kerja'],
-                      approach:'Sajikan data konkret, thread informatif, infografis profesional.',
-                      bestPlatform:'X, Instagram',reach:'32% audience'},
-                    {name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,
-                      traits:['Aktif WhatsApp & Facebook','Admin grup komunitas','Trusted source di keluarga'],
-                      approach:'Pesan formal terpercaya, forward-friendly, sertakan sumber resmi.',
-                      bestPlatform:'WhatsApp, Facebook',reach:'22% audience'},
-                  ].map((persona,i)=>(
-                    <div key={i} style={{padding:16,borderRadius:14,background:C.glass,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
-                      {/* Decorative gradient */}
-                      <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${persona.color},${persona.color}50)`}}/>
-                      <div className="flex items-start gap-3 mb-3">
-                        <div style={{width:48,height:48,borderRadius:12,background:`${persona.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,border:`1px solid ${persona.color}25`}}>
-                          {persona.emoji}
-                        </div>
-                        <div className="flex-1">
-                          <p style={{fontSize:14,fontWeight:700,color:C.text}}>{persona.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span style={{fontSize:10,fontWeight:600,color:persona.color,background:`${persona.color}15`,padding:'1px 6px',borderRadius:4}}>{persona.age} tahun</span>
-                            <span style={{fontSize:10,color:C.textMuted}}>{persona.gender}</span>
-                            <span style={{fontSize:10,fontWeight:700,color:C.primary,marginLeft:'auto'}}>{persona.reach}</span>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Traits */}
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {persona.traits.map((t,ti)=>(
-                          <span key={ti} style={{fontSize:10,color:C.textSec,background:C.surfaceLight,borderRadius:4,padding:'2px 8px',border:`1px solid ${C.borderLight}`}}>{t}</span>
-                        ))}
-                      </div>
-                      {/* Approach */}
-                      <div style={{background:C.bg,borderRadius:8,padding:10,border:`1px solid ${C.borderLight}`,marginBottom:6}}>
-                        <div className="flex items-start gap-2">
-                          <MI name="lightbulb" size={14} fill style={{color:C.orange,flexShrink:0,marginTop:1}}/>
-                          <p style={{fontSize:11,color:C.textSec,lineHeight:1.4}}>{persona.approach}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MI name="devices" size={12} style={{color:C.textMuted}}/>
-                        <span style={{fontSize:10,color:C.textMuted}}>Platform: </span>
-                        <span style={{fontSize:10,fontWeight:600,color:persona.color}}>{persona.bestPlatform}</span>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* AI Insight */}
-                  <div style={{background:C.primaryLight,borderRadius:10,padding:14,border:`1px solid rgba(201,168,76,0.15)`}}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <MI name="smart_toy" size={16} style={{color:C.primary}}/>
-                      <span style={{fontSize:12,fontWeight:700,color:C.primary}}>AI Insight</span>
-                    </div>
-                    <p style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>
-                      Berdasarkan analisis 5 narasi aktif, prioritaskan <b style={{color:C.text}}>TikTok</b> untuk reach maksimal dan <b style={{color:C.text}}>WhatsApp</b> untuk penetrasi komunitas dewasa. Persona "Gen-Z Digital Native" memiliki potensi viral tertinggi namun "Community Leader" memberikan dampak jangka panjang terkuat.
-                    </p>
-                  </div>
-                </div>
-              </DCard>
-            </div>
           </div>)}
 
           {/* ═══ CREATE MISSION ═══ */}
@@ -2656,14 +2602,144 @@ export default function App(){
             const totalBudget=(missionForm.xp||200)*Math.min(estPeople,missionForm.maxPeople||estPeople);
             return(<div className="flex flex-col gap-5">
             {/* Source indicator */}
-            {missionForm.title&&(
+            {missionForm.fromNarasi&&(
               <div style={{background:C.primaryLight,borderRadius:10,padding:'12px 16px',border:`1px solid rgba(201,168,76,0.15)`,display:'flex',alignItems:'center',gap:10}}>
                 <MI name="auto_awesome" size={20} style={{color:C.primary}}/>
                 <div className="flex-1">
-                  <p style={{fontSize:13,fontWeight:700,color:C.primary}}>Misi dari Social Monitoring</p>
-                  <p style={{fontSize:11,color:C.textSec}}>Form telah terisi otomatis. Edit sesuai kebutuhan.</p>
+                  <p style={{fontSize:13,fontWeight:700,color:C.primary}}>Misi dari Narasi: "{missionForm.narasiTopic}"</p>
+                  <p style={{fontSize:11,color:C.textSec}}>AI telah mengisi draft awal. Edit dan sesuaikan semua field.</p>
                 </div>
-                <button onClick={()=>setMissionForm({type:'EDUKASI',title:'',desc:'',xp:200,format:'',duration:'',platforms:[],targetGender:'all',targetAge:'all',targetTier:'all'})} style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer'}}>Reset</button>
+                <button onClick={()=>setMissionForm(f=>({...f,fromNarasi:false}))} style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer'}}>Sembunyikan Rekomendasi</button>
+              </div>
+            )}
+
+            {/* ──── AI RECOMMENDATIONS (from narasi) ──── */}
+            {missionForm.fromNarasi&&(
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+                {/* Narasi Context + Platform Recs */}
+                <DCard title="Rekomendasi AI dari Narasi" subtitle={`Analisis narasi: "${missionForm.narasiTopic||'—'}"`}>
+                  <div className="flex flex-col gap-3">
+                    {/* Impact badge */}
+                    <div className="flex items-center gap-3" style={{padding:12,borderRadius:10,background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',border:`1px solid rgba(201,168,76,0.15)`}}>
+                      <MI name="auto_awesome" size={20} style={{color:C.primary}}/>
+                      <div className="flex-1">
+                        <p style={{fontSize:12,fontWeight:700,color:C.primary}}>Dampak Target: {missionForm.impactLabel||'Moderat'}</p>
+                        <p style={{fontSize:10,color:C.textMuted}}>Aksi: {missionForm.narasiAction==='TOLAK'?'Counter-Narasi':'Amplifikasi'} | {missionForm.maxPeople||0} orang dibutuhkan</p>
+                      </div>
+                      <span style={{fontSize:16,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{missionForm.impactLevel||50}%</span>
+                    </div>
+                    {/* Platform recommendations */}
+                    <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>Platform Terbaik</p>
+                    {(missionForm.aiPlatformRec||[
+                      {platform:'tiktok',score:92,reason:'Volume terbesar, audience muda aktif',reach:'~450K'},
+                      {platform:'instagram',score:78,reason:'Engagement visual tinggi, cocok infografis',reach:'~280K'},
+                      {platform:'x',score:65,reason:'Trending topic aktif, counter-narasi cepat',reach:'~120K'},
+                    ]).map((p,pi)=>{
+                      const sel2=missionForm.platforms.includes(p.platform);
+                      return <div key={pi} onClick={()=>setMissionForm(f=>({...f,platforms:sel2?f.platforms.filter(x=>x!==p.platform):[...f.platforms,p.platform]}))} style={{
+                        padding:12,borderRadius:10,cursor:'pointer',transition:'all 200ms',
+                        background:sel2?C.primaryLight:C.glass,border:`1px solid ${sel2?'rgba(201,168,76,0.3)':C.border}`,
+                      }}>
+                        <div className="flex items-center gap-3">
+                          <div style={{width:32,height:32,borderRadius:8,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
+                            <SocialIcon platform={p.platform} size={14} color={pColor(p.platform)}/>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span style={{fontSize:12,fontWeight:700,color:C.text}}>{pName(p.platform)}</span>
+                              <span style={{fontSize:10,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",background:C.primaryLight,padding:'1px 5px',borderRadius:3}}>{p.score}%</span>
+                              {pi===0&&<span style={{fontSize:8,fontWeight:800,color:'white',background:C.green,padding:'1px 5px',borderRadius:3}}>TOP</span>}
+                            </div>
+                            <p style={{fontSize:10,color:C.textMuted}}>{p.reason}</p>
+                          </div>
+                          <div style={{textAlign:'right'}}>
+                            <p style={{fontSize:10,color:C.textSec}}>Reach: {p.reach}</p>
+                            {sel2&&<MI name="check_circle" size={16} fill style={{color:C.primary,marginTop:2}}/>}
+                          </div>
+                        </div>
+                      </div>;
+                    })}
+                    <p style={{fontSize:10,color:C.textMuted,fontStyle:'italic'}}>Klik platform untuk menambah/hapus dari misi</p>
+                    {/* Audience summary from AI */}
+                    {missionForm.aiAudience&&(
+                      <div style={{background:C.surfaceLight,borderRadius:10,padding:12,border:`1px solid ${C.border}`}}>
+                        <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:8}}>Audience Insight</p>
+                        <div className="flex gap-3 mb-2">
+                          <div className="flex-1" style={{textAlign:'center'}}>
+                            <p style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{(missionForm.aiAudience.totalTalking||0).toLocaleString()}</p>
+                            <p style={{fontSize:9,color:C.textMuted}}>membicarakan</p>
+                          </div>
+                          <div className="flex-1" style={{textAlign:'center'}}>
+                            <p style={{fontSize:13,fontWeight:700,color:C.gold}}>{missionForm.aiAudience.peakHours}</p>
+                            <p style={{fontSize:9,color:C.textMuted}}>peak hours</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div style={{flex:missionForm.aiAudience.demographics?.male||50,background:C.primaryLight,borderRadius:6,padding:'4px 8px',textAlign:'center'}}>
+                            <span style={{fontSize:11,fontWeight:700,color:C.primary}}>{missionForm.aiAudience.demographics?.male||50}% Pria</span>
+                          </div>
+                          <div style={{flex:missionForm.aiAudience.demographics?.female||50,background:C.pinkLight,borderRadius:6,padding:'4px 8px',textAlign:'center'}}>
+                            <span style={{fontSize:11,fontWeight:700,color:C.pink}}>{missionForm.aiAudience.demographics?.female||50}% Wanita</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DCard>
+
+                {/* AI Persona */}
+                <DCard title="Persona Target" subtitle="Profil audience ideal untuk narasi ini">
+                  <div className="flex flex-col gap-3">
+                    {(missionForm.aiPersonas||[
+                      {name:'Gen-Z Digital Native',age:'18-24',gender:'55% Wanita',emoji:'👩‍💻',color:C.purple,traits:['Aktif TikTok & Instagram','Suka konten visual pendek','Mudah share ke teman'],approach:'Gunakan bahasa kasual, meme, challenge.',bestPlatform:'TikTok, Instagram Reels',reach:'38%'},
+                      {name:'Professional Millennial',age:'25-34',gender:'58% Pria',emoji:'👨‍💼',color:C.primary,traits:['Aktif X & LinkedIn','Suka data & fakta','Influencer di lingkungan kerja'],approach:'Sajikan data konkret, thread informatif.',bestPlatform:'X, Instagram',reach:'32%'},
+                      {name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,traits:['Aktif WhatsApp & Facebook','Admin grup komunitas','Trusted source'],approach:'Pesan formal terpercaya, forward-friendly.',bestPlatform:'WhatsApp, Facebook',reach:'22%'},
+                    ]).map((persona,i)=>(
+                      <div key={i} style={{padding:14,borderRadius:12,background:C.glass,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
+                        <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${persona.color},${persona.color}50)`}}/>
+                        <div className="flex items-start gap-3 mb-2">
+                          <div style={{width:40,height:40,borderRadius:10,background:`${persona.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:`1px solid ${persona.color}25`}}>
+                            {persona.emoji}
+                          </div>
+                          <div className="flex-1">
+                            <p style={{fontSize:13,fontWeight:700,color:C.text}}>{persona.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span style={{fontSize:9,fontWeight:600,color:persona.color,background:`${persona.color}15`,padding:'1px 5px',borderRadius:3}}>{persona.age}</span>
+                              <span style={{fontSize:9,color:C.textMuted}}>{persona.gender}</span>
+                              <span style={{fontSize:9,fontWeight:700,color:C.primary,marginLeft:'auto'}}>{persona.reach}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {persona.traits.map((t,ti)=>(
+                            <span key={ti} style={{fontSize:9,color:C.textSec,background:C.surfaceLight,borderRadius:3,padding:'1px 6px',border:`1px solid ${C.borderLight}`}}>{t}</span>
+                          ))}
+                        </div>
+                        <div style={{background:C.bg,borderRadius:6,padding:'6px 8px',border:`1px solid ${C.borderLight}`}}>
+                          <div className="flex items-start gap-2">
+                            <MI name="lightbulb" size={12} fill style={{color:C.orange,flexShrink:0,marginTop:1}}/>
+                            <p style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{persona.approach}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 mt-2">
+                          <MI name="devices" size={11} style={{color:C.textMuted}}/>
+                          <span style={{fontSize:9,color:C.textMuted}}>Platform: </span>
+                          <span style={{fontSize:9,fontWeight:600,color:persona.color}}>{persona.bestPlatform}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {/* AI Insight */}
+                    <div style={{background:C.primaryLight,borderRadius:8,padding:12,border:`1px solid rgba(201,168,76,0.15)`}}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <MI name="smart_toy" size={14} style={{color:C.primary}}/>
+                        <span style={{fontSize:11,fontWeight:700,color:C.primary}}>AI Insight</span>
+                      </div>
+                      <p style={{fontSize:11,color:C.textSec,lineHeight:1.4}}>
+                        Prioritaskan persona yang sesuai dengan platform pilihan. Klik platform di sebelah kiri untuk auto-select di form misi.
+                      </p>
+                    </div>
+                  </div>
+                </DCard>
               </div>
             )}
 
@@ -2911,39 +2987,77 @@ export default function App(){
 
             {/* ──── ROW 3: People + Content Kit + Publish ──── */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:20}}>
-              {/* Target People */}
-              <DCard title="Target Audience" subtitle="Filter dan jumlah orang">
+              {/* Target People + Persona */}
+              <DCard title="Target Audience & Persona" subtitle="Pilih profil dan atur jumlah per segmen">
                 <div className="flex flex-col gap-4">
-                  <L label="Gender" icon="wc">
-                    <div className="flex gap-2">
-                      {[{v:'all',l:'Semua'},{v:'male',l:'Laki-laki'},{v:'female',l:'Perempuan'}].map(g=>(
-                        <button key={g.v} onClick={()=>setMissionForm(f=>({...f,targetGender:g.v}))} style={{
-                          flex:1,padding:'10px 8px',borderRadius:8,border:`1px solid ${missionForm.targetGender===g.v?C.primary:C.border}`,
-                          background:missionForm.targetGender===g.v?C.primaryLight:C.glass,color:missionForm.targetGender===g.v?C.primary:C.textSec,
-                          fontSize:12,fontWeight:missionForm.targetGender===g.v?700:500,cursor:'pointer',textAlign:'center',
-                        }}>{g.l}</button>
-                      ))}
+                  {/* Persona selection with qty */}
+                  <L label="Segmen Persona" icon="people_alt">
+                    <div className="flex flex-col gap-2">
+                      {[
+                        {id:'genz',name:'Gen-Z Digital Native',age:'18-24',emoji:'👩‍💻',color:C.purple,available:475,platform:'TikTok, IG Reels'},
+                        {id:'millenial',name:'Professional Millennial',age:'25-34',emoji:'👨‍💼',color:C.primary,available:398,platform:'X, Instagram'},
+                        {id:'leader',name:'Community Leader',age:'35-50',emoji:'👨‍👩‍👧‍👦',color:C.teal,available:265,platform:'WA, Facebook'},
+                        {id:'senior',name:'Senior Advocate',age:'50+',emoji:'👴',color:C.orange,available:109,platform:'Facebook, WA'},
+                      ].map(persona=>{
+                        const personas=missionForm.personaAlloc||{};
+                        const qty=personas[persona.id]||0;
+                        const active=qty>0;
+                        return <div key={persona.id} style={{padding:10,borderRadius:10,background:active?`${persona.color}08`:C.glass,border:`1px solid ${active?`${persona.color}25`:C.border}`,transition:'all 200ms'}}>
+                          <div className="flex items-center gap-3">
+                            <div onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:active?0:Math.min(50,persona.available)}}))} style={{width:36,height:36,borderRadius:8,background:`${persona.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,cursor:'pointer',border:`1.5px solid ${active?persona.color:`${persona.color}30`}`,transition:'all 200ms'}}>
+                              {persona.emoji}
+                            </div>
+                            <div className="flex-1" style={{minWidth:0}}>
+                              <p style={{fontSize:12,fontWeight:700,color:active?C.text:C.textSec}}>{persona.name}</p>
+                              <p style={{fontSize:9,color:C.textMuted}}>{persona.age} | {persona.platform} | {persona.available} tersedia</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.max(0,qty-10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+                              <input type="number" value={qty} onChange={e=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available,Math.max(0,parseInt(e.target.value)||0))}}))} style={{width:48,padding:'4px 0',borderRadius:4,border:`1px solid ${active?persona.color:C.border}`,fontSize:12,color:active?persona.color:C.textSec,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
+                              <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available,qty+10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                            </div>
+                          </div>
+                        </div>;
+                      })}
                     </div>
                   </L>
-                  <L label="Usia" icon="cake">
-                    <select value={missionForm.targetAge} onChange={e=>setMissionForm(f=>({...f,targetAge:e.target.value}))} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
-                      <option value="all">Semua usia</option><option value="18-24">18–24 tahun</option><option value="25-34">25–34 tahun</option><option value="35-44">35–44 tahun</option><option value="45+">45+ tahun</option>
-                    </select>
-                  </L>
-                  <L label="Tier / Kelas" icon="workspace_premium">
-                    <select value={missionForm.targetTier} onChange={e=>setMissionForm(f=>({...f,targetTier:e.target.value}))} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
-                      <option value="all">Semua tier</option><option value="gold">Gold (5000+ XP)</option><option value="silver">Silver (1000–4999 XP)</option><option value="bronze">Bronze (&lt;1000 XP)</option>
-                    </select>
-                  </L>
-                  <L label="Max Peserta" icon="group">
-                    <input type="number" value={missionForm.maxPeople||''} onChange={e=>setMissionForm(f=>({...f,maxPeople:parseInt(e.target.value)||0}))} placeholder={`Max (tersedia: ${estPeople})`} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:"'JetBrains Mono'",background:C.surfaceLight}}/>
-                  </L>
-                  {/* Estimate */}
-                  <div style={{background:C.surfaceLight,borderRadius:8,padding:12,border:`1px solid ${C.border}`,textAlign:'center'}}>
-                    <p style={{fontSize:28,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{estPeople.toLocaleString()}</p>
-                    <p style={{fontSize:10,color:C.textMuted,marginTop:4}}>anggota memenuhi kriteria</p>
-                    <ProgressBar progress={estPeople/1247} color={C.primary} height={4}/>
+                  {/* Filter overrides */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                    <L label="Gender" icon="wc">
+                      <div className="flex gap-1">
+                        {[{v:'all',l:'Semua'},{v:'male',l:'L'},{v:'female',l:'P'}].map(g=>(
+                          <button key={g.v} onClick={()=>setMissionForm(f=>({...f,targetGender:g.v}))} style={{
+                            flex:1,padding:'8px 4px',borderRadius:6,border:`1px solid ${missionForm.targetGender===g.v?C.primary:C.border}`,
+                            background:missionForm.targetGender===g.v?C.primaryLight:C.glass,color:missionForm.targetGender===g.v?C.primary:C.textSec,
+                            fontSize:11,fontWeight:missionForm.targetGender===g.v?700:500,cursor:'pointer',textAlign:'center',
+                          }}>{g.l}</button>
+                        ))}
+                      </div>
+                    </L>
+                    <L label="Tier" icon="workspace_premium">
+                      <select value={missionForm.targetTier} onChange={e=>setMissionForm(f=>({...f,targetTier:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:12,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
+                        <option value="all">Semua</option><option value="gold">Gold</option><option value="silver">Silver</option><option value="bronze">Bronze</option>
+                      </select>
+                    </L>
                   </div>
+                  {/* Total summary */}
+                  {(()=>{
+                    const alloc=missionForm.personaAlloc||{};
+                    const totalAlloc=Object.values(alloc).reduce((s,v)=>s+(v||0),0);
+                    return <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:10,padding:12,border:`1px solid rgba(201,168,76,0.15)`}}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p style={{fontSize:22,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalAlloc||estPeople}</p>
+                          <p style={{fontSize:9,color:C.textMuted,marginTop:2}}>{totalAlloc?'total dari persona terpilih':'anggota memenuhi kriteria'}</p>
+                        </div>
+                        <div style={{textAlign:'right'}}>
+                          {totalAlloc>0&&<p style={{fontSize:11,color:C.textSec}}>{Object.entries(alloc).filter(([,v])=>v>0).length} segmen aktif</p>}
+                          <p style={{fontSize:10,color:C.textMuted}}>Budget: <span style={{color:C.gold,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>{((missionForm.xp||200)*(totalAlloc||estPeople)).toLocaleString()} XP</span></p>
+                        </div>
+                      </div>
+                      <ProgressBar progress={(totalAlloc||estPeople)/1247} color={C.primary} height={4}/>
+                    </div>;
+                  })()}
                 </div>
               </DCard>
 
