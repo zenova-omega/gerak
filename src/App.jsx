@@ -3154,6 +3154,182 @@ export default function App(){
                 </div>
               </DCard>
             </div>
+            {/* ──── ROW 4: AI Caption Generator (content creation only) ──── */}
+            {!['AMPLIFIKASI'].includes(missionForm.type)&&(()=>{
+              const alloc=missionForm.personaAlloc||{};
+              const totalPeople=Object.values(alloc).reduce((s,v)=>s+(v||0),0)||Math.min(estPeople,missionForm.maxPeople||estPeople);
+              const captions=missionForm.aiCaptions||[];
+              const isContentType=!['AMPLIFIKASI'].includes(missionForm.type);
+              const personaMap={genz:{name:'Gen-Z',emoji:'👩‍💻',color:C.purple},millenial:{name:'Millennial',emoji:'👨‍💼',color:C.primary},leader:{name:'Leader',emoji:'👨‍👩‍👧‍👦',color:C.teal},senior:{name:'Senior',emoji:'👴',color:C.orange}};
+              const captionTemplates={
+                EDUKASI:[
+                  'Tau nggak sih? {topic} itu ternyata lebih penting dari yang kita kira. Yuk simak faktanya! 👇',
+                  'Masih banyak yang salah paham soal {topic}. Ini dia penjelasan lengkapnya! 🧵',
+                  'Thread penting! {topic} — fakta vs hoaks. Baca sampai selesai ya 📖',
+                  'Jangan sampai salah info! Ini yang perlu kamu tau soal {topic} ✅',
+                  'Kamu pasti sering dengar soal {topic}, tapi apakah bener? Cek di sini! 🔍',
+                  '{topic} — 5 hal yang jarang orang tau. Nomor 3 bikin kaget! 😮',
+                  'Penting banget! Sharing info soal {topic} biar makin banyak yang paham 💡',
+                  'Edukasi diri sendiri dulu, baru share ke orang lain. Yuk bahas {topic}! 📚',
+                ],
+                KRISIS:[
+                  'KLARIFIKASI: Berita soal {topic} yang viral itu TIDAK BENAR. Ini faktanya 👇',
+                  'Stop sebar hoaks! Ini penjelasan resmi soal {topic} dari sumber terpercaya ✅',
+                  'Banyak informasi menyesatkan soal {topic}. Ini yang sebenarnya terjadi:',
+                  'Fakta vs Hoaks: {topic}. Jangan mudah percaya, cek dulu! 🔍',
+                  'Waspada! Narasi soal {topic} ini sengaja dibuat untuk menyesatkan. Ini faktanya:',
+                  'Verifikasi sebelum share! {topic} — ini data resmi yang bisa kamu periksa sendiri 📊',
+                ],
+                SOCIAL:[
+                  'Konten baru! Yuk ramaikan campaign {topic} bareng-bareng! 🎯',
+                  'Challenge accepted! Ikutan bikin konten tentang {topic} yuk! 🔥',
+                  'Siapa yang udah ikutan {topic}? Share pengalaman kalian dong! ✨',
+                  'Ini dia cara gue ikutan campaign {topic}! Kalian gimana? 👀',
+                  'Yang belum ikutan {topic}, saatnya sekarang! Caranya gampang banget 💪',
+                  'Seru banget ikutan {topic}! Coba deh, pasti ketagihan 🎉',
+                ],
+                KOMUNITAS:[
+                  'Hai teman-teman! Yuk ramaikan acara {topic}! Kita ketemu di sana ya 🤝',
+                  'Kabar gembira! {topic} akan segera dilaksanakan. Catat tanggalnya! 📅',
+                  'Ajak keluarga dan teman ke {topic}! Banyak kegiatan seru menanti 🎊',
+                  'Komunitas kita makin solid! Yuk dukung {topic} bareng-bareng 💪',
+                  'Bergabung yuk di {topic}! Gratis dan terbuka untuk umum 🙌',
+                ],
+                VISIT:[
+                  'Kunjungan ke {topic} — pengalaman langsung yang bikin mata terbuka! 📸',
+                  'Hari ini aku ke {topic}. Ini yang aku lihat dan rasakan di sana... 🧵',
+                  'Dokumentasi kunjungan {topic}. Ternyata kondisinya begini! 👀',
+                  'Field report dari {topic}! Penting banget ini dishare ke lebih banyak orang 🔴',
+                ],
+              };
+              const generateCaptions=(count)=>{
+                const topic=missionForm.title||missionForm.narasiTopic||'topik ini';
+                const templates=captionTemplates[missionForm.type]||captionTemplates.SOCIAL;
+                const personaKeys=Object.entries(alloc).filter(([,v])=>v>0);
+                const generated=[];
+                for(let i=0;i<count;i++){
+                  let persona=null;
+                  if(personaKeys.length>0){
+                    let cumul=0;const totalA=personaKeys.reduce((s,[,v])=>s+v,0);
+                    const rand=Math.random()*totalA;
+                    for(const [k,v] of personaKeys){cumul+=v;if(rand<=cumul){persona=k;break;}}
+                  }
+                  const tmpl=templates[i%templates.length];
+                  let caption=tmpl.replace(/\{topic\}/g,topic);
+                  // Add slight variations
+                  const suffixes=['','','',` ${missionForm.hashtags||'#GERAK'}`,` ${missionForm.hashtags||'#GERAK #GerakDigital'}`,'',' Spread the word! 🗣️',' Share kalau setuju! 🙏',''];
+                  caption+=suffixes[i%suffixes.length];
+                  generated.push({id:i,caption,persona:persona||'genz',edited:false,approved:false});
+                }
+                return generated;
+              };
+              return <DCard title="AI Caption & Judul Generator" subtitle={`${totalPeople} caption unik untuk setiap peserta — review & edit sebelum deploy`}>
+                <div className="flex flex-col gap-4">
+                  {/* Generate button */}
+                  {captions.length===0?(
+                    <div style={{textAlign:'center',padding:20}}>
+                      <div style={{width:56,height:56,borderRadius:16,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',border:`1px solid rgba(201,168,76,0.2)`}}>
+                        <MI name="auto_awesome" size={28} style={{color:C.primary}}/>
+                      </div>
+                      <h4 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:4}}>Generate Caption Unik</h4>
+                      <p style={{fontSize:12,color:C.textSec,lineHeight:1.4,marginBottom:16,maxWidth:500,margin:'0 auto 16px'}}>
+                        AI akan membuat <b style={{color:C.primary}}>{totalPeople} caption berbeda</b> — satu untuk setiap peserta.
+                        Disesuaikan dengan tipe misi ({missionForm.type}), persona target, dan tone yang berbeda-beda.
+                      </p>
+                      <button onClick={()=>setMissionForm(f=>({...f,aiCaptions:generateCaptions(Math.min(totalPeople,50))}))} className="btn-primary" style={{padding:'14px 32px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:8,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                        <MI name="smart_toy" size={18} style={{color:C.bg}}/> Generate {Math.min(totalPeople,50)} Caption
+                      </button>
+                      {totalPeople>50&&<p style={{fontSize:10,color:C.textMuted,marginTop:8}}>Preview 50 pertama, sisanya auto-generated saat publish</p>}
+                    </div>
+                  ):(
+                    <div className="flex flex-col gap-3">
+                      {/* Stats bar */}
+                      <div className="flex items-center gap-3" style={{padding:12,borderRadius:10,background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',border:`1px solid rgba(201,168,76,0.15)`}}>
+                        <MI name="auto_awesome" size={18} style={{color:C.primary}}/>
+                        <div className="flex-1">
+                          <p style={{fontSize:12,fontWeight:700,color:C.primary}}>{captions.length} Caption Dibuat</p>
+                          <p style={{fontSize:10,color:C.textMuted}}>{captions.filter(c=>c.approved).length} disetujui, {captions.filter(c=>c.edited).length} diedit</p>
+                        </div>
+                        <button onClick={()=>setMissionForm(f=>({...f,aiCaptions:f.aiCaptions.map(c=>({...c,approved:true}))}))} style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${C.green}40`,background:`${C.green}10`,color:C.green,fontSize:10,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                          <MI name="done_all" size={14} style={{color:C.green}}/> Setujui Semua
+                        </button>
+                        <button onClick={()=>setMissionForm(f=>({...f,aiCaptions:generateCaptions(Math.min(totalPeople,50))}))} style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${C.border}`,background:C.glass,color:C.textSec,fontSize:10,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                          <MI name="refresh" size={14} style={{color:C.textMuted}}/> Regenerate
+                        </button>
+                      </div>
+
+                      {/* Filter by persona */}
+                      <div className="flex gap-2">
+                        <button onClick={()=>setMissionForm(f=>({...f,captionFilter:'all'}))} style={{padding:'5px 10px',borderRadius:6,border:`1px solid ${(!missionForm.captionFilter||missionForm.captionFilter==='all')?C.primary:C.border}`,background:(!missionForm.captionFilter||missionForm.captionFilter==='all')?C.primaryLight:C.glass,color:(!missionForm.captionFilter||missionForm.captionFilter==='all')?C.primary:C.textSec,fontSize:10,fontWeight:600,cursor:'pointer'}}>Semua ({captions.length})</button>
+                        {Object.entries(personaMap).map(([k,v])=>{
+                          const cnt=captions.filter(c=>c.persona===k).length;
+                          if(cnt===0) return null;
+                          return <button key={k} onClick={()=>setMissionForm(f=>({...f,captionFilter:k}))} style={{padding:'5px 10px',borderRadius:6,border:`1px solid ${missionForm.captionFilter===k?v.color:C.border}`,background:missionForm.captionFilter===k?`${v.color}15`:C.glass,color:missionForm.captionFilter===k?v.color:C.textSec,fontSize:10,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:3}}>
+                            <span>{v.emoji}</span> {v.name} ({cnt})
+                          </button>;
+                        })}
+                      </div>
+
+                      {/* Caption list */}
+                      <div style={{maxHeight:400,overflowY:'auto',display:'flex',flexDirection:'column',gap:8,paddingRight:4}} className="hide-scrollbar">
+                        {captions.filter(c=>!missionForm.captionFilter||missionForm.captionFilter==='all'||c.persona===missionForm.captionFilter).map((cap,ci)=>{
+                          const pm=personaMap[cap.persona]||personaMap.genz;
+                          return <div key={cap.id} style={{padding:12,borderRadius:10,background:cap.approved?`${C.green}06`:C.glass,border:`1px solid ${cap.approved?`${C.green}20`:cap.edited?`${C.orange}20`:C.border}`,transition:'all 200ms'}}>
+                            <div className="flex items-start gap-3">
+                              <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2,minWidth:32}}>
+                                <span style={{fontSize:10,fontWeight:800,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>{String(cap.id+1).padStart(2,'0')}</span>
+                                <span style={{fontSize:14}}>{pm.emoji}</span>
+                              </div>
+                              <div className="flex-1" style={{minWidth:0}}>
+                                <textarea value={cap.caption} onChange={e=>{
+                                  const updated=[...captions];
+                                  updated[captions.indexOf(cap)]={...cap,caption:e.target.value,edited:true};
+                                  setMissionForm(f=>({...f,aiCaptions:updated}));
+                                }} rows={2} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:`1px solid ${C.borderLight}`,fontSize:12,color:C.text,background:C.surfaceLight,fontFamily:'inherit',resize:'vertical',outline:'none',lineHeight:1.4}}/>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span style={{fontSize:9,color:pm.color,fontWeight:600,background:`${pm.color}10`,padding:'1px 5px',borderRadius:3}}>{pm.name}</span>
+                                  {cap.edited&&<span style={{fontSize:9,color:C.orange,fontWeight:600}}>Diedit</span>}
+                                  {cap.approved&&<span style={{fontSize:9,color:C.green,fontWeight:600}}>Disetujui</span>}
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <button onClick={()=>{
+                                  const updated=[...captions];
+                                  updated[captions.indexOf(cap)]={...cap,approved:!cap.approved};
+                                  setMissionForm(f=>({...f,aiCaptions:updated}));
+                                }} title={cap.approved?'Batalkan':'Setujui'} style={{width:28,height:28,borderRadius:6,border:`1px solid ${cap.approved?C.green:C.border}`,background:cap.approved?`${C.green}15`:C.glass,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                  <MI name={cap.approved?'check_circle':'check'} size={14} fill={cap.approved} style={{color:cap.approved?C.green:C.textMuted}}/>
+                                </button>
+                                <button onClick={()=>{
+                                  const topic=missionForm.title||missionForm.narasiTopic||'topik ini';
+                                  const templates=captionTemplates[missionForm.type]||captionTemplates.SOCIAL;
+                                  const newTmpl=templates[Math.floor(Math.random()*templates.length)];
+                                  const updated=[...captions];
+                                  updated[captions.indexOf(cap)]={...cap,caption:newTmpl.replace(/\{topic\}/g,topic),edited:false,approved:false};
+                                  setMissionForm(f=>({...f,aiCaptions:updated}));
+                                }} title="Regenerate" style={{width:28,height:28,borderRadius:6,border:`1px solid ${C.border}`,background:C.glass,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                  <MI name="refresh" size={14} style={{color:C.textMuted}}/>
+                                </button>
+                              </div>
+                            </div>
+                          </div>;
+                        })}
+                      </div>
+
+                      {/* Bulk progress */}
+                      <div style={{background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`}}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span style={{fontSize:10,fontWeight:700,color:C.textMuted}}>PROGRESS REVIEW</span>
+                          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{captions.filter(c=>c.approved).length}/{captions.length}</span>
+                        </div>
+                        <ProgressBar progress={captions.filter(c=>c.approved).length/captions.length} color={C.green} height={6}/>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </DCard>;
+            })()}
+
           </div>);})()}
 
           {/* ═══ AGENTS ═══ */}
