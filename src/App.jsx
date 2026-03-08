@@ -485,7 +485,8 @@ export default function App(){
   const [k,setK]=useState(0);
 
   const nav=useCallback(s=>{setScreen(s);setK(n=>n+1)},[]);
-  const showToast=useCallback(m=>{setToast(m);setTimeout(()=>setToast(null),2000)},[]);
+  const [toastExiting,setToastExiting]=useState(false);
+  const showToast=useCallback(m=>{setToastExiting(false);setToast(m);setTimeout(()=>{setToastExiting(true);setTimeout(()=>{setToast(null);setToastExiting(false)},200)},1800)},[]);
   const copyText=useCallback(async t=>{try{await navigator.clipboard.writeText(t)}catch{}showToast('Tersalin!')},[showToast]);
   const openM=useCallback(m=>{setSel(m);setConsent(false);setStarted(false);setUploaded(false);nav('detail')},[nav]);
   const joinMission=useCallback((mId)=>{setJoinedMissions(p=>({...p,[mId]:{status:'TERDAFTAR',joinedAt:'8 Mar 2026'}}));showToast('Berhasil mendaftar misi!')},[showToast]);
@@ -494,7 +495,7 @@ export default function App(){
 
   /* ─── SHARED COMPONENTS ─────────────────────────────────────────── */
   function Card({children,style={},className='',onClick}){
-    return <div onClick={onClick} className={`${className} ${onClick?'card-interactive':''}`} style={{
+    return <div onClick={onClick} className={`${className} ${onClick?'card-interactive':'card-hover'}`} style={{
       background:C.surface,borderRadius:12,padding:16,border:`1px solid ${C.border}`,
       cursor:onClick?'pointer':'default',boxShadow:'0 4px 20px rgba(0,0,0,0.2)',
       ...style
@@ -551,11 +552,12 @@ export default function App(){
   }
 
   function Chip({label,active,onClick,color}){
-    return <button onClick={onClick} style={{
+    return <button onClick={onClick} className="chip-btn" style={{
       padding:'6px 16px',borderRadius:9999,border:active?'none':`1px solid ${C.border}`,flexShrink:0,
       background:active?(color||C.primary):C.surface,
       color:active?C.bg:C.textSec,fontSize:13,fontWeight:active?700:500,cursor:'pointer',
-      transition:'all 150ms ease',letterSpacing:active?'0.02em':'0',
+      letterSpacing:active?'0.02em':'0',
+      boxShadow:active?`0 2px 8px ${(color||C.primary)}30`:'none',
     }}>{label}</button>;
   }
 
@@ -572,7 +574,7 @@ export default function App(){
           </div>
         </div>
         <div style={{position:'relative'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
-          <div style={{width:36,height:36,borderRadius:'50%',background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:`1px solid ${C.border}`}}>
+          <div className="bell-ring" style={{width:36,height:36,borderRadius:'50%',background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:`1px solid ${C.border}`,transition:'background 150ms ease'}}>
             <MI name="notifications" size={18} style={{color:C.textSec}}/>
           </div>
           <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:`2px solid ${C.surface}`}} className="urgency-pulse"/>
@@ -580,50 +582,64 @@ export default function App(){
       </div>
 
       {/* ── Hero Welcome Card with Rank Insignia ── */}
-      <Card className="stagger-2" style={{padding:0,marginBottom:12,overflow:'hidden',position:'relative'}}>
-        {/* Background gradient based on rank */}
-        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.02),transparent)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:-30,right:-30,width:120,height:120,borderRadius:'50%',background:'radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%)',pointerEvents:'none'}}/>
-        <div style={{padding:20,display:'flex',alignItems:'center',gap:16,position:'relative'}}>
-          {/* Rank Insignia */}
-          <div style={{flexShrink:0,position:'relative'}}>
-            <RankInsignia rank={1} size={100}/>
-            {/* Glow ring behind insignia */}
-            <div style={{position:'absolute',inset:-4,borderRadius:'50%',border:`1px solid rgba(201,168,76,0.15)`,pointerEvents:'none'}}/>
-          </div>
-          {/* Greeting + Info */}
-          <div className="flex-1" style={{minWidth:0}}>
-            <p style={{fontSize:10,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Selamat Pagi,</p>
-            <h1 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.15,marginTop:2,letterSpacing:-0.3}}>MAYOR ARIF SANTOSO</h1>
-            <div className="flex items-center gap-1.5 mt-2" style={{background:'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))',borderRadius:9999,padding:'4px 12px',border:`1px solid rgba(201,168,76,0.25)`,width:'fit-content'}}>
-              <MI name="military_tech" size={13} fill style={{color:C.primary}}/>
-              <span style={{fontSize:11,fontWeight:700,color:C.primary,letterSpacing:1,textTransform:'uppercase'}}>Perwira Muda</span>
+      {(()=>{
+        const curRank=1; // current user rank index
+        const rankThemes=[
+          {bg:'linear-gradient(135deg,#1E293B,#0F172A)',glow:'rgba(100,116,139,0.12)',accent:'#64748B',light:'#94A3B8'},
+          {bg:'linear-gradient(135deg,#1C1408,#0F1A2E)',glow:'rgba(201,168,76,0.15)',accent:'#C9A84C',light:'#E8D48B'},
+          {bg:'linear-gradient(135deg,#0C1929,#0B1120)',glow:'rgba(59,130,246,0.15)',accent:'#3B82F6',light:'#93C5FD'},
+          {bg:'linear-gradient(135deg,#1A0F2E,#0B1120)',glow:'rgba(139,92,246,0.15)',accent:'#8B5CF6',light:'#C4B5FD'},
+          {bg:'linear-gradient(135deg,#1A1408,#0F1120)',glow:'rgba(245,158,11,0.18)',accent:'#F59E0B',light:'#FCD34D'},
+        ];
+        const rt=rankThemes[curRank];
+        return(
+        <Card className="stagger-2" style={{padding:0,marginBottom:12,overflow:'hidden',position:'relative',background:rt.bg,border:`1px solid ${rt.accent}20`}}>
+          {/* Ambient orbs */}
+          <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 70%)`,pointerEvents:'none',filter:'blur(20px)'}}/>
+          <div style={{position:'absolute',bottom:-30,left:-20,width:100,height:100,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 70%)`,pointerEvents:'none',filter:'blur(25px)'}}/>
+          {/* Top accent line */}
+          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rt.accent},transparent)`,opacity:0.4}}/>
+          <div style={{padding:20,display:'flex',alignItems:'center',gap:16,position:'relative'}}>
+            {/* Rank Insignia */}
+            <div style={{flexShrink:0,position:'relative'}}>
+              <RankInsignia rank={curRank} size={100}/>
+              <div style={{position:'absolute',inset:-6,borderRadius:'50%',border:`1px solid ${rt.accent}20`,pointerEvents:'none'}}/>
+              <div style={{position:'absolute',inset:-12,borderRadius:'50%',border:`1px solid ${rt.accent}10`,pointerEvents:'none'}}/>
             </div>
-            {/* XP Progress inline */}
-            <div style={{marginTop:10}}>
-              <div className="flex items-center justify-between mb-1">
-                <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Kemajuan Pangkat</span>
-                <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4.820 / 5.000 XP</span>
+            {/* Greeting + Info */}
+            <div className="flex-1" style={{minWidth:0}}>
+              <p style={{fontSize:10,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Selamat Pagi,</p>
+              <h1 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.15,marginTop:2,letterSpacing:-0.3}}>MAYOR ARIF SANTOSO</h1>
+              <div className="flex items-center gap-1.5 mt-2" style={{background:`linear-gradient(135deg,${rt.accent}20,${rt.accent}08)`,borderRadius:9999,padding:'4px 12px',border:`1px solid ${rt.accent}30`,width:'fit-content'}}>
+                <MI name="military_tech" size={13} fill style={{color:rt.accent}}/>
+                <span style={{fontSize:11,fontWeight:700,color:rt.accent,letterSpacing:1,textTransform:'uppercase'}}>{RANKS[curRank].name}</span>
               </div>
-              <div style={{height:5,borderRadius:9999,background:C.surfaceLight,overflow:'hidden'}}>
-                <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%'}}/>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <span style={{fontSize:9,fontWeight:600,color:C.primary}}>Perwira Muda</span>
-                <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
-                  <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>Perwira Madya
-                </span>
+              {/* XP Progress inline */}
+              <div style={{marginTop:10}}>
+                <div className="flex items-center justify-between mb-1">
+                  <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Kemajuan Pangkat</span>
+                  <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:rt.accent}}>4.820 / 5.000 XP</span>
+                </div>
+                <div style={{height:5,borderRadius:9999,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
+                  <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${rt.accent},${rt.light},${rt.accent})`,backgroundSize:'200% 100%'}}/>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span style={{fontSize:9,fontWeight:600,color:rt.accent}}>{RANKS[curRank].name}</span>
+                  <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
+                    <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>{RANKS[curRank+1]?.name||'MAX'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>);
+      })()}
 
       {/* Stats Row */}
       <div className="stagger-4 grid grid-cols-3 gap-3" style={{marginBottom:20}}>
         {[{icon:'target',label:'Misi',value:'24',color:C.primary,tip:'Total misi yang telah kamu selesaikan'},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange,tip:'Hari berturut-turut kamu aktif. Jaga streak untuk bonus XP!'},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal,tip:'Peringkatmu di antara semua anggota GERAK'}].map((s,i)=>(
           <Card key={i} style={{textAlign:'center',padding:12}}>
-            <div style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
+            <div className="stat-icon" style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px',cursor:'default'}}>
               <MI name={s.icon} size={18} fill style={{color:s.color}}/>
             </div>
             <p className={`num-pop num-pop-d${i+1}`} style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
@@ -636,12 +652,12 @@ export default function App(){
       <div className="stagger-5" style={{marginBottom:20}}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana Terbaru <Tip text="Lencana didapat dari pencapaian khusus. Kumpulkan semua!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
-          <button onClick={()=>nav('pangkat')} style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:2}}>
-            Semua <MI name="arrow_forward" size={14} style={{color:C.primary}}/>
+          <button onClick={()=>nav('pangkat')} className="link-action" style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>
+            Semua <MI name="arrow_forward" size={14} style={{color:'inherit'}}/>
           </button>
         </div>
         {/* Horizontal scroll of card badges */}
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{scrollSnapType:'x mandatory'}}>
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 scroll-peek" style={{scrollSnapType:'x mandatory'}}>
           {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
             <div key={i} style={{flexShrink:0,width:100,scrollSnapAlign:'start'}}>
               <Badge badge={b} size={48}/>
@@ -754,7 +770,7 @@ export default function App(){
       <div className="stagger-6" style={{marginBottom:20}}>
         <div className="flex justify-between items-center mb-3">
           <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif <Tip text="Misi yang sedang berjalan. Tap untuk lihat detail dan mulai mengerjakan."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
-          <button onClick={()=>nav('misi')} style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
+          <button onClick={()=>nav('misi')} className="link-action" style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua <MI name="arrow_forward" size={14} style={{color:'inherit'}}/></button>
         </div>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 scroll-peek">
           {MISSIONS.filter(m=>m.status!=='SELESAI'&&!joinedMissions[m.id]).slice(0,4).map(m=>(
@@ -768,7 +784,7 @@ export default function App(){
               <h4 style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:10}} className="line-clamp-2">{m.title}</h4>
               <div className="flex items-center justify-between">
                 <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
-                <span className="btn-primary" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'4px 10px',fontSize:10,fontWeight:700,color:'#0B1120'}}>IKUT</span>
+                <span className="btn-gold" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'4px 10px',fontSize:10,fontWeight:700,color:'#0B1120',display:'inline-block'}}>IKUT</span>
               </div>
             </Card>
           ))}
@@ -780,7 +796,7 @@ export default function App(){
         <h3 style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:12}}>Peringkat</h3>
         <Card style={{padding:0,overflow:'hidden'}}>
           {LEADERBOARD.slice(0,3).map((p,i)=>(
-            <div key={i} className="flex items-center gap-3" style={{padding:'12px 16px',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
+            <div key={i} className="flex items-center gap-3 lb-row" style={{padding:'12px 16px',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
               {i===0?<span className="rank-crown" style={{fontSize:16,width:20,textAlign:'center'}}>👑</span>:
               <span style={{fontSize:14,fontWeight:800,color:i===1?'#C0C0C0':'#CD7F32',width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>{p.rank}</span>}
               <div style={{width:32,height:32,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:i===0?C.goldLight:i===1?'rgba(192,192,192,0.1)':C.primaryLight,fontSize:12,fontWeight:700,color:i===0?C.gold:i===1?'#C0C0C0':C.primary,border:`1px solid ${i===0?'rgba(251,191,36,0.2)':i===1?'rgba(192,192,192,0.15)':'rgba(201,168,76,0.15)'}`}}>{p.avatar}</div>
@@ -809,7 +825,7 @@ export default function App(){
       </div>
       {filtered.length===0&&(
         <Card className="stagger-3" style={{textAlign:'center',padding:'32px 16px'}}>
-          <MI name="search_off" size={40} style={{color:C.textMuted,opacity:0.5}}/>
+          <div className="empty-float"><MI name="search_off" size={40} style={{color:C.textMuted,opacity:0.5}}/></div>
           <p style={{fontSize:14,fontWeight:700,color:C.textMuted,marginTop:8}}>Tidak ada misi</p>
           <p style={{fontSize:12,color:C.textMuted,marginTop:2}}>Coba filter lain untuk melihat misi</p>
           <button onClick={()=>setFilter('Semua')} style={{marginTop:12,padding:'8px 20px',borderRadius:8,border:`1px solid ${C.primary}`,background:'transparent',color:C.primary,fontSize:12,fontWeight:700,cursor:'pointer'}}>Reset Filter</button>
@@ -848,7 +864,7 @@ export default function App(){
                 <MI name="schedule" size={12} style={{verticalAlign:'middle',marginRight:1,color:urgent?C.red:daysLeft<=5?C.orange:C.textMuted}}/>{daysLeft}h
               </span>}
             </div>
-            {!done&&!joinedMissions[m.id]&&<span className="btn-primary" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'6px 14px',fontSize:11,fontWeight:700,color:'#0B1120'}}>IKUT</span>}
+            {!done&&!joinedMissions[m.id]&&<span className="btn-gold" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'6px 14px',fontSize:11,fontWeight:700,color:'#0B1120',display:'inline-block'}}>IKUT</span>}
             {!done&&joinedMissions[m.id]&&(()=>{const jst=joinedMissions[m.id].status;return(
               <span style={{borderRadius:8,padding:'5px 12px',fontSize:10,fontWeight:700,
                 background:jst==='TERDAFTAR'?C.orangeLight:jst==='SUBMITTED'?C.tealLight:jst==='REVIEW'?C.purpleLight:C.greenLight,
@@ -1004,8 +1020,8 @@ export default function App(){
       <Card className="stagger-2">
         <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:12}}>Akun Terhubung</h3>
         {SOCIALS.map((s,i)=>(
-          <div key={s.key} className="flex items-center gap-3" style={{padding:'10px 0',borderBottom:i<SOCIALS.length-1?`1px solid ${C.borderLight}`:'none'}}>
-            <div style={{width:38,height:38,borderRadius:10,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
+          <div key={s.key} className="flex items-center gap-3 social-row" style={{padding:'10px 4px',borderBottom:i<SOCIALS.length-1?`1px solid ${C.borderLight}`:'none',cursor:'pointer'}}>
+            <div className="stat-icon" style={{width:38,height:38,borderRadius:10,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
               <SocialIcon platform={s.platform} size={18} color={s.color}/>
             </div>
             <div className="flex-1">
@@ -1018,8 +1034,8 @@ export default function App(){
             </div>
           </div>
         ))}
-        <button style={{width:'100%',marginTop:12,padding:'10px 0',borderRadius:8,border:`1px dashed ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-          <MI name="add" size={16} style={{color:C.primary}}/> Hubungkan Akun Lain
+        <button className="btn-admin" style={{width:'100%',marginTop:12,padding:'10px 0',borderRadius:8,border:`1px dashed ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+          <MI name="add" size={16} style={{color:'inherit'}}/> Hubungkan Akun Lain
         </button>
       </Card>
 
@@ -1027,7 +1043,7 @@ export default function App(){
       <div className="stagger-3">
         <div className="flex justify-between items-center mb-3">
           <h3 style={{fontSize:14,fontWeight:700,color:C.text}}>Lencana</h3>
-          <button onClick={()=>nav('pangkat')} style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
+          <button onClick={()=>nav('pangkat')} className="link-action" style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/></button>
         </div>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
           {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
@@ -1149,7 +1165,7 @@ export default function App(){
               <div style={{paddingLeft:20}}><SentimentChart breakdown={n.sentimentBreakdown} compact/></div>
             </div>
           );})}
-          <button onClick={()=>setAdminTab('narratives')} style={{width:'100%',marginTop:8,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:12,cursor:'pointer'}}>Lihat Semua Narasi</button>
+          <button onClick={()=>setAdminTab('narratives')} className="btn-admin" style={{width:'100%',marginTop:8,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:12,cursor:'pointer'}}>Lihat Semua Narasi</button>
         </Card>
 
         {/* Quick Platform Stats */}
@@ -1608,11 +1624,13 @@ export default function App(){
               if(!canAfford)return;
               if(confirmRedeem===item.id){showToast(`${item.name} berhasil ditukar!`);setConfirmRedeem(null)}
               else{setConfirmRedeem(item.id);setTimeout(()=>setConfirmRedeem(cr=>cr===item.id?null:cr),3000)}
-            }} className={confirmRedeem===item.id?'confirm-bounce':''} style={{
-              width:'100%',padding:'10px 0',border:'none',cursor:canAfford?'pointer':'not-allowed',
+            }} className={`btn-gold ${confirmRedeem===item.id?'confirm-bounce':''}`} style={{
+              width:'100%',padding:'10px 0',border:'none',cursor:canAfford?'pointer':'not-allowed',borderRadius:0,
               background:confirmRedeem===item.id?C.green:canAfford?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(100,116,139,0.15)',
-              color:confirmRedeem===item.id?'white':canAfford?C.bg:C.textMuted,fontSize:12,fontWeight:700,transition:'all 200ms',
+              color:confirmRedeem===item.id?'white':canAfford?C.bg:C.textMuted,fontSize:12,fontWeight:700,
+              display:'flex',alignItems:'center',justifyContent:'center',gap:4,
             }}>
+              {confirmRedeem===item.id&&<MI name="check_circle" size={14} style={{color:'white'}}/>}
               {confirmRedeem===item.id?'Konfirmasi?':canAfford?'Tukar Sekarang':'Poin Kurang'}
             </button>
           </Card>
@@ -1674,8 +1692,8 @@ export default function App(){
 
     return(<div key={k} className="flex flex-col gap-4" style={{paddingBottom:100}}>
       {/* Back */}
-      <button onClick={()=>nav('misi')} className="stagger-1" style={{color:C.textSec,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4,paddingTop:4}}>
-        <MI name="arrow_back" size={18} style={{color:C.textSec}}/> Kembali
+      <button onClick={()=>nav('misi')} className="stagger-1 back-btn" style={{color:C.textSec,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4,paddingTop:4}}>
+        <MI name="arrow_back" size={18} style={{color:'inherit'}}/> Kembali
       </button>
 
       {/* Header + Reward */}
@@ -4968,7 +4986,7 @@ export default function App(){
   /* ─── MODE: ADMIN vs MEMBER ─────────────────────────────────────── */
   if(mode==='admin') return(<>
     <DesktopAdmin/>
-    {toast&&<div style={{position:'fixed',bottom:40,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',padding:'10px 20px',borderRadius:12,fontSize:13,fontWeight:600,color:'#0B1120',animation:'toastIn 200ms ease-out',zIndex:100,boxShadow:'0 8px 24px rgba(201,168,76,0.3)',border:'1px solid rgba(255,255,255,0.1)'}}>{toast}</div>}
+    {toast&&<div className={toastExiting?'toast-exit':'toast-enter'} style={{position:'fixed',bottom:40,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',padding:'10px 20px',borderRadius:12,fontSize:13,fontWeight:600,color:'#0B1120',zIndex:100,boxShadow:'0 8px 24px rgba(201,168,76,0.3)',border:'1px solid rgba(255,255,255,0.1)'}}>{toast}</div>}
   </>);
 
   return(
@@ -4987,10 +5005,10 @@ export default function App(){
         </div>
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          <button onClick={()=>setMode('admin')} style={{padding:'6px 14px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5,transition:'all 150ms ease'}} onMouseEnter={e=>{e.target.style.borderColor=C.primary+'60';e.target.style.color=C.primary}} onMouseLeave={e=>{e.target.style.borderColor=C.border;e.target.style.color=C.textSec}}>
+          <button onClick={()=>setMode('admin')} className="btn-admin" style={{padding:'6px 14px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>
             <MI name="dashboard" size={14}/> Admin
           </button>
-          <button className="btn-primary" style={{padding:'6px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 10px rgba(201,168,76,0.25)'}}>
+          <button className="btn-gold" style={{padding:'6px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 10px rgba(201,168,76,0.25)'}}>
             <MI name="login" size={14} style={{color:'#0B1120'}}/> Masuk
           </button>
         </div>
@@ -5013,13 +5031,14 @@ export default function App(){
 
         {/* Bottom Nav */}
         {screen!=='detail'&&(
-          <nav className="flex" style={{padding:'6px 4px 28px',flexShrink:0,background:'rgba(15,15,26,0.9)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`}}>
+          <nav className="flex" style={{padding:'6px 4px 28px',flexShrink:0,background:'rgba(15,15,26,0.92)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`}}>
             {tabs.map(tab=>{const active=screen===tab.id;return(
-              <button key={tab.id} onClick={()=>nav(tab.id)} className="flex flex-1 flex-col items-center justify-center gap-0.5" style={{background:'none',border:'none',cursor:'pointer',padding:'6px 0',position:'relative'}}>
-                <div style={{width:active?30:26,height:active?30:26,borderRadius:active?10:7,background:active?'linear-gradient(135deg,#C9A84C,#E8D48B)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 200ms cubic-bezier(.16,1,.3,1)',boxShadow:active?'0 4px 12px rgba(201,168,76,0.3)':'none'}}>
-                  <MI name={tab.icon} size={18} fill={active} style={{color:active?'white':C.textMuted}}/>
+              <button key={tab.id} onClick={()=>nav(tab.id)} className="flex flex-1 flex-col items-center justify-center gap-0.5 tap-bounce" style={{background:'none',border:'none',cursor:'pointer',padding:'6px 0',position:'relative'}}>
+                <div style={{width:active?30:26,height:active?30:26,borderRadius:active?10:7,background:active?'linear-gradient(135deg,#C9A84C,#E8D48B)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 250ms cubic-bezier(.16,1,.3,1)',boxShadow:active?'0 4px 12px rgba(201,168,76,0.3)':'none'}}>
+                  <MI name={tab.icon} size={18} fill={active} style={{color:active?'white':C.textMuted,transition:'color 200ms'}}/>
                 </div>
-                <span style={{fontSize:9,fontWeight:active?700:500,color:active?C.primary:C.textMuted,letterSpacing:0.3}}>{tab.label}</span>
+                <span style={{fontSize:9,fontWeight:active?700:500,color:active?C.primary:C.textMuted,letterSpacing:0.3,transition:'all 200ms'}}>{tab.label}</span>
+                {active&&<div className="nav-dot" style={{position:'absolute',bottom:-2,width:4,height:4,borderRadius:2,background:C.primary,boxShadow:`0 0 6px ${C.primary}60`}}/>}
               </button>
             );})}
           </nav>
@@ -5027,7 +5046,7 @@ export default function App(){
       </div>
 
       {/* Toast */}
-      {toast&&<div style={{position:'fixed',bottom:120,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',padding:'10px 20px',borderRadius:12,fontSize:13,fontWeight:600,color:'#0B1120',animation:'toastIn 200ms ease-out',zIndex:100,boxShadow:'0 8px 24px rgba(201,168,76,0.3)',border:'1px solid rgba(255,255,255,0.1)'}}>
+      {toast&&<div className={toastExiting?'toast-exit':'toast-enter'} style={{position:'fixed',bottom:120,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',padding:'10px 20px',borderRadius:12,fontSize:13,fontWeight:600,color:'#0B1120',zIndex:100,boxShadow:'0 8px 24px rgba(201,168,76,0.3)',border:'1px solid rgba(255,255,255,0.1)'}}>
         {toast}
       </div>}
     </div>
