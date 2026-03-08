@@ -5,6 +5,15 @@ function MI({ name, size=24, fill=false, style={} }) {
   return <span className="material-symbols-rounded" style={{ fontSize:size, fontVariationSettings: fill?"'FILL' 1,'wght' 600":"'FILL' 0,'wght' 400", lineHeight:1, ...style }}>{name}</span>;
 }
 
+/* ─── TOOLTIP ────────────────────────────────────────────────────── */
+function Tip({children,text}){
+  const [show,setShow]=useState(false);
+  return(<span style={{position:'relative',display:'inline-flex',alignItems:'center'}} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)} onClick={()=>setShow(s=>!s)}>
+    {children}
+    {show&&<span style={{position:'absolute',bottom:'calc(100% + 6px)',left:'50%',transform:'translateX(-50%)',background:'#1A1A2E',color:'#E2E8F0',fontSize:10,fontWeight:500,padding:'6px 10px',borderRadius:6,whiteSpace:'nowrap',maxWidth:200,textAlign:'center',lineHeight:1.3,boxShadow:'0 4px 12px rgba(0,0,0,0.3)',border:'1px solid rgba(255,255,255,0.1)',zIndex:50,pointerEvents:'none',animation:'fadeInUp 150ms ease'}}>{text}</span>}
+  </span>);
+}
+
 /* ─── GERAK LOGO SVG ─────────────────────────────────────────────── */
 function GerakMark({size=28}){return(
   <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
@@ -416,7 +425,7 @@ export default function App(){
       {/* XP Status Card */}
       <Card className="stagger-3" style={{padding:20}}>
         <div className="flex items-center justify-between" style={{marginBottom:12}}>
-          <span style={{fontSize:11,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Kemajuan Pangkat</span>
+          <span className="flex items-center gap-1" style={{fontSize:11,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Kemajuan Pangkat <Tip text="XP didapat dari menyelesaikan misi. Kumpulkan XP untuk naik pangkat!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></span>
           <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4.820 / 5.000 XP</span>
         </div>
         <div style={{height:6,borderRadius:9999,background:C.surfaceLight,overflow:'hidden',marginBottom:10}}>
@@ -436,13 +445,13 @@ export default function App(){
 
       {/* Stats Row */}
       <div className="stagger-4 grid grid-cols-3 gap-3">
-        {[{icon:'target',label:'Misi',value:'24',color:C.primary},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal}].map((s,i)=>(
+        {[{icon:'target',label:'Misi',value:'24',color:C.primary,tip:'Total misi yang telah kamu selesaikan'},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange,tip:'Hari berturut-turut kamu aktif. Jaga streak untuk bonus XP!'},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal,tip:'Peringkatmu di antara semua anggota GERAK'}].map((s,i)=>(
           <Card key={i} style={{textAlign:'center',padding:12}}>
             <div style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
               <MI name={s.icon} size={18} fill style={{color:s.color}}/>
             </div>
             <p className={`num-pop num-pop-d${i+1}`} style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
-            <p style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label}</p>
+            <p className="flex items-center justify-center gap-1" style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label} <Tip text={s.tip}><MI name="info" size={9} style={{color:C.textMuted,opacity:0.5}}/></Tip></p>
           </Card>
         ))}
       </div>
@@ -450,7 +459,7 @@ export default function App(){
       {/* Badge Showcase */}
       <div className="stagger-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana Terbaru</h3>
+          <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana Terbaru <Tip text="Lencana didapat dari pencapaian khusus. Kumpulkan semua!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <button onClick={()=>nav('pangkat')} style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:2}}>
             Semua <MI name="arrow_forward" size={14} style={{color:C.primary}}/>
           </button>
@@ -480,7 +489,7 @@ export default function App(){
       {/* Daily Brief */}
       <Card className="stagger-6" style={{borderLeft:`3px solid ${C.primary}`}}>
         <div className="flex items-center justify-between" style={{marginBottom:8}}>
-          <span style={{fontSize:10,fontWeight:700,color:C.primary,letterSpacing:1.5,textTransform:'uppercase'}}>Misi Hari Ini</span>
+          <span className="flex items-center gap-1" style={{fontSize:10,fontWeight:700,color:C.primary,letterSpacing:1.5,textTransform:'uppercase'}}>Misi Hari Ini <Tip text="Misi prioritas dari admin. Selesaikan untuk bonus early bird!"><MI name="info" size={10} style={{color:C.primary,opacity:0.6,cursor:'pointer'}}/></Tip></span>
           <span style={{display:'inline-flex',alignItems:'center',gap:4,background:C.primaryLight,color:C.primary,borderRadius:6,padding:'2px 8px',fontSize:10,fontWeight:700}}>BRIEFING</span>
         </div>
         <h3 style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:8}}>Distribusi Materi Literasi Digital ke 5 Grup</h3>
@@ -496,7 +505,7 @@ export default function App(){
       {/* Active Missions */}
       <div className="stagger-6">
         <div className="flex justify-between items-center mb-3">
-          <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif</h3>
+          <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif <Tip text="Misi yang sedang berjalan. Tap untuk lihat detail dan mulai mengerjakan."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <button onClick={()=>nav('misi')} style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
         </div>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 scroll-peek">
@@ -1366,7 +1375,7 @@ export default function App(){
       {/* ══════════ STEP 0: BRIEFING ══════════ */}
       {step===0&&(<div key="step0" className="step-enter">
         <Card className="stagger-3">
-          <h3 style={{fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1.5,textTransform:'uppercase',marginBottom:6}}>Briefing Misi</h3>
+          <h3 className="flex items-center gap-1" style={{fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1.5,textTransform:'uppercase',marginBottom:6}}>Briefing Misi <Tip text="Baca brief dengan teliti. Konten harus sesuai semua spesifikasi untuk lolos review."><MI name="info" size={11} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,marginBottom:12}}>{m.desc}</p>
 
           {/* Content Spec */}
@@ -1459,7 +1468,7 @@ export default function App(){
             <div style={{width:28,height:28,borderRadius:8,background:C.goldLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
               <MI name="emoji_events" size={16} fill style={{color:C.gold}}/>
             </div>
-            <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Sistem Penilaian</h3>
+            <h3 className="flex items-center gap-1" style={{fontSize:13,fontWeight:700,color:C.text}}>Sistem Penilaian <Tip text="Begini cara poin misi dihitung. Selesaikan semua kriteria untuk XP maksimal!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           </div>
 
           {/* Base XP */}
@@ -2696,6 +2705,11 @@ export default function App(){
           {adSubTab==='create'&&(()=>{
             const tc=typeColor(missionForm.type);const tb=typeBg(missionForm.type);const ti=typeIcon(missionForm.type);
             const L=({children,label,icon})=>(<div><div className="flex items-center gap-2 mb-2"><MI name={icon} size={16} style={{color:C.textMuted}}/><label style={{fontSize:12,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>{label}</label></div>{children}</div>);
+            const AISuggest=({text,onApply,applied})=>(<div className="flex items-center gap-2" style={{marginTop:6,padding:'6px 10px',borderRadius:6,background:applied?`${C.green}08`:C.primaryLight,border:`1px solid ${applied?`${C.green}20`:'rgba(201,168,76,0.15)'}`,transition:'all 200ms'}}>
+              <MI name={applied?'check_circle':'auto_awesome'} size={13} fill={applied} style={{color:applied?C.green:C.primary,flexShrink:0}}/>
+              <p style={{fontSize:10,color:applied?C.green:C.textSec,flex:1,lineHeight:1.3}}>{applied?'Diterapkan':text}</p>
+              {!applied&&onApply&&<button onClick={onApply} style={{padding:'3px 8px',borderRadius:4,border:'none',background:C.primary,color:'white',fontSize:9,fontWeight:700,cursor:'pointer',flexShrink:0,whiteSpace:'nowrap'}}>Terapkan</button>}
+            </div>);
             const estPeople=missionForm.targetGender==='all'&&missionForm.targetAge==='all'&&missionForm.targetTier==='all'?1247:missionForm.targetTier==='gold'?186:missionForm.targetTier==='silver'?524:537;
             const totalBudget=(missionForm.xp||200)*Math.min(estPeople,missionForm.maxPeople||estPeople);
             return(<div className="flex flex-col gap-5">
@@ -2876,14 +2890,17 @@ export default function App(){
                   {/* Title */}
                   <L label="Judul Misi" icon="title">
                     <input value={missionForm.title} onChange={e=>setMissionForm(f=>({...f,title:e.target.value}))} placeholder="e.g., Distribusi Materi Literasi Digital..." style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:14,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
+                    {!missionForm.title&&<AISuggest text={missionForm.type==='KRISIS'?'"Flash Counter: Klarifikasi Fakta Terbaru"':missionForm.type==='EDUKASI'?'"Kampanye Literasi Digital untuk Semua"':missionForm.type==='SOCIAL'?'"Challenge Konten Positif #GerakDigital"':'"Misi Komunitas: Aksi Nyata Bersama"'} onApply={()=>setMissionForm(f=>({...f,title:f.type==='KRISIS'?'Flash Counter: Klarifikasi Fakta Terbaru':f.type==='EDUKASI'?'Kampanye Literasi Digital untuk Semua':f.type==='SOCIAL'?'Challenge Konten Positif #GerakDigital':'Misi Komunitas: Aksi Nyata Bersama'}))}/>}
                   </L>
                   {/* Description */}
                   <L label="Deskripsi & Brief" icon="description">
                     <textarea value={missionForm.desc} onChange={e=>setMissionForm(f=>({...f,desc:e.target.value}))} placeholder="Jelaskan detail misi, apa yang harus dilakukan agent..." rows={4} style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
+                    {!missionForm.desc&&missionForm.title&&<AISuggest text="AI bisa generate deskripsi berdasarkan judul dan tipe misi" onApply={()=>setMissionForm(f=>({...f,desc:f.type==='KRISIS'?`Misi darurat untuk counter narasi negatif terkait "${f.title}". Agent diminta membuat konten klarifikasi dengan data dan sumber resmi. Pastikan tone profesional dan berbasis fakta.`:f.type==='EDUKASI'?`Bantu sebarkan informasi akurat tentang "${f.title}". Buat konten edukatif yang mudah dipahami dengan infografis dan data pendukung. Target: meningkatkan literasi masyarakat.`:`Ikut serta dalam kampanye "${f.title}". Buat konten original yang menarik dan shareable. Gunakan kreativitas untuk menyampaikan pesan positif kepada audience.`}))}/>}
                   </L>
                   {/* Hashtags */}
                   <L label="Hashtag Wajib" icon="tag">
                     <input value={missionForm.hashtags||''} onChange={e=>setMissionForm(f=>({...f,hashtags:e.target.value}))} placeholder="#GerakDigital #LiterasiDigital" style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
+                    {!(missionForm.hashtags||'').trim()&&<AISuggest text={`"#GERAK #${(missionForm.type||'').charAt(0)+(missionForm.type||'').slice(1).toLowerCase()} #GerakDigital"`} onApply={()=>setMissionForm(f=>({...f,hashtags:`#GERAK #${(f.type||'').charAt(0)+(f.type||'').slice(1).toLowerCase()} #GerakDigital`}))}/>}
                   </L>
                 </div>
               </DCard>
@@ -2907,6 +2924,7 @@ export default function App(){
                       <input type="number" value={missionForm.xp} onChange={e=>setMissionForm(f=>({...f,xp:parseInt(e.target.value)||0}))} style={{width:80,padding:'6px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:13,color:C.primary,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.surfaceLight,textAlign:'center'}}/>
                       <span style={{fontSize:11,color:C.textMuted}}>XP per orang</span>
                     </div>
+                    {(()=>{const rec=missionForm.type==='KRISIS'?400:missionForm.type==='VISIT'?350:missionForm.type==='EDUKASI'?250:200;return missionForm.xp!==rec?<AISuggest text={`AI rekomendasikan ${rec} XP untuk misi ${missionForm.type} (tingkat effort ${rec>=350?'tinggi':'sedang'})`} onApply={()=>setMissionForm(f=>({...f,xp:rec}))}/>:null;})()}
                   </L>
                   {/* Bonus tiers */}
                   <L label="Bonus & Multiplier" icon="emoji_events">
@@ -2972,6 +2990,7 @@ export default function App(){
                       <option>Like & Share</option><option>Forward pesan</option><option>Foto before-after</option>
                       <option>Dokumentasi acara</option>
                     </select>
+                    {!missionForm.format&&<AISuggest text={missionForm.type==='KRISIS'?'AI: "Thread" paling efektif untuk counter-narasi':missionForm.type==='SOCIAL'||missionForm.type==='AMPLIFIKASI'?'AI: "Video Reels" punya engagement tertinggi':missionForm.type==='VISIT'?'AI: "Foto before-after" cocok untuk dokumentasi':'AI: "Teks + Infografis" ideal untuk edukasi'} onApply={()=>setMissionForm(f=>({...f,format:f.type==='KRISIS'?'Thread':f.type==='SOCIAL'||f.type==='AMPLIFIKASI'?'Video Reels':f.type==='VISIT'?'Foto before-after':'Teks + Infografis'}))}/>}
                   </L>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                     <L label="Durasi Video" icon="timer">
@@ -3242,9 +3261,9 @@ export default function App(){
                       </div>
                     ))}
                   </div>
-                  {/* Publish */}
-                  <button onClick={()=>showToast('Misi berhasil dipublikasikan!')} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(201,168,76,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                    <MI name="rocket_launch" size={18} style={{color:C.bg}}/> Publikasikan Misi
+                  {/* Review & Publish */}
+                  <button onClick={()=>setMissionForm(f=>({...f,showReview:true}))} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(201,168,76,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                    <MI name="rate_review" size={18} style={{color:C.bg}}/> Review & Publikasikan
                   </button>
                   <button onClick={()=>showToast('Draft tersimpan')} style={{width:'100%',padding:'10px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
                     <MI name="save" size={16} style={{color:C.textMuted}}/> Simpan sebagai Draft
@@ -3564,6 +3583,168 @@ export default function App(){
                   )}
                 </div>
               </DCard>;
+            })()}
+
+            {/* ═══ REVIEW OVERLAY ═══ */}
+            {missionForm.showReview&&(()=>{
+              const checks=[
+                {l:'Tipe misi',v:missionForm.type,ok:true},
+                {l:'Judul',v:missionForm.title||'—',ok:!!missionForm.title},
+                {l:'Deskripsi',v:(missionForm.desc||'').slice(0,80)+(missionForm.desc?.length>80?'...':''),ok:!!missionForm.desc},
+                {l:'Platform',v:missionForm.platforms.map(p=>pName(p)).join(', ')||'—',ok:missionForm.platforms.length>0},
+                {l:'XP',v:`${missionForm.xp||0} XP per orang`,ok:(missionForm.xp||0)>0},
+                {l:'Deadline',v:missionForm.deadline||'—',ok:!!missionForm.deadline},
+                {l:'Format',v:missionForm.format||'—',ok:!!missionForm.format},
+                {l:'Hashtag',v:missionForm.hashtags||'—',ok:!!(missionForm.hashtags||'').trim()},
+                {l:'Lokasi',v:missionForm.location||'Tidak diset',ok:missionForm.type!=='VISIT'||!!missionForm.location},
+              ];
+              const passCount=checks.filter(c=>c.ok).length;
+              const aiScore=Math.round((passCount/checks.length)*100);
+              const captions=missionForm.aiCaptions||[];
+              const captionApproved=captions.filter(c=>c.approved).length;
+              const alloc=missionForm.personaAlloc||{};
+              const totalPeople=Object.values(alloc).reduce((s,v)=>s+(v||0),0)||estPeople;
+              const warnings=[];
+              if(!missionForm.title) warnings.push('Judul misi belum diisi');
+              if(!missionForm.desc) warnings.push('Deskripsi belum diisi');
+              if(missionForm.platforms.length===0) warnings.push('Belum memilih platform');
+              if(!missionForm.deadline) warnings.push('Deadline belum diset');
+              if(captions.length>0&&captionApproved<captions.length) warnings.push(`${captions.length-captionApproved} caption belum di-approve`);
+              if(!missionForm.format) warnings.push('Format konten belum dipilih');
+              return <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
+                <div style={{background:C.surface,borderRadius:20,border:`1px solid ${C.border}`,maxWidth:720,width:'100%',maxHeight:'85vh',overflow:'auto',boxShadow:'0 24px 80px rgba(0,0,0,0.5)'}} className="hide-scrollbar">
+                  {/* Header */}
+                  <div style={{padding:'20px 24px',borderBottom:`1px solid ${C.borderLight}`,background:C.primaryLight,borderRadius:'20px 20px 0 0',position:'sticky',top:0,zIndex:2}}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div style={{width:40,height:40,borderRadius:12,background:C.primary,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                          <MI name="rate_review" size={20} style={{color:'white'}}/>
+                        </div>
+                        <div>
+                          <h3 style={{fontSize:16,fontWeight:800,color:C.text}}>Review Misi</h3>
+                          <p style={{fontSize:11,color:C.textMuted}}>Periksa semua detail sebelum publikasi</p>
+                        </div>
+                      </div>
+                      <button onClick={()=>setMissionForm(f=>({...f,showReview:false}))} style={{width:32,height:32,borderRadius:8,border:`1px solid ${C.border}`,background:C.glass,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <MI name="close" size={18} style={{color:C.textMuted}}/>
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{padding:24}} className="flex flex-col gap-5">
+                    {/* AI Quality Score */}
+                    <div className="flex gap-4">
+                      <div style={{width:100,height:100,borderRadius:'50%',background:aiScore>=80?`${C.green}12`:aiScore>=60?`${C.orange}12`:`${C.red}12`,display:'flex',alignItems:'center',justifyContent:'center',border:`3px solid ${aiScore>=80?C.green:aiScore>=60?C.orange:C.red}`,flexShrink:0}}>
+                        <div style={{textAlign:'center'}}>
+                          <p style={{fontSize:28,fontWeight:900,color:aiScore>=80?C.green:aiScore>=60?C.orange:C.red,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{aiScore}</p>
+                          <p style={{fontSize:8,fontWeight:700,color:C.textMuted}}>AI SCORE</p>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:6}}>
+                          {aiScore>=80?'Misi siap dipublikasikan!':aiScore>=60?'Beberapa item perlu dilengkapi':'Banyak item wajib belum terisi'}
+                        </p>
+                        {warnings.length>0&&<div className="flex flex-col gap-1">
+                          {warnings.map((w,wi)=>(
+                            <div key={wi} className="flex items-center gap-2">
+                              <MI name="warning" size={12} fill style={{color:C.orange}}/>
+                              <span style={{fontSize:11,color:C.orange}}>{w}</span>
+                            </div>
+                          ))}
+                        </div>}
+                        {warnings.length===0&&<div className="flex items-center gap-2">
+                          <MI name="verified" size={16} fill style={{color:C.green}}/>
+                          <span style={{fontSize:12,color:C.green,fontWeight:600}}>Semua item terisi lengkap</span>
+                        </div>}
+                      </div>
+                    </div>
+
+                    {/* Mission Preview Card */}
+                    <div style={{background:C.bg,borderRadius:12,padding:16,border:`1px solid ${C.border}`}}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div style={{width:28,height:28,borderRadius:8,background:tb,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                          <MI name={ti} size={14} fill style={{color:tc}}/>
+                        </div>
+                        <span style={{fontSize:11,fontWeight:700,color:tc,textTransform:'uppercase',letterSpacing:0.5}}>{missionForm.type}</span>
+                        <span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:tc,background:tb,padding:'2px 8px',borderRadius:4}}>TERBUKA</span>
+                      </div>
+                      <h4 style={{fontSize:16,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:4}}>{missionForm.title||'Judul belum diisi'}</h4>
+                      <p style={{fontSize:12,color:C.textMuted,lineHeight:1.4,marginBottom:10}}>{missionForm.desc||'Deskripsi belum diisi'}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span style={{background:C.goldLight,color:C.gold,borderRadius:4,padding:'3px 10px',fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>+{missionForm.xp||200} XP</span>
+                        {(missionForm.bonus>0)&&<span style={{background:C.greenLight,color:C.green,borderRadius:4,padding:'3px 10px',fontSize:11,fontWeight:700}}>+{missionForm.bonus} early bird</span>}
+                        {missionForm.deadline&&<span style={{background:C.surfaceLight,color:C.textSec,borderRadius:4,padding:'3px 10px',fontSize:11,fontWeight:600}}>Deadline: {missionForm.deadline}</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-3">
+                        {missionForm.platforms.map(p=>(
+                          <div key={p} className="flex items-center gap-1" style={{padding:'3px 8px',borderRadius:4,background:C.surfaceLight,border:`1px solid ${C.borderLight}`}}>
+                            {pIcon(p)?<MI name={pIcon(p)} size={12} style={{color:pColor(p)}}/>:<SocialIcon platform={p} size={12} color={pColor(p)}/>}
+                            <span style={{fontSize:10,fontWeight:600,color:C.textSec}}>{pName(p)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Detail Checklist */}
+                    <div>
+                      <p style={{fontSize:11,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:8}}>Detail Kelengkapan</p>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+                        {checks.map((c,ci)=>(
+                          <div key={ci} className="flex items-center gap-2" style={{padding:'8px 10px',borderRadius:6,background:c.ok?`${C.green}06`:C.surfaceLight,border:`1px solid ${c.ok?`${C.green}15`:C.border}`}}>
+                            <MI name={c.ok?'check_circle':'error'} size={14} fill style={{color:c.ok?C.green:C.orange,flexShrink:0}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <p style={{fontSize:10,fontWeight:600,color:C.textMuted}}>{c.l}</p>
+                              <p style={{fontSize:11,fontWeight:600,color:c.ok?C.text:C.orange,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.v}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Stats summary */}
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10}}>
+                      <div style={{background:C.primaryLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(201,168,76,0.15)'}}>
+                        <p style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{totalPeople}</p>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>TARGET ORANG</p>
+                      </div>
+                      <div style={{background:C.goldLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(251,191,36,0.15)'}}>
+                        <p style={{fontSize:18,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{((missionForm.xp||200)*totalPeople/1000).toFixed(1)}K</p>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>TOTAL XP</p>
+                      </div>
+                      <div style={{background:C.greenLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(34,197,94,0.15)'}}>
+                        <p style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:"'JetBrains Mono'"}}>{missionForm.platforms.length}</p>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>PLATFORM</p>
+                      </div>
+                      <div style={{background:C.purpleLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(168,85,247,0.15)'}}>
+                        <p style={{fontSize:18,fontWeight:800,color:C.purple,fontFamily:"'JetBrains Mono'"}}>{captions.length>0?`${captionApproved}/${captions.length}`:'—'}</p>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>CAPTION OK</p>
+                      </div>
+                    </div>
+
+                    {/* AI Recommendation */}
+                    <div style={{background:C.primaryLight,borderRadius:10,padding:14,border:'1px solid rgba(201,168,76,0.15)'}}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <MI name="smart_toy" size={16} style={{color:C.primary}}/>
+                        <span style={{fontSize:12,fontWeight:700,color:C.primary}}>AI Review</span>
+                      </div>
+                      <p style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>
+                        {aiScore>=80
+                          ?`Misi "${missionForm.title}" sudah lengkap dan siap deploy ke ${missionForm.platforms.length} platform. Estimasi reach: ${totalPeople>200?'tinggi':'moderat'} dengan ${totalPeople} anggota aktif.`
+                          :`Lengkapi item yang ditandai kuning untuk meningkatkan efektivitas misi. ${!missionForm.deadline?'Deadline sangat penting untuk urgensi.':''} ${missionForm.platforms.length===0?'Pilih minimal 1 platform target.':''}`}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3">
+                      <button onClick={()=>setMissionForm(f=>({...f,showReview:false}))} style={{flex:1,padding:'14px 0',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:13,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                        <MI name="arrow_back" size={16} style={{color:C.textMuted}}/> Kembali Edit
+                      </button>
+                      <button onClick={()=>{setMissionForm(f=>({...f,showReview:false}));showToast('Misi berhasil dipublikasikan!');}} className="btn-primary" style={{flex:2,padding:'14px 0',borderRadius:10,border:'none',background:aiScore>=60?'linear-gradient(135deg,#22C55E,#16A34A)':'linear-gradient(135deg,#F59E0B,#D97706)',color:'white',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:aiScore>=60?'0 4px 15px rgba(34,197,94,0.3)':'0 4px 15px rgba(245,158,11,0.3)'}}>
+                        <MI name="rocket_launch" size={18} style={{color:'white'}}/> {aiScore>=60?'Konfirmasi & Publikasikan':'Publikasikan Anyway'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>;
             })()}
 
           </div>);})()}
