@@ -2181,16 +2181,17 @@ export default function App(){
       {agent:'Sari Utami',mission:'Literasi Digital ke 5 Grup',platform:'whatsapp',time:'2 jam lalu',aiScore:95,aiPass:true,briefMatch:98,briefChecks:[{l:'Min 5 grup',ok:true},{l:'Min 20 anggota',ok:true},{l:'Pesan sesuai',ok:true},{l:'Lampiran ada',ok:true}]},
     ];
 
-    const DCard=({children,style={},title,subtitle,action})=>(
-      <div className="card-interactive" style={{background:C.surface,borderRadius:16,border:`1px solid ${C.border}`,overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,0.2)',...style}}>
+    const DCard=({children,style={},title,subtitle,action,accent,noPad})=>(
+      <div className="card-interactive" style={{background:`linear-gradient(135deg,${C.surface},rgba(15,26,46,0.95))`,borderRadius:16,border:`1px solid ${accent?`${accent}33`:C.border}`,overflow:'hidden',boxShadow:`0 4px 24px rgba(0,0,0,0.25)${accent?`, 0 0 0 1px ${accent}11`:''}`,position:'relative',...style}}>
+        {accent&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${accent},transparent)`,opacity:0.6}}/>}
         {(title||action)&&<div className="flex items-center justify-between" style={{padding:'16px 20px',borderBottom:`1px solid ${C.borderLight}`}}>
           <div>
-            {title&&<h3 style={{fontSize:15,fontWeight:700,color:C.text}}>{title}</h3>}
+            {title&&<h3 style={{fontSize:15,fontWeight:700,color:C.text,letterSpacing:-0.2}}>{title}</h3>}
             {subtitle&&<p style={{fontSize:12,color:C.textMuted,marginTop:2}}>{subtitle}</p>}
           </div>
           {action}
         </div>}
-        <div style={{padding:20}}>{children}</div>
+        <div style={{padding:noPad?0:20}}>{children}</div>
       </div>
     );
 
@@ -2201,26 +2202,42 @@ export default function App(){
         <div className="orb orb-2" style={{width:300,height:300,background:'radial-gradient(circle,rgba(201,168,76,0.06),transparent 70%)',bottom:100,left:'10%'}}/>
 
         {/* Sidebar */}
-        <aside style={{width:240,background:'rgba(15,15,26,0.8)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderRight:`1px solid ${C.border}`,padding:'20px 0',flexShrink:0,display:'flex',flexDirection:'column',zIndex:2}}>
-          <div className="flex items-center gap-2 px-5 mb-6">
-            <GerakMark size={24}/><div>
-              <h1 className="shimmer-text" style={{fontSize:16,fontWeight:800,letterSpacing:1.5}}>GERAK</h1>
-              <p style={{fontSize:8,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Admin Panel</p>
+        <aside style={{width:260,background:'linear-gradient(180deg,rgba(15,15,26,0.95),rgba(11,17,32,0.98))',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',borderRight:`1px solid ${C.border}`,padding:'24px 0',flexShrink:0,display:'flex',flexDirection:'column',zIndex:2}}>
+          <div className="flex items-center gap-3 px-6 mb-8">
+            <div style={{width:36,height:36,borderRadius:10,background:'linear-gradient(135deg,#C9A84C,#E8D48B)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 20px rgba(201,168,76,0.3)'}}>
+              <GerakMark size={20}/>
+            </div>
+            <div>
+              <h1 className="shimmer-text" style={{fontSize:17,fontWeight:800,letterSpacing:1.5}}>GERAK</h1>
+              <p style={{fontSize:9,color:C.textMuted,letterSpacing:2.5,textTransform:'uppercase',fontWeight:500}}>Command Center</p>
             </div>
           </div>
+          <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:2,padding:'0 24px',marginBottom:8}}>Menu</p>
           <nav className="flex flex-col gap-1 px-3">
-            {sideItems.map(s=>(
+            {sideItems.map(s=>{
+              const active=adSideTab===s.id;
+              return(
               <button key={s.id} onClick={()=>{setAdSideTab(s.id);setAdSubTab(s.id==='dashboard'?'ringkasan':s.id==='narasi'?'monitoring':'');}} style={{
-                display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:10,border:'none',cursor:'pointer',
-                background:adSideTab===s.id?C.primaryLight:'transparent',color:adSideTab===s.id?C.primary:C.textSec,
-                fontSize:13,fontWeight:adSideTab===s.id?700:500,textAlign:'left',transition:'all 200ms',width:'100%',
+                display:'flex',alignItems:'center',gap:10,padding:'11px 14px',borderRadius:10,border:'none',cursor:'pointer',position:'relative',
+                background:active?'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))':'transparent',
+                color:active?C.primary:C.textSec,
+                fontSize:13,fontWeight:active?700:500,textAlign:'left',transition:'all 200ms',width:'100%',
               }}>
-                <MI name={s.icon} size={20} fill={adSideTab===s.id} style={{color:adSideTab===s.id?C.primary:C.textMuted}}/>{s.label}
-              </button>
-            ))}
+                {active&&<div style={{position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:3,height:20,borderRadius:'0 3px 3px 0',background:C.primary,boxShadow:`0 0 8px ${C.primary}`}}/>}
+                <MI name={s.icon} size={20} fill={active} style={{color:active?C.primary:C.textMuted}}/>{s.label}
+                {s.id==='agents'&&<span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:C.textMuted,background:C.surfaceLight,padding:'2px 7px',borderRadius:6}}>1.2K</span>}
+              </button>);
+            })}
           </nav>
-          <div style={{marginTop:'auto',padding:'0 16px'}}>
-            <button onClick={()=>setMode('member')} className="btn-ghost" style={{width:'100%',padding:'10px 0',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+          <div style={{margin:'auto 16px 0',display:'flex',flexDirection:'column',gap:12}}>
+            <div style={{padding:16,borderRadius:12,background:'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.02))',border:`1px solid rgba(201,168,76,0.15)`}}>
+              <div className="flex items-center gap-2 mb-2">
+                <MI name="bolt" size={16} fill style={{color:C.gold}}/>
+                <span style={{fontSize:11,fontWeight:700,color:C.gold}}>Sistem Aktif</span>
+              </div>
+              <p style={{fontSize:10,color:C.textMuted,lineHeight:1.4}}>AI Monitoring berjalan. {ADMIN_STATS.missionsActive} misi aktif.</p>
+            </div>
+            <button onClick={()=>setMode('member')} className="btn-ghost" style={{width:'100%',padding:'11px 0',borderRadius:10,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
               <MI name="phone_iphone" size={16}/> Member View
             </button>
           </div>
@@ -2229,19 +2246,38 @@ export default function App(){
         {/* Main Content */}
         <main style={{flex:1,overflow:'auto',padding:28,zIndex:1}}>
           {/* Top Bar */}
-          <div className="flex items-center justify-between" style={{marginBottom:24}}>
+          <div className="flex items-center justify-between" style={{marginBottom:28,paddingBottom:20,borderBottom:`1px solid ${C.borderLight}`}}>
             <div>
-              <h1 style={{fontSize:24,fontWeight:800,color:C.text}}>{adSideTab==='missionDetail'?'Detail Misi':sideItems.find(s=>s.id===adSideTab)?.label}</h1>
-              <p style={{fontSize:13,color:C.textMuted}}>GERAK Command Center · {new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
+              <div className="flex items-center gap-2" style={{marginBottom:4}}>
+                {adSideTab==='missionDetail'&&<button onClick={()=>setAdSideTab('narasi')} style={{background:'none',border:'none',cursor:'pointer',color:C.textMuted,fontSize:12,display:'flex',alignItems:'center',gap:2}}><MI name="arrow_back" size={14}/>Misi</button>}
+                {adSideTab==='missionDetail'&&<span style={{color:C.textMuted,fontSize:12}}>/</span>}
+              </div>
+              <h1 style={{fontSize:26,fontWeight:800,color:C.text,letterSpacing:-0.5}}>{adSideTab==='missionDetail'?'Detail Misi':sideItems.find(s=>s.id===adSideTab)?.label}</h1>
+              <p style={{fontSize:13,color:C.textMuted,marginTop:2}}>{new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
             </div>
             <div className="flex items-center gap-3">
+              {/* Search */}
               <div style={{position:'relative'}}>
-                <div style={{width:40,height:40,borderRadius:12,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`,cursor:'pointer',backdropFilter:'blur(12px)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',borderRadius:10,background:C.surfaceLight,border:`1px solid ${C.border}`,width:200}}>
+                  <MI name="search" size={16} style={{color:C.textMuted}}/>
+                  <input placeholder="Cari..." style={{background:'transparent',border:'none',outline:'none',color:C.text,fontSize:12,width:'100%',fontFamily:'Inter'}}/>
+                </div>
+              </div>
+              <div style={{width:1,height:28,background:C.border}}/>
+              <div style={{position:'relative',cursor:'pointer'}}>
+                <div style={{width:40,height:40,borderRadius:12,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`,backdropFilter:'blur(12px)',transition:'border-color 200ms'}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.primary} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
                   <MI name="notifications" size={20} style={{color:C.text}}/>
                 </div>
-                <div className="dot-live" style={{position:'absolute',top:8,right:8,width:7,height:7,borderRadius:'50%',background:C.red}}/>
+                <div className="dot-live" style={{position:'absolute',top:8,right:8,width:7,height:7,borderRadius:'50%',background:C.red,border:`2px solid ${C.bg}`}}/>
               </div>
-              <div style={{width:40,height:40,borderRadius:12,background:'linear-gradient(135deg,#C9A84C,#E8D48B)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'white',boxShadow:'0 0 12px rgba(201,168,76,0.3)'}}>AD</div>
+              <div style={{display:'flex',alignItems:'center',gap:10,padding:'6px 12px 6px 6px',borderRadius:12,background:C.surfaceLight,border:`1px solid ${C.border}`,cursor:'pointer'}}>
+                <div style={{width:32,height:32,borderRadius:10,background:'linear-gradient(135deg,#C9A84C,#E8D48B)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'white',boxShadow:'0 0 12px rgba(201,168,76,0.3)'}}>AD</div>
+                <div>
+                  <p style={{fontSize:12,fontWeight:600,color:C.text,lineHeight:1.2}}>Admin</p>
+                  <p style={{fontSize:9,color:C.textMuted}}>Super Admin</p>
+                </div>
+                <MI name="expand_more" size={16} style={{color:C.textMuted}}/>
+              </div>
             </div>
           </div>
 
@@ -2263,23 +2299,33 @@ export default function App(){
             {adSubTab==='ringkasan'&&(<>
             {/* Stats Row */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>
-              {[{icon:'group',label:'Total Anggota',value:ADMIN_STATS.totalAgents.toLocaleString(),color:C.primary,bg:C.primaryLight,sub:'+24 minggu ini'},
-                {icon:'person_check',label:'Aktif Hari Ini',value:ADMIN_STATS.activeToday.toString(),color:C.green,bg:C.greenLight,sub:`${Math.round(ADMIN_STATS.activeToday/ADMIN_STATS.totalAgents*100)}% dari total`},
-                {icon:'target',label:'Misi Aktif',value:ADMIN_STATS.missionsActive.toString(),color:C.gold,bg:C.goldLight,sub:`${ADMIN_STATS.missionsCompleted} selesai total`},
-                {icon:'public',label:'Total Reach',value:ADMIN_STATS.totalReach,color:C.purple,bg:C.purpleLight,sub:`Avg ${ADMIN_STATS.avgEngagement} engagement`},
+              {[{icon:'group',label:'Total Anggota',value:ADMIN_STATS.totalAgents.toLocaleString(),color:C.primary,bg:C.primaryLight,sub:'+24 minggu ini',trend:'+3.2%',up:true},
+                {icon:'person_check',label:'Aktif Hari Ini',value:ADMIN_STATS.activeToday.toString(),color:C.green,bg:C.greenLight,sub:`${Math.round(ADMIN_STATS.activeToday/ADMIN_STATS.totalAgents*100)}% dari total`,trend:'+12%',up:true},
+                {icon:'target',label:'Misi Aktif',value:ADMIN_STATS.missionsActive.toString(),color:C.gold,bg:C.goldLight,sub:`${ADMIN_STATS.missionsCompleted} selesai total`,trend:'+2',up:true},
+                {icon:'public',label:'Total Reach',value:ADMIN_STATS.totalReach,color:C.purple,bg:C.purpleLight,sub:`Avg ${ADMIN_STATS.avgEngagement} engagement`,trend:'+18%',up:true},
               ].map((s,i)=>(
-                <DCard key={i} style={{padding:0}}>
-                  <div style={{padding:20}}>
-                    <div className="flex items-center gap-3">
-                      <div style={{width:40,height:40,borderRadius:10,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <MI name={s.icon} size={20} fill style={{color:s.color}}/>
+                <DCard key={i} style={{padding:0}} accent={s.color}>
+                  <div style={{padding:20,position:'relative',overflow:'hidden'}}>
+                    {/* Background glow */}
+                    <div style={{position:'absolute',top:-20,right:-20,width:80,height:80,borderRadius:'50%',background:s.bg,filter:'blur(30px)',opacity:0.5}}/>
+                    <div className="flex items-center justify-between mb-3" style={{position:'relative'}}>
+                      <div style={{width:44,height:44,borderRadius:12,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${s.color}22`}}>
+                        <MI name={s.icon} size={22} fill style={{color:s.color}}/>
                       </div>
-                      <div>
-                        <p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
-                        <p style={{fontSize:11,color:C.textMuted}}>{s.label}</p>
+                      <div style={{display:'flex',alignItems:'center',gap:3,padding:'3px 8px',borderRadius:6,background:s.up?C.greenLight:C.redLight}}>
+                        <MI name={s.up?'trending_up':'trending_down'} size={12} style={{color:s.up?C.green:C.red}}/>
+                        <span style={{fontSize:10,fontWeight:700,color:s.up?C.green:C.red}}>{s.trend}</span>
                       </div>
                     </div>
-                    <p style={{fontSize:10,color:s.color,fontWeight:600,marginTop:8}}>{s.sub}</p>
+                    <div style={{position:'relative'}}>
+                      <p style={{fontSize:28,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",letterSpacing:-1,lineHeight:1}}>{s.value}</p>
+                      <p style={{fontSize:12,color:C.textMuted,marginTop:6,fontWeight:500}}>{s.label}</p>
+                      <p style={{fontSize:10,color:s.color,fontWeight:600,marginTop:6,opacity:0.8}}>{s.sub}</p>
+                    </div>
+                    {/* Mini sparkline decoration */}
+                    <svg viewBox="0 0 80 24" style={{position:'absolute',bottom:12,right:16,width:80,height:24,opacity:0.3}}>
+                      <polyline points={i===0?"0,18 12,14 24,16 36,10 48,12 60,6 72,8 80,2":i===1?"0,20 12,18 24,12 36,16 48,8 60,10 72,4 80,2":i===2?"0,16 12,14 24,18 36,12 48,10 60,14 72,6 80,4":"0,22 12,16 24,14 36,18 48,10 60,8 72,6 80,2"} fill="none" stroke={s.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
                 </DCard>
               ))}
@@ -2288,105 +2334,132 @@ export default function App(){
             {/* Two columns */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               {/* Submission Queue */}
-              <DCard title="Antrian Review" subtitle={`${submissionQueue.length} submisi menunggu`}>
+              <DCard title="Antrian Review" subtitle={`${submissionQueue.length} submisi menunggu`} accent={C.orange}
+                action={<span style={{fontSize:10,fontWeight:700,color:C.orange,padding:'4px 10px',borderRadius:6,background:C.orangeLight,display:'flex',alignItems:'center',gap:4}}><MI name="pending" size={12} fill style={{color:C.orange}}/>{submissionQueue.length} Pending</span>}>
+                <div className="flex flex-col gap-3">
                 {submissionQueue.map((s,i)=>(
-                  <div key={i} style={{padding:'12px 0',borderBottom:i<submissionQueue.length-1?`1px solid ${C.borderLight}`:'none'}}>
+                  <div key={i} style={{padding:14,borderRadius:12,background:C.surfaceLight,border:`1px solid ${s.aiPass?'rgba(34,197,94,0.15)':'rgba(245,158,11,0.15)'}`,transition:'border-color 200ms'}} onMouseEnter={e=>e.currentTarget.style.borderColor=s.aiPass?C.green:C.orange} onMouseLeave={e=>e.currentTarget.style.borderColor=s.aiPass?'rgba(34,197,94,0.15)':'rgba(245,158,11,0.15)'}>
                     <div className="flex items-center gap-3">
-                      <div style={{width:40,height:40,borderRadius:10,background:s.aiPass?C.greenLight:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',flexShrink:0}}>
-                        <span style={{fontSize:13,fontWeight:800,color:s.aiPass?C.green:C.orange,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.aiScore}</span>
-                        <span style={{fontSize:7,fontWeight:600,color:s.aiPass?C.green:C.orange,opacity:0.7}}>AI</span>
+                      {/* AI Score Ring */}
+                      <div style={{width:44,height:44,borderRadius:'50%',position:'relative',flexShrink:0}}>
+                        <svg viewBox="0 0 44 44" style={{width:44,height:44,transform:'rotate(-90deg)'}}>
+                          <circle cx="22" cy="22" r="18" fill="none" stroke={C.border} strokeWidth="3"/>
+                          <circle cx="22" cy="22" r="18" fill="none" stroke={s.aiPass?C.green:C.orange} strokeWidth="3" strokeDasharray={`${s.aiScore*1.13} 113`} strokeLinecap="round"/>
+                        </svg>
+                        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column'}}>
+                          <span style={{fontSize:12,fontWeight:800,color:s.aiPass?C.green:C.orange,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.aiScore}</span>
+                        </div>
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <p style={{fontSize:13,fontWeight:600,color:C.text}}>{s.agent}</p>
-                        <p style={{fontSize:11,color:C.textMuted}}>{s.mission} · {s.time}</p>
+                        <p style={{fontSize:11,color:C.textMuted,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.mission}</p>
+                        <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{s.time}</p>
                       </div>
                       <div style={{textAlign:'center',flexShrink:0}}>
-                        <p style={{fontSize:15,fontWeight:800,color:s.briefMatch>=80?C.green:s.briefMatch>=60?C.orange:C.red,fontFamily:"'JetBrains Mono'"}}>{s.briefMatch}%</p>
-                        <p style={{fontSize:8,fontWeight:600,color:C.textMuted}}>BRIEF MATCH</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button style={{padding:'6px 12px',borderRadius:6,border:'none',background:C.green,color:'white',fontSize:11,fontWeight:700,cursor:'pointer'}}>Approve</button>
-                        <button style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer'}}>Detail</button>
+                        <p style={{fontSize:16,fontWeight:800,color:s.briefMatch>=80?C.green:s.briefMatch>=60?C.orange:C.red,fontFamily:"'JetBrains Mono'"}}>{s.briefMatch}%</p>
+                        <p style={{fontSize:8,fontWeight:600,color:C.textMuted,letterSpacing:0.5}}>BRIEF</p>
                       </div>
                     </div>
                     {/* Brief compliance checks */}
-                    <div className="flex gap-2 mt-2 ml-12">
+                    <div className="flex gap-2 mt-3 flex-wrap">
                       {s.briefChecks.map((bc,j)=>(
-                        <span key={j} style={{fontSize:9,fontWeight:600,padding:'2px 6px',borderRadius:4,display:'flex',alignItems:'center',gap:2,
+                        <span key={j} style={{fontSize:9,fontWeight:600,padding:'3px 8px',borderRadius:6,display:'flex',alignItems:'center',gap:3,
                           background:bc.ok?C.greenLight:C.orangeLight,color:bc.ok?C.green:C.orange,
                         }}>
-                          <MI name={bc.ok?'check':'close'} size={10} style={{color:bc.ok?C.green:C.orange}}/>{bc.l}
+                          <MI name={bc.ok?'check_circle':'cancel'} size={11} fill style={{color:bc.ok?C.green:C.orange}}/>{bc.l}
                         </span>
                       ))}
                     </div>
+                    <div className="flex gap-2 mt-3 justify-end">
+                      <button style={{padding:'7px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#22C55E,#16A34A)',color:'white',fontSize:11,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 8px rgba(34,197,94,0.3)',display:'flex',alignItems:'center',gap:4}}><MI name="check" size={14}/>Approve</button>
+                      <button style={{padding:'7px 14px',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><MI name="visibility" size={14}/>Detail</button>
+                    </div>
                   </div>
                 ))}
+                </div>
               </DCard>
 
               {/* Platform Performance */}
-              <DCard title="Platform Performance" subtitle="Engagement rate per platform">
-                {PLATFORM_STATS.map((p,i)=>(
-                  <div key={i} className="flex items-center gap-3" style={{padding:'10px 0',borderBottom:i<PLATFORM_STATS.length-1?`1px solid ${C.borderLight}`:'none'}}>
-                    <div style={{width:36,height:36,borderRadius:8,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
-                      {p.platform==='facebook'?<MI name="thumb_up" size={18} style={{color:p.color}}/>:<SocialIcon platform={p.platform} size={18} color={p.color}/>}
+              <DCard title="Platform Performance" subtitle="Engagement & reach per platform" accent={C.primary}>
+                <div className="flex flex-col gap-3">
+                {PLATFORM_STATS.map((p,i)=>{
+                  const engVal=parseFloat(p.engagement);
+                  return(
+                  <div key={i} style={{padding:14,borderRadius:12,background:C.surfaceLight,border:`1px solid ${C.border}`,transition:'border-color 200ms'}} onMouseEnter={e=>e.currentTarget.style.borderColor=p.color+'66'} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                    <div className="flex items-center gap-3">
+                      <div style={{width:40,height:40,borderRadius:10,background:`${p.color}15`,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${p.color}22`}}>
+                        {p.platform==='facebook'?<MI name="thumb_up" size={18} style={{color:p.color}}/>:<SocialIcon platform={p.platform} size={18} color={p.color}/>}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.platform==='x'?'X (Twitter)':p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</p>
+                          <div className="flex items-center gap-2">
+                            <span style={{fontSize:15,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{p.engagement}</span>
+                            <span style={{fontSize:10,fontWeight:700,color:p.trend.startsWith('+')?C.green:C.red,padding:'2px 6px',borderRadius:4,background:p.trend.startsWith('+')?C.greenLight:C.redLight}}>{p.trend}</span>
+                          </div>
+                        </div>
+                        <div style={{height:6,borderRadius:6,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
+                          <div style={{height:'100%',borderRadius:6,background:`linear-gradient(90deg,${p.color}88,${p.color})`,width:`${engVal/25*100}%`,transition:'width 1s ease-out'}}/>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span style={{fontSize:10,color:C.textMuted}}>{p.posts} posts</span>
+                          <span style={{fontSize:10,color:C.textMuted}}>Reach: <b style={{color:C.text}}>{p.reach}</b></span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.platform==='x'?'X (Twitter)':p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</p>
-                      <div style={{marginTop:4}}><ProgressBar progress={parseFloat(p.engagement)/25} color={p.color} height={4}/></div>
-                    </div>
-                    <div style={{textAlign:'right'}}>
-                      <p style={{fontSize:14,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{p.engagement}</p>
-                      <p style={{fontSize:10,fontWeight:600,color:p.trend.startsWith('+')?C.green:p.trend.startsWith('-')?C.red:C.textMuted}}>{p.trend}</p>
-                    </div>
-                  </div>
-                ))}
+                  </div>);
+                })}
+                </div>
               </DCard>
             </div>
 
             {/* Active Missions with Analytics */}
-            <DCard title="Misi Aktif — Analisa" subtitle={`${MISSIONS.filter(m=>m.status!=='SELESAI').length} misi sedang berjalan`}>
+            <DCard title="Misi Aktif — Analisa" subtitle={`${MISSIONS.filter(m=>m.status!=='SELESAI').length} misi sedang berjalan`} accent={C.gold}
+              action={<button style={{fontSize:11,fontWeight:600,color:C.primary,background:C.primaryLight,border:'none',padding:'6px 12px',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><MI name="add" size={14}/>Buat Misi</button>}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14}}>
-                {MISSIONS.filter(m=>m.status!=='SELESAI').slice(0,6).map(m=>(
-                  <div key={m.id} onClick={()=>{setSelectedAdMission(m.id);setAdSideTab('missionDetail')}} style={{background:C.surfaceLight,borderRadius:12,padding:16,border:`1px solid ${C.border}`,cursor:'pointer',transition:'border-color 150ms'}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.primary} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div style={{width:26,height:26,borderRadius:6,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <MI name={typeIcon(m.type)} size={13} fill style={{color:typeColor(m.type)}}/>
+                {MISSIONS.filter(m=>m.status!=='SELESAI').slice(0,6).map(m=>{
+                  const tc2=typeColor(m.type);
+                  return(
+                  <div key={m.id} onClick={()=>{setSelectedAdMission(m.id);setAdSideTab('missionDetail')}} style={{background:C.surfaceLight,borderRadius:14,padding:16,border:`1px solid ${C.border}`,cursor:'pointer',transition:'all 200ms',position:'relative',overflow:'hidden'}} onMouseEnter={e=>{e.currentTarget.style.borderColor=tc2+'55';e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 8px 24px rgba(0,0,0,0.2)`}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none'}}>
+                    {/* Type accent line */}
+                    <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${tc2},transparent)`}}/>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div style={{width:28,height:28,borderRadius:8,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <MI name={typeIcon(m.type)} size={14} fill style={{color:tc2}}/>
                       </div>
-                      <span style={{fontSize:10,fontWeight:700,color:typeColor(m.type),textTransform:'uppercase'}}>{m.type}</span>
-                      <span style={{marginLeft:'auto',fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:4,
+                      <span style={{fontSize:10,fontWeight:700,color:tc2,textTransform:'uppercase',letterSpacing:0.5}}>{m.type}</span>
+                      <span style={{marginLeft:'auto',fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:6,
                         background:m.status==='PRIORITAS'?C.redLight:m.status==='SIAGA'?C.orangeLight:typeBg(m.type),
-                        color:m.status==='PRIORITAS'?C.red:m.status==='SIAGA'?C.orange:typeColor(m.type)}}>{m.status}</span>
+                        color:m.status==='PRIORITAS'?C.red:m.status==='SIAGA'?C.orange:tc2}}>{m.status}</span>
                     </div>
-                    <p style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:8}} className="line-clamp-2">{m.title}</p>
+                    <p style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.4,marginBottom:10}} className="line-clamp-2">{m.title}</p>
                     <div className="flex items-center justify-between mb-3">
-                      <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
-                      <span style={{fontSize:10,color:C.textMuted}}>{m.participants} joined · {m.deadline}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'",display:'flex',alignItems:'center',gap:3}}><MI name="star" size={13} fill style={{color:C.gold}}/>+{m.xp} XP</span>
+                      <span style={{fontSize:10,color:C.textMuted}}><b style={{color:C.text}}>{m.participants}</b> joined · {m.deadline}</span>
                     </div>
-                    {m.analytics&&(<>
-                      <div style={{borderTop:`1px solid ${C.border}`,paddingTop:10}}>
-                        <div className="grid grid-cols-3 gap-2 mb-2">
-                          <div style={{textAlign:'center'}}>
-                            <p style={{fontSize:13,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{m.analytics.reach}</p>
-                            <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>Reach</p>
-                          </div>
-                          <div style={{textAlign:'center'}}>
-                            <p style={{fontSize:13,fontWeight:800,color:C.green,fontFamily:"'JetBrains Mono'"}}>{m.analytics.engagement}</p>
-                            <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>Engage</p>
-                          </div>
-                          <div style={{textAlign:'center'}}>
-                            <p style={{fontSize:13,fontWeight:800,color:m.analytics.completion>=70?C.green:m.analytics.completion>=40?C.orange:C.red,fontFamily:"'JetBrains Mono'"}}>{m.analytics.completion}%</p>
-                            <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>Selesai</p>
+                    {m.analytics&&(
+                      <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12}}>
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          {[{v:m.analytics.reach,l:'Reach',c:C.text},{v:m.analytics.engagement,l:'Engage',c:C.green},{v:m.analytics.completion+'%',l:'Selesai',c:m.analytics.completion>=70?C.green:m.analytics.completion>=40?C.orange:C.red}].map((x,xi)=>(
+                            <div key={xi} style={{textAlign:'center',padding:'6px 0',borderRadius:8,background:`${x.c}08`}}>
+                              <p style={{fontSize:14,fontWeight:800,color:x.c,fontFamily:"'JetBrains Mono'"}}>{x.v}</p>
+                              <p style={{fontSize:9,color:C.textMuted,fontWeight:600,marginTop:2}}>{x.l}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{marginTop:4,position:'relative'}}>
+                          <div style={{height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
+                            <div style={{height:'100%',borderRadius:4,background:`linear-gradient(90deg,${m.analytics.completion>=70?C.green:m.analytics.completion>=40?C.orange:C.red}88,${m.analytics.completion>=70?C.green:m.analytics.completion>=40?C.orange:C.red})`,width:`${m.analytics.completion}%`,transition:'width 1s ease-out'}}/>
                           </div>
                         </div>
-                        <div style={{marginTop:4}}><ProgressBar progress={m.analytics.completion/100} color={m.analytics.completion>=70?C.green:m.analytics.completion>=40?C.orange:C.red} height={3}/></div>
-                        <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center justify-between mt-3">
                           <span style={{fontSize:9,color:C.textMuted}}>Sentimen: <b style={{color:m.analytics.sentiment>=70?C.green:m.analytics.sentiment>=40?C.orange:C.red}}>{m.analytics.sentiment}%</b></span>
                           <span style={{fontSize:9,color:C.textMuted}}>Konversi: <b style={{color:C.primary}}>{m.analytics.conversionRate}</b></span>
                         </div>
                       </div>
-                    </>)}
-                  </div>
-                ))}
+                    )}
+                  </div>);
+                })}
               </div>
             </DCard>
             </>)}
@@ -2394,69 +2467,98 @@ export default function App(){
             {adSubTab==='analytics'&&(<>
             {/* Key Metrics */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>
-              {[{label:'Avg Join Rate',value:'68%',icon:'person_add',color:C.primary,sub:'per misi'},
-                {label:'Completion Rate',value:'74%',icon:'task_alt',color:C.green,sub:'misi diselesaikan'},
-                {label:'Avg Engagement',value:'12.3%',icon:'trending_up',color:C.orange,sub:'across platforms'},
-                {label:'Total Reach',value:'2.4M',icon:'public',color:C.purple,sub:'semua platform'},
+              {[{label:'Avg Join Rate',value:'68%',icon:'person_add',color:C.primary,sub:'per misi',pct:68},
+                {label:'Completion Rate',value:'74%',icon:'task_alt',color:C.green,sub:'misi diselesaikan',pct:74},
+                {label:'Avg Engagement',value:'12.3%',icon:'trending_up',color:C.orange,sub:'across platforms',pct:49},
+                {label:'Total Reach',value:'2.4M',icon:'public',color:C.purple,sub:'semua platform',pct:82},
               ].map((s,i)=>(
-                <DCard key={i} style={{padding:0}}>
-                  <div style={{padding:16}}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <MI name={s.icon} size={18} style={{color:s.color}}/>
-                      <span style={{fontSize:12,color:C.textMuted}}>{s.label}</span>
+                <DCard key={i} style={{padding:0}} accent={s.color}>
+                  <div style={{padding:20,position:'relative'}}>
+                    <div style={{position:'absolute',top:16,right:16}}>
+                      <svg viewBox="0 0 48 48" style={{width:48,height:48}}>
+                        <circle cx="24" cy="24" r="20" fill="none" stroke={`${s.color}15`} strokeWidth="4"/>
+                        <circle cx="24" cy="24" r="20" fill="none" stroke={s.color} strokeWidth="4" strokeDasharray={`${s.pct*1.26} 126`} strokeLinecap="round" style={{transform:'rotate(-90deg)',transformOrigin:'center',transition:'stroke-dasharray 1.5s ease'}}/>
+                      </svg>
                     </div>
-                    <p style={{fontSize:28,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
-                    <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{s.sub}</p>
+                    <MI name={s.icon} size={20} fill style={{color:s.color,marginBottom:8,display:'block'}}/>
+                    <p style={{fontSize:30,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",letterSpacing:-1}}>{s.value}</p>
+                    <p style={{fontSize:12,color:C.textMuted,marginTop:4,fontWeight:500}}>{s.label}</p>
+                    <p style={{fontSize:10,color:s.color,fontWeight:600,marginTop:6}}>{s.sub}</p>
                   </div>
                 </DCard>
               ))}
             </div>
 
             {/* Mission Performance */}
-            <DCard title="Performa per Tipe Misi" subtitle="Join rate & engagement berdasarkan tipe">
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+            <DCard title="Performa per Tipe Misi" subtitle="Join rate & engagement berdasarkan tipe" accent={C.teal}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
                 {[{type:'EDUKASI',join:'72%',engagement:'11.2%',completed:42},{type:'AMPLIFIKASI',join:'65%',engagement:'14.8%',completed:38},
                   {type:'KRISIS',join:'89%',engagement:'18.5%',completed:12},{type:'KOMUNITAS',join:'54%',engagement:'8.4%',completed:18},
                   {type:'VISIT',join:'45%',engagement:'22.1%',completed:28},{type:'SOCIAL',join:'78%',engagement:'16.3%',completed:34},
-                ].map((t,i)=>(
-                  <div key={i} style={{background:C.surfaceLight,borderRadius:10,padding:16,border:`1px solid ${C.border}`}}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div style={{width:28,height:28,borderRadius:8,background:typeBg(t.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <MI name={typeIcon(t.type)} size={14} fill style={{color:typeColor(t.type)}}/>
+                ].map((t,i)=>{
+                  const tc2=typeColor(t.type);
+                  return(
+                  <div key={i} style={{background:C.surfaceLight,borderRadius:12,padding:16,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden',transition:'border-color 200ms'}} onMouseEnter={e=>e.currentTarget.style.borderColor=tc2+'44'} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                    <div style={{position:'absolute',top:0,left:0,width:'100%',height:2,background:`linear-gradient(90deg,${tc2},transparent)`}}/>
+                    <div className="flex items-center gap-2 mb-4">
+                      <div style={{width:32,height:32,borderRadius:10,background:typeBg(t.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <MI name={typeIcon(t.type)} size={16} fill style={{color:tc2}}/>
                       </div>
-                      <span style={{fontSize:12,fontWeight:700,color:typeColor(t.type)}}>{t.type}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:tc2}}>{t.type}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.join}</p><p style={{fontSize:9,color:C.textMuted}}>Join Rate</p></div>
-                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.engagement}</p><p style={{fontSize:9,color:C.textMuted}}>Engage</p></div>
-                      <div><p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{t.completed}</p><p style={{fontSize:9,color:C.textMuted}}>Selesai</p></div>
+                      {[{v:t.join,l:'Join'},{v:t.engagement,l:'Engage'},{v:t.completed,l:'Selesai'}].map((x,xi)=>(
+                        <div key={xi}>
+                          <p style={{fontSize:17,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{x.v}</p>
+                          <p style={{fontSize:9,color:C.textMuted,marginTop:2}}>{x.l}</p>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  </div>);
+                })}
               </div>
             </DCard>
 
             {/* Agent Performance Distribution */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-              <DCard title="Distribusi Tier Anggota">
-                {[{tier:'Gold',count:186,pct:15,color:C.orange},{tier:'Silver',count:524,pct:42,color:C.primary},{tier:'Bronze',count:537,pct:43,color:C.textMuted}].map((t,i)=>(
-                  <div key={i} className="flex items-center gap-3" style={{marginBottom:12}}>
-                    <span style={{fontSize:13,fontWeight:700,color:t.color,width:60}}>{t.tier}</span>
-                    <div className="flex-1"><ProgressBar progress={t.pct/100} color={t.color} height={8}/></div>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:50,textAlign:'right'}}>{t.count}</span>
-                    <span style={{fontSize:11,color:C.textMuted,width:30}}>{t.pct}%</span>
+              <DCard title="Distribusi Tier Anggota" accent={C.orange}>
+                <div className="flex items-center gap-6 mb-4">
+                  {/* Donut Chart */}
+                  <svg viewBox="0 0 120 120" style={{width:100,height:100,flexShrink:0}}>
+                    <circle cx="60" cy="60" r="48" fill="none" stroke={C.textMuted} strokeWidth="12" strokeDasharray={`${43*3.015} ${100*3.015}`} strokeDashoffset={`${-(15+42)*3.015}`} style={{transform:'rotate(-90deg)',transformOrigin:'center'}}/>
+                    <circle cx="60" cy="60" r="48" fill="none" stroke={C.primary} strokeWidth="12" strokeDasharray={`${42*3.015} ${100*3.015}`} strokeDashoffset={`${-15*3.015}`} style={{transform:'rotate(-90deg)',transformOrigin:'center'}}/>
+                    <circle cx="60" cy="60" r="48" fill="none" stroke={C.orange} strokeWidth="12" strokeDasharray={`${15*3.015} ${100*3.015}`} style={{transform:'rotate(-90deg)',transformOrigin:'center'}}/>
+                    <text x="60" y="56" textAnchor="middle" style={{fontSize:20,fontWeight:800,fill:C.text,fontFamily:"'JetBrains Mono'"}}>1,247</text>
+                    <text x="60" y="72" textAnchor="middle" style={{fontSize:10,fill:C.textMuted}}>Total</text>
+                  </svg>
+                  <div className="flex flex-col gap-3 flex-1">
+                    {[{tier:'Gold',count:186,pct:15,color:C.orange,icon:'workspace_premium'},{tier:'Silver',count:524,pct:42,color:C.primary,icon:'military_tech'},{tier:'Bronze',count:537,pct:43,color:C.textMuted,icon:'shield'}].map((t,i)=>(
+                      <div key={i} className="flex items-center gap-2">
+                        <MI name={t.icon} size={16} fill style={{color:t.color}}/>
+                        <span style={{fontSize:12,fontWeight:600,color:t.color,width:50}}>{t.tier}</span>
+                        <div className="flex-1"><ProgressBar progress={t.pct/100} color={t.color} height={6}/></div>
+                        <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:40,textAlign:'right'}}>{t.count}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </DCard>
-              <DCard title="Demografi Usia">
-                {[{age:'18\u201324',count:412,pct:33},{age:'25\u201334',count:498,pct:40},{age:'35\u201344',count:237,pct:19},{age:'45+',count:100,pct:8}].map((a,i)=>(
-                  <div key={i} className="flex items-center gap-3" style={{marginBottom:12}}>
-                    <span style={{fontSize:13,fontWeight:600,color:C.text,width:60}}>{a.age}</span>
-                    <div className="flex-1"><ProgressBar progress={a.pct/100} color={C.primary} height={8}/></div>
-                    <span style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:50,textAlign:'right'}}>{a.count}</span>
-                    <span style={{fontSize:11,color:C.textMuted,width:30}}>{a.pct}%</span>
+              <DCard title="Demografi Usia" accent={C.purple}>
+                <div className="flex flex-col gap-3">
+                {[{age:'18\u201324',count:412,pct:33,color:C.teal},{age:'25\u201334',count:498,pct:40,color:C.primary},{age:'35\u201344',count:237,pct:19,color:C.purple},{age:'45+',count:100,pct:8,color:C.pink}].map((a,i)=>(
+                  <div key={i} className="flex items-center gap-3">
+                    <span style={{fontSize:12,fontWeight:600,color:C.text,width:48,flexShrink:0}}>{a.age}</span>
+                    <div className="flex-1" style={{position:'relative'}}>
+                      <div style={{height:24,borderRadius:6,background:'rgba(255,255,255,0.04)',overflow:'hidden'}}>
+                        <div style={{height:'100%',borderRadius:6,background:`linear-gradient(90deg,${a.color}66,${a.color})`,width:`${a.pct*2}%`,transition:'width 1s ease-out',display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:8}}>
+                          <span style={{fontSize:10,fontWeight:700,color:'white',textShadow:'0 1px 3px rgba(0,0,0,0.3)'}}>{a.pct}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:40,textAlign:'right'}}>{a.count}</span>
                   </div>
                 ))}
+                </div>
               </DCard>
             </div>
             </>)}
@@ -4040,36 +4142,81 @@ export default function App(){
 
           {/* ═══ AGENTS ═══ */}
           {adSideTab==='agents'&&(<div className="flex flex-col gap-5">
-            {/* Filter Row */}
-            <div className="flex gap-3">
-              {['Semua','Gold','Silver','Bronze'].map(t=>(
-                <button key={t} style={{padding:'8px 16px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,fontSize:13,fontWeight:600,cursor:'pointer'}}>{t}</button>
+            {/* Summary Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
+              {[{label:'Total Anggota',value:'1,247',icon:'group',color:C.primary},{label:'Aktif',value:'892',icon:'person_check',color:C.green},{label:'Rata-rata XP',value:'2,840',icon:'star',color:C.gold},{label:'Top Engagement',value:'18.5%',icon:'trending_up',color:C.purple}].map((s,i)=>(
+                <div key={i} style={{padding:16,borderRadius:12,background:`linear-gradient(135deg,${s.color}08,${s.color}03)`,border:`1px solid ${s.color}22`}}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <MI name={s.icon} size={16} fill style={{color:s.color}}/>
+                    <span style={{fontSize:11,color:C.textMuted}}>{s.label}</span>
+                  </div>
+                  <p style={{fontSize:22,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+                </div>
               ))}
             </div>
-            <DCard title="Daftar Anggota" subtitle={`${agentsList.length} anggota terdaftar`}>
+            {/* Filter Row */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2" style={{background:C.surface,borderRadius:10,padding:4,border:`1px solid ${C.border}`}}>
+                {['Semua','Gold','Silver','Bronze'].map(t=>(
+                  <button key={t} style={{padding:'8px 14px',borderRadius:8,border:'none',background:t==='Semua'?C.primaryLight:'transparent',color:t==='Semua'?C.primary:C.textSec,fontSize:12,fontWeight:t==='Semua'?700:500,cursor:'pointer',transition:'all 200ms'}}>{t}</button>
+                ))}
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:10,background:C.surfaceLight,border:`1px solid ${C.border}`}}>
+                <MI name="search" size={16} style={{color:C.textMuted}}/>
+                <input placeholder="Cari anggota..." style={{background:'transparent',border:'none',outline:'none',color:C.text,fontSize:12,width:160,fontFamily:'Inter'}}/>
+              </div>
+            </div>
+            <DCard title="Daftar Anggota" subtitle={`${agentsList.length} anggota terdaftar`} noPad accent={C.primary}>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse'}}>
                   <thead>
-                    <tr>{['Anggota','Gender','Usia','Tier','Misi','XP','Engagement','Status'].map(h=>(
-                      <th key={h} style={{padding:'8px 12px',fontSize:11,fontWeight:700,color:C.textMuted,textAlign:'left',borderBottom:`1px solid ${C.border}`,textTransform:'uppercase',letterSpacing:0.5}}>{h}</th>
+                    <tr style={{background:'rgba(201,168,76,0.04)'}}>{['#','Anggota','Gender','Usia','Tier','Misi','XP','Engagement','Status'].map(h=>(
+                      <th key={h} style={{padding:'12px 16px',fontSize:10,fontWeight:700,color:C.textMuted,textAlign:'left',borderBottom:`1px solid ${C.border}`,textTransform:'uppercase',letterSpacing:1}}>{h}</th>
                     ))}</tr>
                   </thead>
                   <tbody>
                     {agentsList.map((a,i)=>(
-                      <tr key={i} style={{borderBottom:`1px solid ${C.borderLight}`}}>
-                        <td style={{padding:'10px 12px'}}>
-                          <div className="flex items-center gap-2">
-                            <div style={{width:32,height:32,borderRadius:8,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.primary}}>{a.avatar}</div>
-                            <span style={{fontSize:13,fontWeight:600,color:C.text}}>{a.name}</span>
+                      <tr key={i} style={{borderBottom:`1px solid ${C.borderLight}`,cursor:'pointer',transition:'background 150ms'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(201,168,76,0.03)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                        <td style={{padding:'12px 16px',fontSize:12,color:C.textMuted,fontFamily:"'JetBrains Mono'",fontWeight:600}}>{i+1}</td>
+                        <td style={{padding:'12px 16px'}}>
+                          <div className="flex items-center gap-3">
+                            <div style={{width:36,height:36,borderRadius:10,background:`linear-gradient(135deg,${a.tier==='Gold'?C.orangeLight:a.tier==='Silver'?'rgba(201,168,76,0.08)':C.surfaceLight},transparent)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:a.tier==='Gold'?C.orange:C.primary,border:`1px solid ${a.tier==='Gold'?C.orange+'33':C.border}`}}>{a.avatar}</div>
+                            <div>
+                              <span style={{fontSize:13,fontWeight:600,color:C.text,display:'block'}}>{a.name}</span>
+                              <span style={{fontSize:10,color:C.textMuted}}>ID-{1000+i}</span>
+                            </div>
                           </div>
                         </td>
-                        <td style={{padding:'10px 12px',fontSize:12,color:C.textSec}}>{a.gender==='M'?'Laki-laki':'Perempuan'}</td>
-                        <td style={{padding:'10px 12px',fontSize:12,color:C.textSec}}>{a.age}</td>
-                        <td style={{padding:'10px 12px'}}><span style={{fontSize:11,fontWeight:700,padding:'3px 8px',borderRadius:4,background:a.tier==='Gold'?C.orangeLight:a.tier==='Silver'?C.borderLight:C.bg,color:a.tier==='Gold'?C.orange:a.tier==='Silver'?C.textSec:C.textMuted}}>{a.tier}</span></td>
-                        <td style={{padding:'10px 12px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'"}}>{a.missions}</td>
-                        <td style={{padding:'10px 12px',fontSize:13,fontWeight:600,color:C.orange,fontFamily:"'JetBrains Mono'"}}>{a.xp.toLocaleString()}</td>
-                        <td style={{padding:'10px 12px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'"}}>{a.engagement}</td>
-                        <td style={{padding:'10px 12px'}}><span style={{width:8,height:8,borderRadius:'50%',background:a.status==='active'?C.green:C.textMuted,display:'inline-block',marginRight:4}}/><span style={{fontSize:12,color:a.status==='active'?C.green:C.textMuted}}>{a.status==='active'?'Aktif':'Idle'}</span></td>
+                        <td style={{padding:'12px 16px',fontSize:12,color:C.textSec}}>{a.gender==='M'?'Laki-laki':'Perempuan'}</td>
+                        <td style={{padding:'12px 16px',fontSize:12,color:C.textSec}}>{a.age}</td>
+                        <td style={{padding:'12px 16px'}}>
+                          <span style={{fontSize:10,fontWeight:700,padding:'4px 10px',borderRadius:6,display:'inline-flex',alignItems:'center',gap:3,
+                            background:a.tier==='Gold'?C.orangeLight:a.tier==='Silver'?'rgba(201,168,76,0.08)':C.surfaceLight,
+                            color:a.tier==='Gold'?C.orange:a.tier==='Silver'?C.primary:C.textMuted,
+                            border:`1px solid ${a.tier==='Gold'?C.orange+'22':a.tier==='Silver'?C.primary+'22':C.border}`}}>
+                            <MI name={a.tier==='Gold'?'workspace_premium':a.tier==='Silver'?'military_tech':'shield'} size={12} fill style={{color:a.tier==='Gold'?C.orange:a.tier==='Silver'?C.primary:C.textMuted}}/>{a.tier}
+                          </span>
+                        </td>
+                        <td style={{padding:'12px 16px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'"}}>{a.missions}</td>
+                        <td style={{padding:'12px 16px'}}>
+                          <span style={{fontSize:13,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{a.xp.toLocaleString()}</span>
+                        </td>
+                        <td style={{padding:'12px 16px'}}>
+                          <div className="flex items-center gap-2">
+                            <div style={{width:40,height:4,borderRadius:2,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
+                              <div style={{height:'100%',borderRadius:2,background:parseFloat(a.engagement)>=15?C.green:parseFloat(a.engagement)>=10?C.orange:C.red,width:`${parseFloat(a.engagement)/25*100}%`}}/>
+                            </div>
+                            <span style={{fontSize:12,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'"}}>{a.engagement}</span>
+                          </div>
+                        </td>
+                        <td style={{padding:'12px 16px'}}>
+                          <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:6,
+                            background:a.status==='active'?C.greenLight:C.surfaceLight,
+                            color:a.status==='active'?C.green:C.textMuted}}>
+                            <span style={{width:6,height:6,borderRadius:'50%',background:a.status==='active'?C.green:C.textMuted}}/>
+                            {a.status==='active'?'Aktif':'Idle'}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
