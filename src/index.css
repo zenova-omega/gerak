@@ -157,8 +157,9 @@ body {
   box-shadow: 0 12px 40px rgba(201,168,76,0.12), 0 4px 12px rgba(0,0,0,0.04);
 }
 .card-interactive:active {
-  transform: translateY(0) scale(0.985);
+  transform: translateY(0) scale(0.975);
   transition-duration: 100ms;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* ─── BUTTONS ─────────────────────────────────────────────────── */
@@ -226,6 +227,75 @@ body {
 }
 .orb-1 { animation: orbFloat 12s ease-in-out infinite; }
 .orb-2 { animation: orbFloat2 15s ease-in-out infinite; }
+
+/* ─── PAGE TRANSITIONS ────────────────────────────────────────── */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: pageEnter 350ms cubic-bezier(.16,1,.3,1) both; }
+
+@keyframes stepSlide {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.step-enter { animation: stepSlide 400ms cubic-bezier(.16,1,.3,1) both; }
+
+/* ─── SVG PROGRESS RING ──────────────────────────────────────── */
+@keyframes strokeDraw {
+  from { stroke-dashoffset: 327; }
+}
+.progress-ring-stroke {
+  animation: strokeDraw 1.4s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: 300ms;
+}
+
+/* ─── ARROW NUDGE ────────────────────────────────────────────── */
+@keyframes arrowNudge {
+  0%,100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+.arrow-nudge { animation: arrowNudge 1.5s ease-in-out infinite; }
+
+/* ─── SCROLL PEEK FADE ───────────────────────────────────────── */
+.scroll-peek { position: relative; }
+.scroll-peek::after {
+  content: ''; position: absolute;
+  right: 0; top: 0; bottom: 0; width: 32px;
+  background: linear-gradient(to right, transparent, #0B1120);
+  pointer-events: none; z-index: 1;
+}
+
+/* ─── TAP FEEDBACK ───────────────────────────────────────────── */
+.tap-bounce { transition: transform 120ms ease; }
+.tap-bounce:active { transform: scale(0.94); }
+
+/* ─── NUMBER POP ─────────────────────────────────────────────── */
+@keyframes numberPop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+  60% { transform: translateY(-2px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.num-pop { animation: numberPop 600ms cubic-bezier(.16,1,.3,1) both; }
+.num-pop-d1 { animation-delay: 100ms; }
+.num-pop-d2 { animation-delay: 200ms; }
+.num-pop-d3 { animation-delay: 300ms; }
+
+/* ─── URGENCY PULSE ──────────────────────────────────────────── */
+@keyframes urgencyPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(224,92,92,0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(224,92,92,0); }
+}
+.urgency-pulse { animation: urgencyPulse 2s ease-in-out infinite; }
+
+/* ─── CONFIRM SHAKE ──────────────────────────────────────────── */
+@keyframes confirmBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.04); }
+  60% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+.confirm-bounce { animation: confirmBounce 300ms ease; }
 
 /* ─── MISC ────────────────────────────────────────────────────── */
 .count-up { animation: countUp 400ms cubic-bezier(.16,1,.3,1) both; }

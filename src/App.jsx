@@ -319,6 +319,8 @@ export default function App(){
   const [narrativeActions,setNarrativeActions]=useState({}); // {id: 'DUKUNG'|'TOLAK'|'MONITOR'}
   const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null); // {narrativeId, step, prompt, platform, impactLevel, ...}
   const [selectedAdMission,setSelectedAdMission]=useState(null); // mission id for admin detail view
+  const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
+  const [logoutConfirm,setLogoutConfirm]=useState(false);
   const [k,setK]=useState(0);
 
   const nav=useCallback(s=>{setScreen(s);setK(n=>n+1)},[]);
@@ -338,21 +340,35 @@ export default function App(){
   }
 
   function Badge({badge,size=52}){
-    const hex='polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
-    const hexIn='polygon(50% 3%, 97% 26%, 97% 74%, 50% 97%, 3% 74%, 3% 26%)';
-    return <div className={`flex flex-col items-center gap-1.5 badge-item ${badge.unlocked?'badge-unlocked':''}`} style={{minWidth:56}}>
-      <div style={{
-        width:size,height:size,clipPath:hex,display:'flex',alignItems:'center',justifyContent:'center',
-        background:badge.unlocked?(badge.color||C.primary):C.surfaceLight,
-        opacity:badge.unlocked?1:0.4,
-        boxShadow:badge.unlocked?`0 0 12px ${badge.color}30`:'none',
-      }}>
-        <div style={{width:'100%',height:'100%',clipPath:hexIn,background:C.surface,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <MI name={badge.unlocked?badge.icon:'lock'} size={size*0.38} fill={badge.unlocked} style={{color:badge.unlocked?badge.color:C.textMuted}}/>
+    const col=badge.color||C.primary;
+    const unlocked=badge.unlocked;
+    return <div className={`flex flex-col items-center gap-2 badge-item ${unlocked?'badge-unlocked':''}`} style={{minWidth:64}} onClick={unlocked?()=>showToast(`🏅 ${badge.name}`)  :undefined}>
+      <div style={{position:'relative',width:size,height:size}}>
+        {/* Outer glow ring */}
+        {unlocked&&<div style={{position:'absolute',inset:-3,borderRadius:'50%',background:`radial-gradient(circle,${col}25,transparent 70%)`,filter:'blur(4px)'}}/>}
+        {/* Gradient border ring */}
+        <div style={{
+          width:size,height:size,borderRadius:'50%',padding:2.5,
+          background:unlocked?`linear-gradient(145deg,${col},${col}80)`:`linear-gradient(145deg,${C.border},${C.surfaceLight})`,
+          boxShadow:unlocked?`0 4px 16px ${col}30, 0 0 20px ${col}15, inset 0 1px 0 rgba(255,255,255,0.15)`:`0 2px 8px rgba(0,0,0,0.2)`,
+          position:'relative',
+        }}>
+          {/* Inner circle */}
+          <div style={{
+            width:'100%',height:'100%',borderRadius:'50%',
+            background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight},${C.bg})`,
+            display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',
+          }}>
+            {/* Subtle inner highlight */}
+            {unlocked&&<div style={{position:'absolute',top:-size*0.15,left:size*0.1,width:size*0.5,height:size*0.3,borderRadius:'50%',background:`rgba(255,255,255,0.06)`,filter:'blur(4px)'}}/>}
+            <MI name={unlocked?badge.icon:'lock'} size={size*0.38} fill={unlocked} style={{color:unlocked?col:C.textMuted,position:'relative',zIndex:1,filter:unlocked?`drop-shadow(0 0 6px ${col}40)`:'none'}}/>
+          </div>
         </div>
+        {/* Locked overlay */}
+        {!unlocked&&<div style={{position:'absolute',inset:0,borderRadius:'50%',background:'rgba(11,17,32,0.4)'}}/>}
       </div>
-      <span style={{fontSize:10,color:badge.unlocked?C.text:C.textMuted,textAlign:'center',fontWeight:500,maxWidth:60,lineHeight:1.2}}>
-        {badge.unlocked?badge.name:'???'}
+      <span style={{fontSize:10,color:unlocked?C.text:C.textMuted,textAlign:'center',fontWeight:unlocked?600:400,maxWidth:64,lineHeight:1.2}}>
+        {unlocked?badge.name:'???'}
       </span>
     </div>;
   }
@@ -379,11 +395,11 @@ export default function App(){
             <span style={{fontSize:11,fontWeight:700,color:C.primary,letterSpacing:1,textTransform:'uppercase'}}>Perwira Muda</span>
           </div>
         </div>
-        <div style={{position:'relative'}}>
-          <div style={{width:40,height:40,borderRadius:'50%',background:C.surface,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{position:'relative'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
+          <div style={{width:40,height:40,borderRadius:'50%',background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:`1px solid ${C.border}`}}>
             <MI name="notifications" size={20} style={{color:C.textSec}}/>
           </div>
-          <div style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:'50%',background:C.red,border:`2px solid ${C.surface}`}}/>
+          <div style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:'50%',background:C.red,border:`2px solid ${C.surface}`}} className="urgency-pulse"/>
         </div>
       </div>
 
@@ -410,10 +426,12 @@ export default function App(){
 
       {/* Stats Row */}
       <div className="stagger-3 grid grid-cols-3 gap-3">
-        {[{icon:'target',label:'Misi',value:'24'},{icon:'local_fire_department',label:'Streak',value:'7d'},{icon:'leaderboard',label:'Rank',value:'#12'}].map((s,i)=>(
+        {[{icon:'target',label:'Misi',value:'24',color:C.primary},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal}].map((s,i)=>(
           <Card key={i} style={{textAlign:'center',padding:12}}>
-            <MI name={s.icon} size={22} style={{color:C.primary}}/>
-            <p style={{fontSize:18,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+            <div style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
+              <MI name={s.icon} size={18} fill style={{color:s.color}}/>
+            </div>
+            <p className={`num-pop num-pop-d${i+1}`} style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
             <p style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label}</p>
           </Card>
         ))}
@@ -431,7 +449,7 @@ export default function App(){
           <span style={{color:C.textMuted,fontSize:11,fontWeight:500}}>12 Mar</span>
         </div>
         <button onClick={()=>openM(MISSIONS[0])} className="btn-primary" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',border:'none',borderRadius:10,padding:'10px 20px',color:'#0B1120',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-          Lihat Misi <MI name="arrow_forward" size={16} style={{color:'#0B1120'}}/>
+          Lihat Misi <span className="arrow-nudge" style={{display:'inline-flex'}}><MI name="arrow_forward" size={16} style={{color:'#0B1120'}}/></span>
         </button>
       </Card>
 
@@ -441,7 +459,7 @@ export default function App(){
           <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif</h3>
           <button onClick={()=>nav('misi')} style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
         </div>
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 scroll-peek">
           {MISSIONS.filter(m=>m.status!=='SELESAI').slice(0,4).map(m=>(
             <Card key={m.id} onClick={()=>openM(m)} style={{minWidth:200,flexShrink:0,padding:14}}>
               <div className="flex items-center gap-2 mb-2">
@@ -473,10 +491,10 @@ export default function App(){
               <span style={{fontSize:12,fontWeight:700,color:C.textSec,fontFamily:"'JetBrains Mono'"}}>{p.xp.toLocaleString()}</span>
             </div>
           ))}
-          <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(201,168,76,0.15)`}}>
+          <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(201,168,76,0.15)`,borderLeft:`3px solid ${C.primary}`}}>
             <span style={{fontSize:14,fontWeight:800,color:C.primary,width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>#4</span>
             <div style={{width:32,height:32,borderRadius:10,background:'linear-gradient(135deg,#C9A84C,#E8D48B)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'white',boxShadow:'0 0 12px rgba(201,168,76,0.3)'}}>AS</div>
-            <div className="flex-1"><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Kamu</p></div>
+            <div className="flex-1"><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Kamu <MI name="star" size={12} fill style={{color:C.gold,verticalAlign:'middle',marginLeft:2}}/></p></div>
             <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>#4 · 4,820</span>
           </div>
         </Card>
@@ -492,8 +510,19 @@ export default function App(){
       <div className="stagger-2 flex gap-2 overflow-x-auto hide-scrollbar pb-1">
         {filters.map(f=><Chip key={f} label={f} active={filter===f} onClick={()=>setFilter(f)}/>)}
       </div>
-      {filtered.map((m,i)=>{const tc=typeColor(m.type);const done=m.status==='SELESAI';return(
-        <Card key={m.id} className={`stagger-${Math.min(i+3,7)}`} onClick={()=>openM(m)} style={{opacity:done?0.6:1,position:'relative',overflow:'hidden'}}>
+      {filtered.length===0&&(
+        <Card className="stagger-3" style={{textAlign:'center',padding:'32px 16px'}}>
+          <MI name="search_off" size={40} style={{color:C.textMuted,opacity:0.5}}/>
+          <p style={{fontSize:14,fontWeight:700,color:C.textMuted,marginTop:8}}>Tidak ada misi</p>
+          <p style={{fontSize:12,color:C.textMuted,marginTop:2}}>Coba filter lain untuk melihat misi</p>
+          <button onClick={()=>setFilter('Semua')} style={{marginTop:12,padding:'8px 20px',borderRadius:8,border:`1px solid ${C.primary}`,background:'transparent',color:C.primary,fontSize:12,fontWeight:700,cursor:'pointer'}}>Reset Filter</button>
+        </Card>
+      )}
+      {filtered.map((m,i)=>{const tc=typeColor(m.type);const done=m.status==='SELESAI';
+        const daysLeft=m.deadline?Math.max(0,Math.round((new Date(m.deadline.replace(/(\d+) (\w+) (\d+)/,'$2 $1, $3'))-new Date())/(1000*60*60*24))):99;
+        const urgent=daysLeft<=2&&!done;
+        return(
+        <Card key={m.id} className={`stagger-${Math.min(i+3,7)} ${urgent?'urgency-pulse':''}`} onClick={()=>openM(m)} style={{opacity:done?0.6:1,position:'relative',overflow:'hidden',borderColor:urgent?C.red:undefined}}>
           {/* Watermark Icon */}
           <div style={{position:'absolute',right:-8,bottom:-8,opacity:0.04,pointerEvents:'none',zIndex:0}}>
             <MI name={typeIcon(m.type)} size={80} fill style={{color:tc}}/>
@@ -518,9 +547,12 @@ export default function App(){
               <span style={{fontSize:11,color:C.textMuted}}>
                 <MI name="group" size={14} style={{color:C.textMuted,verticalAlign:'middle',marginRight:2}}/>{m.participants}
               </span>
+              {!done&&<span style={{fontSize:10,color:urgent?C.red:daysLeft<=5?C.orange:C.textMuted,fontWeight:urgent?700:500}}>
+                <MI name="schedule" size={12} style={{verticalAlign:'middle',marginRight:1,color:urgent?C.red:daysLeft<=5?C.orange:C.textMuted}}/>{daysLeft}h
+              </span>}
             </div>
             {!done&&<span className="btn-primary" style={{background:'linear-gradient(135deg,#C9A84C,#E8D48B)',borderRadius:8,padding:'6px 14px',fontSize:11,fontWeight:700,color:'#0B1120'}}>IKUT</span>}
-            {done&&<span style={{fontSize:11,fontWeight:600,color:C.green}}>Selesai</span>}
+            {done&&<span style={{fontSize:11,fontWeight:600,color:C.green}}><MI name="check_circle" size={14} fill style={{verticalAlign:'middle',marginRight:2}}/> Selesai</span>}
           </div>
         </Card>
       );})}
@@ -540,7 +572,8 @@ export default function App(){
             <circle cx="60" cy="60" r="52" fill="none" stroke={C.border} strokeWidth="6"/>
             <circle cx="60" cy="60" r="52" fill="none" stroke="url(#goldRing)" strokeWidth="6"
               strokeDasharray={`${2*Math.PI*52*0.964} ${2*Math.PI*52*(1-0.964)}`}
-              strokeLinecap="round" className="xp-bar-fill"/>
+              strokeDashoffset={2*Math.PI*52*(1-0.964)}
+              strokeLinecap="round" className="progress-ring-stroke"/>
             <defs><linearGradient id="goldRing" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
               <stop offset="0%" stopColor="#C9A84C"/><stop offset="100%" stopColor="#E8D48B"/>
             </linearGradient></defs>
@@ -562,8 +595,8 @@ export default function App(){
           <div style={{position:'absolute',left:13,top:8,bottom:8,width:2,background:C.border}}/>
           {RANKS.map((r,i)=>{const cur=i===1,done=i<1;return(
             <div key={i} className="flex items-center gap-3" style={{marginBottom:i<RANKS.length-1?16:0,position:'relative'}}>
-              <div style={{position:'absolute',left:-17,width:cur?14:10,height:cur?14:10,borderRadius:'50%',zIndex:2,
-                background:cur?C.primary:done?C.green:C.border,border:`3px solid ${C.surface}`}}/>
+              <div className={cur?'dot-live':''} style={{position:'absolute',left:-17,width:cur?14:10,height:cur?14:10,borderRadius:'50%',zIndex:2,
+                background:cur?C.primary:done?C.green:C.border,border:`3px solid ${C.surface}`,boxShadow:cur?`0 0 8px ${C.primary}60`:'none'}}/>
               <div className="flex-1 flex items-center justify-between" style={{
                 background:cur?C.primaryLight:'transparent',borderRadius:8,padding:cur?'8px 12px':'4px 12px',
                 border:cur?`1px solid ${C.primary}20`:'1px solid transparent'}}>
@@ -584,9 +617,9 @@ export default function App(){
           <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana</h3>
           <span style={{fontSize:12,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{unlocked}/{BADGES.length}</span>
         </div>
-        <Card style={{padding:14}}>
-          <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-            {BADGES.map((b,i)=><Badge key={i} badge={b}/>)}
+        <Card style={{padding:16}}>
+          <div className="grid grid-cols-4 gap-x-1 gap-y-5" style={{justifyItems:'center'}}>
+            {BADGES.map((b,i)=><Badge key={i} badge={b} size={54}/>)}
           </div>
         </Card>
       </div>
@@ -676,13 +709,13 @@ export default function App(){
         {[{label:'Notifikasi',desc:'Pembaruan misi harian',on:notif,toggle:()=>setNotif(!notif)},{label:'Privasi',desc:'Sembunyikan aktivitas',on:privacy,toggle:()=>setPrivacy(!privacy)}].map((s,i)=>(
           <div key={i} className="flex items-center justify-between" style={{padding:'10px 0',borderBottom:`1px solid ${C.borderLight}`}}>
             <div><p style={{fontSize:13,fontWeight:600,color:C.text}}>{s.label}</p><p style={{fontSize:11,color:C.textMuted}}>{s.desc}</p></div>
-            <button onClick={s.toggle} style={{width:44,height:24,borderRadius:12,position:'relative',border:'none',cursor:'pointer',background:s.on?C.primary:C.border,transition:'background 200ms'}}>
-              <span style={{width:18,height:18,borderRadius:'50%',background:'white',position:'absolute',top:3,left:s.on?23:3,transition:'left 200ms ease',boxShadow:'0 1px 3px rgba(0,0,0,0.15)'}}/>
+            <button onClick={s.toggle} style={{width:44,height:24,borderRadius:12,position:'relative',border:'none',cursor:'pointer',background:s.on?C.primary:C.border,transition:'background 200ms ease'}}>
+              <span className="toggle-knob" style={{width:18,height:18,borderRadius:'50%',background:'white',position:'absolute',top:3,left:s.on?23:3,boxShadow:s.on?`0 0 8px rgba(201,168,76,0.4), 0 1px 3px rgba(0,0,0,0.15)`:'0 1px 3px rgba(0,0,0,0.15)'}}/>
             </button>
           </div>
         ))}
-        <button style={{width:'100%',marginTop:14,padding:'10px 0',borderRadius:8,border:`1px solid ${C.redLight}`,background:C.redLight,color:C.red,fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-          <MI name="logout" size={16} style={{color:C.red}}/> Keluar
+        <button onClick={()=>{if(logoutConfirm){showToast('Berhasil keluar');setLogoutConfirm(false)}else{setLogoutConfirm(true);setTimeout(()=>setLogoutConfirm(false),3000)}}} className={logoutConfirm?'confirm-bounce':''} style={{width:'100%',marginTop:14,padding:'10px 0',borderRadius:8,border:`1px solid ${logoutConfirm?C.red:C.redLight}`,background:logoutConfirm?C.red:C.redLight,color:logoutConfirm?'white':C.red,fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all 200ms'}}>
+          <MI name={logoutConfirm?'warning':'logout'} size={16} style={{color:logoutConfirm?'white':C.red}}/> {logoutConfirm?'Yakin keluar?':'Keluar'}
         </button>
       </Card>
     </div>
@@ -988,17 +1021,24 @@ export default function App(){
     ];
     const filtered=kontenTab==='semua'?myPosts:myPosts.filter(p=>p.platform===kontenTab);
     const totalViews='470.8K';const totalLikes='52.1K';const totalShares='16.8K';const avgRate='12.4%';
+    const totalXpEarned=myPosts.reduce((s,p)=>s+p.xpEarned,0);
     const pCol=p=>({instagram:'#E1306C',tiktok:'#E8E8E8',x:'#1DA1F2'}[p]||C.text);
     const pLbl=p=>({instagram:'Instagram',tiktok:'TikTok',x:'X (Twitter)'}[p]||p);
     const tIcon=t=>({video:'play_circle',reels:'slow_motion_video',thread:'article',carousel:'view_carousel'}[t]||'image');
 
     return(<div key={k} className="flex flex-col gap-4 pb-4">
-      <h1 className="stagger-1" style={{fontSize:22,fontWeight:800,color:C.text,paddingTop:4}}>Konten Saya</h1>
+      <div className="stagger-1 flex items-center justify-between" style={{paddingTop:4}}>
+        <h1 style={{fontSize:22,fontWeight:800,color:C.text}}>Konten Saya</h1>
+        {totalXpEarned>0&&<div style={{background:C.goldLight,borderRadius:8,padding:'4px 12px',border:'1px solid rgba(201,168,76,0.2)',display:'flex',alignItems:'center',gap:4}}>
+          <MI name="stars" size={14} fill style={{color:C.gold}}/>
+          <span style={{fontSize:13,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{totalXpEarned} XP</span>
+        </div>}
+      </div>
 
       {/* Overview Stats */}
       <div className="stagger-2 grid grid-cols-4 gap-2">
         {[{l:'Views',v:totalViews,icon:'visibility',c:C.primary},{l:'Likes',v:totalLikes,icon:'favorite',c:C.pink},{l:'Shares',v:totalShares,icon:'share',c:C.teal},{l:'Avg Rate',v:avgRate,icon:'trending_up',c:C.orange}].map((s,i)=>(
-          <div key={i} style={{background:C.surface,borderRadius:10,padding:'10px 6px',textAlign:'center',border:`1px solid ${C.border}`}}>
+          <div key={i} className={`num-pop num-pop-d${Math.min(i+1,3)}`} style={{background:C.surface,borderRadius:10,padding:'10px 6px',textAlign:'center',border:`1px solid ${C.border}`}}>
             <MI name={s.icon} size={16} style={{color:s.c}}/>
             <p style={{fontSize:13,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:2}}>{s.v}</p>
             <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>{s.l}</p>
@@ -1113,12 +1153,12 @@ export default function App(){
     const [shopTab,setShopTab]=useState('semua');
     const userPoints=4820;
     const rewardItems=[
-      {id:1,cat:'pulsa',name:'Pulsa 25K',desc:'Pulsa All Operator Rp25.000',cost:500,icon:'phone_android',color:C.green,stock:50},
-      {id:2,cat:'pulsa',name:'Pulsa 50K',desc:'Pulsa All Operator Rp50.000',cost:900,icon:'phone_android',color:C.green,stock:30},
+      {id:1,cat:'pulsa',name:'Pulsa 25K',desc:'Pulsa All Operator Rp25.000',cost:500,icon:'phone_android',color:C.green,stock:50,popular:true},
+      {id:2,cat:'pulsa',name:'Pulsa 50K',desc:'Pulsa All Operator Rp50.000',cost:900,icon:'phone_android',color:C.green,stock:30,popular:true},
       {id:3,cat:'pulsa',name:'Pulsa 100K',desc:'Pulsa All Operator Rp100.000',cost:1600,icon:'phone_android',color:C.green,stock:15},
       {id:4,cat:'data',name:'Paket Data 5GB',desc:'Kuota Internet 5GB 30 Hari',cost:750,icon:'wifi',color:C.teal,stock:40},
       {id:5,cat:'data',name:'Paket Data 15GB',desc:'Kuota Internet 15GB 30 Hari',cost:1800,icon:'wifi',color:C.teal,stock:20},
-      {id:6,cat:'ewallet',name:'GoPay 50K',desc:'Saldo GoPay Rp50.000',cost:1000,icon:'account_balance_wallet',color:C.primary,stock:25},
+      {id:6,cat:'ewallet',name:'GoPay 50K',desc:'Saldo GoPay Rp50.000',cost:1000,icon:'account_balance_wallet',color:C.primary,stock:25,popular:true},
       {id:7,cat:'ewallet',name:'OVO 50K',desc:'Saldo OVO Rp50.000',cost:1000,icon:'account_balance_wallet',color:C.purple,stock:25},
       {id:8,cat:'ewallet',name:'DANA 100K',desc:'Saldo DANA Rp100.000',cost:1800,icon:'account_balance_wallet',color:C.teal,stock:10},
       {id:9,cat:'voucher',name:'Voucher Tokped 50K',desc:'Voucher Belanja Tokopedia',cost:1100,icon:'shopping_bag',color:C.green,stock:15},
@@ -1165,6 +1205,7 @@ export default function App(){
           return(
           <Card key={item.id} className={`stagger-${Math.min(i+3,7)}`} style={{padding:0,overflow:'hidden'}}>
             <div style={{padding:'14px 12px 10px',textAlign:'center',position:'relative'}}>
+              {item.popular&&<span style={{position:'absolute',top:8,right:8,fontSize:9,fontWeight:700,color:C.orange,background:C.orangeLight,padding:'2px 6px',borderRadius:4}}>Populer</span>}
               <div style={{width:44,height:44,borderRadius:12,background:`${item.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',border:`1px solid ${item.color}20`}}>
                 <MI name={item.icon} size={22} style={{color:item.color}}/>
               </div>
@@ -1176,12 +1217,16 @@ export default function App(){
               </div>
               <p style={{fontSize:9,color:C.textMuted}}>Stok: {item.stock}</p>
             </div>
-            <button onClick={()=>{if(canAfford)showToast(`${item.name} berhasil ditukar!`)}} style={{
+            <button onClick={()=>{
+              if(!canAfford)return;
+              if(confirmRedeem===item.id){showToast(`${item.name} berhasil ditukar!`);setConfirmRedeem(null)}
+              else{setConfirmRedeem(item.id);setTimeout(()=>setConfirmRedeem(cr=>cr===item.id?null:cr),3000)}
+            }} className={confirmRedeem===item.id?'confirm-bounce':''} style={{
               width:'100%',padding:'10px 0',border:'none',cursor:canAfford?'pointer':'not-allowed',
-              background:canAfford?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(100,116,139,0.15)',
-              color:canAfford?C.bg:C.textMuted,fontSize:12,fontWeight:700,transition:'opacity 150ms',
+              background:confirmRedeem===item.id?C.green:canAfford?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(100,116,139,0.15)',
+              color:confirmRedeem===item.id?'white':canAfford?C.bg:C.textMuted,fontSize:12,fontWeight:700,transition:'all 200ms',
             }}>
-              {canAfford?'Tukar Sekarang':'Poin Kurang'}
+              {confirmRedeem===item.id?'Konfirmasi?':canAfford?'Tukar Sekarang':'Poin Kurang'}
             </button>
           </Card>
         );})}
@@ -1277,7 +1322,7 @@ export default function App(){
       {!done&&<p style={{fontSize:12,fontWeight:700,color:C.primary,textAlign:'center',marginTop:-4}}>Step {step+1}: {steps[step].label}</p>}
 
       {/* ══════════ STEP 0: BRIEFING ══════════ */}
-      {step===0&&(<>
+      {step===0&&(<div key="step0" className="step-enter">
         <Card className="stagger-3">
           <h3 style={{fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1.5,textTransform:'uppercase',marginBottom:6}}>Briefing Misi</h3>
           <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,marginBottom:12}}>{m.desc}</p>
@@ -1368,19 +1413,20 @@ export default function App(){
 
         {/* Consent + Next */}
         <div className="stagger-5">
-          <label className="flex items-start gap-3" style={{cursor:'pointer',marginBottom:12}}>
-            <div onClick={()=>setConsent(!consent)} style={{
-              width:20,height:20,borderRadius:6,marginTop:1,flexShrink:0,
+          <label onClick={()=>setConsent(!consent)} className="flex items-start gap-3 tap-bounce" style={{cursor:'pointer',marginBottom:12,padding:'10px 12px',borderRadius:10,background:consent?C.primaryLight:'transparent',border:`1px solid ${consent?'rgba(201,168,76,0.2)':C.border}`,transition:'all 200ms'}}>
+            <div style={{
+              width:22,height:22,borderRadius:6,marginTop:1,flexShrink:0,
               background:consent?C.primary:'transparent',border:consent?'none':`2px solid ${C.border}`,
               display:'flex',alignItems:'center',justifyContent:'center',transition:'all 150ms',
+              boxShadow:consent?'0 0 8px rgba(201,168,76,0.3)':'none',
             }}>{consent&&<MI name="check" size={14} style={{color:'white'}}/>}</div>
-            <span style={{fontSize:12,color:C.textMuted,lineHeight:1.4}}>Saya setuju berpartisipasi secara sukarela sesuai kebijakan yang berlaku.</span>
+            <span style={{fontSize:12,color:consent?C.text:C.textMuted,lineHeight:1.4,fontWeight:consent?600:400,transition:'color 200ms'}}>Saya setuju berpartisipasi secara sukarela sesuai kebijakan yang berlaku.</span>
           </label>
         </div>
-      </>)}
+      </div>)}
 
       {/* ══════════ STEP 1: KIT & CONTOH ══════════ */}
-      {step===1&&(<>
+      {step===1&&(<div key="step1" className="step-enter">
         {/* Kit Konten */}
         {m.templates?.length>0&&(
           <div className="stagger-3 flex flex-col gap-3">
@@ -1466,10 +1512,10 @@ export default function App(){
             Buka {pName(m.socialPlatform)}
           </button>
         )}
-      </>)}
+      </div>)}
 
       {/* ══════════ STEP 2: SUBMIT ══════════ */}
-      {step===2&&(<>
+      {step===2&&(<div key="step2" className="step-enter">
         {/* Upload Bukti */}
         <Card className="stagger-3">
           <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:10}}>Upload Bukti</h3>
@@ -1550,10 +1596,10 @@ export default function App(){
             )}
           </Card>
         )}
-      </>)}
+      </div>)}
 
       {/* ══════════ STEP 3: REVIEW ══════════ */}
-      {step===3&&(<>
+      {step===3&&(<div key="step3" className="step-enter">
         {/* AI Quality Check */}
         <Card className="stagger-3" style={{borderLeft:`3px solid ${C.primary}`}}>
           <div className="flex items-center gap-2 mb-3">
@@ -1655,7 +1701,7 @@ export default function App(){
             </div>
           </Card>
         )}
-      </>)}
+      </div>)}
 
       {/* ══════════ FIXED BOTTOM CTA ══════════ */}
       {!done&&(
@@ -2871,17 +2917,17 @@ export default function App(){
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto hide-scrollbar" style={{padding:'4px 16px 0'}}>{render()}</div>
+        <div className="flex-1 overflow-y-auto hide-scrollbar" style={{padding:'4px 16px 0'}}><div key={k} className="page-enter">{render()}</div></div>
 
         {/* Bottom Nav */}
         {screen!=='detail'&&(
           <nav className="flex" style={{padding:'6px 4px 28px',flexShrink:0,background:'rgba(15,15,26,0.9)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`}}>
             {tabs.map(tab=>{const active=screen===tab.id||(screen==='pangkat'&&tab.id==='profil');return(
               <button key={tab.id} onClick={()=>nav(tab.id)} className="flex flex-1 flex-col items-center justify-center gap-0.5" style={{background:'none',border:'none',cursor:'pointer',padding:'6px 0',position:'relative'}}>
-                <div style={{width:active?36:32,height:active?36:32,borderRadius:active?12:8,background:active?'linear-gradient(135deg,#C9A84C,#E8D48B)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 200ms cubic-bezier(.16,1,.3,1)',boxShadow:active?'0 4px 12px rgba(201,168,76,0.3)':'none'}}>
-                  <MI name={tab.icon} size={20} fill={active} style={{color:active?'white':C.textMuted}}/>
+                <div style={{width:active?30:26,height:active?30:26,borderRadius:active?10:7,background:active?'linear-gradient(135deg,#C9A84C,#E8D48B)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 200ms cubic-bezier(.16,1,.3,1)',boxShadow:active?'0 4px 12px rgba(201,168,76,0.3)':'none'}}>
+                  <MI name={tab.icon} size={18} fill={active} style={{color:active?'white':C.textMuted}}/>
                 </div>
-                <span style={{fontSize:9,fontWeight:active?700:500,color:active?C.primary:C.textMuted}}>{tab.label}</span>
+                <span style={{fontSize:8,fontWeight:active?700:500,color:active?C.primary:C.textMuted,letterSpacing:0.3}}>{tab.label}</span>
               </button>
             );})}
           </nav>
