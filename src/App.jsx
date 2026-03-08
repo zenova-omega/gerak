@@ -170,6 +170,149 @@ const RANKS=[
   {name:'Komandan Garuda',xp:50000,icon:'workspace_premium'},
 ];
 
+/* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
+function RankInsignia({rank=0,size=120}){
+  const s=size;const cx=s/2;const cy=s/2;
+  // rank 0=Rekrut, 1=Perwira Muda, 2=Perwira Madya, 3=Perwira Utama, 4=Komandan Garuda
+  const colors=[
+    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.3)',accent:'#CBD5E1'},  // Rekrut - slate
+    {primary:'#C9A84C',secondary:'#E8D48B',glow:'rgba(201,168,76,0.4)',accent:'#F5E6A3'},    // Perwira Muda - gold
+    {primary:'#3B82F6',secondary:'#93C5FD',glow:'rgba(59,130,246,0.4)',accent:'#BFDBFE'},     // Perwira Madya - blue
+    {primary:'#8B5CF6',secondary:'#C4B5FD',glow:'rgba(139,92,246,0.4)',accent:'#DDD6FE'},     // Perwira Utama - purple
+    {primary:'#F59E0B',secondary:'#FCD34D',glow:'rgba(245,158,11,0.5)',accent:'#FEF3C7'},     // Komandan Garuda - amber
+  ];
+  const c=colors[rank]||colors[0];
+  const id=`rank${rank}_${Math.random().toString(36).slice(2,6)}`;
+
+  if(rank===0) return( // Rekrut Digital — simple chevron
+    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
+      <defs>
+        <linearGradient id={`${id}g`} x1="30" y1="20" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
+        </linearGradient>
+        <filter id={`${id}f`}><feDropShadow dx="0" dy="2" stdDeviation="4" floodColor={c.glow}/></filter>
+      </defs>
+      <circle cx="60" cy="60" r="52" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.2"/>
+      <circle cx="60" cy="60" r="44" fill={`${c.primary}08`} stroke={c.primary} strokeWidth="1" opacity="0.15"/>
+      <g filter={`url(#${id}f)`}>
+        <path d="M60 28 L82 52 L60 44 L38 52 Z" fill={`url(#${id}g)`}/>
+        <path d="M60 52 L82 76 L60 68 L38 76 Z" fill={`url(#${id}g)`} opacity="0.6"/>
+      </g>
+      <text x="60" y="98" textAnchor="middle" style={{fontSize:8,fontWeight:700,fill:c.primary,letterSpacing:2,fontFamily:"'Inter'"}}>REKRUT</text>
+    </svg>
+  );
+
+  if(rank===1) return( // Perwira Muda — shield with star
+    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
+      <defs>
+        <linearGradient id={`${id}g`} x1="30" y1="10" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
+        </linearGradient>
+        <linearGradient id={`${id}g2`} x1="50" y1="30" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FFF8DC"/><stop offset="100%" stopColor={c.primary}/>
+        </linearGradient>
+        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="5" floodColor={c.glow}/></filter>
+      </defs>
+      <circle cx="60" cy="60" r="52" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.25" strokeDasharray="4 3"/>
+      <g filter={`url(#${id}f)`}>
+        <path d="M60 18 L85 38 L85 70 Q85 85 60 100 Q35 85 35 70 L35 38 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1.5"/>
+        <path d="M60 26 L79 42 L79 68 Q79 80 60 92 Q41 80 41 68 L41 42 Z" fill="none" stroke={c.accent} strokeWidth="0.5" opacity="0.4"/>
+      </g>
+      <polygon points="60,38 64,50 76,50 66,58 70,70 60,62 50,70 54,58 44,50 56,50" fill={`url(#${id}g2)`}/>
+      <text x="60" y="112" textAnchor="middle" style={{fontSize:7,fontWeight:700,fill:c.primary,letterSpacing:1.5,fontFamily:"'Inter'"}}>PERWIRA MUDA</text>
+    </svg>
+  );
+
+  if(rank===2) return( // Perwira Madya — winged shield with double stars
+    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
+      <defs>
+        <linearGradient id={`${id}g`} x1="30" y1="10" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
+        </linearGradient>
+        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="6" floodColor={c.glow}/></filter>
+      </defs>
+      <circle cx="60" cy="60" r="52" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.2"/>
+      {/* Wings */}
+      <g opacity="0.5">
+        <path d="M32 50 Q10 40 8 55 Q10 70 32 65 Z" fill={c.primary} opacity="0.3"/>
+        <path d="M88 50 Q110 40 112 55 Q110 70 88 65 Z" fill={c.primary} opacity="0.3"/>
+      </g>
+      <g filter={`url(#${id}f)`}>
+        <path d="M60 20 L82 38 L82 68 Q82 82 60 95 Q38 82 38 68 L38 38 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1.5"/>
+        <line x1="38" y1="44" x2="82" y2="44" stroke={c.accent} strokeWidth="0.8" opacity="0.4"/>
+      </g>
+      {/* Two stars */}
+      <polygon points="50,52 52,58 58,58 53,62 55,68 50,64 45,68 47,62 42,58 48,58" fill="white" opacity="0.9"/>
+      <polygon points="70,52 72,58 78,58 73,62 75,68 70,64 65,68 67,62 62,58 68,58" fill="white" opacity="0.9"/>
+      <text x="60" y="112" textAnchor="middle" style={{fontSize:7,fontWeight:700,fill:c.primary,letterSpacing:1.5,fontFamily:"'Inter'"}}>PERWIRA MADYA</text>
+    </svg>
+  );
+
+  if(rank===3) return( // Perwira Utama — ornate shield with three stars and laurel
+    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
+      <defs>
+        <linearGradient id={`${id}g`} x1="30" y1="5" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
+        </linearGradient>
+        <radialGradient id={`${id}r`} cx="60" cy="50" r="40" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.accent} stopOpacity="0.3"/><stop offset="100%" stopColor={c.primary} stopOpacity="0"/>
+        </radialGradient>
+        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="6" floodColor={c.glow}/></filter>
+      </defs>
+      <circle cx="60" cy="56" r="50" fill={`url(#${id}r)`}/>
+      {/* Laurel wreath */}
+      <g opacity="0.4" stroke={c.primary} strokeWidth="1" fill="none">
+        <path d="M28 80 Q20 60 25 40 Q30 50 28 65"/><path d="M24 75 Q18 58 22 42 Q26 52 24 65"/>
+        <path d="M92 80 Q100 60 95 40 Q90 50 92 65"/><path d="M96 75 Q102 58 98 42 Q94 52 96 65"/>
+      </g>
+      <g filter={`url(#${id}f)`}>
+        <path d="M60 16 L84 36 L84 66 Q84 82 60 96 Q36 82 36 66 L36 36 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="2"/>
+        <path d="M60 22 L80 39 L80 64 Q80 78 60 90 Q40 78 40 64 L40 39 Z" fill="none" stroke="white" strokeWidth="0.5" opacity="0.3"/>
+      </g>
+      {/* Three stars */}
+      <polygon points="60,34 62.5,42 70,42 64,47 66.5,55 60,50 53.5,55 56,47 50,42 57.5,42" fill="white" opacity="0.95"/>
+      <polygon points="45,56 47,62 52,62 48,65.5 49.5,71 45,68 40.5,71 42,65.5 38,62 43,62" fill="white" opacity="0.7"/>
+      <polygon points="75,56 77,62 82,62 78,65.5 79.5,71 75,68 70.5,71 72,65.5 68,62 73,62" fill="white" opacity="0.7"/>
+      <text x="60" y="112" textAnchor="middle" style={{fontSize:6.5,fontWeight:700,fill:c.primary,letterSpacing:1.5,fontFamily:"'Inter'"}}>PERWIRA UTAMA</text>
+    </svg>
+  );
+
+  // rank===4: Komandan Garuda — eagle/garuda with crown
+  return(
+    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
+      <defs>
+        <linearGradient id={`${id}g`} x1="30" y1="0" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#FCD34D"/><stop offset="50%" stopColor={c.primary}/><stop offset="100%" stopColor="#B45309"/>
+        </linearGradient>
+        <radialGradient id={`${id}r`} cx="60" cy="50" r="50" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.secondary} stopOpacity="0.4"/><stop offset="100%" stopColor={c.primary} stopOpacity="0"/>
+        </radialGradient>
+        <filter id={`${id}f`}><feDropShadow dx="0" dy="4" stdDeviation="8" floodColor={c.glow}/></filter>
+      </defs>
+      <circle cx="60" cy="56" r="52" fill={`url(#${id}r)`}/>
+      <circle cx="60" cy="56" r="48" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.25" strokeDasharray="2 2"/>
+      {/* Crown */}
+      <g filter={`url(#${id}f)`}>
+        <path d="M40 28 L45 18 L52 26 L60 14 L68 26 L75 18 L80 28 L78 32 L42 32 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1"/>
+      </g>
+      {/* Shield body */}
+      <g filter={`url(#${id}f)`}>
+        <path d="M60 32 L86 46 L86 68 Q86 86 60 100 Q34 86 34 68 L34 46 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="2"/>
+        <path d="M60 38 L82 49 L82 66 Q82 82 60 94 Q38 82 38 66 L38 49 Z" fill="none" stroke="white" strokeWidth="0.5" opacity="0.25"/>
+      </g>
+      {/* Garuda wings */}
+      <path d="M34 52 Q14 38 10 50 Q12 64 30 62" fill={c.primary} opacity="0.4" stroke={c.accent} strokeWidth="0.5"/>
+      <path d="M86 52 Q106 38 110 50 Q108 64 90 62" fill={c.primary} opacity="0.4" stroke={c.accent} strokeWidth="0.5"/>
+      {/* Center star */}
+      <polygon points="60,48 63.5,58 74,58 66,64.5 69,75 60,68 51,75 54,64.5 46,58 56.5,58" fill="white" opacity="0.95"/>
+      {/* Small stars */}
+      <circle cx="48" cy="52" r="2" fill="white" opacity="0.7"/><circle cx="72" cy="52" r="2" fill="white" opacity="0.7"/>
+      <circle cx="44" cy="62" r="1.5" fill="white" opacity="0.5"/><circle cx="76" cy="62" r="1.5" fill="white" opacity="0.5"/>
+      <text x="60" y="114" textAnchor="middle" style={{fontSize:6,fontWeight:800,fill:c.primary,letterSpacing:2,fontFamily:"'Inter'"}}>KOMANDAN GARUDA</text>
+    </svg>
+  );
+}
+
 const BADGES=[
   {name:'Misi Pertama',icon:'rocket_launch',color:C.teal,bg:C.tealLight,unlocked:true},
   {name:'10 Misi',icon:'military_tech',color:C.orange,bg:C.orangeLight,unlocked:true},
@@ -425,33 +568,42 @@ export default function App(){
         </div>
       </div>
 
-      {/* User Greeting */}
-      <div className="stagger-2" style={{marginBottom:16}}>
-        <p style={{fontSize:11,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Selamat Pagi,</p>
-        <h1 style={{fontSize:22,fontWeight:700,color:C.text,lineHeight:1.1,marginTop:3,fontFamily:"'Inter',sans-serif"}}>MAYOR ARIF SANTOSO</h1>
-        <div className="flex items-center gap-1.5 mt-2" style={{background:C.primaryLight,borderRadius:9999,padding:'3px 12px',border:`1px solid ${C.primary}40`,width:'fit-content'}}>
-          <MI name="diamond" size={12} style={{color:C.primary}}/>
-          <span style={{fontSize:11,fontWeight:700,color:C.primary,letterSpacing:1,textTransform:'uppercase'}}>Perwira Muda</span>
-        </div>
-      </div>
-
-      {/* XP Status Card */}
-      <Card className="stagger-3" style={{padding:20,marginBottom:12}}>
-        <div className="flex items-center justify-between" style={{marginBottom:12}}>
-          <span className="flex items-center gap-1" style={{fontSize:11,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Kemajuan Pangkat <Tip text="XP didapat dari menyelesaikan misi. Kumpulkan XP untuk naik pangkat!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></span>
-          <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4.820 / 5.000 XP</span>
-        </div>
-        <div style={{height:6,borderRadius:9999,background:C.surfaceLight,overflow:'hidden',marginBottom:10}}>
-          <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%'}}/>
-        </div>
-        <div className="flex items-center justify-between" style={{fontSize:12}}>
-          <div className="flex items-center gap-1">
-            <MI name="diamond" size={14} style={{color:C.primary}}/>
-            <span style={{fontWeight:700,color:C.primary}}>Perwira Muda</span>
+      {/* ── Hero Welcome Card with Rank Insignia ── */}
+      <Card className="stagger-2" style={{padding:0,marginBottom:12,overflow:'hidden',position:'relative'}}>
+        {/* Background gradient based on rank */}
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.02),transparent)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:-30,right:-30,width:120,height:120,borderRadius:'50%',background:'radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%)',pointerEvents:'none'}}/>
+        <div style={{padding:20,display:'flex',alignItems:'center',gap:16,position:'relative'}}>
+          {/* Rank Insignia */}
+          <div style={{flexShrink:0,position:'relative'}}>
+            <RankInsignia rank={1} size={100}/>
+            {/* Glow ring behind insignia */}
+            <div style={{position:'absolute',inset:-4,borderRadius:'50%',border:`1px solid rgba(201,168,76,0.15)`,pointerEvents:'none'}}/>
           </div>
-          <div className="flex items-center gap-1">
-            <MI name="star" size={14} style={{color:C.textMuted}}/>
-            <span style={{fontWeight:500,color:C.textMuted}}>Perwira Madya</span>
+          {/* Greeting + Info */}
+          <div className="flex-1" style={{minWidth:0}}>
+            <p style={{fontSize:10,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Selamat Pagi,</p>
+            <h1 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.15,marginTop:2,letterSpacing:-0.3}}>MAYOR ARIF SANTOSO</h1>
+            <div className="flex items-center gap-1.5 mt-2" style={{background:'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))',borderRadius:9999,padding:'4px 12px',border:`1px solid rgba(201,168,76,0.25)`,width:'fit-content'}}>
+              <MI name="military_tech" size={13} fill style={{color:C.primary}}/>
+              <span style={{fontSize:11,fontWeight:700,color:C.primary,letterSpacing:1,textTransform:'uppercase'}}>Perwira Muda</span>
+            </div>
+            {/* XP Progress inline */}
+            <div style={{marginTop:10}}>
+              <div className="flex items-center justify-between mb-1">
+                <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Kemajuan Pangkat</span>
+                <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4.820 / 5.000 XP</span>
+              </div>
+              <div style={{height:5,borderRadius:9999,background:C.surfaceLight,overflow:'hidden'}}>
+                <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%'}}/>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span style={{fontSize:9,fontWeight:600,color:C.primary}}>Perwira Muda</span>
+                <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
+                  <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>Perwira Madya
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </Card>
