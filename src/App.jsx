@@ -3101,173 +3101,53 @@ export default function App(){
             </div>);
             const estPeople=missionForm.targetGender==='all'&&missionForm.targetAge==='all'&&missionForm.targetTier==='all'?1247:missionForm.targetTier==='gold'?186:missionForm.targetTier==='silver'?524:537;
             const totalBudget=(missionForm.xp||200)*Math.min(estPeople,missionForm.maxPeople||estPeople);
+            const aiPersonas=missionForm.aiPersonas||[
+              {id:'genz',name:'Gen-Z Digital Native',age:'18-24',gender:'55% Wanita',emoji:'👩‍💻',color:C.purple,traits:['Aktif TikTok & Instagram','Suka konten visual pendek','Mudah share ke teman'],approach:'Gunakan bahasa kasual, meme, challenge.',bestPlatform:'TikTok, Instagram Reels',reach:'38%',available:475},
+              {id:'millenial',name:'Professional Millennial',age:'25-34',gender:'58% Pria',emoji:'👨‍💼',color:C.primary,traits:['Aktif X & LinkedIn','Suka data & fakta','Influencer di lingkungan kerja'],approach:'Sajikan data konkret, thread informatif.',bestPlatform:'X, Instagram',reach:'32%',available:398},
+              {id:'leader',name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,traits:['Aktif WhatsApp & Facebook','Admin grup komunitas','Trusted source'],approach:'Pesan formal terpercaya, forward-friendly.',bestPlatform:'WhatsApp, Facebook',reach:'22%',available:265},
+              {id:'senior',name:'Senior Advocate',age:'50+',gender:'60% Pria',emoji:'👴',color:C.orange,traits:['Facebook & WhatsApp','Jaringan offline luas','Suara dipercaya'],approach:'Pesan singkat, formal, mudah di-forward.',bestPlatform:'Facebook, WhatsApp',reach:'8%',available:109},
+            ];
+            const aiPlatRec=missionForm.aiPlatformRec||[
+              {platform:'tiktok',score:92,reason:'Volume terbesar, audience muda aktif',reach:'~450K'},
+              {platform:'instagram',score:78,reason:'Engagement visual tinggi, cocok infografis',reach:'~280K'},
+              {platform:'x',score:65,reason:'Trending topic aktif, counter-narasi cepat',reach:'~120K'},
+            ];
             return(<div className="flex flex-col gap-5">
+            <div style={{display:'grid',gridTemplateColumns:'1fr 340px',gap:24,alignItems:'start'}}>
+            {/* ════ LEFT: MAIN FORM ════ */}
+            <div className="flex flex-col gap-5">
             {/* Source indicator */}
             {missionForm.fromNarasi&&(
-              <div style={{background:C.primaryLight,borderRadius:10,padding:'12px 16px',border:`1px solid rgba(201,168,76,0.15)`,display:'flex',alignItems:'center',gap:10}}>
-                <MI name="auto_awesome" size={20} style={{color:C.primary}}/>
+              <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04))',borderRadius:12,padding:'14px 18px',border:`1px solid rgba(201,168,76,0.2)`,display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:36,height:36,borderRadius:10,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><MI name="auto_awesome" size={20} style={{color:C.primary}}/></div>
                 <div className="flex-1">
                   <p style={{fontSize:13,fontWeight:700,color:C.primary}}>Misi dari Narasi: "{missionForm.narasiTopic}"</p>
-                  <p style={{fontSize:11,color:C.textSec}}>AI telah mengisi draft awal. Edit dan sesuaikan semua field.</p>
+                  <p style={{fontSize:11,color:C.textSec}}>AI mengisi draft awal — edit langsung di setiap field. Rekomendasi ditandai <MI name="auto_awesome" size={11} style={{color:C.primary,verticalAlign:'middle'}}/></p>
                 </div>
-                <button onClick={()=>setMissionForm(f=>({...f,fromNarasi:false}))} style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer'}}>Sembunyikan Rekomendasi</button>
               </div>
             )}
 
-            {/* ──── AI RECOMMENDATIONS (from narasi) ──── */}
-            {missionForm.fromNarasi&&(
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
-                {/* Narasi Context + Platform Recs */}
-                <DCard title="Rekomendasi AI dari Narasi" subtitle={`Analisis narasi: "${missionForm.narasiTopic||'—'}"`}>
-                  <div className="flex flex-col gap-3">
-                    {/* Impact badge */}
-                    <div className="flex items-center gap-3" style={{padding:12,borderRadius:10,background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',border:`1px solid rgba(201,168,76,0.15)`}}>
-                      <MI name="auto_awesome" size={20} style={{color:C.primary}}/>
-                      <div className="flex-1">
-                        <p style={{fontSize:12,fontWeight:700,color:C.primary}}>Dampak Target: {missionForm.impactLabel||'Moderat'}</p>
-                        <p style={{fontSize:10,color:C.textMuted}}>Aksi: {missionForm.narasiAction==='TOLAK'?'Counter-Narasi':'Amplifikasi'} | {missionForm.maxPeople||0} orang dibutuhkan</p>
-                      </div>
-                      <span style={{fontSize:16,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{missionForm.impactLevel||50}%</span>
-                    </div>
-                    {/* Platform recommendations */}
-                    <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>Platform Terbaik</p>
-                    {(missionForm.aiPlatformRec||[
-                      {platform:'tiktok',score:92,reason:'Volume terbesar, audience muda aktif',reach:'~450K'},
-                      {platform:'instagram',score:78,reason:'Engagement visual tinggi, cocok infografis',reach:'~280K'},
-                      {platform:'x',score:65,reason:'Trending topic aktif, counter-narasi cepat',reach:'~120K'},
-                    ]).map((p,pi)=>{
-                      const sel2=missionForm.platforms.includes(p.platform);
-                      return <div key={pi} onClick={()=>setMissionForm(f=>({...f,platforms:sel2?f.platforms.filter(x=>x!==p.platform):[...f.platforms,p.platform]}))} style={{
-                        padding:12,borderRadius:10,cursor:'pointer',transition:'all 200ms',
-                        background:sel2?C.primaryLight:C.glass,border:`1px solid ${sel2?'rgba(201,168,76,0.3)':C.border}`,
+            {/* ──── SECTION 1: Tipe & Informasi Dasar ──── */}
+            <DCard title="1. Tipe & Informasi Dasar" subtitle="Pilih tipe misi dan isi detail utama" accent={tc}>
+              <div className="flex flex-col gap-5">
+                {/* Type selector */}
+                <L label="Tipe Misi" icon="category">
+                  <div className="grid grid-cols-6 gap-2">
+                    {[{t:'EDUKASI',desc:'Edukasi'},{t:'AMPLIFIKASI',desc:'Boost'},{t:'KRISIS',desc:'Counter'},{t:'KOMUNITAS',desc:'Sosial'},{t:'VISIT',desc:'Kunjungan'},{t:'SOCIAL',desc:'Sosmed'}].map(({t,desc})=>(
+                      <button key={t} onClick={()=>setMissionForm(f=>({...f,type:t}))} style={{
+                        padding:'10px 4px',borderRadius:10,border:`1.5px solid ${missionForm.type===t?typeColor(t):C.border}`,
+                        background:missionForm.type===t?typeBg(t):C.glass,color:missionForm.type===t?typeColor(t):C.textSec,
+                        cursor:'pointer',textAlign:'center',transition:'all 200ms',
                       }}>
-                        <div className="flex items-center gap-3">
-                          <div style={{width:32,height:32,borderRadius:8,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
-                            <SocialIcon platform={p.platform} size={14} color={pColor(p.platform)}/>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span style={{fontSize:12,fontWeight:700,color:C.text}}>{pName(p.platform)}</span>
-                              <span style={{fontSize:10,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",background:C.primaryLight,padding:'1px 5px',borderRadius:3}}>{p.score}%</span>
-                              {pi===0&&<span style={{fontSize:8,fontWeight:800,color:'white',background:C.green,padding:'1px 5px',borderRadius:3}}>TOP</span>}
-                            </div>
-                            <p style={{fontSize:10,color:C.textMuted}}>{p.reason}</p>
-                          </div>
-                          <div style={{textAlign:'right'}}>
-                            <p style={{fontSize:10,color:C.textSec}}>Reach: {p.reach}</p>
-                            {sel2&&<MI name="check_circle" size={16} fill style={{color:C.primary,marginTop:2}}/>}
-                          </div>
-                        </div>
-                      </div>;
-                    })}
-                    <p style={{fontSize:10,color:C.textMuted,fontStyle:'italic'}}>Klik platform untuk menambah/hapus dari misi</p>
-                    {/* Audience summary from AI */}
-                    {missionForm.aiAudience&&(
-                      <div style={{background:C.surfaceLight,borderRadius:10,padding:12,border:`1px solid ${C.border}`}}>
-                        <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:8}}>Audience Insight</p>
-                        <div className="flex gap-3 mb-2">
-                          <div className="flex-1" style={{textAlign:'center'}}>
-                            <p style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{(missionForm.aiAudience.totalTalking||0).toLocaleString()}</p>
-                            <p style={{fontSize:9,color:C.textMuted}}>membicarakan</p>
-                          </div>
-                          <div className="flex-1" style={{textAlign:'center'}}>
-                            <p style={{fontSize:13,fontWeight:700,color:C.gold}}>{missionForm.aiAudience.peakHours}</p>
-                            <p style={{fontSize:9,color:C.textMuted}}>peak hours</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <div style={{flex:missionForm.aiAudience.demographics?.male||50,background:C.primaryLight,borderRadius:6,padding:'4px 8px',textAlign:'center'}}>
-                            <span style={{fontSize:11,fontWeight:700,color:C.primary}}>{missionForm.aiAudience.demographics?.male||50}% Pria</span>
-                          </div>
-                          <div style={{flex:missionForm.aiAudience.demographics?.female||50,background:C.pinkLight,borderRadius:6,padding:'4px 8px',textAlign:'center'}}>
-                            <span style={{fontSize:11,fontWeight:700,color:C.pink}}>{missionForm.aiAudience.demographics?.female||50}% Wanita</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </DCard>
-
-                {/* AI Persona */}
-                <DCard title="Persona Target" subtitle="Profil audience ideal untuk narasi ini">
-                  <div className="flex flex-col gap-3">
-                    {(missionForm.aiPersonas||[
-                      {name:'Gen-Z Digital Native',age:'18-24',gender:'55% Wanita',emoji:'👩‍💻',color:C.purple,traits:['Aktif TikTok & Instagram','Suka konten visual pendek','Mudah share ke teman'],approach:'Gunakan bahasa kasual, meme, challenge.',bestPlatform:'TikTok, Instagram Reels',reach:'38%'},
-                      {name:'Professional Millennial',age:'25-34',gender:'58% Pria',emoji:'👨‍💼',color:C.primary,traits:['Aktif X & LinkedIn','Suka data & fakta','Influencer di lingkungan kerja'],approach:'Sajikan data konkret, thread informatif.',bestPlatform:'X, Instagram',reach:'32%'},
-                      {name:'Community Leader',age:'35-50',gender:'52% Pria',emoji:'👨‍👩‍👧‍👦',color:C.teal,traits:['Aktif WhatsApp & Facebook','Admin grup komunitas','Trusted source'],approach:'Pesan formal terpercaya, forward-friendly.',bestPlatform:'WhatsApp, Facebook',reach:'22%'},
-                    ]).map((persona,i)=>(
-                      <div key={i} style={{padding:14,borderRadius:12,background:C.glass,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
-                        <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${persona.color},${persona.color}50)`}}/>
-                        <div className="flex items-start gap-3 mb-2">
-                          <div style={{width:40,height:40,borderRadius:10,background:`${persona.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:`1px solid ${persona.color}25`}}>
-                            {persona.emoji}
-                          </div>
-                          <div className="flex-1">
-                            <p style={{fontSize:13,fontWeight:700,color:C.text}}>{persona.name}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span style={{fontSize:9,fontWeight:600,color:persona.color,background:`${persona.color}15`,padding:'1px 5px',borderRadius:3}}>{persona.age}</span>
-                              <span style={{fontSize:9,color:C.textMuted}}>{persona.gender}</span>
-                              <span style={{fontSize:9,fontWeight:700,color:C.primary,marginLeft:'auto'}}>{persona.reach}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {persona.traits.map((t,ti)=>(
-                            <span key={ti} style={{fontSize:9,color:C.textSec,background:C.surfaceLight,borderRadius:3,padding:'1px 6px',border:`1px solid ${C.borderLight}`}}>{t}</span>
-                          ))}
-                        </div>
-                        <div style={{background:C.bg,borderRadius:6,padding:'6px 8px',border:`1px solid ${C.borderLight}`}}>
-                          <div className="flex items-start gap-2">
-                            <MI name="lightbulb" size={12} fill style={{color:C.orange,flexShrink:0,marginTop:1}}/>
-                            <p style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{persona.approach}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 mt-2">
-                          <MI name="devices" size={11} style={{color:C.textMuted}}/>
-                          <span style={{fontSize:9,color:C.textMuted}}>Platform: </span>
-                          <span style={{fontSize:9,fontWeight:600,color:persona.color}}>{persona.bestPlatform}</span>
-                        </div>
-                      </div>
+                        <MI name={typeIcon(t)} size={20} fill={missionForm.type===t} style={{color:missionForm.type===t?typeColor(t):C.textMuted,display:'block',margin:'0 auto 4px'}}/>
+                        <p style={{fontSize:10,fontWeight:700}}>{desc}</p>
+                      </button>
                     ))}
-                    {/* AI Insight */}
-                    <div style={{background:C.primaryLight,borderRadius:8,padding:12,border:`1px solid rgba(201,168,76,0.15)`}}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <MI name="smart_toy" size={14} style={{color:C.primary}}/>
-                        <span style={{fontSize:11,fontWeight:700,color:C.primary}}>AI Insight</span>
-                      </div>
-                      <p style={{fontSize:11,color:C.textSec,lineHeight:1.4}}>
-                        Prioritaskan persona yang sesuai dengan platform pilihan. Klik platform di sebelah kiri untuk auto-select di form misi.
-                      </p>
-                    </div>
                   </div>
-                </DCard>
-              </div>
-            )}
-
-            {/* ──── ROW 1: Type + Basic Info ──── */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
-              <DCard title="Tipe & Detail Misi" subtitle="Pilih tipe dan isi informasi dasar">
-                <div className="flex flex-col gap-4">
-                  {/* Type selector with icons */}
-                  <L label="Tipe Misi" icon="category">
-                    <div className="grid grid-cols-3 gap-2">
-                      {[{t:'EDUKASI',desc:'Edukasi komunitas'},{t:'AMPLIFIKASI',desc:'Boost konten'},{t:'KRISIS',desc:'Counter narasi'},{t:'KOMUNITAS',desc:'Kegiatan sosial'},{t:'VISIT',desc:'Kunjungan lokasi'},{t:'SOCIAL',desc:'Konten sosmed'}].map(({t,desc})=>(
-                        <button key={t} onClick={()=>setMissionForm(f=>({...f,type:t}))} style={{
-                          padding:'12px 8px',borderRadius:10,border:`1.5px solid ${missionForm.type===t?typeColor(t):C.border}`,
-                          background:missionForm.type===t?typeBg(t):C.glass,color:missionForm.type===t?typeColor(t):C.textSec,
-                          cursor:'pointer',textAlign:'center',transition:'all 200ms',
-                        }}>
-                          <MI name={typeIcon(t)} size={20} fill={missionForm.type===t} style={{color:missionForm.type===t?typeColor(t):C.textMuted,display:'block',margin:'0 auto 4px'}}/>
-                          <p style={{fontSize:11,fontWeight:700}}>{t}</p>
-                          <p style={{fontSize:9,color:C.textMuted,marginTop:1}}>{desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </L>
-                  {/* Type hint */}
-                  <div style={{background:`${tc}10`,borderRadius:8,padding:10,border:`1px solid ${tc}20`,display:'flex',alignItems:'center',gap:8}}>
-                    <MI name={ti} size={16} fill style={{color:tc,flexShrink:0}}/>
-                    <p style={{fontSize:11,color:C.textSec,lineHeight:1.4}}>
+                  {/* Type hint inline */}
+                  <div style={{background:`${tc}10`,borderRadius:8,padding:'8px 10px',border:`1px solid ${tc}20`,display:'flex',alignItems:'center',gap:8,marginTop:8}}>
+                    <MI name={ti} size={14} fill style={{color:tc,flexShrink:0}}/>
+                    <p style={{fontSize:11,color:C.textSec,lineHeight:1.3}}>
                       {missionForm.type==='EDUKASI'?'Agent membagikan materi edukasi. Sertakan infografis & template pesan.':
                        missionForm.type==='AMPLIFIKASI'?'Agent like, comment, share konten yang sudah ada.':
                        missionForm.type==='KRISIS'?'Misi darurat counter-narasi. Sertakan fakta & sumber resmi.':
@@ -3276,100 +3156,185 @@ export default function App(){
                        'Konten original di sosmed. Sertakan contoh & hashtag.'}
                     </p>
                   </div>
-                  {/* Title */}
-                  <L label="Judul Misi" icon="title">
-                    <input value={missionForm.title} onChange={e=>setMissionForm(f=>({...f,title:e.target.value}))} placeholder="e.g., Distribusi Materi Literasi Digital..." style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:14,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
-                    {!missionForm.title&&<AISuggest text={missionForm.type==='KRISIS'?'"Flash Counter: Klarifikasi Fakta Terbaru"':missionForm.type==='EDUKASI'?'"Kampanye Literasi Digital untuk Semua"':missionForm.type==='SOCIAL'?'"Challenge Konten Positif #GerakDigital"':'"Misi Komunitas: Aksi Nyata Bersama"'} onApply={()=>setMissionForm(f=>({...f,title:f.type==='KRISIS'?'Flash Counter: Klarifikasi Fakta Terbaru':f.type==='EDUKASI'?'Kampanye Literasi Digital untuk Semua':f.type==='SOCIAL'?'Challenge Konten Positif #GerakDigital':'Misi Komunitas: Aksi Nyata Bersama'}))}/>}
-                  </L>
-                  {/* Description */}
+                </L>
+                {/* Title & Description side by side */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+                  <div className="flex flex-col gap-4">
+                    <L label="Judul Misi" icon="title">
+                      <input value={missionForm.title} onChange={e=>setMissionForm(f=>({...f,title:e.target.value}))} placeholder="e.g., Distribusi Materi Literasi Digital..." style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:14,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
+                      {!missionForm.title&&<AISuggest text={missionForm.type==='KRISIS'?'"Flash Counter: Klarifikasi Fakta Terbaru"':missionForm.type==='EDUKASI'?'"Kampanye Literasi Digital untuk Semua"':missionForm.type==='SOCIAL'?'"Challenge Konten Positif #GerakDigital"':'"Misi Komunitas: Aksi Nyata Bersama"'} onApply={()=>setMissionForm(f=>({...f,title:f.type==='KRISIS'?'Flash Counter: Klarifikasi Fakta Terbaru':f.type==='EDUKASI'?'Kampanye Literasi Digital untuk Semua':f.type==='SOCIAL'?'Challenge Konten Positif #GerakDigital':'Misi Komunitas: Aksi Nyata Bersama'}))}/>}
+                    </L>
+                    <L label="Hashtag Wajib" icon="tag">
+                      <input value={missionForm.hashtags||''} onChange={e=>setMissionForm(f=>({...f,hashtags:e.target.value}))} placeholder="#GerakDigital #LiterasiDigital" style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
+                      {!(missionForm.hashtags||'').trim()&&<AISuggest text={`"#GERAK #${(missionForm.type||'').charAt(0)+(missionForm.type||'').slice(1).toLowerCase()} #GerakDigital"`} onApply={()=>setMissionForm(f=>({...f,hashtags:`#GERAK #${(f.type||'').charAt(0)+(f.type||'').slice(1).toLowerCase()} #GerakDigital`}))}/>}
+                    </L>
+                  </div>
                   <L label="Deskripsi & Brief" icon="description">
-                    <textarea value={missionForm.desc} onChange={e=>setMissionForm(f=>({...f,desc:e.target.value}))} placeholder="Jelaskan detail misi, apa yang harus dilakukan agent..." rows={4} style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
-                    {!missionForm.desc&&missionForm.title&&<AISuggest text="AI bisa generate deskripsi berdasarkan judul dan tipe misi" onApply={()=>setMissionForm(f=>({...f,desc:f.type==='KRISIS'?`Misi darurat untuk counter narasi negatif terkait "${f.title}". Agent diminta membuat konten klarifikasi dengan data dan sumber resmi. Pastikan tone profesional dan berbasis fakta.`:f.type==='EDUKASI'?`Bantu sebarkan informasi akurat tentang "${f.title}". Buat konten edukatif yang mudah dipahami dengan infografis dan data pendukung. Target: meningkatkan literasi masyarakat.`:`Ikut serta dalam kampanye "${f.title}". Buat konten original yang menarik dan shareable. Gunakan kreativitas untuk menyampaikan pesan positif kepada audience.`}))}/>}
-                  </L>
-                  {/* Hashtags */}
-                  <L label="Hashtag Wajib" icon="tag">
-                    <input value={missionForm.hashtags||''} onChange={e=>setMissionForm(f=>({...f,hashtags:e.target.value}))} placeholder="#GerakDigital #LiterasiDigital" style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
-                    {!(missionForm.hashtags||'').trim()&&<AISuggest text={`"#GERAK #${(missionForm.type||'').charAt(0)+(missionForm.type||'').slice(1).toLowerCase()} #GerakDigital"`} onApply={()=>setMissionForm(f=>({...f,hashtags:`#GERAK #${(f.type||'').charAt(0)+(f.type||'').slice(1).toLowerCase()} #GerakDigital`}))}/>}
+                    <textarea value={missionForm.desc} onChange={e=>setMissionForm(f=>({...f,desc:e.target.value}))} placeholder="Jelaskan detail misi, apa yang harus dilakukan agent..." rows={5} style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight,height:'100%',minHeight:120}}/>
+                    {!missionForm.desc&&missionForm.title&&<AISuggest text="AI bisa generate deskripsi berdasarkan judul" onApply={()=>setMissionForm(f=>({...f,desc:f.type==='KRISIS'?`Misi darurat untuk counter narasi negatif terkait "${f.title}". Agent diminta membuat konten klarifikasi dengan data dan sumber resmi.`:f.type==='EDUKASI'?`Bantu sebarkan informasi akurat tentang "${f.title}". Buat konten edukatif yang mudah dipahami dengan infografis dan data pendukung.`:`Ikut serta dalam kampanye "${f.title}". Buat konten original yang menarik dan shareable.`}))}/>}
                   </L>
                 </div>
-              </DCard>
+              </div>
+            </DCard>
 
-              {/* Reward & Scoring */}
-              <DCard title="Reward & Poin" subtitle="Atur sistem penilaian dan reward">
-                <div className="flex flex-col gap-4">
-                  {/* XP Controls */}
-                  <L label="Poin XP Dasar" icon="toll">
-                    <div className="flex items-center gap-3">
-                      {[100,150,200,250,300,400,500].map(v=>(
-                        <button key={v} onClick={()=>setMissionForm(f=>({...f,xp:v}))} style={{
-                          padding:'8px 0',flex:1,borderRadius:6,border:`1px solid ${missionForm.xp===v?C.primary:C.border}`,
-                          background:missionForm.xp===v?C.primaryLight:C.glass,color:missionForm.xp===v?C.primary:C.textSec,
-                          fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:"'JetBrains Mono'",textAlign:'center',
-                        }}>{v}</button>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span style={{fontSize:11,color:C.textMuted}}>Custom:</span>
-                      <input type="number" value={missionForm.xp} onChange={e=>setMissionForm(f=>({...f,xp:parseInt(e.target.value)||0}))} style={{width:80,padding:'6px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:13,color:C.primary,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.surfaceLight,textAlign:'center'}}/>
-                      <span style={{fontSize:11,color:C.textMuted}}>XP per orang</span>
-                    </div>
-                    {(()=>{const rec=missionForm.type==='KRISIS'?400:missionForm.type==='VISIT'?350:missionForm.type==='EDUKASI'?250:200;return missionForm.xp!==rec?<AISuggest text={`AI rekomendasikan ${rec} XP untuk misi ${missionForm.type} (tingkat effort ${rec>=350?'tinggi':'sedang'})`} onApply={()=>setMissionForm(f=>({...f,xp:rec}))}/>:null;})()}
-                  </L>
-                  {/* Bonus tiers */}
-                  <L label="Bonus & Multiplier" icon="emoji_events">
+            {/* ──── SECTION 2: Target Audience + Platform (COMBINED) ──── */}
+            <DCard title="2. Target Audience & Platform" subtitle="Persona, platform, dan wilayah target — rekomendasi AI ditampilkan langsung" accent={C.purple}>
+              <div className="flex flex-col gap-5">
+                {/* Persona cards with allocation controls */}
+                <L label="Segmen Persona" icon="people_alt">
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                    {aiPersonas.map(persona=>{
+                      const personas=missionForm.personaAlloc||{};
+                      const qty=personas[persona.id]||0;
+                      const active=qty>0;
+                      return <div key={persona.id} style={{padding:14,borderRadius:12,background:active?`${persona.color}08`:C.glass,border:`1px solid ${active?`${persona.color}30`:C.border}`,transition:'all 200ms',position:'relative',overflow:'hidden'}}>
+                        {active&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${persona.color},transparent)`}}/>}
+                        <div className="flex items-center gap-3 mb-2">
+                          <div onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:active?0:Math.min(50,persona.available||200)}}))} style={{width:40,height:40,borderRadius:10,background:`${persona.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,cursor:'pointer',border:`1.5px solid ${active?persona.color:`${persona.color}30`}`,transition:'all 200ms'}}>
+                            {persona.emoji}
+                          </div>
+                          <div className="flex-1" style={{minWidth:0}}>
+                            <p style={{fontSize:13,fontWeight:700,color:active?C.text:C.textSec}}>{persona.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span style={{fontSize:9,fontWeight:600,color:persona.color,background:`${persona.color}15`,padding:'1px 5px',borderRadius:3}}>{persona.age}</span>
+                              <span style={{fontSize:9,color:C.textMuted}}>{persona.gender||''}</span>
+                              {persona.reach&&<span style={{fontSize:9,fontWeight:700,color:C.primary,marginLeft:'auto'}}>{persona.reach}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Traits */}
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {(persona.traits||[]).map((t,ti)=>(
+                            <span key={ti} style={{fontSize:9,color:C.textSec,background:C.surfaceLight,borderRadius:3,padding:'1px 6px',border:`1px solid ${C.borderLight}`}}>{t}</span>
+                          ))}
+                        </div>
+                        {/* AI approach hint */}
+                        {persona.approach&&<div style={{background:C.bg,borderRadius:6,padding:'5px 8px',border:`1px solid ${C.borderLight}`,marginBottom:8}}>
+                          <div className="flex items-start gap-2">
+                            <MI name="lightbulb" size={11} fill style={{color:C.orange,flexShrink:0,marginTop:1}}/>
+                            <p style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{persona.approach}</p>
+                          </div>
+                        </div>}
+                        {/* Qty controls */}
+                        <div className="flex items-center gap-2">
+                          <span style={{fontSize:9,color:C.textMuted,flex:1}}>Platform: <b style={{color:persona.color}}>{persona.bestPlatform||''}</b></span>
+                          <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.max(0,qty-10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+                          <input type="number" value={qty} onChange={e=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available||500,Math.max(0,parseInt(e.target.value)||0))}}))} style={{width:48,padding:'4px 0',borderRadius:4,border:`1px solid ${active?persona.color:C.border}`,fontSize:12,color:active?persona.color:C.textSec,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
+                          <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available||500,qty+10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                        </div>
+                      </div>;
+                    })}
+                  </div>
+                </L>
+
+                {/* Platform selection with AI scores inline */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+                  <L label="Platform Target" icon="devices">
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-3" style={{padding:'8px 10px',background:C.surfaceLight,borderRadius:8,border:`1px solid ${C.border}`}}>
-                        <MI name="speed" size={16} style={{color:C.teal}}/>
-                        <span className="flex-1" style={{fontSize:12,color:C.text}}>Early Bird (10 pertama)</span>
-                        <input type="number" value={missionForm.bonus||50} onChange={e=>setMissionForm(f=>({...f,bonus:parseInt(e.target.value)||0}))} style={{width:60,padding:'4px 8px',borderRadius:4,border:`1px solid ${C.border}`,fontSize:12,color:C.teal,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
-                        <span style={{fontSize:10,color:C.textMuted}}>XP</span>
-                      </div>
-                      <div className="flex items-center gap-3" style={{padding:'8px 10px',background:C.surfaceLight,borderRadius:8,border:`1px solid ${C.border}`}}>
-                        <MI name="local_fire_department" size={16} style={{color:C.orange}}/>
-                        <span className="flex-1" style={{fontSize:12,color:C.text}}>Viral Bonus (10K+ views)</span>
-                        <input type="number" value={missionForm.viralBonus||75} onChange={e=>setMissionForm(f=>({...f,viralBonus:parseInt(e.target.value)||0}))} style={{width:60,padding:'4px 8px',borderRadius:4,border:`1px solid ${C.border}`,fontSize:12,color:C.orange,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
-                        <span style={{fontSize:10,color:C.textMuted}}>XP</span>
-                      </div>
-                      <div className="flex items-center gap-3" style={{padding:'8px 10px',background:C.surfaceLight,borderRadius:8,border:`1px solid ${C.border}`}}>
-                        <MI name="diamond" size={16} style={{color:C.purple}}/>
-                        <span className="flex-1" style={{fontSize:12,color:C.text}}>Kualitas Premium</span>
-                        <input type="number" value={missionForm.qualityBonus||100} onChange={e=>setMissionForm(f=>({...f,qualityBonus:parseInt(e.target.value)||0}))} style={{width:60,padding:'4px 8px',borderRadius:4,border:`1px solid ${C.border}`,fontSize:12,color:C.purple,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
-                        <span style={{fontSize:10,color:C.textMuted}}>XP</span>
-                      </div>
+                      {['instagram','tiktok','x','facebook','whatsapp','telegram'].map(p=>{
+                        const sel2=missionForm.platforms.includes(p);
+                        const aiRec=aiPlatRec.find(r=>r.platform===p);
+                        return <button key={p} onClick={()=>setMissionForm(f=>({...f,platforms:sel2?f.platforms.filter(x=>x!==p):[...f.platforms,p]}))} className="flex items-center gap-3" style={{
+                          padding:'10px 12px',borderRadius:8,border:`1.5px solid ${sel2?pColor(p):C.border}`,
+                          background:sel2?`${pColor(p)}08`:C.glass,cursor:'pointer',textAlign:'left',transition:'all 150ms',width:'100%',
+                        }}>
+                          <div style={{width:28,height:28,borderRadius:6,background:sel2?`${pColor(p)}15`:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            {pIcon(p)?<MI name={pIcon(p)} size={14} style={{color:sel2?pColor(p):C.textMuted}}/>:<SocialIcon platform={p} size={14} color={sel2?pColor(p):C.textMuted}/>}
+                          </div>
+                          <div className="flex-1">
+                            <span style={{fontSize:13,fontWeight:sel2?700:500,color:sel2?pColor(p):C.textSec}}>{pName(p)}</span>
+                            {aiRec&&<span style={{fontSize:9,fontWeight:700,color:C.primary,background:C.primaryLight,padding:'1px 5px',borderRadius:3,marginLeft:6}}>AI: {aiRec.score}%</span>}
+                          </div>
+                          {aiRec&&<span style={{fontSize:9,color:C.textMuted}}>{aiRec.reach}</span>}
+                          {sel2&&<MI name="check_circle" size={18} fill style={{color:pColor(p)}}/>}
+                        </button>;
+                      })}
                     </div>
                   </L>
-                  {/* Deadline */}
-                  <L label="Deadline & Durasi" icon="schedule">
-                    <div className="flex gap-3">
-                      <input type="date" value={missionForm.deadline||''} onChange={e=>setMissionForm(f=>({...f,deadline:e.target.value}))} style={{flex:1,padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:'inherit',background:C.surfaceLight}}/>
-                      <select value={missionForm.urgency||'normal'} onChange={e=>setMissionForm(f=>({...f,urgency:e.target.value}))} style={{width:140,padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
-                        <option value="normal">Normal</option>
-                        <option value="urgent">Urgent (2 hari)</option>
-                        <option value="flash">Flash (24 jam)</option>
-                      </select>
+
+                  <div className="flex flex-col gap-4">
+                    {/* Filters */}
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                      <L label="Gender" icon="wc">
+                        <div className="flex gap-1">
+                          {[{v:'all',l:'Semua'},{v:'male',l:'L'},{v:'female',l:'P'}].map(g=>(
+                            <button key={g.v} onClick={()=>setMissionForm(f=>({...f,targetGender:g.v}))} style={{
+                              flex:1,padding:'8px 4px',borderRadius:6,border:`1px solid ${missionForm.targetGender===g.v?C.primary:C.border}`,
+                              background:missionForm.targetGender===g.v?C.primaryLight:C.glass,color:missionForm.targetGender===g.v?C.primary:C.textSec,
+                              fontSize:11,fontWeight:missionForm.targetGender===g.v?700:500,cursor:'pointer',textAlign:'center',
+                            }}>{g.l}</button>
+                          ))}
+                        </div>
+                      </L>
+                      <L label="Tier" icon="workspace_premium">
+                        <select value={missionForm.targetTier} onChange={e=>setMissionForm(f=>({...f,targetTier:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:12,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
+                          <option value="all">Semua</option><option value="gold">Gold</option><option value="silver">Silver</option><option value="bronze">Bronze</option>
+                        </select>
+                      </L>
                     </div>
-                  </L>
-                  {/* Budget estimate */}
-                  <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:10,padding:14,border:`1px solid rgba(201,168,76,0.15)`}}>
-                    <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>Estimasi Budget XP</p>
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <p style={{fontSize:28,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalBudget.toLocaleString()}</p>
-                        <p style={{fontSize:11,color:C.textMuted,marginTop:2}}>Total XP ({missionForm.xp||200} × {Math.min(estPeople,missionForm.maxPeople||estPeople)} orang)</p>
+                    {/* Location */}
+                    <L label="Wilayah Target" icon="map">
+                      <div className="flex flex-wrap gap-2">
+                        {['Jakarta','Surabaya','Bandung','Medan','Makassar','Semarang','Yogyakarta','Semua'].map(city=>{
+                          const sel2=(missionForm.targetCities||[]).includes(city)||(!missionForm.targetCities?.length&&city==='Semua');
+                          return <button key={city} onClick={()=>{
+                            if(city==='Semua')setMissionForm(f=>({...f,targetCities:[]}));
+                            else setMissionForm(f=>({...f,targetCities:sel2?(f.targetCities||[]).filter(c=>c!==city):[...(f.targetCities||[]),city]}));
+                          }} style={{padding:'6px 12px',borderRadius:6,border:`1px solid ${sel2?C.primary:C.border}`,background:sel2?C.primaryLight:C.glass,color:sel2?C.primary:C.textSec,fontSize:11,fontWeight:sel2?700:500,cursor:'pointer'}}>{city}</button>;
+                        })}
                       </div>
-                      <div style={{textAlign:'right'}}>
-                        <p style={{fontSize:11,color:C.textSec}}>+ bonus max <span style={{color:C.orange,fontWeight:700}}>{((missionForm.bonus||50)+(missionForm.viralBonus||75)+(missionForm.qualityBonus||100)).toLocaleString()}</span></p>
+                    </L>
+                    {/* VISIT location */}
+                    {missionForm.type==='VISIT'&&(<>
+                      <L label="Nama Lokasi" icon="location_on">
+                        <input value={missionForm.location||''} onChange={e=>setMissionForm(f=>({...f,location:e.target.value}))} placeholder="e.g., Posko Bantuan, Jl. Raya..." style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:'inherit',background:C.surfaceLight}}/>
+                      </L>
+                    </>)}
+                    {/* Requirements */}
+                    <L label="Persyaratan" icon="checklist">
+                      <div className="flex flex-col gap-2">
+                        {[{label:'Akun harus publik',key:'public'},{label:'Wajib tag akun official',key:'tag'},{label:'Gunakan hashtag campaign',key:'hashtag'},{label:'Sertakan link/sumber resmi',key:'source'}].map(r=>{
+                          const on=(missionForm.requirements||[]).includes(r.key);
+                          return <button key={r.key} onClick={()=>setMissionForm(f=>({...f,requirements:on?(f.requirements||[]).filter(x=>x!==r.key):[...(f.requirements||[]),r.key]}))} className="flex items-center gap-3" style={{padding:'7px 10px',background:on?C.primaryLight:C.surfaceLight,borderRadius:6,border:`1px solid ${on?'rgba(201,168,76,0.2)':C.border}`,cursor:'pointer',textAlign:'left',width:'100%',transition:'all 150ms'}}>
+                            <div style={{width:16,height:16,borderRadius:4,border:on?'none':`2px solid ${C.border}`,background:on?C.primary:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                              {on&&<MI name="check" size={10} style={{color:'white'}}/>}
+                            </div>
+                            <span style={{fontSize:11,color:on?C.text:C.textSec}}>{r.label}</span>
+                          </button>;
+                        })}
                       </div>
-                    </div>
+                    </L>
                   </div>
                 </div>
-              </DCard>
-            </div>
 
-            {/* ──── ROW 2: Content + Platform + Location ──── */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:20}}>
-              {/* Content Specs */}
-              <DCard title="Spesifikasi Konten" subtitle="Format dan persyaratan konten">
+                {/* Total summary bar */}
+                {(()=>{
+                  const alloc=missionForm.personaAlloc||{};
+                  const totalAlloc=Object.values(alloc).reduce((s,v)=>s+(v||0),0);
+                  return <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:10,padding:14,border:`1px solid rgba(201,168,76,0.15)`}}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <MI name="group" size={18} style={{color:C.primary}}/>
+                        <div>
+                          <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalAlloc||estPeople}</p>
+                          <p style={{fontSize:9,color:C.textMuted,marginTop:2}}>{totalAlloc?'total dari persona terpilih':'anggota memenuhi kriteria'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {totalAlloc>0&&<span style={{fontSize:11,color:C.textSec}}>{Object.entries(alloc).filter(([,v])=>v>0).length} segmen</span>}
+                        <span style={{fontSize:11,color:C.textMuted}}>pada <b style={{color:C.primary}}>{missionForm.platforms.length}</b> platform</span>
+                      </div>
+                    </div>
+                    <ProgressBar progress={(totalAlloc||estPeople)/1247} color={C.primary} height={4}/>
+                  </div>;
+                })()}
+              </div>
+            </DCard>
+
+            {/* ──── SECTION 3: Konten & Reward ──── */}
+            <DCard title="3. Spesifikasi Konten & Reward" subtitle="Format konten, reward, dan deadline" accent={C.green}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+                {/* Left: Content specs */}
                 <div className="flex flex-col gap-4">
                   <L label="Format Konten" icon="view_agenda">
                     <select value={missionForm.format} onChange={e=>setMissionForm(f=>({...f,format:e.target.value}))} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
@@ -3391,189 +3356,70 @@ export default function App(){
                       </select>
                     </L>
                   </div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                    <L label="Min Foto" icon="photo_library">
-                      <input type="number" value={missionForm.minPhotos||''} onChange={e=>setMissionForm(f=>({...f,minPhotos:parseInt(e.target.value)||0}))} placeholder="0" style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:"'JetBrains Mono'",background:C.surfaceLight}}/>
-                    </L>
-                    <L label="Min Post/Tweet" icon="edit_note">
-                      <input type="number" value={missionForm.minPosts||''} onChange={e=>setMissionForm(f=>({...f,minPosts:parseInt(e.target.value)||0}))} placeholder="0" style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:"'JetBrains Mono'",background:C.surfaceLight}}/>
-                    </L>
-                  </div>
                   <L label="Catatan Tambahan" icon="info">
                     <textarea value={missionForm.specNote||''} onChange={e=>setMissionForm(f=>({...f,specNote:e.target.value}))} placeholder="Instruksi tambahan untuk agent..." rows={2} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
                   </L>
                 </div>
-              </DCard>
-
-              {/* Platform & Requirements */}
-              <DCard title="Platform & Persyaratan" subtitle="Pilih platform dan aturan">
+                {/* Right: Reward */}
                 <div className="flex flex-col gap-4">
-                  <L label="Platform Target" icon="devices">
-                    <div className="flex flex-col gap-2">
-                      {['instagram','tiktok','x','facebook','whatsapp','telegram'].map(p=>{
-                        const sel2=missionForm.platforms.includes(p);
-                        return <button key={p} onClick={()=>setMissionForm(f=>({...f,platforms:sel2?f.platforms.filter(x=>x!==p):[...f.platforms,p]}))} className="flex items-center gap-3" style={{
-                          padding:'10px 12px',borderRadius:8,border:`1.5px solid ${sel2?pColor(p):C.border}`,
-                          background:sel2?`${pColor(p)}08`:C.glass,cursor:'pointer',textAlign:'left',transition:'all 150ms',width:'100%',
-                        }}>
-                          <div style={{width:28,height:28,borderRadius:6,background:sel2?`${pColor(p)}15`:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                            {pIcon(p)?<MI name={pIcon(p)} size={14} style={{color:sel2?pColor(p):C.textMuted}}/>:<SocialIcon platform={p} size={14} color={sel2?pColor(p):C.textMuted}/>}
-                          </div>
-                          <span className="flex-1" style={{fontSize:13,fontWeight:sel2?700:500,color:sel2?pColor(p):C.textSec}}>{pName(p)}</span>
-                          {sel2&&<MI name="check_circle" size={18} fill style={{color:pColor(p)}}/>}
-                        </button>;
-                      })}
+                  <L label="Poin XP Dasar" icon="toll">
+                    <div className="flex items-center gap-2">
+                      {[100,200,300,400,500].map(v=>(
+                        <button key={v} onClick={()=>setMissionForm(f=>({...f,xp:v}))} style={{
+                          padding:'8px 0',flex:1,borderRadius:6,border:`1px solid ${missionForm.xp===v?C.primary:C.border}`,
+                          background:missionForm.xp===v?C.primaryLight:C.glass,color:missionForm.xp===v?C.primary:C.textSec,
+                          fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:"'JetBrains Mono'",textAlign:'center',
+                        }}>{v}</button>
+                      ))}
                     </div>
+                    {(()=>{const rec=missionForm.type==='KRISIS'?400:missionForm.type==='VISIT'?350:missionForm.type==='EDUKASI'?250:200;return missionForm.xp!==rec?<AISuggest text={`AI rekomendasikan ${rec} XP (effort ${rec>=350?'tinggi':'sedang'})`} onApply={()=>setMissionForm(f=>({...f,xp:rec}))}/>:null;})()}
                   </L>
-                  <L label="Persyaratan Khusus" icon="checklist">
-                    <div className="flex flex-col gap-2">
-                      {[{label:'Akun harus publik',key:'public'},{label:'Wajib tag akun official',key:'tag'},{label:'Gunakan hashtag campaign',key:'hashtag'},{label:'Sertakan link/sumber resmi',key:'source'}].map(r=>{
-                        const on=(missionForm.requirements||[]).includes(r.key);
-                        return <button key={r.key} onClick={()=>setMissionForm(f=>({...f,requirements:on?(f.requirements||[]).filter(x=>x!==r.key):[...(f.requirements||[]),r.key]}))} className="flex items-center gap-3" style={{padding:'8px 10px',background:on?C.primaryLight:C.surfaceLight,borderRadius:6,border:`1px solid ${on?'rgba(201,168,76,0.2)':C.border}`,cursor:'pointer',textAlign:'left',width:'100%',transition:'all 150ms'}}>
-                          <div style={{width:18,height:18,borderRadius:4,border:on?'none':`2px solid ${C.border}`,background:on?C.primary:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                            {on&&<MI name="check" size={12} style={{color:'white'}}/>}
-                          </div>
-                          <span style={{fontSize:12,color:on?C.text:C.textSec}}>{r.label}</span>
-                        </button>;
-                      })}
-                    </div>
-                  </L>
-                </div>
-              </DCard>
-
-              {/* Location (always visible, expanded for VISIT) */}
-              <DCard title="Lokasi & Wilayah" subtitle={missionForm.type==='VISIT'?'Wajib untuk misi VISIT':'Opsional — filter berdasarkan wilayah'}>
-                <div className="flex flex-col gap-4">
-                  {missionForm.type==='VISIT'&&(
-                    <div style={{background:C.pinkLight,borderRadius:8,padding:10,border:`1px solid ${C.pink}20`,display:'flex',alignItems:'center',gap:6}}>
-                      <MI name="info" size={16} style={{color:C.pink}}/>
-                      <p style={{fontSize:11,color:C.pink,fontWeight:600}}>Misi VISIT memerlukan lokasi fisik</p>
-                    </div>
-                  )}
-                  <L label="Nama Lokasi" icon="location_on">
-                    <input value={missionForm.location||''} onChange={e=>setMissionForm(f=>({...f,location:e.target.value}))} placeholder="e.g., Posko Bantuan, Jl. Raya..." style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:'inherit',background:C.surfaceLight}}/>
-                  </L>
-                  <L label="Catatan Lokasi" icon="note">
-                    <input value={missionForm.locationNote||''} onChange={e=>setMissionForm(f=>({...f,locationNote:e.target.value}))} placeholder="Dekat alun-alun, parkir tersedia..." style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:'inherit',background:C.surfaceLight}}/>
-                  </L>
-                  <L label="Wilayah Target" icon="map">
-                    <div className="flex flex-wrap gap-2">
-                      {['Jakarta','Surabaya','Bandung','Medan','Makassar','Semarang','Yogyakarta','Semua'].map(city=>{
-                        const sel2=(missionForm.targetCities||[]).includes(city)||(!missionForm.targetCities?.length&&city==='Semua');
-                        return <button key={city} onClick={()=>{
-                          if(city==='Semua')setMissionForm(f=>({...f,targetCities:[]}));
-                          else setMissionForm(f=>({...f,targetCities:sel2?(f.targetCities||[]).filter(c=>c!==city):[...(f.targetCities||[]),city]}));
-                        }} style={{
-                          padding:'6px 12px',borderRadius:6,border:`1px solid ${sel2?C.primary:C.border}`,
-                          background:sel2?C.primaryLight:C.glass,color:sel2?C.primary:C.textSec,
-                          fontSize:11,fontWeight:sel2?700:500,cursor:'pointer',
-                        }}>{city}</button>;
-                      })}
-                    </div>
-                  </L>
-                  {/* Mini map placeholder for VISIT */}
-                  {missionForm.type==='VISIT'&&missionForm.location&&(
-                    <div style={{width:'100%',height:120,borderRadius:10,overflow:'hidden',position:'relative',border:`1px solid ${C.border}`,background:C.bg}}>
-                      <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:`linear-gradient(${C.border} 1px, transparent 1px), linear-gradient(90deg, ${C.border} 1px, transparent 1px)`,backgroundSize:'28px 28px'}}/>
-                      <div style={{position:'absolute',top:'35%',left:0,right:0,height:2,background:C.border,transform:'rotate(-5deg)',opacity:0.5}}/>
-                      <div style={{position:'absolute',top:0,bottom:0,left:'50%',width:2,background:C.border,transform:'rotate(3deg)',opacity:0.5}}/>
-                      <div style={{position:'absolute',top:'45%',left:'50%',transform:'translate(-50%,-100%)'}}>
-                        <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:C.pink,transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}>
-                          <MI name="location_on" size={14} fill style={{color:'white',transform:'rotate(45deg)'}}/>
-                        </div>
-                      </div>
-                      <div style={{position:'absolute',bottom:4,left:4,background:C.surface,borderRadius:4,padding:'2px 6px',fontSize:9,color:C.textSec,fontFamily:"'JetBrains Mono'",border:`1px solid ${C.border}`}}>
-                        {missionForm.location}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </DCard>
-            </div>
-
-            {/* ──── ROW 3: People + Content Kit + Publish ──── */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:20}}>
-              {/* Target People + Persona */}
-              <DCard title="Target Audience & Persona" subtitle="Pilih profil dan atur jumlah per segmen">
-                <div className="flex flex-col gap-4">
-                  {/* Persona selection with qty */}
-                  <L label="Segmen Persona" icon="people_alt">
-                    <div className="flex flex-col gap-2">
-                      {[
-                        {id:'genz',name:'Gen-Z Digital Native',age:'18-24',emoji:'👩‍💻',color:C.purple,available:475,platform:'TikTok, IG Reels'},
-                        {id:'millenial',name:'Professional Millennial',age:'25-34',emoji:'👨‍💼',color:C.primary,available:398,platform:'X, Instagram'},
-                        {id:'leader',name:'Community Leader',age:'35-50',emoji:'👨‍👩‍👧‍👦',color:C.teal,available:265,platform:'WA, Facebook'},
-                        {id:'senior',name:'Senior Advocate',age:'50+',emoji:'👴',color:C.orange,available:109,platform:'Facebook, WA'},
-                      ].map(persona=>{
-                        const personas=missionForm.personaAlloc||{};
-                        const qty=personas[persona.id]||0;
-                        const active=qty>0;
-                        return <div key={persona.id} style={{padding:10,borderRadius:10,background:active?`${persona.color}08`:C.glass,border:`1px solid ${active?`${persona.color}25`:C.border}`,transition:'all 200ms'}}>
-                          <div className="flex items-center gap-3">
-                            <div onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:active?0:Math.min(50,persona.available)}}))} style={{width:36,height:36,borderRadius:8,background:`${persona.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,cursor:'pointer',border:`1.5px solid ${active?persona.color:`${persona.color}30`}`,transition:'all 200ms'}}>
-                              {persona.emoji}
-                            </div>
-                            <div className="flex-1" style={{minWidth:0}}>
-                              <p style={{fontSize:12,fontWeight:700,color:active?C.text:C.textSec}}>{persona.name}</p>
-                              <p style={{fontSize:9,color:C.textMuted}}>{persona.age} | {persona.platform} | {persona.available} tersedia</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.max(0,qty-10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
-                              <input type="number" value={qty} onChange={e=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available,Math.max(0,parseInt(e.target.value)||0))}}))} style={{width:48,padding:'4px 0',borderRadius:4,border:`1px solid ${active?persona.color:C.border}`,fontSize:12,color:active?persona.color:C.textSec,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
-                              <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available,qty+10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
-                            </div>
-                          </div>
-                        </div>;
-                      })}
-                    </div>
-                  </L>
-                  {/* Filter overrides */}
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                    <L label="Gender" icon="wc">
-                      <div className="flex gap-1">
-                        {[{v:'all',l:'Semua'},{v:'male',l:'L'},{v:'female',l:'P'}].map(g=>(
-                          <button key={g.v} onClick={()=>setMissionForm(f=>({...f,targetGender:g.v}))} style={{
-                            flex:1,padding:'8px 4px',borderRadius:6,border:`1px solid ${missionForm.targetGender===g.v?C.primary:C.border}`,
-                            background:missionForm.targetGender===g.v?C.primaryLight:C.glass,color:missionForm.targetGender===g.v?C.primary:C.textSec,
-                            fontSize:11,fontWeight:missionForm.targetGender===g.v?700:500,cursor:'pointer',textAlign:'center',
-                          }}>{g.l}</button>
-                        ))}
-                      </div>
-                    </L>
-                    <L label="Tier" icon="workspace_premium">
-                      <select value={missionForm.targetTier} onChange={e=>setMissionForm(f=>({...f,targetTier:e.target.value}))} style={{width:'100%',padding:'8px 10px',borderRadius:6,border:`1px solid ${C.border}`,fontSize:12,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
-                        <option value="all">Semua</option><option value="gold">Gold</option><option value="silver">Silver</option><option value="bronze">Bronze</option>
+                  <L label="Deadline" icon="schedule">
+                    <div className="flex gap-3">
+                      <input type="date" value={missionForm.deadline||''} onChange={e=>setMissionForm(f=>({...f,deadline:e.target.value}))} style={{flex:1,padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:'inherit',background:C.surfaceLight}}/>
+                      <select value={missionForm.urgency||'normal'} onChange={e=>setMissionForm(f=>({...f,urgency:e.target.value}))} style={{width:120,padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,background:C.surfaceLight,fontFamily:'inherit'}}>
+                        <option value="normal">Normal</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="flash">Flash 24h</option>
                       </select>
-                    </L>
-                  </div>
-                  {/* Total summary */}
-                  {(()=>{
-                    const alloc=missionForm.personaAlloc||{};
-                    const totalAlloc=Object.values(alloc).reduce((s,v)=>s+(v||0),0);
-                    return <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:10,padding:12,border:`1px solid rgba(201,168,76,0.15)`}}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p style={{fontSize:22,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalAlloc||estPeople}</p>
-                          <p style={{fontSize:9,color:C.textMuted,marginTop:2}}>{totalAlloc?'total dari persona terpilih':'anggota memenuhi kriteria'}</p>
+                    </div>
+                  </L>
+                  <L label="Bonus" icon="emoji_events">
+                    <div className="flex flex-col gap-2">
+                      {[{icon:'speed',label:'Early Bird',color:C.teal,key:'bonus',val:missionForm.bonus||50},{icon:'local_fire_department',label:'Viral 10K+',color:C.orange,key:'viralBonus',val:missionForm.viralBonus||75},{icon:'diamond',label:'Premium',color:C.purple,key:'qualityBonus',val:missionForm.qualityBonus||100}].map(b=>(
+                        <div key={b.key} className="flex items-center gap-3" style={{padding:'7px 10px',background:C.surfaceLight,borderRadius:8,border:`1px solid ${C.border}`}}>
+                          <MI name={b.icon} size={14} style={{color:b.color}}/>
+                          <span className="flex-1" style={{fontSize:11,color:C.text}}>{b.label}</span>
+                          <input type="number" value={b.val} onChange={e=>setMissionForm(f=>({...f,[b.key]:parseInt(e.target.value)||0}))} style={{width:56,padding:'3px 6px',borderRadius:4,border:`1px solid ${C.border}`,fontSize:11,color:b.color,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
+                          <span style={{fontSize:9,color:C.textMuted}}>XP</span>
                         </div>
-                        <div style={{textAlign:'right'}}>
-                          {totalAlloc>0&&<p style={{fontSize:11,color:C.textSec}}>{Object.entries(alloc).filter(([,v])=>v>0).length} segmen aktif</p>}
-                          <p style={{fontSize:10,color:C.textMuted}}>Budget: <span style={{color:C.gold,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>{((missionForm.xp||200)*(totalAlloc||estPeople)).toLocaleString()} XP</span></p>
-                        </div>
+                      ))}
+                    </div>
+                  </L>
+                  {/* Budget summary */}
+                  <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:10,padding:12,border:`1px solid rgba(201,168,76,0.15)`}}>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>Budget XP</p>
+                        <p style={{fontSize:24,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalBudget.toLocaleString()}</p>
                       </div>
-                      <ProgressBar progress={(totalAlloc||estPeople)/1247} color={C.primary} height={4}/>
-                    </div>;
-                  })()}
+                      <p style={{fontSize:10,color:C.textMuted}}>{missionForm.xp||200} × {Math.min(estPeople,missionForm.maxPeople||estPeople)} orang</p>
+                    </div>
+                  </div>
                 </div>
-              </DCard>
+              </div>
+            </DCard>
 
-              {/* Content Kit */}
-              <DCard title="Kit Konten & Referensi" subtitle="Template, file, dan materi pendukung">
+            {/* ──── SECTION 4: Kit Konten ──── */}
+            <DCard title="4. Kit Konten & Referensi" subtitle="Template caption, file pendukung" accent={C.pink}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
                 <div className="flex flex-col gap-4">
                   <L label="Caption / Template" icon="text_fields">
-                    <textarea value={missionForm.template||''} onChange={e=>setMissionForm(f=>({...f,template:e.target.value}))} placeholder="Tulis template caption. Pisahkan beberapa template dengan enter ganda." rows={3} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
+                    <textarea value={missionForm.template||''} onChange={e=>setMissionForm(f=>({...f,template:e.target.value}))} placeholder="Tulis template caption. Pisahkan beberapa template dengan enter ganda." rows={4} style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,outline:'none',resize:'vertical',fontFamily:'inherit',background:C.surfaceLight}}/>
                     <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>Muncul di Kit Konten agent</p>
                   </L>
+                </div>
+                <div className="flex flex-col gap-4">
                   <L label="Upload Referensi" icon="cloud_upload">
                     <div style={{border:`2px dashed ${C.border}`,borderRadius:8,padding:16,textAlign:'center',cursor:'pointer',background:C.glass}} onClick={()=>showToast('File picker (demo)')}>
                       <MI name="cloud_upload" size={28} style={{color:C.textMuted,display:'block',margin:'0 auto 6px'}}/>
@@ -3581,7 +3427,6 @@ export default function App(){
                       <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>PNG, JPG, MP4, PDF (max 50MB)</p>
                     </div>
                   </L>
-                  {/* Quick add buttons */}
                   <div className="flex flex-wrap gap-2">
                     {[{name:'Infografis.png',type:'image',size:'2.4 MB',icon:'image',color:C.pink},
                       {name:'Brief_Misi.pdf',type:'doc',size:'1.2 MB',icon:'description',color:C.primary},
@@ -3595,7 +3440,6 @@ export default function App(){
                       </button>;
                     })}
                   </div>
-                  {/* File list */}
                   {(missionForm.files||[]).length>0&&(
                     <div className="flex flex-col gap-2">
                       {(missionForm.files||[]).map((f,fi)=>(
@@ -3611,10 +3455,14 @@ export default function App(){
                     </div>
                   )}
                 </div>
-              </DCard>
+              </div>
+            </DCard>
 
-              {/* Preview & Publish */}
-              <DCard title="Preview & Publikasi" subtitle="Review sebelum deploy misi">
+            </div>{/* end left col */}
+
+            {/* ════ RIGHT: STICKY SIDEBAR (Preview + Publish) ════ */}
+            <div style={{position:'sticky',top:0}}>
+              <DCard title="Preview Misi" accent={tc}>
                 <div className="flex flex-col gap-4">
                   {/* Preview card */}
                   <div style={{background:C.bg,borderRadius:10,padding:14,border:`1px solid ${C.border}`}}>
@@ -3626,10 +3474,10 @@ export default function App(){
                       <span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:tc,background:tb,padding:'2px 6px',borderRadius:4}}>TERBUKA</span>
                     </div>
                     <h4 style={{fontSize:14,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:4}}>{missionForm.title||'Judul misi...'}</h4>
-                    <p style={{fontSize:11,color:C.textMuted,lineHeight:1.3,marginBottom:8}} className="line-clamp-2">{missionForm.desc||'Deskripsi misi...'}</p>
+                    <p style={{fontSize:11,color:C.textMuted,lineHeight:1.3,marginBottom:8}} className="line-clamp-3">{missionForm.desc||'Deskripsi misi...'}</p>
                     <div className="flex items-center gap-2">
                       <span style={{background:C.goldLight,color:C.gold,borderRadius:4,padding:'2px 8px',fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>+{missionForm.xp||200} XP</span>
-                      {(missionForm.bonus>0)&&<span style={{background:C.greenLight,color:C.green,borderRadius:4,padding:'2px 8px',fontSize:10,fontWeight:700}}>+{missionForm.bonus} bonus</span>}
+                      {(missionForm.bonus>0)&&<span style={{background:C.greenLight,color:C.green,borderRadius:4,padding:'2px 8px',fontSize:10,fontWeight:700}}>+{missionForm.bonus}</span>}
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                       {missionForm.platforms.slice(0,4).map(p=>(
@@ -3643,23 +3491,25 @@ export default function App(){
                   {/* Checklist */}
                   <div className="flex flex-col gap-2">
                     <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>Kelengkapan</p>
-                    {[{l:'Tipe misi dipilih',ok:true},{l:'Judul diisi',ok:!!missionForm.title},{l:'Deskripsi diisi',ok:!!missionForm.desc},{l:'Platform dipilih',ok:missionForm.platforms.length>0},{l:'XP ditentukan',ok:missionForm.xp>0},{l:'Deadline diset',ok:!!missionForm.deadline}].map((c,ci)=>(
-                      <div key={ci} className="flex items-center gap-2" style={{fontSize:12,color:c.ok?C.green:C.textMuted}}>
-                        <MI name={c.ok?'check_circle':'radio_button_unchecked'} size={16} fill={c.ok} style={{color:c.ok?C.green:C.textMuted}}/>
+                    {[{l:'Tipe misi',ok:true},{l:'Judul',ok:!!missionForm.title},{l:'Deskripsi',ok:!!missionForm.desc},{l:'Platform',ok:missionForm.platforms.length>0},{l:'XP',ok:missionForm.xp>0},{l:'Deadline',ok:!!missionForm.deadline},{l:'Format',ok:!!missionForm.format}].map((c,ci)=>(
+                      <div key={ci} className="flex items-center gap-2" style={{fontSize:11,color:c.ok?C.green:C.textMuted}}>
+                        <MI name={c.ok?'check_circle':'radio_button_unchecked'} size={14} fill={c.ok} style={{color:c.ok?C.green:C.textMuted}}/>
                         <span style={{fontWeight:c.ok?600:400}}>{c.l}</span>
                       </div>
                     ))}
                   </div>
-                  {/* Review & Publish */}
+                  {/* Publish */}
                   <button onClick={()=>setMissionForm(f=>({...f,showReview:true}))} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(201,168,76,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                    <MI name="rate_review" size={18} style={{color:C.bg}}/> Review & Publikasikan
+                    <MI name="rate_review" size={18} style={{color:C.bg}}/> Review & Publikasi
                   </button>
                   <button onClick={()=>showToast('Draft tersimpan')} style={{width:'100%',padding:'10px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-                    <MI name="save" size={16} style={{color:C.textMuted}}/> Simpan sebagai Draft
+                    <MI name="save" size={16} style={{color:C.textMuted}}/> Simpan Draft
                   </button>
                 </div>
               </DCard>
             </div>
+            </div>{/* end outer grid */}
+
             {/* ──── ROW 3.5: AI Content Strategy ──── */}
             {missionForm.title&&!['AMPLIFIKASI'].includes(missionForm.type)&&(
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:20}}>
