@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__stitch__create_project",
+      "mcp__stitch__generate_screen_from_text",
+      "mcp__stitch__list_screens",
+      "Bash(python3:*)",
+      "Bash(do:*)",
+      "mcp__stitch__fetch_screen_image",
+      "mcp__stitch__fetch_screen_code",
+      "WebFetch(domain:contribution.usercontent.google.com)",
+      "Bash(mkdir:*)",
+      "Bash(curl:*)",
+      "Bash(npx vite:*)",
+      "Bash(lsof:*)",
+      "WebFetch(domain:dribbble.com)",
+      "WebSearch",
+      "WebFetch(domain:www.behance.net)",
+      "mcp__stitch__list_projects",
+      "Bash(gcloud auth:*)",
+      "Bash(npm run:*)",
+      "Bash(git:*)",
+      "Bash(gh auth:*)",
+      "Bash(ssh:*)",
+      "Bash(ssh-add:*)",
+      "Bash(ssh-keygen:*)",
+      "WebFetch(domain:cdn.dribbble.com)",
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

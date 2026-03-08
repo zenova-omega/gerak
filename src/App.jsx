@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import Globe from 'react-globe.gl';
 
 /* ─── ICON ───────────────────────────────────────────────────────── */
 function MI({ name, size=24, fill=false, style={} }) {
@@ -4085,14 +4086,14 @@ export default function App(){
               {agent:'Nadia Putri',avatar:'NP',joinedAt:'8 Mar 2026',tier:'Bronze',platform:'x'},
               {agent:'Dimas Aditya',avatar:'DA',joinedAt:'8 Mar 2026',tier:'Silver',platform:'tiktok'},
             ];
-            // Submitted posts (uploaded content)
+            // Submitted posts (uploaded content) with geo + social tracking
             const missionPosts=[
-              {agent:'Arif Santoso',avatar:'AS',platform:'tiktok',title:'Tips Aman Pakai WiFi Publik',link:'tiktok.com/@arifsantoso_/video/123',date:'6 Mar 2026',views:'128.4K',likes:'12.3K',comments:'1.2K',shares:'4.5K',rate:14.2,status:'SELESAI',xp:m.xp},
-              {agent:'Rina Dewi',avatar:'RD',platform:'instagram',title:'Cara Cek Fakta Berita Online',link:'instagram.com/p/ABC123',date:'5 Mar 2026',views:'45.8K',likes:'5.6K',comments:'342',shares:'1.8K',rate:11.8,status:'SELESAI',xp:m.xp},
-              {agent:'Fajar Nugroho',avatar:'FN',platform:'x',title:'Thread: Panduan Keamanan Digital',link:'x.com/fajar_n/status/456',date:'4 Mar 2026',views:'18.2K',likes:'2.1K',comments:'187',shares:'956',rate:9.4,status:'REVIEW',xp:0},
-              {agent:'Sari Utami',avatar:'SU',platform:'tiktok',title:'POV: Kamu Kena Phishing',link:'tiktok.com/@sariutami/video/789',date:'3 Mar 2026',views:'256.1K',likes:'28.9K',comments:'3.4K',shares:'8.7K',rate:18.1,status:'SELESAI',xp:m.xp},
-              {agent:'Budi Hartono',avatar:'BH',platform:'instagram',title:'Infografis Keamanan Digital',link:'instagram.com/p/DEF456',date:'3 Mar 2026',views:'22.3K',likes:'3.2K',comments:'156',shares:'890',rate:8.6,status:'REVIEW',xp:0},
-              {agent:'Ahmad Rizki',avatar:'AR',platform:'x',title:'5 Tanda Penipuan Online',link:'x.com/ahmad_r/status/101',date:'2 Mar 2026',views:'8.1K',likes:'920',comments:'78',shares:'310',rate:7.1,status:'DITOLAK',xp:0},
+              {agent:'Arif Santoso',avatar:'AS',platform:'tiktok',title:'Tips Aman Pakai WiFi Publik',link:'tiktok.com/@arifsantoso_/video/123',date:'6 Mar 2026',time:'14:32',views:'128.4K',likes:'12.3K',comments:'1.2K',shares:'4.5K',rate:14.2,status:'SELESAI',xp:m.xp,lat:-6.2088,lng:106.8456,city:'Jakarta',likedBy:['Rina Dewi','Sari Utami','Budi Hartono'],sharedBy:['Rina Dewi','Fajar Nugroho']},
+              {agent:'Rina Dewi',avatar:'RD',platform:'instagram',title:'Cara Cek Fakta Berita Online',link:'instagram.com/p/ABC123',date:'5 Mar 2026',time:'09:15',views:'45.8K',likes:'5.6K',comments:'342',shares:'1.8K',rate:11.8,status:'SELESAI',xp:m.xp,lat:-6.9175,lng:107.6191,city:'Bandung',likedBy:['Arif Santoso','Sari Utami'],sharedBy:['Arif Santoso']},
+              {agent:'Fajar Nugroho',avatar:'FN',platform:'x',title:'Thread: Panduan Keamanan Digital',link:'x.com/fajar_n/status/456',date:'4 Mar 2026',time:'20:45',views:'18.2K',likes:'2.1K',comments:'187',shares:'956',rate:9.4,status:'REVIEW',xp:0,lat:-7.7956,lng:110.3695,city:'Yogyakarta',likedBy:['Arif Santoso'],sharedBy:[]},
+              {agent:'Sari Utami',avatar:'SU',platform:'tiktok',title:'POV: Kamu Kena Phishing',link:'tiktok.com/@sariutami/video/789',date:'3 Mar 2026',time:'16:20',views:'256.1K',likes:'28.9K',comments:'3.4K',shares:'8.7K',rate:18.1,status:'SELESAI',xp:m.xp,lat:-7.2575,lng:112.7521,city:'Surabaya',likedBy:['Arif Santoso','Rina Dewi','Fajar Nugroho','Budi Hartono','Ahmad Rizki'],sharedBy:['Rina Dewi','Budi Hartono','Ahmad Rizki']},
+              {agent:'Budi Hartono',avatar:'BH',platform:'instagram',title:'Infografis Keamanan Digital',link:'instagram.com/p/DEF456',date:'3 Mar 2026',time:'11:08',views:'22.3K',likes:'3.2K',comments:'156',shares:'890',rate:8.6,status:'REVIEW',xp:0,lat:-5.1477,lng:119.4327,city:'Makassar',likedBy:['Sari Utami','Ahmad Rizki'],sharedBy:['Ahmad Rizki']},
+              {agent:'Ahmad Rizki',avatar:'AR',platform:'x',title:'5 Tanda Penipuan Online',link:'x.com/ahmad_r/status/101',date:'2 Mar 2026',time:'08:30',views:'8.1K',likes:'920',comments:'78',shares:'310',rate:7.1,status:'DITOLAK',xp:0,lat:-8.6705,lng:115.2126,city:'Bali',likedBy:['Sari Utami'],sharedBy:[]},
             ];
             const completedCount=missionPosts.filter(p=>p.status==='SELESAI').length;
             const reviewCount=missionPosts.filter(p=>p.status==='REVIEW').length;
@@ -4190,6 +4191,248 @@ export default function App(){
                   ))}
                 </div>
               </DCard>
+
+              {/* ═══ 3D GLOBE — Social Media Monitoring ═══ */}
+              {(()=>{
+                // Build arcs from social interactions (likes/shares between agents)
+                const arcs=[];
+                missionPosts.forEach(post=>{
+                  (post.likedBy||[]).forEach(liker=>{
+                    const likerPost=missionPosts.find(p=>p.agent===liker);
+                    if(likerPost&&likerPost.agent!==post.agent){
+                      arcs.push({startLat:likerPost.lat,startLng:likerPost.lng,endLat:post.lat,endLng:post.lng,color:['rgba(201,168,76,0.6)','rgba(201,168,76,0.15)'],label:`${liker} → liked → ${post.agent}`,type:'like'});
+                    }
+                  });
+                  (post.sharedBy||[]).forEach(sharer=>{
+                    const sharerPost=missionPosts.find(p=>p.agent===sharer);
+                    if(sharerPost&&sharerPost.agent!==post.agent){
+                      arcs.push({startLat:sharerPost.lat,startLng:sharerPost.lng,endLat:post.lat,endLng:post.lng,color:['rgba(45,212,191,0.7)','rgba(45,212,191,0.15)'],label:`${sharer} → shared → ${post.agent}`,type:'share'});
+                    }
+                  });
+                });
+                // Points for each post location
+                const points=missionPosts.map(p=>({lat:p.lat,lng:p.lng,agent:p.agent,city:p.city,platform:p.platform,title:p.title,views:p.views,rate:p.rate,status:p.status,size:Math.max(0.3,p.rate/20),color:p.status==='SELESAI'?C.green:p.status==='REVIEW'?C.orange:C.red}));
+
+                return(<>
+                <DCard title="3D Globe — Peta Konten Aktif" subtitle="Geolokasi post anggota & interaksi sosial antar kota" action={<div className="flex items-center gap-3">
+                  {[{l:'Like',c:'#C9A84C'},{l:'Share',c:'#2DD4BF'}].map(x=>(
+                    <div key={x.l} className="flex items-center gap-1"><div style={{width:10,height:3,borderRadius:2,background:x.c}}/><span style={{fontSize:10,color:C.textMuted}}>{x.l}</span></div>
+                  ))}
+                </div>}>
+                  <div style={{position:'relative',borderRadius:12,overflow:'hidden',background:'radial-gradient(ellipse at center,#0a1628 0%,#060d1a 100%)',border:`1px solid ${C.border}`}}>
+                    <Globe
+                      width={760} height={480}
+                      globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+                      bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                      backgroundImageUrl=""
+                      backgroundColor="rgba(0,0,0,0)"
+                      atmosphereColor="rgba(201,168,76,0.3)"
+                      atmosphereAltitude={0.2}
+                      pointsData={points}
+                      pointLat="lat" pointLng="lng"
+                      pointAltitude={d=>d.size*0.06}
+                      pointRadius={d=>d.size*0.5}
+                      pointColor="color"
+                      pointLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;font-family:Inter,sans-serif;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+                        <div style="font-size:13px;font-weight:700;color:#F1F5F9;margin-bottom:4px">${d.agent}</div>
+                        <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">${d.city} · ${d.platform}</div>
+                        <div style="font-size:11px;color:#C9A84C;font-weight:600">${d.title}</div>
+                        <div style="display:flex;gap:12px;margin-top:6px">
+                          <span style="font-size:10px;color:#94A3B8">👁 ${d.views}</span>
+                          <span style="font-size:10px;color:${d.status==='SELESAI'?'#22C55E':d.status==='REVIEW'?'#F59E0B':'#EF4444'};font-weight:600">${d.status}</span>
+                          <span style="font-size:10px;color:#C9A84C;font-weight:700">${d.rate}%</span>
+                        </div>
+                      </div>`}
+                      arcsData={arcs}
+                      arcStartLat="startLat" arcStartLng="startLng"
+                      arcEndLat="endLat" arcEndLng="endLng"
+                      arcColor="color"
+                      arcDashLength={0.4} arcDashGap={0.2} arcDashAnimateTime={2500}
+                      arcStroke={0.5}
+                      arcLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#94A3B8;box-shadow:0 4px 16px rgba(0,0,0,0.4)">${d.label}</div>`}
+                      animateIn={true}
+                      // Camera focused on Indonesia
+                      pointOfView={{lat:-2.5,lng:118,altitude:2.2}}
+                    />
+                    {/* Overlay Stats */}
+                    <div style={{position:'absolute',top:16,left:16,display:'flex',flexDirection:'column',gap:8}}>
+                      <div style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>Total Post</p>
+                        <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{missionPosts.length}</p>
+                      </div>
+                      <div style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>Kota Aktif</p>
+                        <p style={{fontSize:20,fontWeight:800,color:C.teal,fontFamily:"'JetBrains Mono'"}}>{new Set(missionPosts.map(p=>p.city)).size}</p>
+                      </div>
+                      <div style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                        <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>Interaksi</p>
+                        <p style={{fontSize:20,fontWeight:800,color:'#C9A84C',fontFamily:"'JetBrains Mono'"}}>{arcs.length}</p>
+                      </div>
+                    </div>
+                    {/* City Legend */}
+                    <div style={{position:'absolute',bottom:16,right:16,display:'flex',flexDirection:'column',gap:4}}>
+                      {[...new Set(missionPosts.map(p=>p.city))].map(city=>{
+                        const cp=missionPosts.find(p=>p.city===city);
+                        return(<div key={city} className="flex items-center gap-2" style={{background:'rgba(15,26,46,0.85)',backdropFilter:'blur(12px)',borderRadius:6,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                          <div style={{width:6,height:6,borderRadius:'50%',background:cp.status==='SELESAI'?C.green:cp.status==='REVIEW'?C.orange:C.red}}/>
+                          <span style={{fontSize:10,color:C.textSec,fontWeight:600}}>{city}</span>
+                          <span style={{fontSize:9,color:C.textMuted}}>{cp.agent}</span>
+                        </div>);
+                      })}
+                    </div>
+                  </div>
+                </DCard>
+
+                {/* ═══ CONTENT TIMELINE ═══ */}
+                <DCard title="Timeline Konten" subtitle="Kronologi postingan anggota misi ini">
+                  <div style={{position:'relative',paddingLeft:28}}>
+                    {/* Vertical line */}
+                    <div style={{position:'absolute',left:10,top:0,bottom:0,width:2,background:`linear-gradient(to bottom,${C.primary},${C.border})`,borderRadius:1}}/>
+                    {missionPosts.sort((a,b)=>new Date('2026-03-'+b.date.split(' ')[0])-new Date('2026-03-'+a.date.split(' ')[0])).map((post,i)=>{
+                      const stCol=post.status==='SELESAI'?C.green:post.status==='REVIEW'?C.orange:C.red;
+                      return(
+                      <div key={i} style={{position:'relative',paddingBottom:i<missionPosts.length-1?20:0}}>
+                        {/* Timeline dot */}
+                        <div style={{position:'absolute',left:-22,top:4,width:12,height:12,borderRadius:'50%',background:stCol,border:'2px solid #0B1120',boxShadow:`0 0 8px ${stCol}40`}}/>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,background:C.surfaceLight,borderRadius:10,padding:16,border:`1px solid ${C.border}`}}>
+                          {/* Left: Content Info */}
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div style={{width:28,height:28,borderRadius:8,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:C.primary}}>{post.avatar}</div>
+                              <div>
+                                <p style={{fontSize:13,fontWeight:700,color:C.text}}>{post.agent}</p>
+                                <p style={{fontSize:10,color:C.textMuted}}>{post.city} · {post.date}, {post.time}</p>
+                              </div>
+                              <span style={{marginLeft:'auto',fontSize:9,fontWeight:700,padding:'2px 8px',borderRadius:4,background:post.status==='SELESAI'?C.greenLight:post.status==='REVIEW'?C.orangeLight:C.redLight,color:stCol}}>{post.status}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <SocialIcon platform={post.platform} size={14} color={pColor(post.platform)}/>
+                              <p style={{fontSize:12,fontWeight:600,color:C.text}}>{post.title}</p>
+                            </div>
+                            {/* Engagement */}
+                            <div className="flex gap-3">
+                              {[{l:'Views',v:post.views,c:C.primary},{l:'Likes',v:post.likes,c:C.pink},{l:'Comments',v:post.comments,c:C.teal},{l:'Shares',v:post.shares,c:C.orange}].map(s=>(
+                                <div key={s.l} style={{textAlign:'center'}}>
+                                  <p style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                                  <p style={{fontSize:8,color:C.textMuted,fontWeight:600}}>{s.l}</p>
+                                </div>
+                              ))}
+                              <div style={{marginLeft:'auto',textAlign:'right'}}>
+                                <p style={{fontSize:16,fontWeight:800,color:post.rate>15?C.green:post.rate>10?C.orange:C.textSec,fontFamily:"'JetBrains Mono'"}}>{post.rate}%</p>
+                                <p style={{fontSize:8,color:C.textMuted,fontWeight:600}}>Rate</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Right: Social interactions - who liked & shared */}
+                          <div style={{borderLeft:`1px solid ${C.border}`,paddingLeft:16}}>
+                            <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>Interaksi Antar Anggota</p>
+                            {post.likedBy&&post.likedBy.length>0&&(
+                              <div style={{marginBottom:8}}>
+                                <div className="flex items-center gap-1 mb-2">
+                                  <MI name="favorite" size={12} fill style={{color:C.pink}}/>
+                                  <span style={{fontSize:10,fontWeight:600,color:C.pink}}>Dilike oleh ({post.likedBy.length})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {post.likedBy.map(name=>{
+                                    const p2=missionPosts.find(p=>p.agent===name);
+                                    return(<span key={name} style={{fontSize:9,fontWeight:600,padding:'2px 8px',borderRadius:4,background:C.primaryLight,color:C.primary,display:'inline-flex',alignItems:'center',gap:3}}>
+                                      {p2&&<SocialIcon platform={p2.platform} size={8} color={C.primary}/>}{name.split(' ')[0]}
+                                    </span>);
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {post.sharedBy&&post.sharedBy.length>0&&(
+                              <div>
+                                <div className="flex items-center gap-1 mb-2">
+                                  <MI name="share" size={12} style={{color:C.teal}}/>
+                                  <span style={{fontSize:10,fontWeight:600,color:C.teal}}>Dishare oleh ({post.sharedBy.length})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {post.sharedBy.map(name=>{
+                                    const p2=missionPosts.find(p=>p.agent===name);
+                                    return(<span key={name} style={{fontSize:9,fontWeight:600,padding:'2px 8px',borderRadius:4,background:C.tealLight,color:C.teal,display:'inline-flex',alignItems:'center',gap:3}}>
+                                      {p2&&<SocialIcon platform={p2.platform} size={8} color={C.teal}/>}{name.split(' ')[0]}
+                                    </span>);
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {(!post.likedBy||post.likedBy.length===0)&&(!post.sharedBy||post.sharedBy.length===0)&&(
+                              <p style={{fontSize:11,color:C.textMuted,fontStyle:'italic'}}>Belum ada interaksi</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>);
+                    })}
+                  </div>
+                </DCard>
+
+                {/* ═══ SOCIAL INTERACTION GRAPH ═══ */}
+                <DCard title="Jaringan Interaksi Anggota" subtitle="Siapa yang me-like dan men-share post siapa">
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+                    {missionPosts.map(post=>{
+                      const totalInteractions=(post.likedBy?.length||0)+(post.sharedBy?.length||0);
+                      const stCol=post.status==='SELESAI'?C.green:post.status==='REVIEW'?C.orange:C.red;
+                      return(
+                      <div key={post.agent} style={{background:C.surfaceLight,borderRadius:10,padding:14,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
+                        {/* Glow for high interaction */}
+                        {totalInteractions>=4&&<div style={{position:'absolute',top:-20,right:-20,width:60,height:60,borderRadius:'50%',background:'radial-gradient(circle,rgba(201,168,76,0.12),transparent 70%)',pointerEvents:'none'}}/>}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div style={{width:32,height:32,borderRadius:8,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.primary}}>{post.avatar}</div>
+                          <div className="flex-1">
+                            <p style={{fontSize:12,fontWeight:700,color:C.text}}>{post.agent.split(' ')[0]}</p>
+                            <p style={{fontSize:9,color:C.textMuted}}>{post.city}</p>
+                          </div>
+                          <SocialIcon platform={post.platform} size={14} color={pColor(post.platform)}/>
+                        </div>
+                        {/* Interaction Score */}
+                        <div style={{textAlign:'center',marginBottom:10}}>
+                          <div style={{width:48,height:48,borderRadius:'50%',background:`${C.primary}15`,border:`2px solid ${totalInteractions>=4?C.primary:C.border}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto',boxShadow:totalInteractions>=4?`0 0 12px ${C.primary}30`:'none'}}>
+                            <span style={{fontSize:18,fontWeight:800,color:totalInteractions>=4?C.primary:C.textSec,fontFamily:"'JetBrains Mono'"}}>{totalInteractions}</span>
+                          </div>
+                          <p style={{fontSize:9,color:C.textMuted,marginTop:4}}>interaksi</p>
+                        </div>
+                        {/* Like / Share breakdown */}
+                        <div className="flex gap-2">
+                          <div style={{flex:1,background:`${C.pink}10`,borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
+                            <MI name="favorite" size={12} fill style={{color:C.pink}}/>
+                            <p style={{fontSize:13,fontWeight:700,color:C.pink,fontFamily:"'JetBrains Mono'"}}>{post.likedBy?.length||0}</p>
+                            <p style={{fontSize:8,color:C.textMuted}}>Likes</p>
+                          </div>
+                          <div style={{flex:1,background:`${C.teal}10`,borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
+                            <MI name="share" size={12} style={{color:C.teal}}/>
+                            <p style={{fontSize:13,fontWeight:700,color:C.teal,fontFamily:"'JetBrains Mono'"}}>{post.sharedBy?.length||0}</p>
+                            <p style={{fontSize:8,color:C.textMuted}}>Shares</p>
+                          </div>
+                        </div>
+                        {/* Rate badge */}
+                        <div style={{marginTop:8,textAlign:'center'}}>
+                          <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:post.rate>15?C.greenLight:post.rate>10?C.orangeLight:C.surfaceLight,color:post.rate>15?C.green:post.rate>10?C.orange:C.textMuted}}>{post.rate}% eng.</span>
+                          <span style={{fontSize:9,marginLeft:6,fontWeight:600,padding:'2px 6px',borderRadius:4,background:post.status==='SELESAI'?C.greenLight:post.status==='REVIEW'?C.orangeLight:C.redLight,color:stCol}}>{post.status}</span>
+                        </div>
+                      </div>);
+                    })}
+                  </div>
+                  {/* Top Interactions */}
+                  <div style={{marginTop:16,padding:12,background:C.bg,borderRadius:8,border:`1px solid ${C.border}`}}>
+                    <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:8}}>Top Cross-Interaction</p>
+                    <div className="flex flex-col gap-2">
+                      {arcs.slice(0,6).map((arc,i)=>(
+                        <div key={i} className="flex items-center gap-2" style={{fontSize:11,color:C.textSec}}>
+                          <MI name={arc.type==='like'?'favorite':'share'} size={12} fill={arc.type==='like'} style={{color:arc.type==='like'?C.pink:C.teal}}/>
+                          <span style={{fontWeight:600,color:C.text}}>{arc.label.split(' → ')[0]}</span>
+                          <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>
+                          <span style={{color:arc.type==='like'?C.pink:C.teal,fontWeight:600}}>{arc.type==='like'?'liked':'shared'}</span>
+                          <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>
+                          <span style={{fontWeight:600,color:C.text}}>{arc.label.split(' → ')[2]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </DCard>
+                </>);
+              })()}
 
               {/* Registered Members (not uploaded yet) */}
               <DCard title="Anggota Terdaftar" subtitle={`${registeredMembers.length} anggota belum upload konten`}>
