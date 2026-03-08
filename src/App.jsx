@@ -332,6 +332,7 @@ export default function App(){
   const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null); // {narrativeId, step, prompt, platform, impactLevel, ...}
   const [selectedAdMission,setSelectedAdMission]=useState(null); // mission id for admin detail view
   const [monitorView,setMonitorView]=useState('network'); // 'network' | 'globe' | 'timeline'
+  const [globeSelPost,setGlobeSelPost]=useState(null); // selected post on globe click
   const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
   const [logoutConfirm,setLogoutConfirm]=useState(false);
   // joinedMissions: {missionId: {status:'TERDAFTAR'|'SUBMITTED'|'REVIEW'|'SELESAI', joinedAt, submittedAt?}}
@@ -4334,58 +4335,9 @@ export default function App(){
 
                   {/* ─── VIEW: 3D GLOBE ─── */}
                   {monitorView==='globe'&&(()=>{
-                    // Group posts by city for rich hover cards
-                    const cityGroups={};
-                    missionPosts.forEach(p=>{if(!cityGroups[p.city])cityGroups[p.city]=[];cityGroups[p.city].push(p);});
-                    // One point per city (aggregated)
-                    const cityPoints=Object.entries(cityGroups).map(([city,posts])=>{
-                      const first=posts[0];
-                      const totalViews=posts.reduce((s,p)=>s+parseFloat(p.views)*1000,0);
-                      const avgRate=posts.reduce((s,p)=>s+p.rate,0)/posts.length;
-                      // Build rich HTML tooltip with profile pics and post cards
-                      const postsHtml=posts.map(p=>{
-                        const platCol=p.platform==='instagram'?'#E1306C':p.platform==='tiktok'?'#E8E8E8':'#1DA1F2';
-                        const stCol=p.status==='SELESAI'?'#22C55E':p.status==='REVIEW'?'#F59E0B':'#EF4444';
-                        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;${posts.indexOf(p)<posts.length-1?'border-bottom:1px solid rgba(255,255,255,0.06)':''}">
-                          <div style="width:36px;height:36px;border-radius:10px;background:${platCol}20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${platCol};border:1.5px solid ${platCol}40;flex-shrink:0">${p.avatar}</div>
-                          <div style="flex:1;min-width:0">
-                            <div style="font-size:12px;font-weight:700;color:#F1F5F9">${p.agent}</div>
-                            <div style="font-size:10px;color:#C9A84C;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
-                            <div style="display:flex;gap:8px;margin-top:3px">
-                              <span style="font-size:9px;color:#94A3B8">👁 ${p.views}</span>
-                              <span style="font-size:9px;color:#EC4899">♥ ${p.likes}</span>
-                              <span style="font-size:9px;color:#2DD4BF">↗ ${p.shares}</span>
-                            </div>
-                          </div>
-                          <div style="text-align:right;flex-shrink:0">
-                            <div style="font-size:13px;font-weight:800;color:${avgRate>15?'#22C55E':avgRate>10?'#F59E0B':'#94A3B8'};font-family:'JetBrains Mono'">${p.rate}%</div>
-                            <div style="font-size:8px;font-weight:700;color:${stCol};margin-top:2px">${p.status}</div>
-                          </div>
-                        </div>`;
-                      }).join('');
-                      return {
-                        lat:first.lat,lng:first.lng,city,postCount:posts.length,
-                        totalViews:totalViews>1000000?(totalViews/1000000).toFixed(1)+'M':(totalViews/1000).toFixed(1)+'K',
-                        avgRate:avgRate.toFixed(1),
-                        size:Math.max(0.4,posts.length*0.3+avgRate/20),
-                        color:avgRate>15?C.green:avgRate>10?C.orange:C.primary,
-                        label:`<div style="background:#0B1120;border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:0;font-family:Inter,sans-serif;min-width:280px;max-width:340px;box-shadow:0 16px 48px rgba(0,0,0,0.7);overflow:hidden">
-                          <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
-                            <div style="display:flex;align-items:center;justify-content:space-between">
-                              <div>
-                                <div style="font-size:15px;font-weight:800;color:#F1F5F9">${city}</div>
-                                <div style="font-size:10px;color:#94A3B8;margin-top:2px">${posts.length} konten · Total ${totalViews>1000000?(totalViews/1000000).toFixed(1)+'M':(totalViews/1000).toFixed(1)+'K'} views</div>
-                              </div>
-                              <div style="background:${avgRate>15?'rgba(34,197,94,0.15)':avgRate>10?'rgba(245,158,11,0.15)':'rgba(201,168,76,0.15)'};border-radius:8px;padding:4px 10px;text-align:center">
-                                <div style="font-size:16px;font-weight:800;color:${avgRate>15?'#22C55E':avgRate>10?'#F59E0B':'#C9A84C'};font-family:'JetBrains Mono'">${avgRate.toFixed(1)}%</div>
-                                <div style="font-size:8px;color:#64748B;font-weight:600">AVG RATE</div>
-                              </div>
-                            </div>
-                          </div>
-                          <div style="padding:4px 16px 12px">${postsHtml}</div>
-                        </div>`,
-                      };
-                    });
+                    // Each post = one pin on the globe with avatar, click to show detail
+                    const htmlData=missionPosts.map(p=>({...p,size:20}));
+                    const selP=globeSelPost?missionPosts.find(x=>x.agent===globeSelPost):null;
                     return(
                     <div style={{position:'relative',height:520,background:'radial-gradient(ellipse at center,#0a1628 0%,#060d1a 100%)'}}>
                       <Globe
@@ -4393,46 +4345,121 @@ export default function App(){
                         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
                         bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                         backgroundImageUrl="" backgroundColor="rgba(0,0,0,0)"
-                        atmosphereColor="rgba(201,168,76,0.3)" atmosphereAltitude={0.18}
-                        pointsData={cityPoints}
-                        pointLat="lat" pointLng="lng"
-                        pointAltitude={d=>d.size*0.04}
-                        pointRadius={d=>d.size*0.6}
-                        pointColor="color"
-                        pointLabel="label"
-                        ringsData={cityPoints.map(p=>({lat:p.lat,lng:p.lng,maxR:p.postCount*0.8+parseFloat(p.avgRate)/10,propagationSpeed:1.5,repeatPeriod:1200,color:()=>p.color+'60'}))}
+                        atmosphereColor="rgba(201,168,76,0.25)" atmosphereAltitude={0.18}
+                        htmlElementsData={htmlData}
+                        htmlLat="lat" htmlLng="lng"
+                        htmlAltitude={0.01}
+                        htmlElement={d=>{
+                          const el=document.createElement('div');
+                          const pc=d.platform==='instagram'?'#E1306C':d.platform==='tiktok'?'#E8E8E8':'#1DA1F2';
+                          const isSel=globeSelPost===d.agent;
+                          el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transform:translate(-50%,-50%)">
+                            <div style="width:${isSel?40:32}px;height:${isSel?40:32}px;border-radius:50%;background:#0B1120;border:2.5px solid ${isSel?'#C9A84C':pc};display:flex;align-items:center;justify-content:center;font-size:${isSel?13:11}px;font-weight:700;color:${isSel?'#C9A84C':pc};box-shadow:0 0 ${isSel?16:8}px ${isSel?'rgba(201,168,76,0.5)':pc+'40'};transition:all 200ms">
+                              ${d.avatar}
+                            </div>
+                            <div style="margin-top:3px;background:rgba(11,17,32,0.9);border-radius:4px;padding:1px 6px;font-size:8px;font-weight:700;color:${pc};font-family:Inter,sans-serif;white-space:nowrap;border:1px solid ${pc}30">${d.agent.split(' ')[0]}</div>
+                          </div>`;
+                          el.style.cursor='pointer';
+                          el.onclick=(e)=>{e.stopPropagation();setGlobeSelPost(prev=>prev===d.agent?null:d.agent);};
+                          return el;
+                        }}
+                        ringsData={missionPosts.map(p=>({lat:p.lat,lng:p.lng,maxR:p.rate/12,propagationSpeed:1.5,repeatPeriod:1500,color:()=>(p.status==='SELESAI'?C.green:p.status==='REVIEW'?C.orange:C.red)+'50'}))}
                         ringMaxRadius="maxR" ringPropagationSpeed="propagationSpeed" ringRepeatPeriod="repeatPeriod"
+                        onGlobeClick={()=>setGlobeSelPost(null)}
                         animateIn={true}
                         pointOfView={{lat:-2.5,lng:118,altitude:2.2}}
                       />
-                      {/* Overlay: total stats */}
+                      {/* Overlay: stats */}
                       <div style={{position:'absolute',top:16,left:16,display:'flex',flexDirection:'column',gap:6}}>
-                        {[{l:'Total Post',v:missionPosts.length,c:C.primary},{l:'Kota',v:Object.keys(cityGroups).length,c:C.teal},{l:'Avg Rate',v:(missionPosts.reduce((s,p)=>s+p.rate,0)/missionPosts.length).toFixed(1)+'%',c:C.green}].map(s=>(
+                        {[{l:'Konten',v:missionPosts.length,c:C.primary},{l:'Kota',v:new Set(missionPosts.map(p=>p.city)).size,c:C.teal},{l:'Avg Rate',v:(missionPosts.reduce((s,p)=>s+p.rate,0)/missionPosts.length).toFixed(1)+'%',c:C.green}].map(s=>(
                           <div key={s.l} style={{background:'rgba(15,26,46,0.92)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 14px',border:'1px solid rgba(255,255,255,0.06)'}}>
                             <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>{s.l}</p>
                             <p style={{fontSize:20,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
                           </div>
                         ))}
                       </div>
-                      {/* Bottom: city cards */}
-                      <div style={{position:'absolute',bottom:16,left:16,right:16,display:'flex',gap:8,justifyContent:'center'}}>
-                        {Object.entries(cityGroups).map(([city,posts])=>{
-                          const avgR=posts.reduce((s,p)=>s+p.rate,0)/posts.length;
-                          return(
-                          <div key={city} style={{background:'rgba(15,26,46,0.92)',backdropFilter:'blur(12px)',borderRadius:10,padding:'10px 14px',border:'1px solid rgba(255,255,255,0.06)',minWidth:100,textAlign:'center'}}>
-                            <div className="flex justify-center" style={{marginBottom:6,gap:'-4px'}}>
-                              {posts.slice(0,3).map((p,j)=>(
-                                <div key={p.agent} style={{width:24,height:24,borderRadius:6,background:`${pColor(p.platform)}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:8,fontWeight:700,color:pColor(p.platform),border:`1.5px solid ${pColor(p.platform)}40`,marginLeft:j>0?-4:0,position:'relative',zIndex:3-j}}>
-                                  {p.avatar}
+                      {/* Click hint */}
+                      {!globeSelPost&&(
+                        <div style={{position:'absolute',bottom:16,left:'50%',transform:'translateX(-50%)',background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 16px',border:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:6}}>
+                          <MI name="touch_app" size={14} style={{color:C.primary}}/>
+                          <span style={{fontSize:11,color:C.textMuted}}>Klik avatar untuk lihat detail postingan</span>
+                        </div>
+                      )}
+                      {/* ── SELECTED POST DETAIL CARD ── */}
+                      {selP&&(
+                        <div style={{position:'absolute',top:16,right:16,width:320,background:'rgba(11,17,32,0.95)',backdropFilter:'blur(20px)',borderRadius:14,border:'1px solid rgba(201,168,76,0.2)',boxShadow:'0 20px 60px rgba(0,0,0,0.7)',overflow:'hidden',animation:'fadeInUp 250ms ease'}}>
+                          {/* Header */}
+                          <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),transparent)',padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:12}}>
+                            <div style={{width:44,height:44,borderRadius:12,background:`${pColor(selP.platform)}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:pColor(selP.platform),border:`2px solid ${pColor(selP.platform)}50`,flexShrink:0}}>
+                              {selP.avatar}
+                            </div>
+                            <div style={{flex:1}}>
+                              <p style={{fontSize:14,fontWeight:700,color:'#F1F5F9'}}>{selP.agent}</p>
+                              <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2}}>
+                                <SocialIcon platform={selP.platform} size={12} color={pColor(selP.platform)}/>
+                                <span style={{fontSize:11,color:'#94A3B8'}}>{selP.city}</span>
+                                <span style={{fontSize:10,color:'#64748B'}}>{selP.date}, {selP.time}</span>
+                              </div>
+                            </div>
+                            <button onClick={()=>setGlobeSelPost(null)} style={{width:24,height:24,borderRadius:6,border:'none',background:'rgba(255,255,255,0.06)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                              <MI name="close" size={14} style={{color:'#94A3B8'}}/>
+                            </button>
+                          </div>
+                          {/* Content */}
+                          <div style={{padding:'12px 16px'}}>
+                            <p style={{fontSize:13,fontWeight:600,color:'#F1F5F9',marginBottom:8,lineHeight:1.3}}>{selP.title}</p>
+                            {/* Content preview */}
+                            <div style={{background:'#060d1a',borderRadius:8,height:56,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.05)',marginBottom:12}}>
+                              <MI name={selP.platform==='x'?'article':'play_circle'} size={24} style={{color:pColor(selP.platform),opacity:0.3}}/>
+                              <span style={{fontSize:11,color:'#64748B',marginLeft:6}}>{selP.platform==='x'?'Thread':'Video/Image'}</span>
+                            </div>
+                            {/* Metrics */}
+                            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:12}}>
+                              {[{l:'Views',v:selP.views,c:'#C9A84C'},{l:'Likes',v:selP.likes,c:'#EC4899'},{l:'Comments',v:selP.comments,c:'#2DD4BF'},{l:'Shares',v:selP.shares,c:'#F59E0B'}].map(s=>(
+                                <div key={s.l} style={{background:'rgba(255,255,255,0.03)',borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
+                                  <p style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                                  <p style={{fontSize:8,color:'#64748B',fontWeight:600}}>{s.l}</p>
                                 </div>
                               ))}
                             </div>
-                            <p style={{fontSize:11,fontWeight:700,color:C.text}}>{city}</p>
-                            <p style={{fontSize:9,color:C.textMuted}}>{posts.length} post</p>
-                            <p style={{fontSize:11,fontWeight:800,color:avgR>15?C.green:avgR>10?C.orange:C.primary,fontFamily:"'JetBrains Mono'",marginTop:2}}>{avgR.toFixed(1)}%</p>
-                          </div>);
-                        })}
-                      </div>
+                            {/* Engagement + Status */}
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                <div style={{background:selP.rate>15?'rgba(34,197,94,0.15)':selP.rate>10?'rgba(245,158,11,0.15)':'rgba(148,163,184,0.1)',borderRadius:6,padding:'4px 10px'}}>
+                                  <span style={{fontSize:16,fontWeight:800,color:selP.rate>15?'#22C55E':selP.rate>10?'#F59E0B':'#94A3B8',fontFamily:"'JetBrains Mono'"}}>{selP.rate}%</span>
+                                </div>
+                                <span style={{fontSize:9,color:'#64748B'}}>engagement</span>
+                              </div>
+                              <span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:6,background:selP.status==='SELESAI'?'rgba(34,197,94,0.15)':selP.status==='REVIEW'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.15)',color:selP.status==='SELESAI'?'#22C55E':selP.status==='REVIEW'?'#F59E0B':'#EF4444'}}>{selP.status}</span>
+                            </div>
+                            {/* Liked by */}
+                            {selP.likedBy&&selP.likedBy.length>0&&(
+                              <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+                                <p style={{fontSize:9,fontWeight:700,color:'#64748B',textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>Interaksi dari anggota lain</p>
+                                <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                                  {selP.likedBy.map(name=>{
+                                    const p2=missionPosts.find(p=>p.agent===name);
+                                    return(<div key={name} onClick={()=>setGlobeSelPost(name)} style={{display:'flex',alignItems:'center',gap:4,background:'rgba(255,255,255,0.04)',borderRadius:6,padding:'3px 8px',cursor:'pointer',border:'1px solid rgba(255,255,255,0.06)'}}>
+                                      <div style={{width:16,height:16,borderRadius:4,background:p2?`${pColor(p2.platform)}20`:'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:7,fontWeight:700,color:p2?pColor(p2.platform):'#94A3B8'}}>{p2?.avatar||'?'}</div>
+                                      <span style={{fontSize:9,fontWeight:600,color:'#F1F5F9'}}>{name.split(' ')[0]}</span>
+                                      <MI name="favorite" size={8} fill style={{color:'#EC4899'}}/>
+                                    </div>);
+                                  })}
+                                  {selP.sharedBy?.map(name=>{
+                                    if(selP.likedBy?.includes(name))return null;
+                                    const p2=missionPosts.find(p=>p.agent===name);
+                                    return(<div key={name+'s'} onClick={()=>setGlobeSelPost(name)} style={{display:'flex',alignItems:'center',gap:4,background:'rgba(255,255,255,0.04)',borderRadius:6,padding:'3px 8px',cursor:'pointer',border:'1px solid rgba(255,255,255,0.06)'}}>
+                                      <div style={{width:16,height:16,borderRadius:4,background:p2?`${pColor(p2.platform)}20`:'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:7,fontWeight:700,color:p2?pColor(p2.platform):'#94A3B8'}}>{p2?.avatar||'?'}</div>
+                                      <span style={{fontSize:9,fontWeight:600,color:'#F1F5F9'}}>{name.split(' ')[0]}</span>
+                                      <MI name="share" size={8} style={{color:'#2DD4BF'}}/>
+                                    </div>);
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>);
                   })()}
 
