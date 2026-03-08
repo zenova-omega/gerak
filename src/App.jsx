@@ -74,7 +74,7 @@ const SOCIALS=[
 const MISSIONS=[
   {id:1,type:'EDUKASI',title:'Distribusi Materi Literasi Digital ke 5 Grup',
     desc:'Sebarkan materi edukasi tentang keamanan digital kepada minimal 5 grup komunitas WhatsApp atau Telegram.',
-    xp:250,bonus:50,participants:128,status:'TERBUKA',deadline:'12 Mar 2026',
+    xp:250,bonus:50,participants:128,status:'TERBUKA',deadline:'12 Mar 2026',hashtags:'#GERAK #LiterasiDigital #AmanDigital',
     analytics:{reach:'45.2K',engagement:'12.8%',completion:72,avgTime:'2.4 jam',topCity:'Jakarta',sentiment:78,conversionRate:'8.2%'},
     targetPlatforms:['whatsapp','telegram'],
     contentSpec:{format:'Teks + Gambar',type:'Forward pesan',minGroups:5,note:'Kirim ke grup dengan min 20 anggota'},
@@ -83,7 +83,7 @@ const MISSIONS=[
   },
   {id:2,type:'AMPLIFIKASI',title:'Amplifikasi Pesan Pembangunan Infrastruktur Desa',
     desc:'Like, comment, dan share postingan resmi tentang program pembangunan infrastruktur desa di semua platform kamu.',
-    xp:200,participants:89,status:'TERBUKA',deadline:'15 Mar 2026',
+    xp:200,participants:89,status:'TERBUKA',deadline:'15 Mar 2026',hashtags:'#GERAK #InfrastrukturDesa #BangunIndonesia',
     analytics:{reach:'120.5K',engagement:'15.3%',completion:58,avgTime:'1.8 jam',topCity:'Surabaya',sentiment:84,conversionRate:'11.4%'},
     targetPlatforms:['instagram','tiktok','x','facebook'],
     contentSpec:{format:'Like & Share',type:'Engagement post resmi',actions:['Like post','Tulis komentar positif','Share/repost ke akun kamu'],note:'Komentar min 10 kata, relevan & positif'},
@@ -94,7 +94,7 @@ const MISSIONS=[
     ]},
   {id:3,type:'KRISIS',title:'Counter-Narasi Hoaks Vaksinasi',
     desc:'Lawan disinformasi tentang vaksinasi nasional dengan membagikan fakta terverifikasi ke platform sosial media.',
-    xp:400,bonus:100,participants:245,status:'PRIORITAS',deadline:'9 Mar 2026',
+    xp:400,bonus:100,participants:245,status:'PRIORITAS',deadline:'9 Mar 2026',hashtags:'#GERAK #FaktaVaksin #LawanHoaks #SehatIndonesia',
     analytics:{reach:'890K',engagement:'22.1%',completion:91,avgTime:'3.1 jam',topCity:'Jakarta',sentiment:45,conversionRate:'18.7%'},
     targetPlatforms:['whatsapp','x','facebook','tiktok'],
     contentSpec:{format:'Teks + Infografis',type:'Post original & share',minPosts:3,note:'Posting di min 3 platform berbeda. Sertakan sumber resmi.'},
@@ -105,26 +105,26 @@ const MISSIONS=[
     ]},
   {id:4,type:'KOMUNITAS',title:'Rekrutmen Relawan Bencana Wilayah Timur',
     desc:'Bantu koordinasi rekrutmen relawan untuk respons bencana di wilayah timur Indonesia.',
-    xp:300,participants:67,status:'SIAGA',deadline:'20 Mar 2026',
+    xp:300,participants:67,status:'SIAGA',deadline:'20 Mar 2026',hashtags:'#GERAK #RelawanBencana #IndonesiaTimur #PeduliBencana',
     analytics:{reach:'28.3K',engagement:'9.4%',completion:34,avgTime:'4.2 jam',topCity:'Makassar',sentiment:62,conversionRate:'5.8%'},
     targetPlatforms:['whatsapp','telegram'],
     contentSpec:{format:'Teks + Poster',type:'Forward pesan',minGroups:3,note:'Sertakan poster dan link pendaftaran resmi'},
     templates:['Dibutuhkan relawan bencana wilayah timur. Daftar via link resmi berikut. Mari bantu saudara kita!']},
   {id:5,type:'VISIT',title:'Kunjungi Posko Bantuan Bencana Cianjur',
     desc:'Datang ke lokasi posko bantuan, ambil foto/video situasi terkini, dan upload sebagai laporan lapangan.',
-    xp:500,bonus:100,participants:34,status:'TERBUKA',deadline:'18 Mar 2026',
+    xp:500,bonus:100,participants:34,status:'TERBUKA',deadline:'18 Mar 2026',hashtags:'#GERAK #BantuanBencana #CianjurBangkit',
     analytics:{reach:'15.6K',engagement:'18.2%',completion:42,avgTime:'5.5 jam',topCity:'Cianjur',sentiment:88,conversionRate:'14.1%'},
     contentSpec:{format:'Foto + Video',type:'Dokumentasi lapangan',minPhotos:3,videoDuration:'30-60 detik',note:'Foto: min 3 (posko, tim relawan, kondisi). Video: rekam suasana posko 30-60 detik.'},
     templates:[],visitLocation:'Posko Bantuan, Jl. Raya Cianjur No.12',visitCheckin:true,lat:-6.8204,lng:107.1414,locationNote:'Dekat Alun-alun Cianjur, parkir tersedia'},
   {id:6,type:'VISIT',title:'Hadiri Town Hall Meeting Kecamatan Menteng',
     desc:'Hadir di town hall meeting bersama warga. Dokumentasikan dan bagikan momen penting diskusi.',
-    xp:350,participants:52,status:'TERBUKA',deadline:'22 Mar 2026',
+    xp:350,participants:52,status:'TERBUKA',deadline:'22 Mar 2026',hashtags:'#GERAK #TownHall #PartisipasiWarga #Menteng',
     analytics:{reach:'8.9K',engagement:'11.5%',completion:28,avgTime:'3.8 jam',topCity:'Jakarta',sentiment:75,conversionRate:'6.3%'},
     contentSpec:{format:'Foto + Video',type:'Dokumentasi acara',minPhotos:5,videoDuration:'60-120 detik',note:'Foto: suasana, pembicara, peserta. Video: ringkasan pembahasan penting.'},
     templates:[],visitLocation:'Balai Kecamatan Menteng, Jakarta Pusat',visitCheckin:true,lat:-6.1944,lng:106.8529,locationNote:'Jl. Cut Mutia No.18, Menteng'},
   {id:7,type:'SOCIAL',title:'Post Reels IG: Tips Keamanan Digital',
     desc:'Buat dan posting Instagram Reels tentang tips keamanan digital yang engaging dan informatif.',
-    xp:300,bonus:75,participants:89,status:'TERBUKA',deadline:'20 Mar 2026',
+    xp:300,bonus:75,participants:89,status:'TERBUKA',deadline:'20 Mar 2026',hashtags:'#GERAK #GerakDigital #CyberSafety #AmanOnline',
     analytics:{reach:'234K',engagement:'19.8%',completion:65,avgTime:'2.1 jam',topCity:'Bandung',sentiment:91,conversionRate:'15.6%'},
     socialPlatform:'instagram',socialAction:'Post Reels',
     contentSpec:{format:'Video Reels',type:'Original content',videoDuration:'30-60 detik',aspectRatio:'9:16 (portrait)',note:'Gunakan musik trending. Tambahkan text overlay untuk poin utama.'},
@@ -134,7 +134,7 @@ const MISSIONS=[
   },
   {id:8,type:'SOCIAL',title:'Duet TikTok: Challenge #GerakUntukNegeri',
     desc:'Duet atau stitch video official GERAK di TikTok. Tambahkan pesan positif dan kreatif kamu.',
-    xp:250,participants:167,status:'TERBUKA',deadline:'25 Mar 2026',
+    xp:250,participants:167,status:'TERBUKA',deadline:'25 Mar 2026',hashtags:'#GERAK #GerakUntukNegeri #TikTokChallenge',
     analytics:{reach:'1.2M',engagement:'24.5%',completion:78,avgTime:'1.5 jam',topCity:'Jakarta',sentiment:93,conversionRate:'21.2%'},
     socialPlatform:'tiktok',socialAction:'Duet / Stitch',
     contentSpec:{format:'Video TikTok',type:'Duet / Stitch',videoDuration:'15-60 detik',aspectRatio:'9:16 (portrait)',note:'Duet video official lalu tambahkan reaksi/pesan. Boleh tambah musik & effect.'},
@@ -144,7 +144,7 @@ const MISSIONS=[
   },
   {id:9,type:'SOCIAL',title:'Thread X: Fakta Pembangunan Infrastruktur',
     desc:'Buat thread informatif min 5 tweet tentang progres pembangunan infrastruktur dengan data valid.',
-    xp:200,participants:45,status:'TERBUKA',deadline:'28 Mar 2026',
+    xp:200,participants:45,status:'TERBUKA',deadline:'28 Mar 2026',hashtags:'#GERAK #InfrastrukturIndonesia #FaktaPembangunan',
     analytics:{reach:'56.7K',engagement:'8.9%',completion:38,avgTime:'3.5 jam',topCity:'Yogyakarta',sentiment:82,conversionRate:'7.1%'},
     socialPlatform:'x',socialAction:'Thread',
     contentSpec:{format:'Thread (teks + gambar)',type:'Original thread',minTweets:5,note:'Setiap tweet max 280 karakter. Sertakan 1 gambar/infografis per 2 tweet.'},
@@ -152,11 +152,11 @@ const MISSIONS=[
     templates:['🧵 THREAD: Pembangunan infrastruktur Indonesia makin merata. Fakta-faktanya 👇'],
     exampleMedia:[{type:'image',label:'Infografis Data Pembangunan',desc:'Gunakan sebagai visual pendukung thread'}],
   },
-  {id:10,type:'AMPLIFIKASI',title:'Kampanye #HijaukanIndonesia',desc:'Kampanye digital kesadaran lingkungan hidup.',xp:180,participants:156,status:'SELESAI',deadline:'5 Mar 2026',targetPlatforms:['instagram','tiktok'],templates:[],contentSpec:{format:'Post gambar',type:'Share campaign'},
+  {id:10,type:'AMPLIFIKASI',title:'Kampanye #HijaukanIndonesia',desc:'Kampanye digital kesadaran lingkungan hidup.',xp:180,participants:156,status:'SELESAI',deadline:'5 Mar 2026',hashtags:'#GERAK #HijaukanIndonesia #LingkunganHidup',targetPlatforms:['instagram','tiktok'],templates:[],contentSpec:{format:'Post gambar',type:'Share campaign'},
     analytics:{reach:'340K',engagement:'16.7%',completion:100,avgTime:'1.9 jam',topCity:'Bali',sentiment:95,conversionRate:'13.8%'}},
   {id:11,type:'VISIT',title:'Inspeksi Gotong Royong Lingkungan RT',
     desc:'Ikuti gotong royong di lingkungan RT. Dokumentasikan before-after kondisi lingkungan.',
-    xp:200,participants:28,status:'SIAGA',deadline:'15 Mar 2026',
+    xp:200,participants:28,status:'SIAGA',deadline:'15 Mar 2026',hashtags:'#GERAK #GotongRoyong #LingkunganBersih',
     analytics:{reach:'5.2K',engagement:'7.3%',completion:18,avgTime:'4.0 jam',topCity:'Semarang',sentiment:71,conversionRate:'4.5%'},
     contentSpec:{format:'Foto before-after',type:'Dokumentasi',minPhotos:4,note:'Foto before (2) dan after (2) dari sudut yang sama.'},
     templates:[],visitLocation:'Lokasi RT setempat',visitCheckin:true,lat:-6.2088,lng:106.8456,locationNote:'Koordinasi ketua RT'},
@@ -1461,6 +1461,136 @@ export default function App(){
             )}
           </Card>
         )}
+
+        {/* ── CONTENT CREATOR BRIEF: Visual & Tone ── */}
+        <Card className="stagger-4" style={{borderLeft:`3px solid ${C.purple}`}}>
+          <div className="flex items-center gap-2 mb-3">
+            <div style={{width:28,height:28,borderRadius:8,background:C.purpleLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="palette" size={16} fill style={{color:C.purple}}/>
+            </div>
+            <h3 className="flex items-center gap-1" style={{fontSize:13,fontWeight:700,color:C.text}}>Panduan Konten <Tip text="Ikuti panduan ini agar kontenmu sesuai brief dan lolos review AI."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
+          </div>
+
+          {/* Mood & Tone */}
+          <div className="flex gap-2 mb-3">
+            <div style={{flex:1,background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`,textAlign:'center'}}>
+              <MI name="mood" size={18} fill style={{color:C.orange}}/>
+              <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:2}}>Mood</p>
+              <p style={{fontSize:11,fontWeight:600,color:C.orange}}>{m.type==='KRISIS'?'Bold & Urgent':m.type==='EDUKASI'?'Clean & Professional':'Warm & Engaging'}</p>
+            </div>
+            <div style={{flex:1,background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`,textAlign:'center'}}>
+              <MI name="record_voice_over" size={18} fill style={{color:C.primary}}/>
+              <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:2}}>Gaya Bahasa</p>
+              <p style={{fontSize:11,fontWeight:600,color:C.primary}}>{m.type==='KRISIS'?'Data-driven':m.type==='EDUKASI'?'Storytelling':'Kasual'}</p>
+            </div>
+          </div>
+
+          {/* Hashtags */}
+          {m.hashtags&&(
+            <div style={{background:C.primaryLight,borderRadius:8,padding:10,border:'1px solid rgba(201,168,76,0.15)',marginBottom:10}}>
+              <div className="flex items-center gap-2 mb-1">
+                <MI name="tag" size={14} fill style={{color:C.primary}}/>
+                <span style={{fontSize:10,fontWeight:700,color:C.primary,textTransform:'uppercase',letterSpacing:0.5}}>Hashtag Wajib</span>
+              </div>
+              <p style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",lineHeight:1.6}}>{m.hashtags}</p>
+            </div>
+          )}
+
+          {/* Do's and Don'ts */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+            <div style={{background:`${C.green}08`,borderRadius:8,padding:10,border:`1px solid ${C.green}15`}}>
+              <p style={{fontSize:10,fontWeight:700,color:C.green,marginBottom:4}}>LAKUKAN</p>
+              {(m.type==='KRISIS'?['Sertakan sumber resmi','Gunakan data & fakta','Tone tegas tapi sopan']:m.type==='EDUKASI'?['Pakai infografis','Bahasa mudah dipahami','Sertakan contoh nyata']:['Konten original','Visual menarik','Ajak interaksi']).map((d,di)=>(
+                <div key={di} className="flex items-start gap-1.5" style={{marginBottom:2}}>
+                  <MI name="check" size={10} style={{color:C.green,marginTop:2,flexShrink:0}}/>
+                  <span style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{d}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{background:`${C.red}08`,borderRadius:8,padding:10,border:`1px solid ${C.red}15`}}>
+              <p style={{fontSize:10,fontWeight:700,color:C.red,marginBottom:4}}>HINDARI</p>
+              {(m.type==='KRISIS'?['Info belum terverifikasi','Attack personal','Bahasa provokatif']:m.type==='EDUKASI'?['Clickbait / misleading','Teks terlalu panjang','Info tanpa sumber']:['Repost tanpa credit','Konten sensitif','Spam / repetitif']).map((d,di)=>(
+                <div key={di} className="flex items-start gap-1.5" style={{marginBottom:2}}>
+                  <MI name="close" size={10} style={{color:C.red,marginTop:2,flexShrink:0}}/>
+                  <span style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{d}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Opening Hook Suggestions */}
+          <div style={{marginBottom:10}}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <MI name="format_quote" size={14} fill style={{color:C.teal}}/>
+              <span style={{fontSize:10,fontWeight:700,color:C.teal,textTransform:'uppercase',letterSpacing:0.5}}>Contoh Opening</span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {(m.type==='KRISIS'?
+                ['⚠️ KLARIFIKASI: Ini fakta sebenarnya...','Sebelum kamu share, baca ini dulu 👇','Banyak yang salah paham. Thread 🧵']:
+                m.type==='EDUKASI'?
+                ['Tau nggak sih? Ternyata...','5 hal yang jarang orang tau 📚','Thread penting! Yuk bahas... 🧵']:
+                ['Hai guys! Yuk ikutan 🔥','Challenge baru nih! Siapa berani?','Konten seru yang wajib kamu coba ✨']
+              ).map((hook,hi)=>(
+                <div key={hi} style={{padding:'6px 10px',background:C.bg,borderRadius:6,border:`1px solid ${C.borderLight}`,fontSize:11,color:C.textSec,fontStyle:'italic',lineHeight:1.3}}>{hook}</div>
+              ))}
+            </div>
+            <p style={{fontSize:9,color:C.textMuted,marginTop:4}}>Kamu boleh modifikasi, ini hanya contoh inspirasi</p>
+          </div>
+
+          {/* CTA */}
+          <div style={{marginBottom:10}}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <MI name="ads_click" size={14} fill style={{color:C.orange}}/>
+              <span style={{fontSize:10,fontWeight:700,color:C.orange,textTransform:'uppercase',letterSpacing:0.5}}>Call to Action</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {(m.type==='KRISIS'?['Share ke teman','Comment fakta yang kamu tau','Simpan untuk referensi']:['Like & share','Tag 3 temanmu','Follow untuk update','Comment pendapatmu']).map((cta,ci)=>(
+                <span key={ci} style={{fontSize:10,fontWeight:600,color:C.text,background:C.surfaceLight,borderRadius:4,padding:'3px 8px',border:`1px solid ${C.borderLight}`}}>{cta}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Best Posting Time */}
+          <div style={{background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`}}>
+            <div className="flex items-center gap-2 mb-2">
+              <MI name="schedule" size={14} fill style={{color:C.primary}}/>
+              <span style={{fontSize:10,fontWeight:700,color:C.primary,textTransform:'uppercase',letterSpacing:0.5}}>Waktu Posting Terbaik</span>
+            </div>
+            <div className="flex gap-2">
+              {[{time:'07-09',label:'Pagi',pct:72},{time:'12-13',label:'Siang',pct:65},{time:'18-21',label:'Malam',pct:92}].map((slot,si)=>(
+                <div key={si} style={{flex:1,textAlign:'center',padding:6,borderRadius:6,background:si===2?C.primaryLight:C.bg,border:`1px solid ${si===2?'rgba(201,168,76,0.2)':C.borderLight}`}}>
+                  <p style={{fontSize:12,fontWeight:800,color:si===2?C.primary:C.text,fontFamily:"'JetBrains Mono'"}}>{slot.pct}%</p>
+                  <p style={{fontSize:9,fontWeight:600,color:si===2?C.primary:C.textMuted}}>{slot.time}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* ── Caption Kamu (personalized) ── */}
+        <Card className="stagger-4" style={{borderLeft:`3px solid ${C.teal}`}}>
+          <div className="flex items-center gap-2 mb-3">
+            <div style={{width:28,height:28,borderRadius:8,background:C.tealLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="edit_note" size={16} fill style={{color:C.teal}}/>
+            </div>
+            <h3 className="flex items-center gap-1" style={{fontSize:13,fontWeight:700,color:C.text}}>Caption Untukmu <Tip text="Caption yang sudah disiapkan khusus untukmu. Boleh dimodifikasi sesuai gaya kamu."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
+          </div>
+          <div style={{background:C.surfaceLight,borderRadius:10,padding:14,border:`1px solid ${C.border}`,marginBottom:8}}>
+            <p style={{fontSize:13,color:C.text,lineHeight:1.6,fontStyle:'italic'}}>
+              {m.type==='KRISIS'?`"⚠️ KLARIFIKASI: Berita soal ${m.title.split(':')[1]||m.title} yang viral itu TIDAK BENAR. Ini faktanya 👇\n\nBerdasarkan data resmi... [isi dengan fakta]. Jangan mudah percaya info yang belum terverifikasi!\n\n${m.hashtags||'#GERAK #Klarifikasi'}"`:
+               m.type==='EDUKASI'?`"Tau nggak sih? ${m.title} itu ternyata lebih penting dari yang kita kira! 📚\n\nIni dia 3 fakta penting yang perlu kamu tau... [isi dengan fakta edukatif]\n\nShare ke teman biar makin banyak yang paham! 💡\n\n${m.hashtags||'#GERAK #Edukasi'}"`:
+               `"Hai guys! Yuk ikutan campaign ${m.title}! 🔥\n\nIni cara gue berpartisipasi... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu! ✨\n\n${m.hashtags||'#GERAK #GerakDigital'}"`}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={()=>showToast('Caption disalin!')} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:'white',fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+              <MI name="content_copy" size={14} style={{color:'white'}}/> Salin Caption
+            </button>
+            <button onClick={()=>showToast('Kamu boleh edit caption sesuai gayamu')} style={{flex:1,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+              <MI name="edit" size={14} style={{color:C.textMuted}}/> Edit Sendiri
+            </button>
+          </div>
+        </Card>
 
         {/* ── GAMIFICATION: Sistem Penilaian ── */}
         <Card className="stagger-4" style={{borderLeft:`3px solid ${C.primary}`}}>
