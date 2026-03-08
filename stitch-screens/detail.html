@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detail Misi GERAK Briefing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C9A84C",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#0B1120",
+                        "teal-accent": "#008080",
+                        "card-bg": "#0F1A2E",
+                        "muted": "#64748b",
+                        "slate-900": "#0f172a",
+                        "slate-100": "#f1f5f9"
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-sans text-slate-900 dark:text-slate-100 antialiased min-h-screen pb-24">
+<!-- Top Teal Strip -->
+<div class="h-1 bg-teal-accent w-full"></div>
+<!-- Header -->
+<header class="flex items-center px-4 py-3 sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur z-10 border-b border-primary/20">
+<button class="flex items-center text-slate-900 dark:text-slate-100 mr-4 focus:outline-none">
+<span class="material-symbols-outlined mr-1" style="font-size: 20px;">arrow_back</span>
+<span class="text-sm font-medium">Kembali</span>
+</button>
+<h1 class="text-base font-bold flex-1 text-center pr-10 font-display">Detail Misi</h1>
+</header>
+<main class="max-w-md mx-auto px-4 pt-6 space-y-6">
+<!-- Mission Title & Status -->
+<section>
+<p class="text-[10px] uppercase font-bold text-muted tracking-wider mb-2">EDUKASI</p>
+<h2 class="text-[26px] font-bold font-display leading-tight mb-4 text-slate-900 dark:text-white">
+                Distribusi Materi Literasi Digital ke 5 Grup
+            </h2>
+<div class="inline-flex items-center px-3 py-1 rounded-full border border-teal-accent text-teal-accent text-xs font-bold tracking-wide">
+                TERBUKA
+            </div>
+</section>
+<!-- Reward Panel -->
+<section class="bg-card-bg rounded-lg border-l-2 border-primary p-5 shadow-lg relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+<p class="text-xs font-bold text-muted uppercase tracking-wider mb-1">PENGHARGAAN</p>
+<p class="text-[32px] font-bold font-display text-primary leading-none mb-2">+250 POIN XP</p>
+<p class="text-sm font-medium text-[#10b981] flex items-center">
+<span class="material-symbols-outlined mr-1" style="font-size: 16px;">bolt</span>
+                Bonus +50 XP untuk 10 pertama
+            </p>
+</section>
+<!-- Briefing Description -->
+<section class="space-y-4">
+<h3 class="text-sm font-bold uppercase tracking-wider text-muted border-b border-primary/20 pb-2">Briefing</h3>
+<p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                Bantu sebarkan kesadaran tentang keamanan digital di lingkungan terdekat Anda. Bagikan materi edukasi resmi GERAK ke minimal 5 grup WhatsApp atau Telegram yang Anda ikuti. Materi berfokus pada cara mengidentifikasi hoaks dan penipuan online.
+            </p>
+<p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                Bukti penyelesaian misi berupa tangkapan layar (screenshot) dari setiap grup yang Anda bagikan.
+            </p>
+</section>
+<!-- Kit Konten -->
+<section class="space-y-4">
+<h3 class="text-sm font-bold uppercase tracking-wider text-muted border-b border-primary/20 pb-2 flex items-center justify-between">
+<span>Kit Konten</span>
+<span class="text-xs font-normal lowercase bg-primary/10 text-primary px-2 py-0.5 rounded">2 Pesan</span>
+</h3>
+<!-- Template 1 -->
+<div class="bg-background-dark/50 dark:bg-black/40 border border-primary/20 rounded-lg p-4 space-y-3 relative group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold text-muted">Pesan Teks (Formal)</span>
+<button aria-label="Copy to clipboard" class="text-primary hover:text-primary/80 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+</button>
+</div>
+<p class="text-sm text-slate-700 dark:text-slate-300 italic bg-primary/5 p-3 rounded border-l-2 border-primary/30">
+                    "Halo semua, mari tingkatkan kewaspadaan kita terhadap penipuan online. Berikut panduan singkat dari GERAK tentang cara mengenali pesan mencurigakan. Jangan mudah klik tautan sembarangan!"
+                </p>
+<button class="w-full py-2 mt-2 border border-primary text-primary rounded text-xs font-bold uppercase tracking-wider hover:bg-primary/10 transition-colors">
+                    SALIN
+                </button>
+</div>
+<!-- Template 2 -->
+<div class="bg-background-dark/50 dark:bg-black/40 border border-primary/20 rounded-lg p-4 space-y-3 relative group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-xs font-bold text-muted">Pesan Teks (Kasual)</span>
+<button aria-label="Copy to clipboard" class="text-primary hover:text-primary/80 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+</button>
+</div>
+<p class="text-sm text-slate-700 dark:text-slate-300 italic bg-primary/5 p-3 rounded border-l-2 border-primary/30">
+                    "Eh guys, hati-hati ya sekarang banyak banget penipuan lewat WA. Baca deh panduan literasi digital dari GERAK ini biar kita ngga gampang ketipu. Share ke keluarga juga ya!"
+                </p>
+<button class="w-full py-2 mt-2 border border-primary text-primary rounded text-xs font-bold uppercase tracking-wider hover:bg-primary/10 transition-colors">
+                    SALIN
+                </button>
+</div>
+</section>
+<!-- Participants -->
+<section class="flex items-center justify-between py-4 border-y border-primary/20">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">128 anggota berpartisipasi</span>
+<span class="text-xs text-muted">Misi ditutup dalam 2 hari</span>
+</div>
+<div class="flex -space-x-3">
+<img alt="Avatar 1" class="w-8 h-8 rounded-full border-2 border-background-light dark:border-background-dark" data-alt="Portrait of woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK8c2_L6xsabIV2VmOkbk9t5KUVBbXvT6fVLCRQkh0h3OgEFctaT20errBBPEeQnA4lpvAAUOvUZrgTjueq_ziYF1dupCwExRrnL_L6xtYOVXLchO70Xe4PX-q5mCrrGJJrmfUoElw9XoKuqus9VdJGdr31knUS-f2Cz6ASwszXoTPOMQpjbCDAK5YhnPVWpYkH0NvxVNXZIUvPKsbc57PBz6cBAEl4mZpy0MiEfpPWLdhPQHG0e8M4PAk4mhpTipfJ8XRzsg3o54"/>
+<img alt="Avatar 2" class="w-8 h-8 rounded-full border-2 border-background-light dark:border-background-dark" data-alt="Portrait of man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmx-N6gqVJKok65PSvbxEXJEoPH4bYbu8LYAdFM4stZvXKQGKk_DRW56KYCouiJGcrnsSKAmV7aoQTSAFCYPEDbNdV0HwFL52C6ajV_naYYcr95U2Rx96QvAE9JEQioQgV3QieZ_VmAcMTKZO8oCBNeeB0CLjCNqIDNktO5NtDLZwF9YtjNKUWpT-mDnJCXaOUKd8f8YLpFa1g-obRE442qKFPbcwTQmPXe1zPhR1xGfE4CO_IrGDn5rJvSSYHG_NYPCiQ06HnVRc"/>
+<img alt="Avatar 3" class="w-8 h-8 rounded-full border-2 border-background-light dark:border-background-dark" data-alt="Portrait of woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBNb9uegCY4XlkIl5iH3ISutqDr1O-9eoAa-j4uPszle6hCTpcCXHGtzQjKppoDQwbtH-POk4SdpaJvTDig8S_LLq58M6qYUo88Tzu2p31N-TrKDIPuq-VZzmSf56-lX9R6zsE1FceDy0a_0P5eopzIu1IbgFnN_1twUHXsI7LNKF2xdlWmnCCQcIpGj1TwJsiy8Cty6q9llcQ9nh85OaRO5T01MNam53nAUX0iv2e-KDvmKhgiYidAiT3wZ-1ruWOKNO572qq1K4"/>
+<div class="w-8 h-8 rounded-full border-2 border-background-light dark:border-background-dark bg-card-bg flex items-center justify-center text-[10px] font-bold text-primary z-10">
+                    +125
+                </div>
+</div>
+</section>
+<!-- Consent -->
+<section class="flex items-start gap-3 py-2">
+<div class="relative flex items-center mt-0.5">
+<input class="peer h-5 w-5 appearance-none rounded border-2 border-primary/50 bg-transparent checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer" id="consent" type="checkbox"/>
+<span class="material-symbols-outlined absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" style="font-size: 16px;">check</span>
+</div>
+<label class="text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none" for="consent">
+                Saya setuju berpartisipasi secara sukarela sesuai kebijakan yang berlaku.
+            </label>
+</section>
+</main>
+<!-- Fixed Bottom CTA -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-background-light dark:bg-background-dark border-t border-primary/20 max-w-md mx-auto z-20">
+<!-- Disabled State CTA (as requested) -->
+<button class="w-full py-4 rounded bg-muted/30 text-muted cursor-not-allowed font-bold uppercase tracking-widest text-sm transition-colors flex justify-center items-center" disabled="">
+            Mulai Misi
+            <span class="material-symbols-outlined ml-2" style="font-size: 18px;">lock</span>
+</button>
+</div>
+</body></html>

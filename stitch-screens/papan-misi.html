@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Papan Misi GERAK List</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&amp;family=Noto+Serif:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#C9A84C",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#0B1120",
+                        "card-bg": "#0F1A2E",
+                        "card-border": "#1E3A5F",
+                        "badge-teal": "#0D9488",
+                        "badge-red": "#E11D48",
+                        "badge-sage": "#65A30D",
+                        "badge-gold": "#CA8A04",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif", "serif"],
+                        "heading": ["Cormorant Garamond", "serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px", "card": "12px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col antialiased">
+<!-- Header -->
+<header class="flex items-center p-6 pb-2 justify-center border-b border-card-border/50 sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-10">
+<h1 class="text-3xl font-heading font-bold leading-tight tracking-tight flex-1 text-center">Papan Misi</h1>
+</header>
+<!-- Filter Row -->
+<nav class="flex gap-3 p-4 overflow-x-auto no-scrollbar scroll-smooth">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary px-5 transition-colors">
+<span class="text-background-dark text-sm font-bold tracking-wide">Semua</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-card-border bg-card-bg/50 px-5 hover:bg-card-bg transition-colors">
+<span class="text-slate-400 dark:text-slate-300 text-sm font-medium tracking-wide">Edukasi</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-card-border bg-card-bg/50 px-5 hover:bg-card-bg transition-colors">
+<span class="text-slate-400 dark:text-slate-300 text-sm font-medium tracking-wide">Amplifikasi</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-card-border bg-card-bg/50 px-5 hover:bg-card-bg transition-colors">
+<span class="text-slate-400 dark:text-slate-300 text-sm font-medium tracking-wide">Krisis</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-card-border bg-card-bg/50 px-5 hover:bg-card-bg transition-colors">
+<span class="text-slate-400 dark:text-slate-300 text-sm font-medium tracking-wide">Komunitas</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-card-border bg-card-bg/50 px-5 hover:bg-card-bg transition-colors">
+<span class="text-slate-400 dark:text-slate-300 text-sm font-medium tracking-wide">Selesai</span>
+</button>
+</nav>
+<!-- Mission List -->
+<main class="flex-1 flex flex-col gap-4 p-4 overflow-y-auto pb-24">
+<!-- Card A (EDUKASI) -->
+<article class="bg-card-bg border border-card-border rounded-card p-4 flex flex-col gap-3 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-1">
+<div class="flex items-center gap-2">
+<span class="bg-badge-teal/20 text-badge-teal text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-badge-teal/30">Edukasi</span>
+<span class="text-slate-400 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Terbuka</span>
+</div>
+</div>
+<h2 class="text-lg font-heading font-semibold leading-tight pr-4">Distribusi Materi Literasi Digital ke 5 Grup</h2>
+<div class="flex items-center gap-3 text-sm mt-1">
+<span class="font-mono text-primary font-bold tracking-tight">+250 Poin</span>
+<span class="text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">group</span>
+                    128 berpartisipasi
+                </span>
+</div>
+<div class="mt-2 flex justify-end">
+<button class="h-9 px-6 rounded-full border border-badge-teal text-badge-teal text-sm font-bold tracking-wide hover:bg-badge-teal/10 transition-colors uppercase">
+                    Ikut Misi
+                </button>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]">menu_book</span>
+</div>
+</article>
+<!-- Card B (KRISIS) -->
+<article class="bg-card-bg border border-badge-red/30 rounded-card p-4 flex flex-col gap-3 relative overflow-hidden group shadow-[0_0_15px_rgba(225,29,72,0.1)]">
+<div class="flex justify-between items-start mb-1">
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1.5 bg-badge-red/20 text-badge-red text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-badge-red/30">
+<span class="w-1.5 h-1.5 rounded-full bg-badge-red animate-pulse"></span>
+                        Krisis
+                    </div>
+<span class="flex items-center gap-1 text-badge-red text-[10px] font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[12px]">priority_high</span>
+                        Prioritas
+                    </span>
+</div>
+</div>
+<h2 class="text-lg font-heading font-semibold leading-tight pr-4">Respons Cepat: Counter-Narasi Hoaks Vaksinasi</h2>
+<div class="flex items-center gap-3 text-sm mt-1">
+<span class="font-mono text-primary font-bold tracking-tight">+400 Poin</span>
+</div>
+<div class="mt-2 flex justify-end">
+<button class="h-9 px-6 rounded-full border border-badge-red text-badge-red text-sm font-bold tracking-wide hover:bg-badge-red/10 transition-colors uppercase">
+                    Ikut Misi
+                </button>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]">warning</span>
+</div>
+</article>
+<!-- Card C (KOMUNITAS) -->
+<article class="bg-card-bg border border-card-border rounded-card p-4 flex flex-col gap-3 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-1">
+<div class="flex items-center gap-2">
+<span class="bg-badge-sage/20 text-badge-sage text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-badge-sage/30">Komunitas</span>
+<span class="flex items-center gap-1 text-amber-500 text-[10px] font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[12px]">error</span>
+                        Siaga
+                    </span>
+</div>
+</div>
+<h2 class="text-lg font-heading font-semibold leading-tight pr-4">Rekrutmen Relawan Bencana Alam Wilayah Timur</h2>
+<div class="flex items-center gap-3 text-sm mt-1">
+<span class="font-mono text-primary font-bold tracking-tight">+300 Poin</span>
+</div>
+<div class="mt-2 flex justify-end">
+<button class="h-9 px-6 rounded-full border border-badge-sage text-badge-sage text-sm font-bold tracking-wide hover:bg-badge-sage/10 transition-colors uppercase">
+                    Ikut Misi
+                </button>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]">volunteer_activism</span>
+</div>
+</article>
+<!-- Card D (AMPLIFIKASI) -->
+<article class="bg-card-bg border border-card-border/50 rounded-card p-4 flex flex-col gap-3 relative overflow-hidden opacity-75">
+<div class="flex justify-between items-start mb-1">
+<div class="flex items-center gap-2">
+<span class="bg-badge-gold/20 text-badge-gold text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border border-badge-gold/30">Amplifikasi</span>
+<span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Selesai</span>
+</div>
+</div>
+<h2 class="text-lg font-heading font-semibold leading-tight pr-4 text-slate-400">Kampanye Peduli Lingkungan #HijaukanIndonesia</h2>
+<div class="flex items-center gap-3 text-sm mt-1">
+<span class="font-mono text-slate-500 font-bold tracking-tight line-through">+150 Poin</span>
+</div>
+<div class="mt-2 flex justify-end">
+<button class="h-9 px-6 rounded-full bg-card-border/30 text-slate-500 text-sm font-bold tracking-wide uppercase cursor-not-allowed">
+                    Selesai
+                </button>
+</div>
+</article>
+</main>
+<!-- BottomNavBar -->
+<div class="fixed bottom-0 w-full flex gap-2 border-t border-card-border/80 bg-background-dark/95 backdrop-blur-lg px-4 pb-safe-bottom pt-2 z-20" style="padding-bottom: env(safe-area-inset-bottom, 12px);">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 hover:text-primary transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">home</span>
+</div>
+<p class="text-[11px] font-medium leading-normal tracking-[0.015em]">Beranda</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">my_location</span>
+</div>
+<p class="text-[11px] font-medium leading-normal tracking-[0.015em]">Misi</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 hover:text-primary transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">military_tech</span>
+</div>
+<p class="text-[11px] font-medium leading-normal tracking-[0.015em]">Peringkat</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 hover:text-primary transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">person</span>
+</div>
+<p class="text-[11px] font-medium leading-normal tracking-[0.015em]">Profil</p>
+</a>
+</div>
+</body></html>

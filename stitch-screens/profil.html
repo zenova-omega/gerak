@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profil Anggota GERAK</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#c9a74a",
+            "background-light": "#f8f7f6",
+            "background-dark": "#0B1120",
+            "card": "#0F1A2E",
+            "border-color": "#1E3A5F",
+          },
+          fontFamily: {
+            "display": ["Noto Serif", "serif"],
+            "sans": ["Noto Sans", "sans-serif"],
+            "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+          },
+          borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+<header class="flex items-center p-4 justify-between border-b border-border-color bg-card">
+<div class="flex items-center gap-2 flex-1">
+<span class="material-symbols-outlined text-primary cursor-pointer">chevron_left</span>
+</div>
+<h2 class="text-white text-lg font-display font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Profil Anggota</h2>
+<div class="flex items-center justify-end gap-2 flex-1">
+<span class="material-symbols-outlined text-primary cursor-pointer">settings</span>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Hero Card -->
+<div class="bg-card border-b border-border-color p-6 flex flex-col items-center">
+<div class="w-20 h-20 rounded-full border-2 border-primary bg-gradient-to-br from-background-dark to-card flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(201,167,74,0.3)]">
+<span class="text-primary font-display font-bold text-2xl tracking-widest">AS</span>
+</div>
+<h1 class="text-white text-2xl font-display font-bold text-center mb-1">MAYOR ARIF SANTOSO</h1>
+<p class="text-primary/70 font-mono text-[11px] mb-3 uppercase tracking-widest">NRP-20240812</p>
+<div class="px-4 py-1.5 border border-primary/50 rounded-full bg-primary/10 mb-6">
+<span class="text-primary text-xs font-bold tracking-widest uppercase">◆ PERWIRA MUDA</span>
+</div>
+<div class="flex flex-wrap w-full gap-3">
+<div class="flex-1 bg-background-dark/50 border border-border-color rounded-lg p-3 text-center">
+<p class="text-primary font-mono text-xs uppercase tracking-wider mb-1 opacity-70">Misi</p>
+<p class="text-white font-display font-bold text-xl">24</p>
+</div>
+<div class="flex-1 bg-background-dark/50 border border-border-color rounded-lg p-3 text-center">
+<p class="text-primary font-mono text-xs uppercase tracking-wider mb-1 opacity-70">XP</p>
+<p class="text-white font-display font-bold text-xl">4.820</p>
+</div>
+<div class="flex-1 bg-background-dark/50 border border-border-color rounded-lg p-3 text-center">
+<p class="text-primary font-mono text-xs uppercase tracking-wider mb-1 opacity-70">Posisi</p>
+<p class="text-white font-display font-bold text-xl">#12</p>
+</div>
+</div>
+</div>
+<!-- Lencana Terbaru -->
+<div class="p-6 border-b border-border-color bg-background-dark">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-white font-display font-bold text-lg">Lencana Terbaru</h3>
+<a class="text-primary text-sm font-medium flex items-center gap-1 hover:text-primary/80 transition-colors" href="#">
+          Lihat Semua <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="flex justify-start gap-6 overflow-x-auto pb-2 hide-scrollbar">
+<div class="flex flex-col items-center gap-2 min-w-[80px]">
+<div class="w-14 h-14 bg-card border border-primary/40 rounded-lg flex items-center justify-center rotate-45 transform shadow-[0_0_10px_rgba(201,167,74,0.15)]">
+<span class="material-symbols-outlined text-primary -rotate-45 text-3xl">star</span>
+</div>
+<p class="text-slate-300 text-xs text-center mt-2 font-medium">Misi Pertama</p>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[80px]">
+<div class="w-14 h-14 bg-card border border-primary/40 rounded-lg flex items-center justify-center rotate-45 transform shadow-[0_0_10px_rgba(201,167,74,0.15)]">
+<span class="material-symbols-outlined text-primary -rotate-45 text-3xl">military_tech</span>
+</div>
+<p class="text-slate-300 text-xs text-center mt-2 font-medium">10 Misi</p>
+</div>
+<div class="flex flex-col items-center gap-2 min-w-[80px]">
+<div class="w-14 h-14 bg-card border border-primary/40 rounded-lg flex items-center justify-center rotate-45 transform shadow-[0_0_10px_rgba(201,167,74,0.15)]">
+<span class="material-symbols-outlined text-primary -rotate-45 text-3xl">bolt</span>
+</div>
+<p class="text-slate-300 text-xs text-center mt-2 font-medium">Misi Kilat</p>
+</div>
+</div>
+</div>
+<!-- Aktivitas Terkini -->
+<div class="p-6 border-b border-border-color bg-card/50">
+<h3 class="text-white font-display font-bold text-lg mb-4">Aktivitas Terkini</h3>
+<div class="flex flex-col gap-4">
+<!-- Item 1 -->
+<div class="flex items-center gap-4 bg-background-dark/50 p-3 rounded border border-border-color/50">
+<div class="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_5px_rgba(20,184,166,0.5)] shrink-0"></div>
+<div class="flex-1 min-w-0">
+<p class="text-slate-200 text-sm font-medium truncate">Patroli Wilayah Utara</p>
+<p class="text-slate-400 text-xs mt-0.5">12 Okt 2023</p>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="text-primary font-mono text-xs">+250 pts</span>
+<span class="px-2 py-0.5 bg-teal-500/10 text-teal-400 border border-teal-500/30 rounded text-[10px] font-bold tracking-wider">SELESAI</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center gap-4 bg-background-dark/50 p-3 rounded border border-border-color/50">
+<div class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)] shrink-0"></div>
+<div class="flex-1 min-w-0">
+<p class="text-slate-200 text-sm font-medium truncate">Latihan Sandi Yudha</p>
+<p class="text-slate-400 text-xs mt-0.5">10 Okt 2023</p>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="text-primary font-mono text-xs">--</span>
+<span class="px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded text-[10px] font-bold tracking-wider">PROSES</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center gap-4 bg-background-dark/50 p-3 rounded border border-border-color/50">
+<div class="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_5px_rgba(20,184,166,0.5)] shrink-0"></div>
+<div class="flex-1 min-w-0">
+<p class="text-slate-200 text-sm font-medium truncate">Pengawalan Logistik</p>
+<p class="text-slate-400 text-xs mt-0.5">05 Okt 2023</p>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="text-primary font-mono text-xs">+150 pts</span>
+<span class="px-2 py-0.5 bg-teal-500/10 text-teal-400 border border-teal-500/30 rounded text-[10px] font-bold tracking-wider">SELESAI</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Pengaturan -->
+<div class="p-6 bg-background-dark">
+<h3 class="text-white font-display font-bold text-lg mb-4">Pengaturan</h3>
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between p-3 bg-card rounded border border-border-color">
+<div>
+<p class="text-slate-200 text-sm font-medium">Preferensi Notifikasi</p>
+<p class="text-slate-400 text-xs mt-0.5">Terima pembaruan misi harian</p>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background-dark">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+</button>
+</div>
+<div class="flex items-center justify-between p-3 bg-card rounded border border-border-color">
+<div>
+<p class="text-slate-200 text-sm font-medium">Privasi Partisipasi</p>
+<p class="text-slate-400 text-xs mt-0.5">Sembunyikan aktivitas dari publik</p>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-border-color transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background-dark">
+<span class="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-slate-400 transition-transform"></span>
+</button>
+</div>
+<button class="w-full mt-4 p-3 rounded border border-red-500/30 bg-red-500/5 text-red-500 font-medium text-sm hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">logout</span>
+          Keluar
+        </button>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar -->
+<div class="fixed bottom-0 left-0 right-0 flex gap-2 border-t border-border-color bg-card px-4 pb-6 pt-3 z-50">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide uppercase">Beranda</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">target</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide uppercase">Misi</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">trophy</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide uppercase">Peringkat</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">person</span>
+<p class="text-[10px] font-bold leading-normal tracking-wide uppercase">Profil</p>
+</a>
+</div>
+<style>
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</body></html>

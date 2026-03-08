@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pangkat &amp; Lencana - GERAK</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#c9a74a",
+                        "secondary": "#2dd4bf", // teal for completed
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#0B1120",
+                        "surface": "#0F1A2E",
+                        "surface-light": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif", "serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                        "sans": ["system-ui", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .hexagon {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        .hexagon-inner {
+            clip-path: polygon(50% 2%, 98% 26%, 98% 74%, 50% 98%, 2% 74%, 2% 26%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans min-h-screen flex flex-col max-w-md mx-auto relative pb-20 overflow-x-hidden">
+<!-- Header -->
+<header class="flex items-center p-4 sticky top-0 z-10 bg-background-dark/90 backdrop-blur-sm border-b border-surface-light">
+<a class="flex size-10 shrink-0 items-center justify-center text-slate-100 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</a>
+<h1 class="text-lg font-display font-bold flex-1 text-center pr-10">Pangkat &amp; Lencana</h1>
+</header>
+<main class="flex-1 flex flex-col">
+<!-- Rank Hero Section -->
+<section class="flex flex-col items-center justify-center p-8 relative overflow-hidden">
+<!-- Background glow -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+<div class="relative w-40 h-40 flex items-center justify-center mb-6">
+<!-- Circular Progress Background -->
+<svg class="absolute inset-0 w-full h-full -rotate-90" viewbox="0 0 100 100">
+<circle class="text-surface" cx="50" cy="50" fill="transparent" r="46" stroke="currentColor" stroke-dasharray="289" stroke-dashoffset="0" stroke-width="4"></circle>
+<!-- 96% of 289 = 277.44 -->
+<circle class="text-primary transition-all duration-1000 ease-out" cx="50" cy="50" fill="transparent" r="46" stroke="currentColor" stroke-dasharray="289" stroke-dashoffset="11.56" stroke-linecap="round" stroke-width="4"></circle>
+</svg>
+<!-- Hexagon Badge -->
+<div class="w-28 h-28 bg-primary hexagon flex items-center justify-center shadow-[0_0_30px_rgba(201,167,74,0.3)]">
+<div class="w-full h-full bg-surface hexagon-inner flex items-center justify-center">
+<span class="text-5xl text-primary font-display">◆</span>
+</div>
+</div>
+</div>
+<div class="text-center space-y-2">
+<h2 class="text-3xl font-display font-bold tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-primary to-amber-200">Perwira Muda</h2>
+<div class="font-mono text-primary bg-primary/10 px-4 py-1.5 rounded-full inline-block text-sm border border-primary/20 tracking-widest shadow-[0_0_10px_rgba(201,167,74,0.1)]">
+                    4.820 / 5.000 XP
+                </div>
+</div>
+</section>
+<div class="px-4 py-6 space-y-8">
+<!-- Pangkat Ladder -->
+<section class="bg-surface rounded-xl p-5 border border-surface-light relative overflow-hidden">
+<!-- Grid Pattern Background -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: linear-gradient(#c9a74a 1px, transparent 1px), linear-gradient(90deg, #c9a74a 1px, transparent 1px); background-size: 20px 20px;"></div>
+<h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 relative z-10 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">timeline</span>
+                    Jalur Kepangkatan
+                </h3>
+<div class="relative ml-3 space-y-8 z-10">
+<!-- Vertical Line -->
+<div class="absolute left-1 top-2 bottom-2 w-0.5 bg-surface-light"></div>
+<!-- Completed Rank -->
+<div class="relative flex items-center gap-4 group cursor-default">
+<div class="absolute -left-[3px] w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface z-10"></div>
+<div class="flex-1 flex justify-between items-center bg-surface-light/30 rounded-lg p-2 border border-surface-light/50">
+<div class="flex items-center gap-2">
+<span class="text-secondary font-display text-sm">●</span>
+<span class="font-bold text-slate-300 text-sm">REKRUT DIGITAL</span>
+</div>
+<span class="text-xs font-mono text-slate-500">0 XP</span>
+</div>
+</div>
+<!-- Current Rank -->
+<div class="relative flex items-center gap-4 group cursor-default">
+<!-- Progress Line -->
+<div class="absolute left-[0.5px] -top-8 h-8 w-0.5 bg-secondary"></div>
+<div class="absolute left-[0.5px] top-2 h-full w-0.5 bg-gradient-to-b from-secondary to-primary/50"></div>
+<div class="absolute -left-1.5 w-3.5 h-3.5 rounded-full bg-primary ring-4 ring-surface shadow-[0_0_10px_rgba(201,167,74,0.5)] z-10"></div>
+<div class="flex-1 flex justify-between items-center bg-primary/10 rounded-lg p-3 border border-primary/30 shadow-[0_0_15px_rgba(201,167,74,0.05)]">
+<div class="flex items-center gap-2">
+<span class="text-primary font-display">◆</span>
+<span class="font-bold text-primary">PERWIRA MUDA</span>
+</div>
+<span class="text-xs font-mono text-primary font-bold">1.000 XP</span>
+</div>
+</div>
+<!-- Locked Rank 1 -->
+<div class="relative flex items-center gap-4 group cursor-default opacity-60">
+<div class="absolute -left-[3px] w-2.5 h-2.5 rounded-full bg-surface-light ring-4 ring-surface z-10"></div>
+<div class="flex-1 flex justify-between items-center rounded-lg p-2 border border-transparent">
+<div class="flex items-center gap-2">
+<span class="text-slate-500 font-display text-sm">★</span>
+<span class="font-bold text-slate-400 text-sm">PERWIRA MADYA</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-xs font-mono text-slate-500">5.000 XP</span>
+<span class="text-[10px] text-primary/70 font-mono mt-0.5">+180 XP lagi</span>
+</div>
+</div>
+</div>
+<!-- Locked Rank 2 -->
+<div class="relative flex items-center gap-4 group cursor-default opacity-40">
+<div class="absolute -left-[3px] w-2.5 h-2.5 rounded-full bg-surface-light ring-4 ring-surface z-10"></div>
+<div class="flex-1 flex justify-between items-center rounded-lg p-2 border border-transparent">
+<div class="flex items-center gap-2">
+<span class="text-slate-500 font-display text-sm">✦</span>
+<span class="font-bold text-slate-500 text-sm">PERWIRA UTAMA</span>
+</div>
+<span class="text-xs font-mono text-slate-600">15.000 XP</span>
+</div>
+</div>
+<!-- Locked Rank 3 -->
+<div class="relative flex items-center gap-4 group cursor-default opacity-30">
+<div class="absolute -left-[3px] w-2.5 h-2.5 rounded-full bg-surface-light ring-4 ring-surface z-10"></div>
+<div class="flex-1 flex justify-between items-center rounded-lg p-2 border border-transparent">
+<div class="flex items-center gap-2">
+<span class="text-slate-500 text-sm">🔱</span>
+<span class="font-bold text-slate-500 text-sm">KOMANDAN GARUDA</span>
+</div>
+<span class="text-xs font-mono text-slate-600">50.000 XP</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Lencana Grid Section -->
+<section>
+<div class="flex justify-between items-end mb-4 px-1">
+<h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">military_tech</span>
+                        Koleksi Lencana
+                    </h3>
+<span class="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">8/24</span>
+</div>
+<div class="grid grid-cols-4 gap-y-6 gap-x-2 bg-surface rounded-xl p-5 border border-surface-light">
+<!-- Unlocked Badge 1 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-14 h-14 bg-secondary hexagon flex items-center justify-center shadow-[0_0_10px_rgba(45,212,191,0.2)] group-hover:scale-110 transition-transform">
+<div class="w-full h-full bg-surface hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-xl">bolt</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-300 w-full truncate">Aksi Cepat</span>
+</div>
+<!-- Unlocked Badge 2 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-14 h-14 bg-primary hexagon flex items-center justify-center shadow-[0_0_10px_rgba(201,167,74,0.2)] group-hover:scale-110 transition-transform">
+<div class="w-full h-full bg-surface hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">share</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-300 w-full truncate">Penyebar</span>
+</div>
+<!-- Unlocked Badge 3 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-14 h-14 bg-slate-300 hexagon flex items-center justify-center shadow-[0_0_10px_rgba(203,213,225,0.2)] group-hover:scale-110 transition-transform">
+<div class="w-full h-full bg-surface hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-300 text-xl">forum</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-300 w-full truncate">Orator</span>
+</div>
+<!-- Unlocked Badge 4 -->
+<div class="flex flex-col items-center gap-2 cursor-pointer group">
+<div class="w-14 h-14 bg-emerald-500 hexagon flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.2)] group-hover:scale-110 transition-transform">
+<div class="w-full h-full bg-surface hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-emerald-500 text-xl">verified</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-300 w-full truncate">Terverifikasi</span>
+</div>
+<!-- Locked Badges -->
+<div class="flex flex-col items-center gap-2 opacity-50 grayscale cursor-not-allowed">
+<div class="w-14 h-14 bg-surface-light hexagon flex items-center justify-center">
+<div class="w-full h-full bg-background-dark hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-600 text-lg">lock</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-500 w-full">???</span>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-50 grayscale cursor-not-allowed">
+<div class="w-14 h-14 bg-surface-light hexagon flex items-center justify-center">
+<div class="w-full h-full bg-background-dark hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-600 text-lg">lock</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-500 w-full">???</span>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-50 grayscale cursor-not-allowed">
+<div class="w-14 h-14 bg-surface-light hexagon flex items-center justify-center">
+<div class="w-full h-full bg-background-dark hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-600 text-lg">lock</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-500 w-full">???</span>
+</div>
+<div class="flex flex-col items-center gap-2 opacity-50 grayscale cursor-not-allowed">
+<div class="w-14 h-14 bg-surface-light hexagon flex items-center justify-center">
+<div class="w-full h-full bg-background-dark hexagon-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-600 text-lg">lock</span>
+</div>
+</div>
+<span class="text-[10px] text-center font-medium leading-tight text-slate-500 w-full">???</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-surface border-t border-surface-light px-4 pb-safe pt-2 z-50">
+<div class="flex justify-between items-center pb-2">
+<a class="flex flex-col items-center gap-1 flex-1 text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<span class="text-[10px] font-medium tracking-wide">Beranda</span>
+</a>
+<a class="flex flex-col items-center gap-1 flex-1 text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">track_changes</span>
+<span class="text-[10px] font-medium tracking-wide">Misi</span>
+</a>
+<a class="flex flex-col items-center gap-1 flex-1 text-primary relative" href="#">
+<div class="absolute -top-4 bg-surface border border-primary/30 rounded-full p-2 shadow-[0_0_15px_rgba(201,167,74,0.2)]">
+<span class="material-symbols-outlined text-2xl fill-current">military_tech</span>
+</div>
+<span class="text-[10px] font-medium tracking-wide mt-6">Pangkat</span>
+</a>
+<a class="flex flex-col items-center gap-1 flex-1 text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<span class="text-[10px] font-medium tracking-wide">Profil</span>
+</a>
+</div>
+</nav>
+<!-- Safe area padding for iOS -->
+<style>
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+    </style>
+</body></html>

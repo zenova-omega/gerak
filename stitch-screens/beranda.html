@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Beranda Dashboard GERAK</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;family=Playfair+Display:wght@600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#C9A84C",
+            "background-light": "#f8f7f6",
+            "background-dark": "#0B1120",
+            "card-dark": "#0F1A2E",
+            "accent-teal": "#2DD4BF",
+            "accent-red": "#E05C5C",
+          },
+          fontFamily: {
+            "display": ["Manrope", "sans-serif"],
+            "serif": ["Playfair Display", "serif"],
+            "mono": ["Space Mono", "monospace"]
+          },
+          borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col overflow-x-hidden">
+<!-- Header Section -->
+<header class="p-5 pt-8 flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<p class="text-[11px] font-bold text-slate-500 tracking-widest uppercase">Selamat Pagi,</p>
+<h1 class="font-serif text-[26px] font-bold leading-none text-white">MAYOR ARIF SANTOSO</h1>
+<div class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 w-fit">
+<span class="text-primary text-[10px] material-symbols-outlined" style="font-size: 12px;">diamond</span>
+<span class="text-primary text-xs font-bold tracking-wider uppercase">Perwira Muda</span>
+</div>
+</div>
+<button class="relative flex h-10 w-10 items-center justify-center rounded-full bg-card-dark text-slate-300">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-accent-red"></span>
+</button>
+</header>
+<!-- Main Content Scroll Area -->
+<main class="flex-1 overflow-y-auto pb-24 px-5 flex flex-col gap-6">
+<!-- Daily Brief Card -->
+<section class="relative overflow-hidden rounded-xl bg-card-dark border-l-2 border-primary p-5 shadow-lg shadow-black/20">
+<p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">Briefing Hari Ini</p>
+<h2 class="font-serif text-xl font-bold text-white mb-2 leading-tight">Distribusi Materi Literasi Digital ke 5 Grup</h2>
+<p class="text-sm text-slate-400 mb-4 line-clamp-2">Laksanakan penyebaran informasi terkait keamanan siber dasar ke grup komunitas lokal binaan Anda sebelum pukul 18.00 WIB.</p>
+<div class="flex flex-wrap items-center gap-3 mb-4">
+<div class="inline-flex items-center rounded-md bg-primary/20 px-2.5 py-1">
+<span class="text-primary text-xs font-bold">12 Mar 2026</span>
+</div>
+<div class="inline-flex items-center rounded-md bg-primary/20 px-2.5 py-1">
+<span class="text-primary text-xs font-bold font-mono">+250 XP</span>
+</div>
+</div>
+<a class="inline-flex items-center gap-1 text-primary text-sm font-bold tracking-wider hover:text-white transition-colors" href="#">
+        LIHAT MISI <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</section>
+<!-- XP Status Card -->
+<section class="rounded-xl bg-card-dark p-5 shadow-lg shadow-black/20">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-[11px] font-bold text-slate-400 tracking-widest uppercase">Kemajuan Pangkat</h3>
+<span class="font-mono text-primary text-xs font-bold">4.820 / 5.000 XP</span>
+</div>
+<div class="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden mb-3">
+<div class="h-full bg-primary rounded-full" style="width: 96%"></div>
+</div>
+<div class="flex items-center justify-between text-xs">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-size: 14px;">diamond</span>
+<span class="font-bold">Perwira Muda</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500">
+<span class="material-symbols-outlined" style="font-size: 14px;">star</span>
+<span class="font-medium">Perwira Madya</span>
+</div>
+</div>
+</section>
+<!-- Stats Row -->
+<section class="grid grid-cols-3 gap-3">
+<div class="rounded-xl bg-card-dark p-3 flex flex-col items-center justify-center text-center gap-2 border border-white/5">
+<span class="material-symbols-outlined text-primary text-xl">track_changes</span>
+<div>
+<p class="text-[9px] text-slate-400 font-bold tracking-wider uppercase">Misi Selesai</p>
+<p class="font-mono text-white font-bold text-sm">24</p>
+</div>
+</div>
+<div class="rounded-xl bg-card-dark p-3 flex flex-col items-center justify-center text-center gap-2 border border-white/5">
+<span class="material-symbols-outlined text-accent-red text-xl">local_fire_department</span>
+<div>
+<p class="text-[9px] text-slate-400 font-bold tracking-wider uppercase">Streak Aktif</p>
+<p class="font-mono text-white font-bold text-sm">7 HARI</p>
+</div>
+</div>
+<div class="rounded-xl bg-card-dark p-3 flex flex-col items-center justify-center text-center gap-2 border border-white/5">
+<span class="material-symbols-outlined text-primary text-xl">emoji_events</span>
+<div>
+<p class="text-[9px] text-slate-400 font-bold tracking-wider uppercase">Posisi</p>
+<p class="font-mono text-white font-bold text-sm">#12</p>
+</div>
+</div>
+</section>
+<!-- Misi Aktif -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-sm font-bold text-white tracking-wide">MISI AKTIF</h3>
+<a class="text-[10px] text-primary font-bold tracking-wider" href="#">LIHAT SEMUA</a>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar" style="scrollbar-width: none;">
+<!-- Mission Card 1 -->
+<div class="min-w-[240px] snap-center rounded-xl bg-card-dark p-4 border border-white/5 flex flex-col h-full">
+<div class="mb-3">
+<span class="inline-block rounded bg-accent-teal/20 px-2 py-0.5 text-[9px] font-bold text-accent-teal tracking-wider uppercase">Edukasi</span>
+</div>
+<h4 class="font-serif text-base font-bold text-white mb-2 leading-tight flex-1">Kampanye Anti-Hoaks Pemilu</h4>
+<div class="flex items-end justify-between mt-4">
+<span class="font-mono text-xs font-bold text-primary">+150 XP</span>
+<button class="rounded border border-primary px-3 py-1.5 text-[10px] font-bold text-primary tracking-wider hover:bg-primary/10 transition-colors uppercase">Ikut</button>
+</div>
+</div>
+<!-- Mission Card 2 -->
+<div class="min-w-[240px] snap-center rounded-xl bg-card-dark p-4 border border-white/5 flex flex-col h-full">
+<div class="mb-3">
+<span class="inline-block rounded bg-accent-red/20 px-2 py-0.5 text-[9px] font-bold text-accent-red tracking-wider uppercase">Krisis</span>
+</div>
+<h4 class="font-serif text-base font-bold text-white mb-2 leading-tight flex-1">Mitigasi Isu SARA Regional</h4>
+<div class="flex items-end justify-between mt-4">
+<span class="font-mono text-xs font-bold text-primary">+300 XP</span>
+<button class="rounded border border-primary px-3 py-1.5 text-[10px] font-bold text-primary tracking-wider hover:bg-primary/10 transition-colors uppercase">Ikut</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex gap-2 border-t border-white/5 bg-background-dark/95 backdrop-blur-md px-4 pb-6 pt-3">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<p class="text-[10px] font-bold tracking-wider uppercase">Beranda</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 hover:text-slate-300 transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">track_changes</span>
+</div>
+<p class="text-[10px] font-bold tracking-wider uppercase">Misi</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 hover:text-slate-300 transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">emoji_events</span>
+</div>
+<p class="text-[10px] font-bold tracking-wider uppercase">Peringkat</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 hover:text-slate-300 transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-[10px] font-bold tracking-wider uppercase">Profil</p>
+</a>
+</nav>
+<style>
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</body></html>
