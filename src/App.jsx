@@ -1510,7 +1510,7 @@ export default function App(){
       {!done&&<p style={{fontSize:12,fontWeight:700,color:C.primary,textAlign:'center',marginTop:-4}}>Step {step+1}: {steps[step].label}</p>}
 
       {/* ══════════ STEP 0: BRIEFING ══════════ */}
-      {step===0&&(<div key="step0" className="step-enter">
+      {step===0&&(<div key="step0" className="step-enter flex flex-col gap-4">
         <Card className="stagger-3">
           <h3 className="flex items-center gap-1" style={{fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1.5,textTransform:'uppercase',marginBottom:6}}>Briefing Misi <Tip text="Baca brief dengan teliti. Konten harus sesuai semua spesifikasi untuk lolos review."><MI name="info" size={11} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,marginBottom:12}}>{m.desc}</p>
@@ -1822,7 +1822,7 @@ export default function App(){
       </div>)}
 
       {/* ══════════ STEP 1: KIT & CONTOH ══════════ */}
-      {step===1&&(<div key="step1" className="step-enter">
+      {step===1&&(<div key="step1" className="step-enter flex flex-col gap-4">
         {/* Kit Konten */}
         {m.templates?.length>0&&(
           <div className="stagger-3 flex flex-col gap-3">
@@ -1911,7 +1911,7 @@ export default function App(){
       </div>)}
 
       {/* ══════════ STEP 2: SUBMIT ══════════ */}
-      {step===2&&(<div key="step2" className="step-enter">
+      {step===2&&(<div key="step2" className="step-enter flex flex-col gap-4">
         {/* Upload Bukti */}
         <Card className="stagger-3">
           <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:10}}>Upload Bukti</h3>
@@ -1995,7 +1995,7 @@ export default function App(){
       </div>)}
 
       {/* ══════════ STEP 3: REVIEW ══════════ */}
-      {step===3&&(<div key="step3" className="step-enter">
+      {step===3&&(<div key="step3" className="step-enter flex flex-col gap-4">
         {/* AI Quality Check */}
         <Card className="stagger-3" style={{borderLeft:`3px solid ${C.primary}`}}>
           <div className="flex items-center gap-2 mb-3">
