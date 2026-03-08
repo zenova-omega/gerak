@@ -4333,60 +4333,108 @@ export default function App(){
                   )}
 
                   {/* ─── VIEW: 3D GLOBE ─── */}
-                  {monitorView==='globe'&&(
+                  {monitorView==='globe'&&(()=>{
+                    // Group posts by city for rich hover cards
+                    const cityGroups={};
+                    missionPosts.forEach(p=>{if(!cityGroups[p.city])cityGroups[p.city]=[];cityGroups[p.city].push(p);});
+                    // One point per city (aggregated)
+                    const cityPoints=Object.entries(cityGroups).map(([city,posts])=>{
+                      const first=posts[0];
+                      const totalViews=posts.reduce((s,p)=>s+parseFloat(p.views)*1000,0);
+                      const avgRate=posts.reduce((s,p)=>s+p.rate,0)/posts.length;
+                      // Build rich HTML tooltip with profile pics and post cards
+                      const postsHtml=posts.map(p=>{
+                        const platCol=p.platform==='instagram'?'#E1306C':p.platform==='tiktok'?'#E8E8E8':'#1DA1F2';
+                        const stCol=p.status==='SELESAI'?'#22C55E':p.status==='REVIEW'?'#F59E0B':'#EF4444';
+                        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;${posts.indexOf(p)<posts.length-1?'border-bottom:1px solid rgba(255,255,255,0.06)':''}">
+                          <div style="width:36px;height:36px;border-radius:10px;background:${platCol}20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${platCol};border:1.5px solid ${platCol}40;flex-shrink:0">${p.avatar}</div>
+                          <div style="flex:1;min-width:0">
+                            <div style="font-size:12px;font-weight:700;color:#F1F5F9">${p.agent}</div>
+                            <div style="font-size:10px;color:#C9A84C;font-weight:600;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
+                            <div style="display:flex;gap:8px;margin-top:3px">
+                              <span style="font-size:9px;color:#94A3B8">👁 ${p.views}</span>
+                              <span style="font-size:9px;color:#EC4899">♥ ${p.likes}</span>
+                              <span style="font-size:9px;color:#2DD4BF">↗ ${p.shares}</span>
+                            </div>
+                          </div>
+                          <div style="text-align:right;flex-shrink:0">
+                            <div style="font-size:13px;font-weight:800;color:${avgRate>15?'#22C55E':avgRate>10?'#F59E0B':'#94A3B8'};font-family:'JetBrains Mono'">${p.rate}%</div>
+                            <div style="font-size:8px;font-weight:700;color:${stCol};margin-top:2px">${p.status}</div>
+                          </div>
+                        </div>`;
+                      }).join('');
+                      return {
+                        lat:first.lat,lng:first.lng,city,postCount:posts.length,
+                        totalViews:totalViews>1000000?(totalViews/1000000).toFixed(1)+'M':(totalViews/1000).toFixed(1)+'K',
+                        avgRate:avgRate.toFixed(1),
+                        size:Math.max(0.4,posts.length*0.3+avgRate/20),
+                        color:avgRate>15?C.green:avgRate>10?C.orange:C.primary,
+                        label:`<div style="background:#0B1120;border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:0;font-family:Inter,sans-serif;min-width:280px;max-width:340px;box-shadow:0 16px 48px rgba(0,0,0,0.7);overflow:hidden">
+                          <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
+                            <div style="display:flex;align-items:center;justify-content:space-between">
+                              <div>
+                                <div style="font-size:15px;font-weight:800;color:#F1F5F9">${city}</div>
+                                <div style="font-size:10px;color:#94A3B8;margin-top:2px">${posts.length} konten · Total ${totalViews>1000000?(totalViews/1000000).toFixed(1)+'M':(totalViews/1000).toFixed(1)+'K'} views</div>
+                              </div>
+                              <div style="background:${avgRate>15?'rgba(34,197,94,0.15)':avgRate>10?'rgba(245,158,11,0.15)':'rgba(201,168,76,0.15)'};border-radius:8px;padding:4px 10px;text-align:center">
+                                <div style="font-size:16px;font-weight:800;color:${avgRate>15?'#22C55E':avgRate>10?'#F59E0B':'#C9A84C'};font-family:'JetBrains Mono'">${avgRate.toFixed(1)}%</div>
+                                <div style="font-size:8px;color:#64748B;font-weight:600">AVG RATE</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div style="padding:4px 16px 12px">${postsHtml}</div>
+                        </div>`,
+                      };
+                    });
+                    return(
                     <div style={{position:'relative',height:520,background:'radial-gradient(ellipse at center,#0a1628 0%,#060d1a 100%)'}}>
                       <Globe
                         width={760} height={520}
                         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
                         bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                         backgroundImageUrl="" backgroundColor="rgba(0,0,0,0)"
-                        atmosphereColor="rgba(201,168,76,0.3)" atmosphereAltitude={0.2}
-                        pointsData={points}
+                        atmosphereColor="rgba(201,168,76,0.3)" atmosphereAltitude={0.18}
+                        pointsData={cityPoints}
                         pointLat="lat" pointLng="lng"
-                        pointAltitude={d=>d.size*0.06} pointRadius={d=>d.size*0.5}
+                        pointAltitude={d=>d.size*0.04}
+                        pointRadius={d=>d.size*0.6}
                         pointColor="color"
-                        pointLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 16px;font-family:Inter,sans-serif;min-width:200px;box-shadow:0 12px 40px rgba(0,0,0,0.6)">
-                          <div style="font-size:14px;font-weight:700;color:#F1F5F9;margin-bottom:4px">${d.agent}</div>
-                          <div style="font-size:11px;color:#94A3B8;margin-bottom:6px">${d.city} · ${d.platform}</div>
-                          <div style="font-size:12px;color:#C9A84C;font-weight:600">${d.title}</div>
-                          <div style="display:flex;gap:12px;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
-                            <span style="font-size:10px;color:#94A3B8">Views <b style="color:#F1F5F9">${d.views}</b></span>
-                            <span style="font-size:10px;color:${d.status==='SELESAI'?'#22C55E':d.status==='REVIEW'?'#F59E0B':'#EF4444'};font-weight:600">${d.status}</span>
-                            <span style="font-size:10px;color:#C9A84C;font-weight:700">${d.rate}%</span>
-                          </div>
-                        </div>`}
-                        ringsData={points.map(p=>({lat:p.lat,lng:p.lng,maxR:p.rate/8,propagationSpeed:2,repeatPeriod:800+Math.random()*400,color:()=>p.color+'80'}))}
+                        pointLabel="label"
+                        ringsData={cityPoints.map(p=>({lat:p.lat,lng:p.lng,maxR:p.postCount*0.8+parseFloat(p.avgRate)/10,propagationSpeed:1.5,repeatPeriod:1200,color:()=>p.color+'60'}))}
                         ringMaxRadius="maxR" ringPropagationSpeed="propagationSpeed" ringRepeatPeriod="repeatPeriod"
-                        arcsData={arcs}
-                        arcStartLat="startLat" arcStartLng="startLng"
-                        arcEndLat="endLat" arcEndLng="endLng"
-                        arcColor="color" arcDashLength={0.4} arcDashGap={0.2} arcDashAnimateTime={2500} arcStroke={0.5}
-                        arcLabel={d=>`<div style="background:#0F1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#94A3B8;box-shadow:0 4px 16px rgba(0,0,0,0.4)">${d.label}</div>`}
                         animateIn={true}
                         pointOfView={{lat:-2.5,lng:118,altitude:2.2}}
                       />
-                      {/* Overlay Stats */}
+                      {/* Overlay: total stats */}
                       <div style={{position:'absolute',top:16,left:16,display:'flex',flexDirection:'column',gap:6}}>
-                        {[{l:'Total Post',v:missionPosts.length,c:C.primary},{l:'Kota Aktif',v:new Set(missionPosts.map(p=>p.city)).size,c:C.teal},{l:'Interaksi',v:arcs.length,c:'#C9A84C'}].map(s=>(
-                          <div key={s.l} style={{background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.08)'}}>
+                        {[{l:'Total Post',v:missionPosts.length,c:C.primary},{l:'Kota',v:Object.keys(cityGroups).length,c:C.teal},{l:'Avg Rate',v:(missionPosts.reduce((s,p)=>s+p.rate,0)/missionPosts.length).toFixed(1)+'%',c:C.green}].map(s=>(
+                          <div key={s.l} style={{background:'rgba(15,26,46,0.92)',backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 14px',border:'1px solid rgba(255,255,255,0.06)'}}>
                             <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>{s.l}</p>
                             <p style={{fontSize:20,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
                           </div>
                         ))}
                       </div>
-                      {/* City pins legend */}
-                      <div style={{position:'absolute',bottom:16,right:16,display:'flex',flexDirection:'column',gap:4}}>
-                        {[...new Set(missionPosts.map(p=>p.city))].map(city=>{
-                          const cp=missionPosts.find(p=>p.city===city);
-                          return(<div key={city} className="flex items-center gap-2" style={{background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',borderRadius:6,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.06)'}}>
-                            <div style={{width:6,height:6,borderRadius:'50%',background:cp.color||C.green}}/>
-                            <span style={{fontSize:10,color:C.textSec,fontWeight:600}}>{city}</span>
-                            <span style={{fontSize:9,color:C.textMuted}}>{cp.agent.split(' ')[0]}</span>
+                      {/* Bottom: city cards */}
+                      <div style={{position:'absolute',bottom:16,left:16,right:16,display:'flex',gap:8,justifyContent:'center'}}>
+                        {Object.entries(cityGroups).map(([city,posts])=>{
+                          const avgR=posts.reduce((s,p)=>s+p.rate,0)/posts.length;
+                          return(
+                          <div key={city} style={{background:'rgba(15,26,46,0.92)',backdropFilter:'blur(12px)',borderRadius:10,padding:'10px 14px',border:'1px solid rgba(255,255,255,0.06)',minWidth:100,textAlign:'center'}}>
+                            <div className="flex justify-center" style={{marginBottom:6,gap:'-4px'}}>
+                              {posts.slice(0,3).map((p,j)=>(
+                                <div key={p.agent} style={{width:24,height:24,borderRadius:6,background:`${pColor(p.platform)}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:8,fontWeight:700,color:pColor(p.platform),border:`1.5px solid ${pColor(p.platform)}40`,marginLeft:j>0?-4:0,position:'relative',zIndex:3-j}}>
+                                  {p.avatar}
+                                </div>
+                              ))}
+                            </div>
+                            <p style={{fontSize:11,fontWeight:700,color:C.text}}>{city}</p>
+                            <p style={{fontSize:9,color:C.textMuted}}>{posts.length} post</p>
+                            <p style={{fontSize:11,fontWeight:800,color:avgR>15?C.green:avgR>10?C.orange:C.primary,fontFamily:"'JetBrains Mono'",marginTop:2}}>{avgR.toFixed(1)}%</p>
                           </div>);
                         })}
                       </div>
-                    </div>
-                  )}
+                    </div>);
+                  })()}
 
                   {/* ─── VIEW: TIMELINE ─── */}
                   {monitorView==='timeline'&&(
