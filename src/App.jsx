@@ -394,9 +394,9 @@ export default function App(){
 
   /* ─── BERANDA ──────────────────────────────────────────────────── */
   function Beranda(){return(
-    <div key={k} className="flex flex-col gap-4 pb-4">
+    <div key={k} className="flex flex-col pb-4">
       {/* GERAK Branding Bar */}
-      <div className="stagger-1 flex items-center justify-between pt-2">
+      <div className="stagger-1 flex items-center justify-between pt-2" style={{marginBottom:12}}>
         <div className="flex items-center gap-2.5">
           <GerakMark size={28}/>
           <div>
@@ -413,7 +413,7 @@ export default function App(){
       </div>
 
       {/* User Greeting */}
-      <div className="stagger-2">
+      <div className="stagger-2" style={{marginBottom:16}}>
         <p style={{fontSize:11,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Selamat Pagi,</p>
         <h1 style={{fontSize:22,fontWeight:700,color:C.text,lineHeight:1.1,marginTop:3,fontFamily:"'Inter',sans-serif"}}>MAYOR ARIF SANTOSO</h1>
         <div className="flex items-center gap-1.5 mt-2" style={{background:C.primaryLight,borderRadius:9999,padding:'3px 12px',border:`1px solid ${C.primary}40`,width:'fit-content'}}>
@@ -423,7 +423,7 @@ export default function App(){
       </div>
 
       {/* XP Status Card */}
-      <Card className="stagger-3" style={{padding:20}}>
+      <Card className="stagger-3" style={{padding:20,marginBottom:12}}>
         <div className="flex items-center justify-between" style={{marginBottom:12}}>
           <span className="flex items-center gap-1" style={{fontSize:11,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Kemajuan Pangkat <Tip text="XP didapat dari menyelesaikan misi. Kumpulkan XP untuk naik pangkat!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></span>
           <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4.820 / 5.000 XP</span>
@@ -444,7 +444,7 @@ export default function App(){
       </Card>
 
       {/* Stats Row */}
-      <div className="stagger-4 grid grid-cols-3 gap-3">
+      <div className="stagger-4 grid grid-cols-3 gap-3" style={{marginBottom:20}}>
         {[{icon:'target',label:'Misi',value:'24',color:C.primary,tip:'Total misi yang telah kamu selesaikan'},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange,tip:'Hari berturut-turut kamu aktif. Jaga streak untuk bonus XP!'},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal,tip:'Peringkatmu di antara semua anggota GERAK'}].map((s,i)=>(
           <Card key={i} style={{textAlign:'center',padding:12}}>
             <div style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
@@ -457,7 +457,7 @@ export default function App(){
       </div>
 
       {/* Badge Showcase */}
-      <div className="stagger-5">
+      <div className="stagger-5" style={{marginBottom:20}}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana Terbaru <Tip text="Lencana didapat dari pencapaian khusus. Kumpulkan semua!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <button onClick={()=>nav('pangkat')} style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:2}}>
@@ -487,7 +487,7 @@ export default function App(){
       </div>
 
       {/* Daily Brief */}
-      <Card className="stagger-6" style={{borderLeft:`3px solid ${C.primary}`}}>
+      <Card className="stagger-6" style={{borderLeft:`3px solid ${C.primary}`,marginBottom:20}}>
         <div className="flex items-center justify-between" style={{marginBottom:8}}>
           <span className="flex items-center gap-1" style={{fontSize:10,fontWeight:700,color:C.primary,letterSpacing:1.5,textTransform:'uppercase'}}>Misi Hari Ini <Tip text="Misi prioritas dari admin. Selesaikan untuk bonus early bird!"><MI name="info" size={10} style={{color:C.primary,opacity:0.6,cursor:'pointer'}}/></Tip></span>
           <span style={{display:'inline-flex',alignItems:'center',gap:4,background:C.primaryLight,color:C.primary,borderRadius:6,padding:'2px 8px',fontSize:10,fontWeight:700}}>BRIEFING</span>
@@ -503,7 +503,7 @@ export default function App(){
       </Card>
 
       {/* Active Missions */}
-      <div className="stagger-6">
+      <div className="stagger-6" style={{marginBottom:20}}>
         <div className="flex justify-between items-center mb-3">
           <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif <Tip text="Misi yang sedang berjalan. Tap untuk lihat detail dan mulai mengerjakan."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
           <button onClick={()=>nav('misi')} style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
