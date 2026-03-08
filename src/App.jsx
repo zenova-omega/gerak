@@ -171,174 +171,170 @@ const RANKS=[
 ];
 
 /* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
-function RankInsignia({rank=0,size=120}){
-  const s=size;const cx=s/2;const cy=s/2;
-  // rank 0=Rekrut, 1=Perwira Muda, 2=Perwira Madya, 3=Perwira Utama, 4=Komandan Garuda
+function RankInsignia({rank=0,size=120,showLabel=true}){
+  const s=size;
   const colors=[
-    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.3)',accent:'#CBD5E1'},  // Rekrut - slate
-    {primary:'#C9A84C',secondary:'#E8D48B',glow:'rgba(201,168,76,0.4)',accent:'#F5E6A3'},    // Perwira Muda - gold
-    {primary:'#3B82F6',secondary:'#93C5FD',glow:'rgba(59,130,246,0.4)',accent:'#BFDBFE'},     // Perwira Madya - blue
-    {primary:'#8B5CF6',secondary:'#C4B5FD',glow:'rgba(139,92,246,0.4)',accent:'#DDD6FE'},     // Perwira Utama - purple
-    {primary:'#F59E0B',secondary:'#FCD34D',glow:'rgba(245,158,11,0.5)',accent:'#FEF3C7'},     // Komandan Garuda - amber
+    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.3)',accent:'#CBD5E1',dark:'#334155'},
+    {primary:'#C9A84C',secondary:'#E8D48B',glow:'rgba(201,168,76,0.4)',accent:'#F5E6A3',dark:'#92742A'},
+    {primary:'#3B82F6',secondary:'#93C5FD',glow:'rgba(59,130,246,0.4)',accent:'#BFDBFE',dark:'#1D4ED8'},
+    {primary:'#8B5CF6',secondary:'#C4B5FD',glow:'rgba(139,92,246,0.4)',accent:'#DDD6FE',dark:'#6D28D9'},
+    {primary:'#F59E0B',secondary:'#FCD34D',glow:'rgba(245,158,11,0.5)',accent:'#FEF3C7',dark:'#B45309'},
   ];
   const c=colors[rank]||colors[0];
   const id=`rank${rank}_${Math.random().toString(36).slice(2,6)}`;
+  const labels=['REKRUT','PERWIRA MUDA','PERWIRA MADYA','PERWIRA UTAMA','KOMANDAN GARUDA'];
 
-  if(rank===0) return( // Rekrut Digital — simple chevron
-    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
-      <defs>
-        <linearGradient id={`${id}g`} x1="30" y1="20" x2="90" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
-        </linearGradient>
-        <filter id={`${id}f`}><feDropShadow dx="0" dy="2" stdDeviation="4" floodColor={c.glow}/></filter>
-      </defs>
-      <circle cx="60" cy="60" r="52" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.2"/>
-      <circle cx="60" cy="60" r="44" fill={`${c.primary}08`} stroke={c.primary} strokeWidth="1" opacity="0.15"/>
-      <g filter={`url(#${id}f)`}>
-        <path d="M60 28 L82 52 L60 44 L38 52 Z" fill={`url(#${id}g)`}/>
-        <path d="M60 52 L82 76 L60 68 L38 76 Z" fill={`url(#${id}g)`} opacity="0.6"/>
-      </g>
-      <text x="60" y="98" textAnchor="middle" style={{fontSize:8,fontWeight:700,fill:c.primary,letterSpacing:2,fontFamily:"'Inter'"}}>REKRUT</text>
-    </svg>
-  );
+  // Hexagonal badge shape path for all ranks
+  const hexPath=(cx,cy,r)=>{
+    const pts=[];for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;pts.push(`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`);}
+    return`M${pts[0]}L${pts[1]}L${pts[2]}L${pts[3]}L${pts[4]}L${pts[5]}Z`;
+  };
 
-  if(rank===1) return( // Perwira Muda — shield with star
-    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
-      <defs>
-        <linearGradient id={`${id}g`} x1="30" y1="10" x2="90" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
-        </linearGradient>
-        <linearGradient id={`${id}g2`} x1="50" y1="30" x2="70" y2="70" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFF8DC"/><stop offset="100%" stopColor={c.primary}/>
-        </linearGradient>
-        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="5" floodColor={c.glow}/></filter>
-      </defs>
-      <circle cx="60" cy="60" r="52" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.25" strokeDasharray="4 3"/>
-      <g filter={`url(#${id}f)`}>
-        <path d="M60 18 L85 38 L85 70 Q85 85 60 100 Q35 85 35 70 L35 38 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1.5"/>
-        <path d="M60 26 L79 42 L79 68 Q79 80 60 92 Q41 80 41 68 L41 42 Z" fill="none" stroke={c.accent} strokeWidth="0.5" opacity="0.4"/>
-      </g>
-      <polygon points="60,38 64,50 76,50 66,58 70,70 60,62 50,70 54,58 44,50 56,50" fill={`url(#${id}g2)`}/>
-      <text x="60" y="112" textAnchor="middle" style={{fontSize:7,fontWeight:700,fill:c.primary,letterSpacing:1.5,fontFamily:"'Inter'"}}>PERWIRA MUDA</text>
-    </svg>
-  );
-
-  if(rank===2) return( // Perwira Madya — winged shield with double stars
-    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
-      <defs>
-        <linearGradient id={`${id}g`} x1="30" y1="10" x2="90" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
-        </linearGradient>
-        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="6" floodColor={c.glow}/></filter>
-      </defs>
-      <circle cx="60" cy="60" r="52" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.2"/>
-      {/* Wings */}
-      <g opacity="0.5">
-        <path d="M32 50 Q10 40 8 55 Q10 70 32 65 Z" fill={c.primary} opacity="0.3"/>
-        <path d="M88 50 Q110 40 112 55 Q110 70 88 65 Z" fill={c.primary} opacity="0.3"/>
-      </g>
-      <g filter={`url(#${id}f)`}>
-        <path d="M60 20 L82 38 L82 68 Q82 82 60 95 Q38 82 38 68 L38 38 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1.5"/>
-        <line x1="38" y1="44" x2="82" y2="44" stroke={c.accent} strokeWidth="0.8" opacity="0.4"/>
-      </g>
-      {/* Two stars */}
-      <polygon points="50,52 52,58 58,58 53,62 55,68 50,64 45,68 47,62 42,58 48,58" fill="white" opacity="0.9"/>
-      <polygon points="70,52 72,58 78,58 73,62 75,68 70,64 65,68 67,62 62,58 68,58" fill="white" opacity="0.9"/>
-      <text x="60" y="112" textAnchor="middle" style={{fontSize:7,fontWeight:700,fill:c.primary,letterSpacing:1.5,fontFamily:"'Inter'"}}>PERWIRA MADYA</text>
-    </svg>
-  );
-
-  if(rank===3) return( // Perwira Utama — ornate shield with three stars and laurel
-    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
-      <defs>
-        <linearGradient id={`${id}g`} x1="30" y1="5" x2="90" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.primary}/>
-        </linearGradient>
-        <radialGradient id={`${id}r`} cx="60" cy="50" r="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.accent} stopOpacity="0.3"/><stop offset="100%" stopColor={c.primary} stopOpacity="0"/>
-        </radialGradient>
-        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="6" floodColor={c.glow}/></filter>
-      </defs>
-      <circle cx="60" cy="56" r="50" fill={`url(#${id}r)`}/>
-      {/* Laurel wreath */}
-      <g opacity="0.4" stroke={c.primary} strokeWidth="1" fill="none">
-        <path d="M28 80 Q20 60 25 40 Q30 50 28 65"/><path d="M24 75 Q18 58 22 42 Q26 52 24 65"/>
-        <path d="M92 80 Q100 60 95 40 Q90 50 92 65"/><path d="M96 75 Q102 58 98 42 Q94 52 96 65"/>
-      </g>
-      <g filter={`url(#${id}f)`}>
-        <path d="M60 16 L84 36 L84 66 Q84 82 60 96 Q36 82 36 66 L36 36 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="2"/>
-        <path d="M60 22 L80 39 L80 64 Q80 78 60 90 Q40 78 40 64 L40 39 Z" fill="none" stroke="white" strokeWidth="0.5" opacity="0.3"/>
-      </g>
-      {/* Three stars */}
-      <polygon points="60,34 62.5,42 70,42 64,47 66.5,55 60,50 53.5,55 56,47 50,42 57.5,42" fill="white" opacity="0.95"/>
-      <polygon points="45,56 47,62 52,62 48,65.5 49.5,71 45,68 40.5,71 42,65.5 38,62 43,62" fill="white" opacity="0.7"/>
-      <polygon points="75,56 77,62 82,62 78,65.5 79.5,71 75,68 70.5,71 72,65.5 68,62 73,62" fill="white" opacity="0.7"/>
-      <text x="60" y="112" textAnchor="middle" style={{fontSize:6.5,fontWeight:700,fill:c.primary,letterSpacing:1.5,fontFamily:"'Inter'"}}>PERWIRA UTAMA</text>
-    </svg>
-  );
-
-  // rank===4: Komandan Garuda — eagle/garuda with crown
   return(
     <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
       <defs>
-        <linearGradient id={`${id}g`} x1="30" y1="0" x2="90" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FCD34D"/><stop offset="50%" stopColor={c.primary}/><stop offset="100%" stopColor="#B45309"/>
+        <linearGradient id={`${id}g`} x1="20" y1="10" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.dark}/>
         </linearGradient>
-        <radialGradient id={`${id}r`} cx="60" cy="50" r="50" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.secondary} stopOpacity="0.4"/><stop offset="100%" stopColor={c.primary} stopOpacity="0"/>
+        <linearGradient id={`${id}g2`} x1="40" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="white" stopOpacity="0.25"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </linearGradient>
+        <radialGradient id={`${id}r`} cx="60" cy="55" r="50" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.primary} stopOpacity="0.15"/><stop offset="100%" stopColor={c.primary} stopOpacity="0"/>
         </radialGradient>
-        <filter id={`${id}f`}><feDropShadow dx="0" dy="4" stdDeviation="8" floodColor={c.glow}/></filter>
+        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="6" floodColor={c.glow}/></filter>
+        <filter id={`${id}fi`}><feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="rgba(0,0,0,0.4)"/></filter>
+        <clipPath id={`${id}clip`}><path d={hexPath(60,52,38)}/></clipPath>
       </defs>
-      <circle cx="60" cy="56" r="52" fill={`url(#${id}r)`}/>
-      <circle cx="60" cy="56" r="48" fill="none" stroke={c.primary} strokeWidth="1.5" opacity="0.25" strokeDasharray="2 2"/>
-      {/* Crown */}
+      {/* Ambient glow */}
+      <circle cx="60" cy="55" r="52" fill={`url(#${id}r)`}/>
+      {/* Outer hex ring */}
+      <path d={hexPath(60,52,46)} fill="none" stroke={c.primary} strokeWidth="1" opacity="0.15"/>
+      {/* Main hexagonal badge */}
       <g filter={`url(#${id}f)`}>
-        <path d="M40 28 L45 18 L52 26 L60 14 L68 26 L75 18 L80 28 L78 32 L42 32 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1"/>
+        <path d={hexPath(60,52,40)} fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1.5" strokeOpacity="0.5"/>
+        <path d={hexPath(60,52,40)} fill={`url(#${id}g2)`}/>
       </g>
-      {/* Shield body */}
-      <g filter={`url(#${id}f)`}>
-        <path d="M60 32 L86 46 L86 68 Q86 86 60 100 Q34 86 34 68 L34 46 Z" fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="2"/>
-        <path d="M60 38 L82 49 L82 66 Q82 82 60 94 Q38 82 38 66 L38 49 Z" fill="none" stroke="white" strokeWidth="0.5" opacity="0.25"/>
-      </g>
-      {/* Garuda wings */}
-      <path d="M34 52 Q14 38 10 50 Q12 64 30 62" fill={c.primary} opacity="0.4" stroke={c.accent} strokeWidth="0.5"/>
-      <path d="M86 52 Q106 38 110 50 Q108 64 90 62" fill={c.primary} opacity="0.4" stroke={c.accent} strokeWidth="0.5"/>
-      {/* Center star */}
-      <polygon points="60,48 63.5,58 74,58 66,64.5 69,75 60,68 51,75 54,64.5 46,58 56.5,58" fill="white" opacity="0.95"/>
-      {/* Small stars */}
-      <circle cx="48" cy="52" r="2" fill="white" opacity="0.7"/><circle cx="72" cy="52" r="2" fill="white" opacity="0.7"/>
-      <circle cx="44" cy="62" r="1.5" fill="white" opacity="0.5"/><circle cx="76" cy="62" r="1.5" fill="white" opacity="0.5"/>
-      <text x="60" y="114" textAnchor="middle" style={{fontSize:6,fontWeight:800,fill:c.primary,letterSpacing:2,fontFamily:"'Inter'"}}>KOMANDAN GARUDA</text>
+      {/* Inner hex border */}
+      <path d={hexPath(60,52,34)} fill="none" stroke={c.accent} strokeWidth="0.5" opacity="0.3"/>
+
+      {/* Rank-specific center emblem */}
+      {rank===0&&<g filter={`url(#${id}fi)`}>
+        <path d="M60 36 L72 48 L60 44 L48 48 Z" fill="white" opacity="0.9"/>
+        <path d="M60 50 L72 62 L60 58 L48 62 Z" fill="white" opacity="0.5"/>
+      </g>}
+
+      {rank===1&&<g filter={`url(#${id}fi)`}>
+        <polygon points="60,32 64,44 76,44 67,52 70,64 60,56 50,64 53,52 44,44 56,44" fill="white" opacity="0.95"/>
+      </g>}
+
+      {rank===2&&<g filter={`url(#${id}fi)`}>
+        {/* Wings */}
+        <path d="M38 50 Q22 42 20 52 Q22 62 36 58" fill="white" opacity="0.3"/>
+        <path d="M82 50 Q98 42 100 52 Q98 62 84 58" fill="white" opacity="0.3"/>
+        {/* Shield */}
+        <path d="M60 34 L74 42 L74 58 Q74 66 60 72 Q46 66 46 58 L46 42 Z" fill="white" opacity="0.15" stroke="white" strokeWidth="1" strokeOpacity="0.5"/>
+        {/* Two stars */}
+        <polygon points="52,48 53.5,52 58,52 54.5,55 55.5,59 52,56.5 48.5,59 49.5,55 46,52 50.5,52" fill="white" opacity="0.9"/>
+        <polygon points="68,48 69.5,52 74,52 70.5,55 71.5,59 68,56.5 64.5,59 65.5,55 62,52 66.5,52" fill="white" opacity="0.9"/>
+      </g>}
+
+      {rank===3&&<g filter={`url(#${id}fi)`}>
+        {/* Laurel arcs */}
+        <path d="M36 68 Q30 52 34 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3"/>
+        <path d="M84 68 Q90 52 86 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3"/>
+        {/* Shield */}
+        <path d="M60 32 L78 42 L78 60 Q78 72 60 78 Q42 72 42 60 L42 42 Z" fill="white" opacity="0.1" stroke="white" strokeWidth="1" strokeOpacity="0.4"/>
+        {/* Three stars */}
+        <polygon points="60,36 62.5,44 70,44 64,49 66.5,57 60,52 53.5,57 56,49 50,44 57.5,44" fill="white" opacity="0.95"/>
+        <polygon points="48,56 49.5,60 53,60 50,62.5 51,66 48,64 45,66 46,62.5 43,60 46.5,60" fill="white" opacity="0.6"/>
+        <polygon points="72,56 73.5,60 77,60 74,62.5 75,66 72,64 69,66 70,62.5 67,60 70.5,60" fill="white" opacity="0.6"/>
+      </g>}
+
+      {rank===4&&<g filter={`url(#${id}fi)`}>
+        {/* Crown */}
+        <path d="M44 30 L48 22 L54 28 L60 18 L66 28 L72 22 L76 30 L74 34 L46 34 Z" fill="white" opacity="0.9"/>
+        {/* Garuda wings */}
+        <path d="M36 52 Q18 40 16 50 Q18 62 34 58" fill="white" opacity="0.25"/>
+        <path d="M84 52 Q102 40 104 50 Q102 62 86 58" fill="white" opacity="0.25"/>
+        {/* Shield */}
+        <path d="M60 36 L80 48 L80 64 Q80 78 60 86 Q40 78 40 64 L40 48 Z" fill="white" opacity="0.1" stroke="white" strokeWidth="1" strokeOpacity="0.4"/>
+        {/* Big star */}
+        <polygon points="60,44 63.5,54 74,54 66,60 69,70 60,64 51,70 54,60 46,54 56.5,54" fill="white" opacity="0.95"/>
+        {/* Dots */}
+        <circle cx="48" cy="52" r="2" fill="white" opacity="0.6"/><circle cx="72" cy="52" r="2" fill="white" opacity="0.6"/>
+      </g>}
+
+      {/* Rank label */}
+      {showLabel&&<text x="60" y={rank===4?112:108} textAnchor="middle" style={{fontSize:rank===4?5.5:7,fontWeight:800,fill:c.primary,letterSpacing:rank===4?1.5:2,fontFamily:"'Inter'"}}>{labels[rank]}</text>}
     </svg>
   );
 }
 
+/* ─── BADGE SHAPE SVG ────────────────────────────────────────────── */
+function BadgeShape({color,size=64,icon,unlocked=true,rarity='common'}){
+  const rc=RARITY_COLORS[rarity]||RARITY_COLORS.common;
+  const s=size;
+  const id=`bs_${Math.random().toString(36).slice(2,6)}`;
+  // Rounded hexagon points
+  const hexPts=(cx,cy,r)=>{const p=[];for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return p;};
+  const pts=hexPts(s/2,s/2,s*0.42);
+  const pStr=pts.map(p=>p.join(',')).join(' ');
+  return(
+    <div style={{position:'relative',width:s,height:s}}>
+      {unlocked&&<div style={{position:'absolute',inset:-4,borderRadius:'50%',background:`radial-gradient(circle,${rc.glow},transparent 70%)`,filter:'blur(6px)',animation:rarity==='legendary'?'breathe 3s ease-in-out infinite':undefined}}/>}
+      <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+        <defs>
+          <linearGradient id={`${id}g`} x1="0" y1="0" x2={s} y2={s} gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={unlocked?color:'#334155'}/><stop offset="100%" stopColor={unlocked?(color+'CC'):'#1E293B'}/>
+          </linearGradient>
+          <filter id={`${id}f`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={unlocked?`${color}40`:'rgba(0,0,0,0.3)'}/></filter>
+        </defs>
+        <g filter={`url(#${id}f)`}>
+          <polygon points={pStr} fill={`url(#${id}g)`} stroke={unlocked?`${color}80`:'#475569'} strokeWidth="1.5"/>
+          {/* Highlight */}
+          <polygon points={pStr} fill="url(#none)" style={{opacity:0.15}}>
+            <set attributeName="fill" to="white"/>
+          </polygon>
+        </g>
+        {/* Inner hex */}
+        {unlocked&&<polygon points={hexPts(s/2,s/2,s*0.32).map(p=>p.join(',')).join(' ')} fill="none" stroke="white" strokeWidth="0.5" opacity="0.2"/>}
+      </svg>
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <MI name={unlocked?icon:'lock'} size={s*0.36} fill={unlocked} style={{color:unlocked?'white':'#475569',filter:unlocked?'drop-shadow(0 2px 4px rgba(0,0,0,0.3))':'none'}}/>
+      </div>
+      {!unlocked&&<div style={{position:'absolute',inset:0,borderRadius:'50%',background:'rgba(11,17,32,0.3)'}}/>}
+    </div>
+  );
+}
+
 const BADGES=[
-  {name:'Misi Pertama',icon:'rocket_launch',color:C.teal,bg:C.tealLight,unlocked:true},
-  {name:'10 Misi',icon:'military_tech',color:C.orange,bg:C.orangeLight,unlocked:true},
-  {name:'50 Misi',icon:'emoji_events',color:C.primary,bg:C.primaryLight,unlocked:false},
-  {name:'Misi Kilat',icon:'bolt',color:C.pink,bg:C.pinkLight,unlocked:true},
-  {name:'Krisis Hero',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true},
-  {name:'Streak 7',icon:'whatshot',color:C.orange,bg:C.orangeLight,unlocked:true},
-  {name:'Streak 30',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true},
-  {name:'Streak 100',icon:'volcano',color:C.pink,bg:C.pinkLight,unlocked:false},
-  {name:'Naik Pangkat',icon:'trending_up',color:C.purple,bg:C.purpleLight,unlocked:true},
-  {name:'Amplifier',icon:'campaign',color:C.orange,bg:C.orangeLight,unlocked:true},
-  {name:'First Join',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true},
-  {name:'Viral King',icon:'share',color:C.pink,bg:C.pinkLight,unlocked:false},
-  {name:'IG Star',icon:'photo_camera',color:'#E1306C',bg:'rgba(225,48,108,0.12)',unlocked:true},
-  {name:'TikToker',icon:'music_note',color:'#E8E8E8',bg:'rgba(232,232,232,0.12)',unlocked:false},
-  {name:'X Thread',icon:'edit_note',color:C.primary,bg:C.primaryLight,unlocked:false},
-  {name:'Field Agent',icon:'location_on',color:C.pink,bg:C.pinkLight,unlocked:true},
-  {name:'Guardian',icon:'security',color:C.primary,bg:C.primaryLight,unlocked:false},
-  {name:'Mentor',icon:'psychology',color:C.green,bg:C.greenLight,unlocked:false},
-  {name:'Elite',icon:'diamond',color:C.orange,bg:C.orangeLight,unlocked:false},
-  {name:'Night Owl',icon:'dark_mode',color:C.purple,bg:C.purpleLight,unlocked:false},
-  {name:'Speed Run',icon:'speed',color:C.red,bg:C.redLight,unlocked:false},
-  {name:'Konsisten',icon:'calendar_month',color:C.teal,bg:C.tealLight,unlocked:false},
-  {name:'Top 10',icon:'leaderboard',color:C.orange,bg:C.orangeLight,unlocked:false},
-  {name:'Patriot',icon:'flag',color:C.primary,bg:C.primaryLight,unlocked:false},
+  {name:'Misi Pertama',desc:'Selesaikan misi pertamamu',icon:'rocket_launch',color:C.teal,bg:C.tealLight,unlocked:true,rarity:'common',cat:'Misi'},
+  {name:'10 Misi',desc:'Selesaikan 10 misi',icon:'military_tech',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Misi'},
+  {name:'50 Misi',desc:'Selesaikan 50 misi',icon:'emoji_events',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Misi'},
+  {name:'Misi Kilat',desc:'Selesaikan misi dalam 1 jam',icon:'bolt',color:C.pink,bg:C.pinkLight,unlocked:true,rarity:'rare',cat:'Misi'},
+  {name:'Krisis Hero',desc:'Selesaikan 5 misi krisis',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true,rarity:'epic',cat:'Misi'},
+  {name:'Streak 7',desc:'7 hari berturut-turut aktif',icon:'whatshot',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'common',cat:'Streak'},
+  {name:'Streak 30',desc:'30 hari berturut-turut aktif',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true,rarity:'epic',cat:'Streak'},
+  {name:'Streak 100',desc:'100 hari tak terputus!',icon:'volcano',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Streak'},
+  {name:'Naik Pangkat',desc:'Naik pangkat pertama kali',icon:'trending_up',color:C.purple,bg:C.purpleLight,unlocked:true,rarity:'common',cat:'Pangkat'},
+  {name:'Amplifier',desc:'Amplifikasi 10 konten',icon:'campaign',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Sosial'},
+  {name:'First Join',desc:'Bergabung dengan GERAK',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
+  {name:'Viral King',desc:'Kontenmu viral 100K+',icon:'share',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Sosial'},
+  {name:'IG Star',desc:'10 post Instagram selesai',icon:'photo_camera',color:'#E1306C',bg:'rgba(225,48,108,0.12)',unlocked:true,rarity:'rare',cat:'Sosial'},
+  {name:'TikToker',desc:'10 post TikTok selesai',icon:'music_note',color:'#E8E8E8',bg:'rgba(232,232,232,0.12)',unlocked:false,rarity:'rare',cat:'Sosial'},
+  {name:'X Thread',desc:'Buat 5 thread di X',icon:'edit_note',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'rare',cat:'Sosial'},
+  {name:'Field Agent',desc:'Ikut 3 misi lapangan',icon:'location_on',color:C.pink,bg:C.pinkLight,unlocked:true,rarity:'epic',cat:'Misi'},
+  {name:'Guardian',desc:'Jadi pelindung narasi',icon:'security',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
+  {name:'Mentor',desc:'Bantu 5 anggota baru',icon:'psychology',color:C.green,bg:C.greenLight,unlocked:false,rarity:'epic',cat:'Pangkat'},
+  {name:'Elite',desc:'Masuk top 5 leaderboard',icon:'diamond',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
+  {name:'Night Owl',desc:'Selesaikan misi pukul 00-05',icon:'dark_mode',color:C.purple,bg:C.purpleLight,unlocked:false,rarity:'rare',cat:'Misi'},
+  {name:'Speed Run',desc:'3 misi dalam sehari',icon:'speed',color:C.red,bg:C.redLight,unlocked:false,rarity:'epic',cat:'Misi'},
+  {name:'Konsisten',desc:'Aktif selama 3 bulan',icon:'calendar_month',color:C.teal,bg:C.tealLight,unlocked:false,rarity:'epic',cat:'Streak'},
+  {name:'Top 10',desc:'Masuk 10 besar ranking',icon:'leaderboard',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'rare',cat:'Pangkat'},
+  {name:'Patriot',desc:'Agen paling berdedikasi',icon:'flag',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
 ];
+const RARITY_COLORS={common:{label:'Common',gradient:'linear-gradient(135deg,#475569,#64748B)',border:'#64748B',glow:'rgba(100,116,139,0.3)'},rare:{label:'Rare',gradient:'linear-gradient(135deg,#2563EB,#3B82F6)',border:'#3B82F6',glow:'rgba(59,130,246,0.3)'},epic:{label:'Epic',gradient:'linear-gradient(135deg,#7C3AED,#8B5CF6)',border:'#8B5CF6',glow:'rgba(139,92,246,0.3)'},legendary:{label:'Legendary',gradient:'linear-gradient(135deg,#D97706,#F59E0B,#FBBF24)',border:'#F59E0B',glow:'rgba(245,158,11,0.4)'}};
 
 const ACTIVITY=[
   {mission:'Literasi Digital',type:'EDUKASI',date:'8 Mar',xp:250,status:'SELESAI'},
@@ -505,38 +501,53 @@ export default function App(){
     }}>{children}</div>;
   }
 
-  function Badge({badge,size=52}){
+  function Badge({badge,size=52,compact=false}){
     const col=badge.color||C.primary;
     const unlocked=badge.unlocked;
-    return <div className={`flex flex-col items-center gap-2 badge-item ${unlocked?'badge-unlocked':''}`} style={{minWidth:64}} onClick={unlocked?()=>showToast(`🏅 ${badge.name}`)  :undefined}>
-      <div style={{position:'relative',width:size,height:size}}>
-        {/* Outer glow ring */}
-        {unlocked&&<div style={{position:'absolute',inset:-3,borderRadius:'50%',background:`radial-gradient(circle,${col}25,transparent 70%)`,filter:'blur(4px)'}}/>}
-        {/* Gradient border ring */}
-        <div style={{
-          width:size,height:size,borderRadius:'50%',padding:2.5,
-          background:unlocked?`linear-gradient(145deg,${col},${col}80)`:`linear-gradient(145deg,${C.border},${C.surfaceLight})`,
-          boxShadow:unlocked?`0 4px 16px ${col}30, 0 0 20px ${col}15, inset 0 1px 0 rgba(255,255,255,0.15)`:`0 2px 8px rgba(0,0,0,0.2)`,
-          position:'relative',
-        }}>
-          {/* Inner circle */}
-          <div style={{
-            width:'100%',height:'100%',borderRadius:'50%',
-            background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight},${C.bg})`,
-            display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden',
-          }}>
-            {/* Subtle inner highlight */}
-            {unlocked&&<div style={{position:'absolute',top:-size*0.15,left:size*0.1,width:size*0.5,height:size*0.3,borderRadius:'50%',background:`rgba(255,255,255,0.06)`,filter:'blur(4px)'}}/>}
-            <MI name={unlocked?badge.icon:'lock'} size={size*0.38} fill={unlocked} style={{color:unlocked?col:C.textMuted,position:'relative',zIndex:1,filter:unlocked?`drop-shadow(0 0 6px ${col}40)`:'none'}}/>
-          </div>
-        </div>
-        {/* Locked overlay */}
-        {!unlocked&&<div style={{position:'absolute',inset:0,borderRadius:'50%',background:'rgba(11,17,32,0.4)'}}/>}
+    const rc=RARITY_COLORS[badge.rarity||'common']||RARITY_COLORS.common;
+
+    if(compact) return(
+      <div className={`flex flex-col items-center gap-1.5 badge-item ${unlocked?'badge-unlocked':''}`} style={{minWidth:56}} onClick={unlocked?()=>showToast(`${badge.name} — ${badge.desc||''}`):undefined}>
+        <BadgeShape color={col} size={size} icon={badge.icon} unlocked={unlocked} rarity={badge.rarity}/>
+        <span style={{fontSize:9,color:unlocked?C.text:C.textMuted,textAlign:'center',fontWeight:unlocked?600:400,maxWidth:60,lineHeight:1.2}}>
+          {unlocked?badge.name:'???'}
+        </span>
       </div>
-      <span style={{fontSize:10,color:unlocked?C.text:C.textMuted,textAlign:'center',fontWeight:unlocked?600:400,maxWidth:64,lineHeight:1.2}}>
-        {unlocked?badge.name:'???'}
-      </span>
-    </div>;
+    );
+
+    // Card-style badge
+    return(
+      <div className={`badge-item ${unlocked?'badge-unlocked':''}`}
+        onClick={unlocked?()=>showToast(`${badge.name} — ${badge.desc||''}`):undefined}
+        style={{
+          position:'relative',overflow:'hidden',borderRadius:16,
+          background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight}80,${C.bg})`,
+          border:`1px solid ${unlocked?`${col}25`:C.border}`,
+          padding:'16px 10px 12px',textAlign:'center',cursor:unlocked?'pointer':'default',
+          boxShadow:unlocked?`0 4px 20px ${col}15, 0 1px 3px rgba(0,0,0,0.2)`:'0 2px 8px rgba(0,0,0,0.15)',
+        }}>
+        {/* Top rarity accent line */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:unlocked?rc.gradient:'linear-gradient(90deg,#334155,#475569)',opacity:unlocked?0.8:0.3}}/>
+        {/* Background glow */}
+        {unlocked&&<div style={{position:'absolute',top:-20,left:'50%',transform:'translateX(-50%)',width:60,height:60,borderRadius:'50%',background:`radial-gradient(circle,${col}15,transparent 70%)`,filter:'blur(12px)',pointerEvents:'none'}}/>}
+        {/* Badge shape */}
+        <div style={{display:'flex',justifyContent:'center',marginBottom:8,position:'relative'}}>
+          <BadgeShape color={col} size={size} icon={badge.icon} unlocked={unlocked} rarity={badge.rarity}/>
+        </div>
+        {/* Name */}
+        <p style={{fontSize:11,fontWeight:unlocked?700:500,color:unlocked?C.text:C.textMuted,lineHeight:1.2,marginBottom:3}}>
+          {unlocked?badge.name:'???'}
+        </p>
+        {/* Rarity tag */}
+        <span style={{
+          display:'inline-block',fontSize:8,fontWeight:700,letterSpacing:1,textTransform:'uppercase',
+          padding:'2px 8px',borderRadius:9999,
+          background:unlocked?`${rc.border}18`:'rgba(71,85,105,0.15)',
+          color:unlocked?rc.border:'#475569',
+          border:`1px solid ${unlocked?`${rc.border}30`:'rgba(71,85,105,0.2)'}`,
+        }}>{unlocked?rc.label:'Locked'}</span>
+      </div>
+    );
   }
 
   function Chip({label,active,onClick,color}){
@@ -621,7 +632,7 @@ export default function App(){
         ))}
       </div>
 
-      {/* Badge Showcase */}
+      {/* Badge Showcase — card style */}
       <div className="stagger-5" style={{marginBottom:20}}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana Terbaru <Tip text="Lencana didapat dari pencapaian khusus. Kumpulkan semua!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
@@ -629,26 +640,32 @@ export default function App(){
             Semua <MI name="arrow_forward" size={14} style={{color:C.primary}}/>
           </button>
         </div>
-        <Card style={{padding:16,background:`linear-gradient(135deg,${C.surface},${C.bg})`,border:`1px solid ${C.border}`,overflow:'hidden',position:'relative'}}>
-          {/* Decorative glow */}
-          <div style={{position:'absolute',top:-20,right:-20,width:80,height:80,borderRadius:'50%',background:`radial-gradient(circle,${C.primary}15,transparent)`,filter:'blur(20px)',pointerEvents:'none'}}/>
-          <div className="flex items-center gap-4 overflow-x-auto hide-scrollbar pb-1">
-            {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
-              <Badge key={i} badge={b} size={56}/>
-            ))}
-            {/* "More" indicator */}
-            <div onClick={()=>nav('pangkat')} style={{minWidth:56,height:56,borderRadius:'50%',border:`2px dashed ${C.border}`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
-              <span style={{fontSize:16,fontWeight:800,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>+{BADGES.filter(b=>b.unlocked).length-5}</span>
+        {/* Horizontal scroll of card badges */}
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2" style={{scrollSnapType:'x mandatory'}}>
+          {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
+            <div key={i} style={{flexShrink:0,width:100,scrollSnapAlign:'start'}}>
+              <Badge badge={b} size={48}/>
             </div>
+          ))}
+          {/* See all card */}
+          <div onClick={()=>nav('pangkat')} style={{
+            flexShrink:0,width:100,scrollSnapAlign:'start',borderRadius:16,
+            border:`2px dashed ${C.border}`,display:'flex',flexDirection:'column',
+            alignItems:'center',justifyContent:'center',cursor:'pointer',gap:4,
+            background:`linear-gradient(135deg,${C.surface}80,transparent)`,minHeight:140,
+          }}>
+            <span style={{fontSize:20,fontWeight:800,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>+{BADGES.filter(b=>b.unlocked).length-5}</span>
+            <span style={{fontSize:10,color:C.textMuted,fontWeight:600}}>Lihat Semua</span>
           </div>
-          <div className="flex items-center justify-between mt-3" style={{paddingTop:8,borderTop:`1px solid ${C.borderLight}`}}>
-            <div className="flex items-center gap-2">
-              <MI name="workspace_premium" size={16} fill style={{color:C.gold}}/>
-              <span style={{fontSize:12,fontWeight:700,color:C.text}}>{BADGES.filter(b=>b.unlocked).length}/{BADGES.length} Lencana</span>
-            </div>
-            <span style={{fontSize:11,color:C.textMuted}}>Raih semua untuk jadi Elite!</span>
+        </div>
+        {/* Progress bar */}
+        <div className="flex items-center gap-3 mt-3" style={{padding:'0 2px'}}>
+          <div className="flex items-center gap-1.5">
+            <MI name="workspace_premium" size={14} fill style={{color:C.gold}}/>
+            <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{BADGES.filter(b=>b.unlocked).length}/{BADGES.length}</span>
           </div>
-        </Card>
+          <div className="flex-1"><ProgressBar progress={BADGES.filter(b=>b.unlocked).length/BADGES.length} color={C.gold} height={4}/></div>
+        </div>
       </div>
 
       {/* Daily Brief */}
@@ -848,68 +865,116 @@ export default function App(){
 
   /* ─── PANGKAT & LENCANA ─────────────────────────────────────────── */
   function PangkatLencana(){
+    const [badgeCat,setBadgeCat]=useState('Semua');
     const unlocked=BADGES.filter(b=>b.unlocked).length;
+    const cats=['Semua','Misi','Streak','Sosial','Pangkat'];
+    const filtered=badgeCat==='Semua'?BADGES:BADGES.filter(b=>b.cat===badgeCat);
+
     return(<div key={k} className="flex flex-col gap-4 pb-4">
       <h1 className="stagger-1" style={{fontSize:22,fontWeight:800,color:C.text,paddingTop:4}}>Pangkat & Lencana</h1>
 
-      {/* Rank Card with SVG Progress Ring */}
-      <Card className="stagger-2" style={{textAlign:'center',padding:24,position:'relative',overflow:'hidden'}}>
-        <div className="orb orb-1" style={{width:150,height:150,background:'radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%)',top:-40,right:-40}}/>
-        <div style={{position:'relative',width:120,height:120,margin:'0 auto 16px',zIndex:1}}>
-          <svg width="120" height="120" viewBox="0 0 120 120" style={{transform:'rotate(-90deg)'}}>
-            <circle cx="60" cy="60" r="52" fill="none" stroke={C.border} strokeWidth="6"/>
-            <circle cx="60" cy="60" r="52" fill="none" stroke="url(#goldRing)" strokeWidth="6"
-              strokeDasharray={`${2*Math.PI*52*0.964} ${2*Math.PI*52*(1-0.964)}`}
-              strokeDashoffset={2*Math.PI*52*(1-0.964)}
-              strokeLinecap="round" className="progress-ring-stroke"/>
-            <defs><linearGradient id="goldRing" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#C9A84C"/><stop offset="100%" stopColor="#E8D48B"/>
-            </linearGradient></defs>
-          </svg>
-          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-            <MI name="military_tech" size={32} fill style={{color:C.gold}}/>
-            <span style={{fontSize:10,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'",marginTop:2}}>96%</span>
+      {/* ─── Current Rank Hero Card ─── */}
+      <Card className="stagger-2" style={{padding:0,overflow:'hidden',position:'relative'}}>
+        {/* Gradient bg */}
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.02),transparent)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:'radial-gradient(circle,rgba(201,168,76,0.12),transparent 70%)',pointerEvents:'none'}}/>
+        <div style={{padding:'24px 20px',display:'flex',alignItems:'center',gap:20,position:'relative'}}>
+          {/* Rank insignia */}
+          <div style={{flexShrink:0}}>
+            <RankInsignia rank={1} size={110}/>
           </div>
-        </div>
-        <h2 style={{fontSize:22,fontWeight:800,color:C.text,position:'relative',zIndex:1,fontFamily:"'Inter'"}}>Perwira Muda</h2>
-        <p style={{fontSize:13,color:C.gold,marginTop:4,fontFamily:"'JetBrains Mono'",fontWeight:600,position:'relative',zIndex:1}}>4,820 / 5,000 XP</p>
-        <p style={{fontSize:11,color:C.textMuted,marginTop:4,position:'relative',zIndex:1}}>180 XP lagi menuju <span style={{color:C.primary,fontWeight:600}}>Perwira Madya</span></p>
-      </Card>
-
-      {/* Rank Ladder */}
-      <Card className="stagger-3">
-        <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:16}}>Jenjang Pangkat</h3>
-        <div style={{position:'relative',paddingLeft:24}}>
-          <div style={{position:'absolute',left:13,top:8,bottom:8,width:2,background:C.border}}/>
-          {RANKS.map((r,i)=>{const cur=i===1,done=i<1;return(
-            <div key={i} className="flex items-center gap-3" style={{marginBottom:i<RANKS.length-1?16:0,position:'relative'}}>
-              <div className={cur?'dot-live':''} style={{position:'absolute',left:-17,width:cur?14:10,height:cur?14:10,borderRadius:'50%',zIndex:2,
-                background:cur?C.primary:done?C.green:C.border,border:`3px solid ${C.surface}`,boxShadow:cur?`0 0 8px ${C.primary}60`:'none'}}/>
-              <div className="flex-1 flex items-center justify-between" style={{
-                background:cur?C.primaryLight:'transparent',borderRadius:8,padding:cur?'8px 12px':'4px 12px',
-                border:cur?`1px solid ${C.primary}20`:'1px solid transparent'}}>
-                <div className="flex items-center gap-2">
-                  <MI name={r.icon} size={18} fill={cur||done} style={{color:cur?C.primary:done?C.green:C.textMuted}}/>
-                  <span style={{fontWeight:cur?700:500,color:cur?C.primary:done?C.green:C.textMuted,fontSize:13}}>{r.name}</span>
-                </div>
-                <span style={{fontSize:11,fontWeight:600,color:cur?C.primary:done?C.green:C.textMuted,fontFamily:"'JetBrains Mono'"}}>{r.xp.toLocaleString()}</span>
+          {/* Info */}
+          <div className="flex-1" style={{minWidth:0}}>
+            <span style={{fontSize:9,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Pangkat Saat Ini</span>
+            <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Perwira Muda</h2>
+            <div className="flex items-center gap-2 mt-2">
+              <span style={{background:'linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.05))',borderRadius:9999,padding:'3px 10px',border:`1px solid rgba(201,168,76,0.25)`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>4,820 XP</span>
+              <span style={{fontSize:10,color:C.textMuted}}>/ 5,000</span>
+            </div>
+            {/* Progress */}
+            <div style={{marginTop:10}}>
+              <ProgressBar progress={0.964} color={C.gold} height={6} gold/>
+              <div className="flex items-center justify-between mt-1.5">
+                <span style={{fontSize:9,fontWeight:600,color:C.primary}}>96%</span>
+                <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
+                  180 XP ke <span style={{color:C.primary,fontWeight:600,marginLeft:2}}>Perwira Madya</span>
+                </span>
               </div>
             </div>
-          );})}
+          </div>
         </div>
       </Card>
 
-      {/* Badges */}
+      {/* ─── Rank Ladder — visual cards ─── */}
+      <div className="stagger-3">
+        <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:12}}>Jenjang Pangkat</h3>
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+          {RANKS.map((r,i)=>{
+            const cur=i===1,done=i<1;
+            const rankColors=[
+              {bg:'linear-gradient(135deg,#334155,#1E293B)',border:'#64748B',accent:'#94A3B8'},
+              {bg:'linear-gradient(135deg,#92742A20,#0F1A2E)',border:'#C9A84C',accent:'#C9A84C'},
+              {bg:'linear-gradient(135deg,#1D4ED820,#0F1A2E)',border:'#3B82F6',accent:'#3B82F6'},
+              {bg:'linear-gradient(135deg,#6D28D920,#0F1A2E)',border:'#8B5CF6',accent:'#8B5CF6'},
+              {bg:'linear-gradient(135deg,#B4530920,#0F1A2E)',border:'#F59E0B',accent:'#F59E0B'},
+            ][i];
+            return(
+              <div key={i} style={{
+                flexShrink:0,width:100,borderRadius:16,overflow:'hidden',
+                background:cur?rankColors.bg:`linear-gradient(135deg,${C.surface},${C.bg})`,
+                border:`1.5px solid ${cur?rankColors.border:done?C.green+'40':C.border}`,
+                padding:'14px 10px',textAlign:'center',position:'relative',
+                boxShadow:cur?`0 4px 20px ${rankColors.accent}20`:'none',
+                opacity:!cur&&!done?0.5:1,
+              }}>
+                {cur&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rankColors.accent},transparent)`,opacity:0.6}}/>}
+                <RankInsignia rank={i} size={56} showLabel={false}/>
+                <p style={{fontSize:10,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
+                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3}}>{r.xp.toLocaleString()} XP</p>
+                {cur&&<div style={{marginTop:6,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 6px',display:'inline-block'}}>
+                  <span style={{fontSize:8,fontWeight:700,color:rankColors.accent,letterSpacing:0.5}}>SAAT INI</span>
+                </div>}
+                {done&&<div style={{marginTop:6}}><MI name="check_circle" size={14} fill style={{color:C.green}}/></div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Badges Grid ─── */}
       <div className="stagger-4">
-        <div className="flex justify-between items-center mb-3">
-          <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Koleksi Lencana</h3>
           <span style={{fontSize:12,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{unlocked}/{BADGES.length}</span>
         </div>
-        <Card style={{padding:16}}>
-          <div className="grid grid-cols-4 gap-x-1 gap-y-5" style={{justifyItems:'center'}}>
-            {BADGES.map((b,i)=><Badge key={i} badge={b} size={54}/>)}
-          </div>
-        </Card>
+        {/* Progress */}
+        <div className="flex items-center gap-3 mb-3">
+          <ProgressBar progress={unlocked/BADGES.length} color={C.gold} height={4}/>
+          <span style={{fontSize:10,color:C.textMuted,fontWeight:600,flexShrink:0}}>{Math.round(unlocked/BADGES.length*100)}%</span>
+        </div>
+        {/* Category filter */}
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-3 pb-1">
+          {cats.map(c2=>(
+            <button key={c2} onClick={()=>setBadgeCat(c2)} style={{
+              padding:'5px 14px',borderRadius:9999,flexShrink:0,fontSize:12,fontWeight:badgeCat===c2?700:500,
+              background:badgeCat===c2?C.primaryLight:'transparent',color:badgeCat===c2?C.primary:C.textMuted,
+              border:`1px solid ${badgeCat===c2?C.primary+'30':C.border}`,cursor:'pointer',transition:'all 150ms ease',
+            }}>{c2}</button>
+          ))}
+        </div>
+        {/* Rarity legend */}
+        <div className="flex gap-3 mb-3" style={{paddingLeft:2}}>
+          {Object.entries(RARITY_COLORS).map(([k2,v])=>(
+            <div key={k2} className="flex items-center gap-1.5">
+              <div style={{width:8,height:8,borderRadius:2,background:v.gradient}}/>
+              <span style={{fontSize:9,color:C.textMuted,fontWeight:500}}>{v.label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Badge grid */}
+        <div className="grid grid-cols-3 gap-3">
+          {filtered.map((b,i)=><Badge key={i} badge={b} size={48}/>)}
+        </div>
       </div>
     </div>);}
 
@@ -964,11 +1029,13 @@ export default function App(){
           <h3 style={{fontSize:14,fontWeight:700,color:C.text}}>Lencana</h3>
           <button onClick={()=>nav('pangkat')} style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua</button>
         </div>
-        <Card style={{padding:14}}>
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
-            {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=><Badge key={i} badge={b} size={48}/>)}
-          </div>
-        </Card>
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
+          {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
+            <div key={i} style={{flexShrink:0,width:90}}>
+              <Badge badge={b} size={42} compact={false}/>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Activity */}
@@ -4905,15 +4972,29 @@ export default function App(){
   </>);
 
   return(
-    <div className="flex items-center justify-center" style={{minHeight:'100vh',background:C.bg,padding:'20px 0',position:'relative',overflow:'hidden'}}>
+    <div className="flex items-center justify-center" style={{minHeight:'100vh',background:C.bg,paddingTop:60,paddingBottom:20,position:'relative',overflow:'hidden'}}>
       {/* Decorative Orbs */}
       <div className="orb orb-1" style={{width:300,height:300,background:'radial-gradient(circle,rgba(201,168,76,0.15),transparent 70%)',top:-50,left:-80}}/>
       <div className="orb orb-2" style={{width:250,height:250,background:'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)',bottom:100,right:-60}}/>
 
-      {/* Mode Toggle */}
-      <button onClick={()=>setMode('admin')} className="btn-primary" style={{position:'fixed',top:20,right:20,zIndex:200,padding:'8px 16px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
-        <MI name="dashboard" size={16} style={{color:'#0B1120'}}/> Admin Dashboard
-      </button>
+      {/* Top Bar — GERAK Branding + Login/Admin */}
+      <div style={{position:'fixed',top:0,left:0,right:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 20px',background:'rgba(11,17,32,0.85)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <GerakMark size={24}/>
+          <span style={{fontSize:15,fontWeight:800,letterSpacing:1.5,color:C.text,fontFamily:"'Inter'"}}>GERAK</span>
+          <span style={{fontSize:8,fontWeight:700,color:C.textMuted,letterSpacing:1,padding:'2px 6px',borderRadius:4,border:`1px solid ${C.border}`,marginLeft:2}}>BETA</span>
+        </div>
+        {/* Right actions */}
+        <div className="flex items-center gap-2">
+          <button onClick={()=>setMode('admin')} style={{padding:'6px 14px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5,transition:'all 150ms ease'}} onMouseEnter={e=>{e.target.style.borderColor=C.primary+'60';e.target.style.color=C.primary}} onMouseLeave={e=>{e.target.style.borderColor=C.border;e.target.style.color=C.textSec}}>
+            <MI name="dashboard" size={14}/> Admin
+          </button>
+          <button className="btn-primary" style={{padding:'6px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 10px rgba(201,168,76,0.25)'}}>
+            <MI name="login" size={14} style={{color:'#0B1120'}}/> Masuk
+          </button>
+        </div>
+      </div>
 
       <div style={{width:390,maxWidth:'100vw',height:844,maxHeight:'calc(100vh - 40px)',background:C.bg,borderRadius:44,overflow:'hidden',position:'relative',border:'2px solid rgba(255,255,255,0.08)',boxShadow:'0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',display:'flex',flexDirection:'column'}}>
         {/* Status Bar */}
