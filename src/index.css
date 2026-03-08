@@ -217,6 +217,70 @@ body {
   100% { background-position: 200% 0; }
 }
 
+/* ─── LOCKED BADGE HOVER ─────────────────────────────────────── */
+.badge-locked {
+  transition: transform 350ms cubic-bezier(.16,1,.3,1), box-shadow 350ms ease,
+              border-color 350ms ease, filter 350ms ease;
+  cursor: pointer;
+  filter: grayscale(0.7) brightness(0.7);
+}
+.badge-locked:hover {
+  transform: scale(1.06) translateY(-5px);
+  filter: grayscale(0) brightness(1);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.06);
+}
+.badge-locked:active {
+  transform: scale(1.01) translateY(-1px);
+  transition-duration: 100ms;
+}
+/* Locked badge inner elements transition */
+.badge-locked .badge-locked-hex {
+  transition: opacity 350ms ease, filter 350ms ease;
+  filter: grayscale(0.8);
+}
+.badge-locked:hover .badge-locked-hex {
+  filter: grayscale(0);
+}
+.badge-locked .badge-locked-overlay {
+  transition: opacity 350ms ease;
+  opacity: 0.4;
+}
+.badge-locked:hover .badge-locked-overlay {
+  opacity: 0.05;
+}
+.badge-locked .badge-locked-name {
+  transition: color 300ms ease, opacity 300ms ease;
+}
+.badge-locked:hover .badge-locked-name {
+  color: #F1F5F9 !important;
+  opacity: 1 !important;
+}
+.badge-locked .badge-locked-accent {
+  transition: opacity 350ms ease, height 350ms ease;
+  opacity: 0.15;
+  height: 2px;
+}
+.badge-locked:hover .badge-locked-accent {
+  opacity: 0.7;
+  height: 3px;
+}
+.badge-locked .badge-locked-tag {
+  transition: all 300ms ease;
+}
+.badge-locked:hover .badge-locked-tag {
+  background: rgba(201,168,76,0.12) !important;
+  color: #C9A84C !important;
+  border-color: rgba(201,168,76,0.25) !important;
+}
+@keyframes lockWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+.badge-locked:hover .badge-locked-lock {
+  animation: lockWiggle 400ms ease-in-out;
+}
+
 /* ─── RANK / PROGRESS ─────────────────────────────────────────── */
 .xp-bar-fill {
   animation: xpFill 1.2s cubic-bezier(.16,1,.3,1) both;

@@ -276,34 +276,30 @@ function BadgeShape({color,size=64,icon,unlocked=true,rarity='common'}){
   const rc=RARITY_COLORS[rarity]||RARITY_COLORS.common;
   const s=size;
   const id=`bs_${Math.random().toString(36).slice(2,6)}`;
-  // Rounded hexagon points
   const hexPts=(cx,cy,r)=>{const p=[];for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return p;};
   const pts=hexPts(s/2,s/2,s*0.42);
   const pStr=pts.map(p=>p.join(',')).join(' ');
   return(
-    <div style={{position:'relative',width:s,height:s}}>
+    <div className={unlocked?'':'badge-locked-hex'} style={{position:'relative',width:s,height:s}}>
       {unlocked&&<div style={{position:'absolute',inset:-4,borderRadius:'50%',background:`radial-gradient(circle,${rc.glow},transparent 70%)`,filter:'blur(6px)',animation:rarity==='legendary'?'breathe 3s ease-in-out infinite':undefined}}/>}
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
         <defs>
+          {/* Always use the real color in gradient — CSS filter handles locked grayscale */}
           <linearGradient id={`${id}g`} x1="0" y1="0" x2={s} y2={s} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor={unlocked?color:'#334155'}/><stop offset="100%" stopColor={unlocked?(color+'CC'):'#1E293B'}/>
+            <stop offset="0%" stopColor={color}/><stop offset="100%" stopColor={color+'CC'}/>
           </linearGradient>
-          <filter id={`${id}f`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={unlocked?`${color}40`:'rgba(0,0,0,0.3)'}/></filter>
+          <filter id={`${id}f`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={`${color}40`}/></filter>
         </defs>
         <g filter={`url(#${id}f)`}>
-          <polygon points={pStr} fill={`url(#${id}g)`} stroke={unlocked?`${color}80`:'#475569'} strokeWidth="1.5"/>
-          {/* Highlight */}
-          <polygon points={pStr} fill="url(#none)" style={{opacity:0.15}}>
-            <set attributeName="fill" to="white"/>
-          </polygon>
+          <polygon points={pStr} fill={`url(#${id}g)`} stroke={`${color}80`} strokeWidth="1.5"/>
         </g>
         {/* Inner hex */}
-        {unlocked&&<polygon points={hexPts(s/2,s/2,s*0.32).map(p=>p.join(',')).join(' ')} fill="none" stroke="white" strokeWidth="0.5" opacity="0.2"/>}
+        <polygon points={hexPts(s/2,s/2,s*0.32).map(p=>p.join(',')).join(' ')} fill="none" stroke="white" strokeWidth="0.5" opacity={unlocked?0.2:0.08}/>
       </svg>
-      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <MI name={unlocked?icon:'lock'} size={s*0.36} fill={unlocked} style={{color:unlocked?'white':'#475569',filter:unlocked?'drop-shadow(0 2px 4px rgba(0,0,0,0.3))':'none'}}/>
+      <div className={unlocked?'':'badge-locked-lock'} style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <MI name={unlocked?icon:'lock'} size={s*0.36} fill={unlocked} style={{color:'white',filter:'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',opacity:unlocked?1:0.7}}/>
       </div>
-      {!unlocked&&<div style={{position:'absolute',inset:0,borderRadius:'50%',background:'rgba(11,17,32,0.3)'}}/>}
+      {!unlocked&&<div className="badge-locked-overlay" style={{position:'absolute',inset:0,borderRadius:'50%',background:'rgba(11,17,32,0.5)'}}/>}
     </div>
   );
 }
@@ -508,45 +504,47 @@ export default function App(){
     const rc=RARITY_COLORS[badge.rarity||'common']||RARITY_COLORS.common;
 
     if(compact) return(
-      <div className={`flex flex-col items-center gap-1.5 badge-item ${unlocked?'badge-unlocked':''}`} style={{minWidth:56}} onClick={unlocked?()=>showToast(`${badge.name} — ${badge.desc||''}`):undefined}>
+      <div className={`flex flex-col items-center gap-1.5 ${unlocked?'badge-item badge-unlocked':'badge-locked'}`} style={{minWidth:56}} onClick={()=>showToast(unlocked?`${badge.name} — ${badge.desc||''}`:`${badge.name} — ${badge.desc||'Belum terbuka'}`)}>
         <BadgeShape color={col} size={size} icon={badge.icon} unlocked={unlocked} rarity={badge.rarity}/>
-        <span style={{fontSize:9,color:unlocked?C.text:C.textMuted,textAlign:'center',fontWeight:unlocked?600:400,maxWidth:60,lineHeight:1.2}}>
-          {unlocked?badge.name:'???'}
+        <span className={unlocked?'':'badge-locked-name'} style={{fontSize:9,color:unlocked?C.text:C.textMuted,textAlign:'center',fontWeight:unlocked?600:400,maxWidth:60,lineHeight:1.2}}>
+          {unlocked?badge.name:badge.name}
         </span>
       </div>
     );
 
     // Card-style badge
     return(
-      <div className={`badge-item ${unlocked?'badge-unlocked':''}`}
-        onClick={unlocked?()=>showToast(`${badge.name} — ${badge.desc||''}`):undefined}
+      <div className={unlocked?'badge-item badge-unlocked':'badge-locked'}
+        onClick={()=>showToast(unlocked?`${badge.name} — ${badge.desc||''}`:`${badge.name} — ${badge.desc||'Belum terbuka'}`)}
         style={{
           position:'relative',overflow:'hidden',borderRadius:16,
-          background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight}80,${C.bg})`,
-          border:`1px solid ${unlocked?`${col}25`:C.border}`,
-          padding:'16px 10px 12px',textAlign:'center',cursor:unlocked?'pointer':'default',
+          background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight}60,${C.bg})`,
+          border:`1px solid ${unlocked?`${col}25`:`${col}10`}`,
+          padding:'16px 10px 12px',textAlign:'center',cursor:'pointer',
           boxShadow:unlocked?`0 4px 20px ${col}15, 0 1px 3px rgba(0,0,0,0.2)`:'0 2px 8px rgba(0,0,0,0.15)',
         }}>
-        {/* Top rarity accent line */}
-        <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:unlocked?rc.gradient:'linear-gradient(90deg,#334155,#475569)',opacity:unlocked?0.8:0.3}}/>
-        {/* Background glow */}
-        {unlocked&&<div style={{position:'absolute',top:-20,left:'50%',transform:'translateX(-50%)',width:60,height:60,borderRadius:'50%',background:`radial-gradient(circle,${col}15,transparent 70%)`,filter:'blur(12px)',pointerEvents:'none'}}/>}
+        {/* Top rarity accent line — uses real color, CSS controls visibility */}
+        <div className={unlocked?'':'badge-locked-accent'} style={{position:'absolute',top:0,left:0,right:0,height:unlocked?2:2,background:rc.gradient,opacity:unlocked?0.8:0.15}}/>
+        {/* Background glow — shows for both, brighter on unlocked */}
+        <div style={{position:'absolute',top:-20,left:'50%',transform:'translateX(-50%)',width:60,height:60,borderRadius:'50%',background:`radial-gradient(circle,${col}${unlocked?'15':'08'},transparent 70%)`,filter:'blur(12px)',pointerEvents:'none',transition:'opacity 300ms'}}/>
         {/* Badge shape */}
         <div style={{display:'flex',justifyContent:'center',marginBottom:8,position:'relative'}}>
           <BadgeShape color={col} size={size} icon={badge.icon} unlocked={unlocked} rarity={badge.rarity}/>
         </div>
-        {/* Name */}
-        <p style={{fontSize:11,fontWeight:unlocked?700:500,color:unlocked?C.text:C.textMuted,lineHeight:1.2,marginBottom:3}}>
-          {unlocked?badge.name:'???'}
+        {/* Name — always show real name, CSS dims locked */}
+        <p className={unlocked?'':'badge-locked-name'} style={{fontSize:11,fontWeight:unlocked?700:500,color:unlocked?C.text:C.textMuted,lineHeight:1.2,marginBottom:2,opacity:unlocked?1:0.6}}>
+          {badge.name}
         </p>
+        {/* Desc — show requirement for locked */}
+        {!unlocked&&<p className="badge-locked-name" style={{fontSize:8,color:'#475569',lineHeight:1.3,marginBottom:3,opacity:0.5}}>{badge.desc}</p>}
         {/* Rarity tag */}
-        <span style={{
+        <span className={unlocked?'':'badge-locked-tag'} style={{
           display:'inline-block',fontSize:8,fontWeight:700,letterSpacing:1,textTransform:'uppercase',
           padding:'2px 8px',borderRadius:9999,
-          background:unlocked?`${rc.border}18`:'rgba(71,85,105,0.15)',
+          background:unlocked?`${rc.border}18`:'rgba(71,85,105,0.12)',
           color:unlocked?rc.border:'#475569',
-          border:`1px solid ${unlocked?`${rc.border}30`:'rgba(71,85,105,0.2)'}`,
-        }}>{unlocked?rc.label:'Locked'}</span>
+          border:`1px solid ${unlocked?`${rc.border}30`:'rgba(71,85,105,0.15)'}`,
+        }}>{rc.label}</span>
       </div>
     );
   }
