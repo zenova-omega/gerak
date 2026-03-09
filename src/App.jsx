@@ -1688,7 +1688,7 @@ export default function App(){
     const doAiCheck=()=>{setAiChecking(true);setTimeout(()=>{setAiChecking(false);setAiResult({pass:true,score:87,checks:[{label:'Format konten sesuai',pass:true},{label:'Hashtag terdeteksi',pass:true},{label:'Durasi memenuhi syarat',pass:true},{label:'Konten original (bukan duplikat)',pass:true},{label:'Tone & messaging sesuai brief',pass:false,note:'Minor: pertimbangkan tambah CTA'}]});},2000)};
 
 
-    return(<div key={k} className="flex flex-col gap-4" style={{paddingBottom:100}}>
+    return(<div key={k} className="flex flex-col gap-4" style={{paddingBottom:0,minHeight:'100%'}}>
       {/* Back */}
       <button onClick={()=>nav('misi')} className="stagger-1 back-btn" style={{color:C.textSec,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4,paddingTop:4}}>
         <MI name="arrow_back" size={18} style={{color:'inherit'}}/> Kembali
@@ -2340,7 +2340,7 @@ export default function App(){
 
       {/* ══════════ BOTTOM CTA ══════════ */}
       {!done&&(
-        <div style={{position:'sticky',bottom:-8,left:-16,right:-16,padding:'12px 16px 28px',background:'rgba(11,17,32,0.95)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`,zIndex:20,margin:'auto -16px -8px',width:'calc(100% + 32px)'}}>
+        <div style={{position:'sticky',bottom:0,padding:'12px 0 8px',background:C.bg,borderTop:`1px solid ${C.border}`,zIndex:20,marginTop:'auto'}}>
           {step===0&&!isJoined?(
             /* Not joined yet → "Ikut Misi" registers the member */
             <button onClick={()=>{if(consent){joinMission(m.id);setStep(1)}}} disabled={!consent} className={consent?'btn-primary':''} style={{
