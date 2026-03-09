@@ -1,10 +1,74 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import ForceGraph3D from 'react-force-graph-3d';
+import { useSpring, animated } from '@react-spring/web';
+import Lottie from 'lottie-react';
+import {
+  Plus, PlusCircle, UserGear, ChartLine, ArrowLeft, ArrowRight,
+  Sparkle, BatteryFull, Lightning, ChatDots, ChatCenteredDots, Check, CheckCircle, X,
+  CloudArrowUp, CopySimple, SquaresFour, CheckSquare, DownloadSimple, Pencil,
+  Notebook, Trophy, CaretDown, Heart, Flag, Quotes, UsersThree, ClockCounterClockwise,
+  HourglassSimple, UserCheck, ImageSquare, Info, Link, Fire, MapPin, MedalMilitary,
+  Smiley, Crosshair, Bell, BellRinging, ArrowSquareOut, Palette, CircleNotch,
+  Phone, Globe as GlobeIcon, Star, MoonStars, Tag, ThumbsUp, Coins, HandPointing,
+  TrendUp, ShieldCheck, Eye, Warning, Sun, WifiHigh, Medal,
+  RocketLaunch, FloppyDisk, PiggyBank, Timer, MagnifyingGlass, MagnifyingGlassMinus,
+  PaperPlaneRight, ShareNetwork, CellSignalFull, Robot, Gauge, Target,
+  Broadcast, Repeat, ChatCentered, MonitorPlay, Storefront, House, Person,
+  ShoppingBag, IdentificationBadge, Lock, Barricade, CalendarBlank,
+  Diamond, Moon, Flame, Ranking, FlagBanner, Brain, SecurityCamera,
+  HandWaving, Camera, MusicNote, Article, Lightbulb, VideoCamera,
+  TextT, Sliders, Ruler, CloudArrowDown, Swap, Circle, Confetti, Bookmark
+} from '@phosphor-icons/react';
 
 /* ─── ICON ───────────────────────────────────────────────────────── */
+const ICON_MAP = {
+  add: Plus, add_circle: PlusCircle, admin_panel_settings: UserGear,
+  analytics: ChartLine, arrow_back: ArrowLeft, arrow_forward: ArrowRight,
+  arrow_forward_ios: ArrowRight, auto_awesome: Sparkle, bar_chart: ChartLine,
+  battery_full: BatteryFull, bolt: Lightning, chat: ChatDots, chat_bubble: ChatCenteredDots,
+  check: Check, check_circle: CheckCircle, close: X, cloud_upload: CloudArrowUp,
+  content_copy: CopySimple, dashboard: SquaresFour, done_all: CheckSquare,
+  download: DownloadSimple, edit: Pencil, edit_note: Notebook, emoji_events: Trophy,
+  expand_more: CaretDown, expand_less: CaretDown, favorite: Heart, flag: Flag,
+  format_quote: Quotes, group: UsersThree, history: ClockCounterClockwise,
+  hourglass_top: HourglassSimple, how_to_reg: UserCheck, image: ImageSquare, info: Info,
+  lightbulb: Lightbulb, link: Link, local_fire_department: Fire, location_on: MapPin,
+  military_tech: MedalMilitary, mood: Smiley, my_location: Crosshair,
+  notifications: Bell, notifications_active: BellRinging, open_in_new: ArrowSquareOut,
+  palette: Palette, pending: CircleNotch, phone_iphone: Phone, phone_android: Phone,
+  public: GlobeIcon, rate_review: Star, record_voice_over: Broadcast,
+  refresh: Repeat, rocket_launch: RocketLaunch, save: FloppyDisk, savings: PiggyBank,
+  schedule: Timer, search: MagnifyingGlass, search_off: MagnifyingGlassMinus,
+  send: PaperPlaneRight, share: ShareNetwork, signal_cellular_alt: CellSignalFull,
+  smart_toy: Robot, speed: Gauge, star: Star, stars: MoonStars, tag: Tag,
+  thumb_up: ThumbsUp, toll: Coins, touch_app: HandPointing, trending_up: TrendUp,
+  verified: ShieldCheck, visibility: Eye, warning: Warning, wb_sunny: Sun,
+  wifi: WifiHigh, workspace_premium: Medal, target: Target,
+  person: Person, person_check: UserCheck, home: House, storefront: Storefront,
+  campaign: Broadcast, school: Lightbulb, groups: UsersThree,
+  warning_amber: Warning, priority_high: Warning, block: Barricade,
+  monitor: MonitorPlay, inventory_2: ShoppingBag, description: Notebook,
+  cloud_download: CloudArrowDown, play_circle: MonitorPlay,
+  upload_file: CloudArrowUp, upload: CloudArrowUp, login: ArrowRight,
+  logout: ArrowLeft, whatshot: Flame, volcano: Flame, calendar_month: CalendarBlank,
+  diamond: Diamond, dark_mode: Moon, leaderboard: Ranking,
+  waving_hand: HandWaving, photo_camera: Camera, music_note: MusicNote,
+  security: SecurityCamera, psychology: Brain, slow_motion_video: VideoCamera,
+  view_carousel: ImageSquare, bookmark: Bookmark, checkroom: IdentificationBadge,
+  styler: IdentificationBadge, lock: Lock, category: Sliders,
+  text_fields: TextT, timer: Timer, aspect_ratio: Ruler,
+  videocam: VideoCamera, celebration: Confetti, business: IdentificationBadge,
+  article: Article, repeat: Repeat, reply: ChatCentered,
+  account_balance_wallet: Coins, shopping_bag: ShoppingBag,
+  swap_horiz: Swap, monitoring: Eye, radio_button_unchecked: Circle,
+  wifi_tethering: Broadcast, check_box: CheckSquare,
+};
+
 function MI({ name, size=24, fill=false, style={} }) {
-  return <span className="material-symbols-rounded" style={{ fontSize:size, fontVariationSettings: fill?"'FILL' 1,'wght' 600":"'FILL' 0,'wght' 400", lineHeight:1, ...style }}>{name}</span>;
+  const IconComp = ICON_MAP[name];
+  if (!IconComp) return <span style={{ display:'inline-flex', width:size, height:size, alignItems:'center', justifyContent:'center', fontSize:size*0.6, color:style.color||'currentColor', ...style }}>?</span>;
+  return <IconComp size={size} weight={fill?'fill':'duotone'} style={{ display:'inline-block', verticalAlign:'middle', lineHeight:1, flexShrink:0, ...style }} />;
 }
 
 /* ─── TOOLTIP ────────────────────────────────────────────────────── */
@@ -393,10 +457,11 @@ const PLATFORM_STATS=[
   {platform:'facebook',posts:'1.4K',reach:'210K',engagement:'4.2%',color:'#1877F2',trend:'-3%'},
 ];
 
-/* ─── PROGRESS BAR ───────────────────────────────────────────────── */
+/* ─── PROGRESS BAR (react-spring animated) ───────────────────────── */
 function ProgressBar({progress=0,color=C.primary,height=6,bg='rgba(255,255,255,0.08)',gold=false}){
+  const spring = useSpring({ width: `${progress*100}%`, from: { width: '0%' }, config: { tension: 120, friction: 20 } });
   return <div style={{height,borderRadius:height,background:bg,overflow:'hidden',width:'100%'}}>
-    <div className={gold?'xp-bar-gold':'xp-bar-fill'} style={{height:'100%',borderRadius:height,background:color,width:`${progress*100}%`,transition:'width 1s ease-out'}}/>
+    <animated.div className={gold?'xp-bar-gold':'xp-bar-fill'} style={{height:'100%',borderRadius:height,background:color,...spring}}/>
   </div>;
 }
 
@@ -502,6 +567,11 @@ export default function App(){
     const col=badge.color||C.primary;
     const unlocked=badge.unlocked;
     const rc=RARITY_COLORS[badge.rarity||'common']||RARITY_COLORS.common;
+    const badgeSpring = useSpring({
+      from: { scale: unlocked?0.5:1, opacity: unlocked?0:1 },
+      to: { scale: 1, opacity: 1 },
+      config: { tension: 200, friction: 12 },
+    });
 
     if(compact) return(
       <div className={`flex flex-col items-center gap-1.5 ${unlocked?'badge-item badge-unlocked':'badge-locked'}`} style={{minWidth:56}} onClick={()=>showToast(unlocked?`${badge.name} — ${badge.desc||''}`:`${badge.name} — ${badge.desc||'Belum terbuka'}`)}>
@@ -514,9 +584,10 @@ export default function App(){
 
     // Card-style badge
     return(
-      <div className={unlocked?'badge-item badge-unlocked':'badge-locked'}
+      <animated.div className={unlocked?'badge-item badge-unlocked':'badge-locked'}
         onClick={()=>showToast(unlocked?`${badge.name} — ${badge.desc||''}`:`${badge.name} — ${badge.desc||'Belum terbuka'}`)}
         style={{
+          ...badgeSpring,
           position:'relative',overflow:'hidden',borderRadius:16,
           background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight}60,${C.bg})`,
           border:`1px solid ${unlocked?`${col}25`:`${col}10`}`,
@@ -545,7 +616,7 @@ export default function App(){
           color:unlocked?rc.border:'#475569',
           border:`1px solid ${unlocked?`${rc.border}30`:'rgba(71,85,105,0.15)'}`,
         }}>{rc.label}</span>
-      </div>
+      </animated.div>
     );
   }
 
@@ -2238,7 +2309,13 @@ export default function App(){
       </div>)}
 
       {/* ══════════ STEP 3: REVIEW ══════════ */}
-      {step===3&&(<div key="step3" className="step-enter flex flex-col gap-4">
+      {step===3&&(<div key="step3" className="step-enter flex flex-col gap-4" style={{position:'relative'}}>
+        {/* Confetti celebration on AI pass */}
+        {aiResult&&aiResult.pass&&(
+          <div style={{position:'absolute',top:-60,left:'50%',transform:'translateX(-50%)',width:300,height:300,pointerEvents:'none',zIndex:30}}>
+            <Lottie animationData={null} path="https://assets10.lottiefiles.com/packages/lf20_touohxv0.json" loop={false} style={{width:'100%',height:'100%'}}/>
+          </div>
+        )}
         {/* AI Quality Check */}
         <Card className="stagger-3" style={{borderLeft:`3px solid ${C.primary}`}}>
           <div className="flex items-center gap-2 mb-3">
@@ -5012,7 +5089,7 @@ export default function App(){
   </>);
 
   return(
-    <div className="flex items-center justify-center" style={{minHeight:'100vh',background:C.bg,paddingTop:20,paddingBottom:20,position:'relative',overflow:'hidden'}}>
+    <div className="flex items-center justify-center noise-bg mesh-bg" style={{minHeight:'100vh',background:C.bg,paddingTop:20,paddingBottom:20,position:'relative',overflow:'hidden'}}>
       {/* Decorative Orbs */}
       <div className="orb orb-1" style={{width:300,height:300,background:'radial-gradient(circle,rgba(201,168,76,0.15),transparent 70%)',top:-50,left:-80}}/>
       <div className="orb orb-2" style={{width:250,height:250,background:'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)',bottom:100,right:-60}}/>

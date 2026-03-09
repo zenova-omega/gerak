@@ -27,7 +27,8 @@
       "WebFetch(domain:cdn.dribbble.com)",
       "Bash(git commit:*)",
       "Bash(grep:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(node:*)"
     ]
   }
 }
