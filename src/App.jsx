@@ -1085,7 +1085,10 @@ export default function App(){
             </button>
           </div>
         ))}
-        <button onClick={()=>{if(logoutConfirm){showToast('Berhasil keluar');setLogoutConfirm(false)}else{setLogoutConfirm(true);setTimeout(()=>setLogoutConfirm(false),3000)}}} className={logoutConfirm?'confirm-bounce':''} style={{width:'100%',marginTop:14,padding:'10px 0',borderRadius:8,border:`1px solid ${logoutConfirm?C.red:C.redLight}`,background:logoutConfirm?C.red:C.redLight,color:logoutConfirm?'white':C.red,fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all 200ms'}}>
+        <button onClick={()=>setMode('admin')} className="btn-admin" style={{width:'100%',marginTop:14,padding:'10px 0',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.primary,fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+          <MI name="dashboard" size={16} style={{color:C.primary}}/> Admin Dashboard
+        </button>
+        <button onClick={()=>{if(logoutConfirm){showToast('Berhasil keluar');setLogoutConfirm(false)}else{setLogoutConfirm(true);setTimeout(()=>setLogoutConfirm(false),3000)}}} className={logoutConfirm?'confirm-bounce':''} style={{width:'100%',marginTop:8,padding:'10px 0',borderRadius:8,border:`1px solid ${logoutConfirm?C.red:C.redLight}`,background:logoutConfirm?C.red:C.redLight,color:logoutConfirm?'white':C.red,fontWeight:700,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all 200ms'}}>
           <MI name={logoutConfirm?'warning':'logout'} size={16} style={{color:logoutConfirm?'white':C.red}}/> {logoutConfirm?'Yakin keluar?':'Keluar'}
         </button>
       </Card>
@@ -1733,10 +1736,11 @@ export default function App(){
         <div className="stagger-2 flex items-center gap-1" style={{padding:'4px 0'}}>
           {steps.map((s,i)=>(
             <div key={i} className="flex items-center" style={{flex:i<steps.length-1?1:'none'}}>
-              <button onClick={()=>setStep(i)} style={{
-                width:34,height:34,borderRadius:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
+              <button onClick={()=>{if(!isJoined&&i>0)return;setStep(i)}} style={{
+                width:34,height:34,borderRadius:10,cursor:(!isJoined&&i>0)?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
                 background:i===step?C.primary:i<step?C.green:C.surface,
                 border:i>step?`1px solid ${C.border}`:'none',transition:'all 200ms',
+                opacity:(!isJoined&&i>0)?0.4:1,
               }}>
                 {i<step?<MI name="check" size={16} style={{color:'white'}}/>:
                   <MI name={s.icon} size={16} style={{color:i===step?'white':C.textMuted}}/>}
@@ -2339,55 +2343,75 @@ export default function App(){
       </div>)}
 
       {/* ══════════ BOTTOM CTA ══════════ */}
-      {!done&&(
-        <div style={{position:'sticky',bottom:0,padding:'12px 0 8px',background:C.bg,borderTop:`1px solid ${C.border}`,zIndex:20,marginTop:'auto'}}>
-          {step===0&&!isJoined?(
-            /* Not joined yet → "Ikut Misi" registers the member */
-            <button onClick={()=>{if(consent){joinMission(m.id);setStep(1)}}} disabled={!consent} className={consent?'btn-primary':''} style={{
-              width:'100%',padding:'14px 0',borderRadius:12,border:'none',
-              background:consent?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(255,255,255,0.06)',color:consent?'#0B1120':C.textMuted,
-              fontSize:15,fontWeight:700,cursor:consent?'pointer':'not-allowed',
-              opacity:consent?1:0.5,transition:'all 200ms',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              boxShadow:consent?'0 4px 15px rgba(201,168,76,0.3)':'none',
-            }}>
-              <MI name="how_to_reg" size={18} style={{color:consent?'#0B1120':C.textMuted}}/> Ikut Misi
+      {(()=>{
+        const hasLinkSection=!!(m.socialPlatform||m.targetPlatforms);
+        const canSubmit=uploaded&&(hasLinkSection?linkVal.trim():true);
+        return(
+        <div style={{position:'sticky',bottom:-8,zIndex:20,background:`linear-gradient(to top, ${C.bg} 60%, transparent)`,padding:'20px 0 8px',marginTop:16}}>
+          {done ? (
+            <button
+              onClick={()=>nav('misi')}
+              className="tap-bounce"
+              style={{width:'100%',padding:'14px 0',borderRadius:12,border:`1px solid ${C.border}`,
+                background:C.surface,color:C.textSec,fontSize:15,fontWeight:700,cursor:'pointer',
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              <MI name="arrow_back" size={20} style={{color:C.textSec}}/>
+              Kembali ke Misi
             </button>
-          ):step===0&&isJoined?(
-            /* Already joined, viewing briefing again → go to kit */
-            <button onClick={()=>setStep(1)} className="btn-primary" style={{
-              width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',
-              color:'#0B1120',fontSize:15,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              boxShadow:'0 4px 15px rgba(201,168,76,0.3)',
-            }}>
-              Lihat Kit & Contoh <MI name="arrow_forward" size={18} style={{color:'#0B1120'}}/>
+          ) : step===0&&!isJoined ? (
+            <button
+              disabled={!consent}
+              onClick={()=>{joinMission(m.id);setStep(1)}}
+              className={consent?'btn-gold tap-bounce':''}
+              style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',
+                background:consent?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(255,255,255,0.06)',
+                color:consent?'#0B1120':C.textMuted,fontSize:15,fontWeight:700,cursor:consent?'pointer':'not-allowed',
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                boxShadow:consent?'0 4px 16px rgba(201,168,76,0.3)':'none',
+                transition:'all 250ms cubic-bezier(.16,1,.3,1)',opacity:consent?1:0.5}}>
+              <MI name="how_to_reg" size={20} style={{color:consent?'#0B1120':C.textMuted}}/>
+              Ikut Misi
             </button>
-          ):step===1?(
-            <button onClick={()=>setStep(2)} className="btn-primary" style={{
-              width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',
-              color:'#0B1120',fontSize:15,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              boxShadow:'0 4px 15px rgba(201,168,76,0.3)',
-            }}>
-              Upload Konten <MI name="cloud_upload" size={18} style={{color:'#0B1120'}}/>
+          ) : step===1&&isJoined ? (
+            <button
+              onClick={()=>setStep(2)}
+              className="btn-gold tap-bounce"
+              style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',
+                background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:15,fontWeight:700,cursor:'pointer',
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                boxShadow:'0 4px 16px rgba(201,168,76,0.3)'}}>
+              <MI name="cloud_upload" size={20} style={{color:'#0B1120'}}/>
+              Lanjut Upload
             </button>
-          ):step===2?(
-            <button onClick={()=>{if(uploaded){setJoinedMissions(p=>({...p,[m.id]:{...p[m.id],status:'SUBMITTED',submittedAt:'8 Mar 2026'}}));setStep(3)}}} disabled={!uploaded} className={uploaded?'btn-primary':''} style={{
-              width:'100%',padding:'14px 0',borderRadius:12,border:'none',
-              background:uploaded?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(255,255,255,0.06)',color:uploaded?'#0B1120':C.textMuted,
-              fontSize:15,fontWeight:700,cursor:uploaded?'pointer':'not-allowed',
-              opacity:uploaded?1:0.5,transition:'all 200ms',display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-              boxShadow:uploaded?'0 4px 15px rgba(201,168,76,0.3)':'none',
-            }}>
-              <MI name="send" size={18} style={{color:uploaded?'#0B1120':C.textMuted}}/> Kirim untuk Review
+          ) : step===2&&isJoined ? (
+            <button
+              disabled={!canSubmit}
+              onClick={()=>{setAiResult(null);setStep(3);setJoinedMissions(p=>({...p,[m.id]:{...p[m.id],status:'SUBMITTED',submittedAt:'8 Mar 2026'}}));showToast('Bukti berhasil dikirim!')}}
+              className={canSubmit?'btn-gold tap-bounce':''}
+              style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',
+                background:canSubmit?'linear-gradient(135deg,#C9A84C,#E8D48B)':'rgba(255,255,255,0.06)',
+                color:canSubmit?'#0B1120':C.textMuted,fontSize:15,fontWeight:700,
+                cursor:canSubmit?'pointer':'not-allowed',
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                boxShadow:canSubmit?'0 4px 16px rgba(201,168,76,0.3)':'none',
+                opacity:canSubmit?1:0.5}}>
+              <MI name="send" size={20} style={{color:canSubmit?'#0B1120':C.textMuted}}/>
+              Kirim Bukti
             </button>
-          ):null}
-          {/* Deadline reminder for joined missions */}
-          {isJoined&&jm.status==='TERDAFTAR'&&step<3&&(
-            <p style={{textAlign:'center',fontSize:10,color:C.orange,fontWeight:600,marginTop:6}}>
-              <MI name="schedule" size={11} style={{verticalAlign:'middle',marginRight:2}}/>Deadline upload: {m.deadline}
-            </p>
-          )}
-        </div>
-      )}
+          ) : step===3 ? (
+            <button
+              onClick={()=>nav('misi')}
+              className="tap-bounce"
+              style={{width:'100%',padding:'14px 0',borderRadius:12,border:`1px solid ${C.border}`,
+                background:C.surface,color:C.textSec,fontSize:15,fontWeight:700,cursor:'pointer',
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              <MI name="arrow_back" size={20} style={{color:C.textSec}}/>
+              Kembali ke Misi
+            </button>
+          ) : null}
+        </div>);
+      })()}
+
     </div>);}
 
   /* ─── DESKTOP ADMIN DASHBOARD ─────────────────────────────────────── */
@@ -4988,28 +5012,16 @@ export default function App(){
   </>);
 
   return(
-    <div className="flex items-center justify-center" style={{minHeight:'100vh',background:C.bg,paddingTop:60,paddingBottom:20,position:'relative',overflow:'hidden'}}>
+    <div className="flex items-center justify-center" style={{minHeight:'100vh',background:C.bg,paddingTop:20,paddingBottom:20,position:'relative',overflow:'hidden'}}>
       {/* Decorative Orbs */}
       <div className="orb orb-1" style={{width:300,height:300,background:'radial-gradient(circle,rgba(201,168,76,0.15),transparent 70%)',top:-50,left:-80}}/>
       <div className="orb orb-2" style={{width:250,height:250,background:'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)',bottom:100,right:-60}}/>
 
-      {/* Top Bar — GERAK Branding + Login/Admin */}
-      <div style={{position:'fixed',top:0,left:0,right:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 20px',background:'rgba(11,17,32,0.85)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <GerakMark size={24}/>
-          <span style={{fontSize:15,fontWeight:800,letterSpacing:1.5,color:C.text,fontFamily:"'Inter'"}}>GERAK</span>
-          <span style={{fontSize:8,fontWeight:700,color:C.textMuted,letterSpacing:1,padding:'2px 6px',borderRadius:4,border:`1px solid ${C.border}`,marginLeft:2}}>BETA</span>
-        </div>
-        {/* Right actions */}
-        <div className="flex items-center gap-2">
-          <button onClick={()=>setMode('admin')} className="btn-admin" style={{padding:'6px 14px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>
-            <MI name="dashboard" size={14}/> Admin
-          </button>
-          <button className="btn-gold" style={{padding:'6px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#C9A84C,#E8D48B)',color:'#0B1120',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 10px rgba(201,168,76,0.25)'}}>
-            <MI name="login" size={14} style={{color:'#0B1120'}}/> Masuk
-          </button>
-        </div>
+      {/* Admin Toggle — top-right corner */}
+      <div style={{position:'fixed',top:12,right:12,zIndex:200,display:'flex',alignItems:'center',gap:8}}>
+        <button onClick={()=>setMode('admin')} className="btn-admin tap-bounce" style={{padding:'7px 14px',borderRadius:10,border:`1px solid ${C.border}`,background:'rgba(15,26,46,0.9)',backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 12px rgba(0,0,0,0.3)'}}>
+          <MI name="dashboard" size={14} style={{color:C.primary}}/> Admin
+        </button>
       </div>
 
       <div style={{width:390,maxWidth:'100vw',height:844,maxHeight:'calc(100vh - 40px)',background:C.bg,borderRadius:44,overflow:'hidden',position:'relative',border:'2px solid rgba(255,255,255,0.08)',boxShadow:'0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',display:'flex',flexDirection:'column'}}>
