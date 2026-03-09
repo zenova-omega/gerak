@@ -3720,7 +3720,7 @@ export default function App(){
             </div>{/* end left col */}
 
             {/* ════ RIGHT: STICKY SIDEBAR (Preview + Publish) ════ */}
-            <div style={{position:'sticky',top:0}}>
+            <div style={{position:'sticky',top:16,maxHeight:'calc(100vh - 32px)',overflowY:'auto'}}>
               <DCard title="Preview Misi" accent={tc}>
                 <div className="flex flex-col gap-4">
                   {/* Preview card */}
