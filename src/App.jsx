@@ -2338,9 +2338,9 @@ export default function App(){
         )}
       </div>)}
 
-      {/* ══════════ FIXED BOTTOM CTA ══════════ */}
+      {/* ══════════ BOTTOM CTA ══════════ */}
       {!done&&(
-        <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,maxWidth:'100vw',padding:'10px 16px 28px',background:'rgba(15,15,26,0.9)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`,zIndex:20}}>
+        <div style={{position:'sticky',bottom:-8,left:-16,right:-16,padding:'12px 16px 28px',background:'rgba(11,17,32,0.95)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`,zIndex:20,margin:'auto -16px -8px',width:'calc(100% + 32px)'}}>
           {step===0&&!isJoined?(
             /* Not joined yet → "Ikut Misi" registers the member */
             <button onClick={()=>{if(consent){joinMission(m.id);setStep(1)}}} disabled={!consent} className={consent?'btn-primary':''} style={{
