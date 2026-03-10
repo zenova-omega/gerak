@@ -457,11 +457,11 @@ const MISSIONS=[
 ];
 
 const RANKS=[
-  {name:'Rekrut Digital',xp:0,icon:'person',animal:null},
-  {name:'Perwira Muda',xp:1000,icon:'military_tech',animal:'macan'},
-  {name:'Perwira Madya',xp:5000,icon:'shield',animal:'cendrawasih'},
-  {name:'Perwira Utama',xp:15000,icon:'stars',animal:'komodo'},
-  {name:'Komandan Garuda',xp:50000,icon:'workspace_premium',animal:'garuda'},
+  {name:'Rekrut',xp:0,icon:'person',animal:null,subtitle:'Langkah Pertama'},
+  {name:'Ksatria Macan',xp:1000,icon:'military_tech',animal:'macan',subtitle:'Keberanian & Ketangkasan'},
+  {name:'Sayap Cendrawasih',xp:5000,icon:'shield',animal:'cendrawasih',subtitle:'Keindahan & Strategi'},
+  {name:'Naga Komodo',xp:15000,icon:'stars',animal:'komodo',subtitle:'Ketahanan & Dominasi'},
+  {name:'Garuda Emas',xp:50000,icon:'workspace_premium',animal:'garuda',subtitle:'Pemimpin Tertinggi'},
 ];
 
 /* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
@@ -476,7 +476,7 @@ function RankInsignia({rank=0,size=120,showLabel=true}){
   ];
   const c=colors[rank]||colors[0];
   const id=`rank${rank}_${Math.random().toString(36).slice(2,6)}`;
-  const labels=['REKRUT','PERWIRA MUDA','PERWIRA MADYA','PERWIRA UTAMA','KOMANDAN GARUDA'];
+  const labels=['REKRUT','KSATRIA MACAN','SAYAP CENDRAWASIH','NAGA KOMODO','GARUDA EMAS'];
 
   // Hexagonal badge shape path for all ranks
   const hexPath=(cx,cy,r)=>{
@@ -927,42 +927,71 @@ export default function App(){
         ];
         const rt=rankThemes[curRank];
         return(
-        <Card className="stagger-2" style={{padding:0,marginBottom:12,overflow:'hidden',position:'relative',background:rt.bg,border:`1px solid ${rt.accent}20`}}>
-          {/* Ambient orbs */}
-          <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 70%)`,pointerEvents:'none',filter:'blur(20px)'}}/>
-          <div style={{position:'absolute',bottom:-30,left:-20,width:100,height:100,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 70%)`,pointerEvents:'none',filter:'blur(25px)'}}/>
+        <Card className="stagger-2" style={{padding:0,marginBottom:12,overflow:'hidden',position:'relative',background:rt.bg,border:`1px solid ${rt.accent}15`}}>
+          {/* Ambient glow layers */}
+          <div style={{position:'absolute',top:-60,right:-30,width:180,height:180,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 65%)`,pointerEvents:'none',filter:'blur(30px)'}}/>
+          <div style={{position:'absolute',bottom:-40,left:-40,width:160,height:160,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 65%)`,pointerEvents:'none',filter:'blur(30px)'}}/>
           {/* Top accent line */}
-          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rt.accent},transparent)`,opacity:0.4}}/>
-          <div style={{padding:20,display:'flex',alignItems:'center',gap:16,position:'relative'}}>
-            {/* Rank Animal + Insignia */}
-            <div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-              <Animal3D type={RANKS[curRank].animal||'garuda'} size={80}/>
-              <RankInsignia rank={curRank} size={36} showLabel={false}/>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rt.accent},transparent)`,opacity:0.5}}/>
+
+          {/* Top section: Animal hero + greeting */}
+          <div style={{padding:'20px 20px 0',display:'flex',alignItems:'flex-start',gap:14,position:'relative'}}>
+            {/* 3D Animal — hero size */}
+            <div style={{flexShrink:0,position:'relative'}}>
+              <Animal3D type={RANKS[curRank].animal||'garuda'} size={96}/>
+              {/* Small insignia badge overlapping bottom-right */}
+              <div style={{position:'absolute',bottom:-4,right:-4,background:C.surface,borderRadius:8,padding:2,border:`1px solid ${rt.accent}30`}}>
+                <RankInsignia rank={curRank} size={28} showLabel={false}/>
+              </div>
             </div>
-            {/* Greeting + Info */}
-            <div className="flex-1" style={{minWidth:0}}>
-              <p style={{fontSize:10,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Selamat Pagi,</p>
-              <h1 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.15,marginTop:2,letterSpacing:-0.3}}>MAYOR ARIF SANTOSO</h1>
-              <div className="flex items-center gap-1.5 mt-2" style={{background:`linear-gradient(135deg,${rt.accent}20,${rt.accent}08)`,borderRadius:9999,padding:'4px 12px',border:`1px solid ${rt.accent}30`,width:'fit-content'}}>
-                <MI name="military_tech" size={13} fill style={{color:rt.accent}}/>
-                <span style={{fontSize:11,fontWeight:700,color:rt.accent,letterSpacing:1,textTransform:'uppercase'}}>{RANKS[curRank].name}</span>
-              </div>
-              {/* XP Progress inline */}
-              <div style={{marginTop:10}}>
-                <div className="flex items-center justify-between mb-1">
-                  <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Kemajuan Pangkat</span>
-                  <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:rt.accent}}>4.820 / 5.000 XP</span>
-                </div>
-                <div style={{height:5,borderRadius:9999,background:C.overlay06,overflow:'hidden',position:'relative'}}>
-                  <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${rt.accent},${rt.light},${rt.accent})`,backgroundSize:'200% 100%'}}/>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span style={{fontSize:9,fontWeight:600,color:rt.accent}}>{RANKS[curRank].name}</span>
-                  <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
-                    <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>{RANKS[curRank+1]?.name||'MAX'}
-                  </span>
+            {/* Greeting + Name */}
+            <div className="flex-1" style={{minWidth:0,paddingTop:6}}>
+              <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:1.5,textTransform:'uppercase'}}>Selamat Pagi,</p>
+              <h1 style={{fontSize:18,fontWeight:800,color:C.text,lineHeight:1.2,marginTop:3,letterSpacing:-0.3}}>ARIF SANTOSO</h1>
+              <div className="flex items-center gap-1.5 mt-3" style={{background:`linear-gradient(135deg,${rt.accent}20,${rt.accent}08)`,borderRadius:8,padding:'5px 12px',border:`1px solid ${rt.accent}25`,width:'fit-content'}}>
+                <MI name="military_tech" size={14} fill style={{color:rt.accent}}/>
+                <div>
+                  <p style={{fontSize:11,fontWeight:700,color:rt.accent,letterSpacing:0.5,lineHeight:1}}>{RANKS[curRank].name}</p>
+                  <p style={{fontSize:8,fontWeight:600,color:rt.accent,opacity:0.6,letterSpacing:0.5,lineHeight:1,marginTop:1}}>{RANKS[curRank].subtitle}</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Bottom section: XP Progress + Stats */}
+          <div style={{padding:'14px 20px 16px',position:'relative'}}>
+            {/* XP Progress bar */}
+            <div className="flex items-center justify-between mb-1.5">
+              <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Kemajuan Pangkat</span>
+              <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:rt.accent}}>4.820 / 5.000 XP</span>
+            </div>
+            <div style={{height:6,borderRadius:9999,background:C.overlay06,overflow:'hidden',position:'relative'}}>
+              <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${rt.accent},${rt.light},${rt.accent})`,backgroundSize:'200% 100%'}}/>
+            </div>
+            <div className="flex items-center justify-between mt-1.5">
+              <span style={{fontSize:9,fontWeight:600,color:rt.accent}}>{RANKS[curRank].name}</span>
+              <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
+                <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>{RANKS[curRank+1]?.name||'MAX'}
+              </span>
+            </div>
+
+            {/* Quick stats row */}
+            <div className="flex items-center gap-3 mt-3" style={{paddingTop:10,borderTop:`1px solid ${rt.accent}12`}}>
+              {[
+                {icon:'target',value:'24',label:'Misi',color:rt.accent},
+                {icon:'local_fire_department',value:'7',label:'Streak',color:C.orange},
+                {icon:'leaderboard',value:'#12',label:'Rank',color:C.teal},
+              ].map((st,si)=>(
+                <div key={si} className="flex items-center gap-2" style={{flex:1}}>
+                  <div style={{width:28,height:28,borderRadius:8,background:`${st.color}15`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <MI name={st.icon} size={14} fill style={{color:st.color}}/>
+                  </div>
+                  <div>
+                    <p style={{fontSize:14,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{st.value}</p>
+                    <p style={{fontSize:8,fontWeight:600,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,lineHeight:1,marginTop:1}}>{st.label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </Card>);
@@ -1236,7 +1265,7 @@ export default function App(){
           {/* Info */}
           <div className="flex-1" style={{minWidth:0}}>
             <span style={{fontSize:9,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Pangkat Saat Ini</span>
-            <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Perwira Muda</h2>
+            <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Ksatria Macan</h2>
             <div className="flex items-center gap-2 mt-2">
               <span style={{background:`linear-gradient(135deg,${C.primaryMid},${C.primaryFaint})`,borderRadius:9999,padding:'3px 10px',border:`1px solid ${C.primary}40`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>4,820 XP</span>
               <span style={{fontSize:10,color:C.textMuted}}>/ 5,000</span>
@@ -1247,7 +1276,7 @@ export default function App(){
               <div className="flex items-center justify-between mt-1.5">
                 <span style={{fontSize:9,fontWeight:600,color:C.primary}}>96%</span>
                 <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
-                  180 XP ke <span style={{color:C.primary,fontWeight:600,marginLeft:2}}>Perwira Madya</span>
+                  180 XP ke <span style={{color:C.primary,fontWeight:600,marginLeft:2}}>Sayap Cendrawasih</span>
                 </span>
               </div>
             </div>
@@ -1268,8 +1297,6 @@ export default function App(){
               {bg:`linear-gradient(135deg,${C.purple}20,${C.surface})`,border:C.purple,accent:C.purple},
               {bg:`linear-gradient(135deg,${C.accent}20,${C.surface})`,border:C.accent,accent:C.accent},
             ][i];
-            const animalTypes=[null,'macan','cendrawasih','komodo','garuda'];
-            const animalLabels=[null,'Macan','Cendrawasih','Komodo','Garuda'];
             return(
               <div key={i} style={{
                 flexShrink:0,width:130,borderRadius:12,overflow:'hidden',
@@ -1280,10 +1307,10 @@ export default function App(){
                 opacity:!cur&&!done?0.5:1,
               }}>
                 {cur&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rankColors.accent},transparent)`,opacity:0.6}}/>}
-                {/* 3D Animal illustration */}
-                {animalTypes[i]?<Animal3D type={animalTypes[i]} size={64}/>:<RankInsignia rank={0} size={56} showLabel={false}/>}
+                {/* 3D Animal illustration or basic insignia for Rekrut */}
+                {r.animal?<Animal3D type={r.animal} size={68}/>:<RankInsignia rank={0} size={56} showLabel={false}/>}
                 <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
-                {animalLabels[i]&&<p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'99':C.textMuted,marginTop:1,textTransform:'uppercase',letterSpacing:1}}>{animalLabels[i]}</p>}
+                {r.subtitle&&<p style={{fontSize:8,fontWeight:600,color:cur?rankColors.accent+'80':C.textMuted,marginTop:1,letterSpacing:0.3,lineHeight:1.2}}>{r.subtitle}</p>}
                 <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3}}>{r.xp.toLocaleString()} XP</p>
                 {cur&&<div style={{marginTop:5,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 8px',display:'inline-block'}}>
                   <span style={{fontSize:10,fontWeight:700,color:rankColors.accent,letterSpacing:0.5}}>SAAT INI</span>
@@ -1343,7 +1370,7 @@ export default function App(){
         </div>
         <h2 style={{fontSize:18,fontWeight:800,color:C.text,position:'relative',zIndex:1}}>Mayor Arif Santoso</h2>
         <p style={{fontSize:11,color:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
-        <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>Perwira Muda</span>
+        <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>Ksatria Macan</span>
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[{l:'Misi',v:'24'},{l:'XP',v:'4,820'},{l:'Rank',v:'#12'}].map((s,i)=>(
             <div key={i} style={{background:C.surfaceLight,borderRadius:12,padding:'8px 0',textAlign:'center',border:`1px solid ${C.border}`,position:'relative',zIndex:1}}>
