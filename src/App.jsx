@@ -895,117 +895,202 @@ export default function App(){
     }}>{label}</button>;
   }
 
+  /* ─── 3D AVATAR ───────────────────────────────────────────────────── */
+  function Avatar3D({initials='AS',color=C.primary,size=48,animal=null,editable=false}){
+    const s=size;
+    const id=`av_${Math.random().toString(36).slice(2,6)}`;
+    return(
+      <div style={{width:s,height:s,position:'relative',cursor:editable?'pointer':'default'}} onClick={editable?()=>showToast('Edit avatar coming soon'):undefined}>
+        <svg viewBox="0 0 48 48" width={s} height={s}>
+          <defs>
+            <linearGradient id={`${id}bg`} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={color}/><stop offset="100%" stopColor={color+'CC'}/>
+            </linearGradient>
+            <radialGradient id={`${id}hi`} cx="18" cy="14" r="20" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="0.3"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+            <filter id={`${id}sh`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={`${color}50`}/></filter>
+          </defs>
+          <g filter={`url(#${id}sh)`}>
+            <circle cx="24" cy="24" r="22" fill={`url(#${id}bg)`}/>
+            <circle cx="24" cy="24" r="22" fill={`url(#${id}hi)`}/>
+            <circle cx="24" cy="24" r="21" fill="none" stroke="white" strokeWidth="0.5" opacity="0.2"/>
+          </g>
+          {animal?<g transform="translate(6,4) scale(0.75)">
+            {animal==='macan'&&<>
+              <ellipse cx="24" cy="20" rx="14" ry="12" fill="white" opacity="0.2"/>
+              <path d="M14 14 L12 8 L18 12 Z" fill="white" opacity="0.4"/>
+              <path d="M34 14 L36 8 L30 12 Z" fill="white" opacity="0.4"/>
+              <ellipse cx="24" cy="20" rx="12" ry="10" fill="white" opacity="0.15"/>
+              <ellipse cx="19" cy="18" rx="2.5" ry="3" fill="white" opacity="0.7"/>
+              <ellipse cx="29" cy="18" rx="2.5" ry="3" fill="white" opacity="0.7"/>
+              <circle cx="19.5" cy="18.5" r="1.5" fill={color+'CC'}/>
+              <circle cx="29.5" cy="18.5" r="1.5" fill={color+'CC'}/>
+              <ellipse cx="24" cy="23" rx="2" ry="1.5" fill="white" opacity="0.5"/>
+            </>}
+          </g>:<text x="24" y="26" textAnchor="middle" dominantBaseline="middle" style={{fontSize:s>40?16:12,fontWeight:800,fill:'white',fontFamily:"'Inter'",letterSpacing:1}}>{initials}</text>}
+        </svg>
+        {editable&&<div style={{position:'absolute',bottom:-1,right:-1,width:16,height:16,borderRadius:'50%',background:C.primary,border:`2px solid ${C.bg}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <MI name="edit" size={8} style={{color:'white'}}/>
+        </div>}
+      </div>
+    );
+  }
+
   /* ─── BERANDA ──────────────────────────────────────────────────── */
-  function Beranda(){return(
+  function Beranda(){
+    const curRank=1;
+    return(
     <div key={k} className="flex flex-col pb-4">
-      {/* GERAK Branding Bar */}
-      <div className="stagger-1 flex items-center justify-between pt-2" style={{marginBottom:12}}>
-        <div className="flex items-center gap-2.5">
-          <GerakMark size={28}/>
-          <div>
-            <h2 style={{fontSize:15,fontWeight:900,color:C.text,letterSpacing:2,lineHeight:1}}>GERAK</h2>
-            <p style={{fontSize:9,fontWeight:600,color:C.textMuted,letterSpacing:1.2,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
+      {/* ═══════ ORANGE HEADER BLOCK ═══════ */}
+      <div className="stagger-1" style={{
+        margin:'-16px -16px 0',padding:'0 16px',position:'relative',overflow:'hidden',
+        background:`linear-gradient(180deg, #C2410C 0%, ${C.primary} 40%, ${C.primaryAccent} 100%)`,
+        borderRadius:'0 0 24px 24px',
+      }}>
+        {/* Decorative circles */}
+        <div style={{position:'absolute',top:-40,right:-30,width:140,height:140,borderRadius:'50%',background:'rgba(255,255,255,0.06)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:20,left:-50,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,0.04)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:40,right:10,width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
+
+        {/* Top bar: Logo + Notification */}
+        <div className="flex items-center justify-between" style={{paddingTop:16,paddingBottom:8}}>
+          <div className="flex items-center gap-2.5">
+            <GerakMark size={24}/>
+            <div>
+              <h2 style={{fontSize:14,fontWeight:900,color:'white',letterSpacing:2,lineHeight:1}}>GERAK</h2>
+              <p style={{fontSize:8,fontWeight:600,color:'rgba(255,255,255,0.6)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
+            </div>
+          </div>
+          <div role="button" aria-label="Notifications" style={{position:'relative',cursor:'pointer'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.12)',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.15)'}}>
+              <MI name="notifications" size={18} style={{color:'white'}}/>
+            </div>
+            <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:'2px solid #C2410C'}} className="urgency-pulse"/>
           </div>
         </div>
-        <div role="button" aria-label="Notifications" style={{position:'relative',cursor:'pointer'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
-          <div className="bell-ring" style={{width:36,height:36,borderRadius:'50%',background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:`1px solid ${C.border}`,transition:'background 150ms ease'}}>
-            <MI name="notifications" size={18} style={{color:C.textSec}}/>
+
+        {/* User greeting row */}
+        <div className="flex items-center gap-3" style={{padding:'8px 0 12px'}}>
+          <Avatar3D initials="AS" color="rgba(255,255,255,0.2)" size={48} animal={RANKS[curRank].animal} editable/>
+          <div className="flex-1" style={{minWidth:0}}>
+            <p style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.65)',letterSpacing:1,textTransform:'uppercase'}}>Selamat Pagi,</p>
+            <h1 style={{fontSize:18,fontWeight:800,color:'white',lineHeight:1.2,marginTop:2}}>Arif Santoso</h1>
           </div>
-          <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:`2px solid ${C.surface}`}} className="urgency-pulse"/>
+          <div style={{textAlign:'right'}}>
+            <div className="flex items-center gap-1" style={{background:'rgba(255,255,255,0.12)',borderRadius:8,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.15)'}}>
+              <Animal3D type={RANKS[curRank].animal||'garuda'} size={20}/>
+              <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:0.5}}>{RANKS[curRank].name}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* XP Progress */}
+        <div style={{padding:'0 0 14px'}}>
+          <div className="flex items-center justify-between mb-1">
+            <span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.6)'}}>Kemajuan Pangkat</span>
+            <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'white'}}>4.820 / 5.000 XP</span>
+          </div>
+          <div style={{height:6,borderRadius:9999,background:'rgba(255,255,255,0.15)',overflow:'hidden'}}>
+            <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:'linear-gradient(90deg,white,rgba(255,255,255,0.7),white)',backgroundSize:'200% 100%'}}/>
+          </div>
+          <div className="flex items-center justify-between mt-1">
+            <span style={{fontSize:9,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>{RANKS[curRank].name}</span>
+            <span style={{fontSize:9,color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',gap:2}}>
+              <MI name="arrow_forward" size={10} style={{color:'rgba(255,255,255,0.5)'}}/>{RANKS[curRank+1]?.name||'MAX'}
+            </span>
+          </div>
+        </div>
+
+        {/* ═══ PODIUM LEADERBOARD (Top 3) ═══ */}
+        <div style={{paddingBottom:20,paddingTop:6}}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 style={{fontSize:13,fontWeight:700,color:'white',display:'flex',alignItems:'center',gap:4}}>
+              <MI name="emoji_events" size={16} fill style={{color:'#FDE68A'}}/>Leaderboard
+            </h3>
+            <button onClick={()=>nav('pangkat')} style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.7)',background:'none',border:'none',cursor:'pointer'}}>
+              Lihat Semua <MI name="arrow_forward" size={12} style={{color:'rgba(255,255,255,0.5)'}}/>
+            </button>
+          </div>
+
+          {/* Podium — 2nd, 1st, 3rd */}
+          <div className="flex items-end justify-center gap-3" style={{paddingTop:8}}>
+            {/* 2nd Place */}
+            <div style={{flex:1,textAlign:'center'}}>
+              <div style={{position:'relative',display:'inline-block'}}>
+                <Avatar3D initials={LEADERBOARD[1].avatar} color={C.secondary} size={44}/>
+                <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#C0C0C0,#E8E8E8)',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid rgba(255,255,255,0.3)',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}>
+                  <span style={{fontSize:9,fontWeight:800,color:'#666'}}>2</span>
+                </div>
+              </div>
+              <p style={{fontSize:10,fontWeight:700,color:'white',marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[1].name.split(' ').slice(-1)[0]}</p>
+              <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A',marginTop:1}}>{LEADERBOARD[1].xp.toLocaleString()}</p>
+              {/* Podium bar */}
+              <div style={{height:48,background:'rgba(255,255,255,0.1)',borderRadius:'8px 8px 0 0',marginTop:6,border:'1px solid rgba(255,255,255,0.08)',borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:14,fontWeight:800,color:'rgba(255,255,255,0.15)'}}>2</span>
+              </div>
+            </div>
+
+            {/* 1st Place (center, tallest) */}
+            <div style={{flex:1,textAlign:'center'}}>
+              <div style={{position:'relative',display:'inline-block'}}>
+                {/* Crown */}
+                <div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',zIndex:1}}>
+                  <svg width="24" height="14" viewBox="0 0 24 14" fill="none">
+                    <path d="M2 12 L5 4 L8 8 L12 1 L16 8 L19 4 L22 12 Z" fill="#FDE68A" stroke="#FBBF24" strokeWidth="0.5"/>
+                  </svg>
+                </div>
+                <Avatar3D initials={LEADERBOARD[0].avatar} color="#FBBF24" size={52}/>
+                <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:20,height:20,borderRadius:'50%',background:'linear-gradient(135deg,#FBBF24,#FDE68A)',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid rgba(255,255,255,0.4)',boxShadow:'0 2px 8px rgba(251,191,36,0.4)'}}>
+                  <span style={{fontSize:10,fontWeight:800,color:'#92400E'}}>1</span>
+                </div>
+              </div>
+              <p style={{fontSize:11,fontWeight:700,color:'white',marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[0].name.split(' ').slice(-1)[0]}</p>
+              <p style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A',marginTop:1}}>{LEADERBOARD[0].xp.toLocaleString()}</p>
+              {/* Podium bar — tallest */}
+              <div style={{height:68,background:'rgba(255,255,255,0.12)',borderRadius:'8px 8px 0 0',marginTop:6,border:'1px solid rgba(255,255,255,0.1)',borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:18,fontWeight:800,color:'rgba(255,255,255,0.15)'}}>1</span>
+              </div>
+            </div>
+
+            {/* 3rd Place */}
+            <div style={{flex:1,textAlign:'center'}}>
+              <div style={{position:'relative',display:'inline-block'}}>
+                <Avatar3D initials={LEADERBOARD[2].avatar} color={C.accent} size={40}/>
+                <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#CD7F32,#DDA15E)',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid rgba(255,255,255,0.3)',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}>
+                  <span style={{fontSize:9,fontWeight:800,color:'#5C3A1E'}}>3</span>
+                </div>
+              </div>
+              <p style={{fontSize:10,fontWeight:700,color:'white',marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[2].name.split(' ').slice(-1)[0]}</p>
+              <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A',marginTop:1}}>{LEADERBOARD[2].xp.toLocaleString()}</p>
+              {/* Podium bar */}
+              <div style={{height:36,background:'rgba(255,255,255,0.08)',borderRadius:'8px 8px 0 0',marginTop:6,border:'1px solid rgba(255,255,255,0.06)',borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:12,fontWeight:800,color:'rgba(255,255,255,0.12)'}}>3</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Your rank row */}
+          <div style={{background:'rgba(255,255,255,0.1)',borderRadius:10,padding:'8px 12px',marginTop:8,border:'1px solid rgba(255,255,255,0.08)',display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:12,fontWeight:800,color:'rgba(255,255,255,0.5)',fontFamily:"'JetBrains Mono'",width:20,textAlign:'center'}}>#4</span>
+            <Avatar3D initials="AS" color="rgba(255,255,255,0.2)" size={28} animal={RANKS[curRank].animal}/>
+            <div className="flex-1" style={{minWidth:0}}>
+              <p style={{fontSize:11,fontWeight:700,color:'white'}}>Arif Santoso <span style={{fontSize:9,fontWeight:600,color:'rgba(255,255,255,0.5)',marginLeft:4}}>Kamu</span></p>
+            </div>
+            <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A'}}>4,820</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Hero Welcome Card with Rank Insignia ── */}
-      {(()=>{
-        const curRank=1; // current user rank index
-        const rankThemes=[
-          {bg:'linear-gradient(135deg,#1E293B,#0F172A)',glow:'rgba(100,116,139,0.12)',accent:'#64748B',light:'#94A3B8'},
-          {bg:`linear-gradient(135deg,#1A0C02,${C.bg})`,glow:'rgba(249,115,22,0.15)',accent:C.primary,light:C.primaryAccent},
-          {bg:`linear-gradient(135deg,#021A2E,${C.bg})`,glow:'rgba(14,165,233,0.15)',accent:C.secondary,light:'#38BDF8'},
-          {bg:`linear-gradient(135deg,#1A0F2E,${C.bg})`,glow:'rgba(139,92,246,0.15)',accent:'#8B5CF6',light:'#A78BFA'},
-          {bg:`linear-gradient(135deg,#1A0814,${C.bg})`,glow:'rgba(236,72,153,0.18)',accent:C.accent,light:'#F472B6'},
-        ];
-        const rt=rankThemes[curRank];
-        return(
-        <Card className="stagger-2" style={{padding:0,marginBottom:12,overflow:'hidden',position:'relative',background:rt.bg,border:`1px solid ${rt.accent}15`}}>
-          {/* Ambient glow layers */}
-          <div style={{position:'absolute',top:-60,right:-30,width:180,height:180,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 65%)`,pointerEvents:'none',filter:'blur(30px)'}}/>
-          <div style={{position:'absolute',bottom:-40,left:-40,width:160,height:160,borderRadius:'50%',background:`radial-gradient(circle,${rt.glow},transparent 65%)`,pointerEvents:'none',filter:'blur(30px)'}}/>
-          {/* Top accent line */}
-          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rt.accent},transparent)`,opacity:0.5}}/>
-
-          {/* Top section: Animal hero + greeting */}
-          <div style={{padding:'20px 20px 0',display:'flex',alignItems:'flex-start',gap:14,position:'relative'}}>
-            {/* 3D Animal — hero size */}
-            <div style={{flexShrink:0,position:'relative'}}>
-              <Animal3D type={RANKS[curRank].animal||'garuda'} size={96}/>
-              {/* Small insignia badge overlapping bottom-right */}
-              <div style={{position:'absolute',bottom:-4,right:-4,background:C.surface,borderRadius:8,padding:2,border:`1px solid ${rt.accent}30`}}>
-                <RankInsignia rank={curRank} size={28} showLabel={false}/>
-              </div>
-            </div>
-            {/* Greeting + Name */}
-            <div className="flex-1" style={{minWidth:0,paddingTop:6}}>
-              <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:1.5,textTransform:'uppercase'}}>Selamat Pagi,</p>
-              <h1 style={{fontSize:18,fontWeight:800,color:C.text,lineHeight:1.2,marginTop:3,letterSpacing:-0.3}}>ARIF SANTOSO</h1>
-              <div className="flex items-center gap-1.5 mt-3" style={{background:`linear-gradient(135deg,${rt.accent}20,${rt.accent}08)`,borderRadius:8,padding:'5px 12px',border:`1px solid ${rt.accent}25`,width:'fit-content'}}>
-                <MI name="military_tech" size={14} fill style={{color:rt.accent}}/>
-                <div>
-                  <p style={{fontSize:11,fontWeight:700,color:rt.accent,letterSpacing:0.5,lineHeight:1}}>{RANKS[curRank].name}</p>
-                  <p style={{fontSize:8,fontWeight:600,color:rt.accent,opacity:0.6,letterSpacing:0.5,lineHeight:1,marginTop:1}}>{RANKS[curRank].subtitle}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom section: XP Progress + Stats */}
-          <div style={{padding:'14px 20px 16px',position:'relative'}}>
-            {/* XP Progress bar */}
-            <div className="flex items-center justify-between mb-1.5">
-              <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>Kemajuan Pangkat</span>
-              <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:rt.accent}}>4.820 / 5.000 XP</span>
-            </div>
-            <div style={{height:6,borderRadius:9999,background:C.overlay06,overflow:'hidden',position:'relative'}}>
-              <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${rt.accent},${rt.light},${rt.accent})`,backgroundSize:'200% 100%'}}/>
-            </div>
-            <div className="flex items-center justify-between mt-1.5">
-              <span style={{fontSize:9,fontWeight:600,color:rt.accent}}>{RANKS[curRank].name}</span>
-              <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
-                <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>{RANKS[curRank+1]?.name||'MAX'}
-              </span>
-            </div>
-
-            {/* Quick stats row */}
-            <div className="flex items-center gap-3 mt-3" style={{paddingTop:10,borderTop:`1px solid ${rt.accent}12`}}>
-              {[
-                {icon:'target',value:'24',label:'Misi',color:rt.accent},
-                {icon:'local_fire_department',value:'7',label:'Streak',color:C.orange},
-                {icon:'leaderboard',value:'#12',label:'Rank',color:C.teal},
-              ].map((st,si)=>(
-                <div key={si} className="flex items-center gap-2" style={{flex:1}}>
-                  <div style={{width:28,height:28,borderRadius:8,background:`${st.color}15`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <MI name={st.icon} size={14} fill style={{color:st.color}}/>
-                  </div>
-                  <div>
-                    <p style={{fontSize:14,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{st.value}</p>
-                    <p style={{fontSize:8,fontWeight:600,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,lineHeight:1,marginTop:1}}>{st.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>);
-      })()}
-
-      {/* Stats Row */}
-      <div className="stagger-4 grid grid-cols-3 gap-3" style={{marginBottom:20}}>
-        {[{icon:'target',label:'Misi',value:'24',color:C.primary,tip:'Total misi yang telah kamu selesaikan'},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange,tip:'Hari berturut-turut kamu aktif. Jaga streak untuk bonus XP!'},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal,tip:'Peringkatmu di antara semua anggota GERAK'}].map((s,i)=>(
+      {/* ═══ QUICK STATS (below orange block) ═══ */}
+      <div className="stagger-3 grid grid-cols-3 gap-3" style={{marginTop:16,marginBottom:16}}>
+        {[{icon:'target',label:'Misi',value:'24',color:C.primary},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal}].map((s,i)=>(
           <Card key={i} style={{textAlign:'center',padding:12}}>
-            <div className="stat-icon" style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px',cursor:'default',position:'relative'}}>
-              <MI name={s.icon} size={18} fill style={{color:s.color}}/>
+            <div style={{width:32,height:32,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
+              <MI name={s.icon} size={16} fill style={{color:s.color}}/>
             </div>
-            <p className={`num-pop num-pop-d${i+1}`} style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
-            <p className="flex items-center justify-center gap-1" style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label} <Tip text={s.tip}><MI name="info" size={9} style={{color:C.textMuted,opacity:0.5}}/></Tip></p>
+            <p style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+            <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label}</p>
           </Card>
         ))}
       </div>
