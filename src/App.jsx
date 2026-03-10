@@ -665,11 +665,11 @@ const ACTIVITY=[
 ];
 
 const LEADERBOARD=[
-  {name:'Cpt. Rina Dewi',xp:6200,rank:1,avatar:'RD'},
-  {name:'Lt. Budi Hartono',xp:5800,rank:2,avatar:'BH'},
-  {name:'Sgt. Fajar Nugroho',xp:5400,rank:3,avatar:'FN'},
-  {name:'Arif Santoso',xp:4820,rank:4,avatar:'AS',isYou:true},
-  {name:'Pvt. Sari Utami',xp:4600,rank:5,avatar:'SU'},
+  {name:'Cpt. Rina Dewi',xp:6200,rank:1,avatar:'RD',rankIdx:3},
+  {name:'Lt. Budi Hartono',xp:5800,rank:2,avatar:'BH',rankIdx:2},
+  {name:'Sgt. Fajar Nugroho',xp:5400,rank:3,avatar:'FN',rankIdx:2},
+  {name:'Arif Santoso',xp:4820,rank:4,avatar:'AS',isYou:true,rankIdx:1},
+  {name:'Pvt. Sari Utami',xp:4600,rank:5,avatar:'SU',rankIdx:1},
 ];
 
 /* ─── ADMIN / AI DATA ────────────────────────────────────────────── */
@@ -895,43 +895,140 @@ export default function App(){
     }}>{label}</button>;
   }
 
+  /* ─── AVATAR CONFIG (rank-based military person) ─── */
+  const AVATAR_HATS={
+    none:{label:'Tanpa Topi'},
+    beret:{label:'Baret'},
+    peaked:{label:'Topi Perwira'},
+    helmet:{label:'Helm Tempur'},
+    boonie:{label:'Topi Rimba'},
+  };
+  const AVATAR_SKINS=['#D4A574','#C68642','#8D5524','#F1C27D','#E0AC69'];
+  const AVATAR_UNIFORMS={
+    green:{label:'Hijau TNI',fill:'#2D5016',accent:'#3A6B1E'},
+    olive:{label:'Olive Drab',fill:'#556B2F',accent:'#6B8E23'},
+    navy:{label:'Biru Navy',fill:'#1B2838',accent:'#2C3E50'},
+    desert:{label:'Desert Tan',fill:'#C2A86C',accent:'#D4BA7A'},
+    black:{label:'Hitam Ops',fill:'#1A1A2E',accent:'#2D2D44'},
+  };
+
+  /* Rank → default avatar config */
+  const RANK_AVATAR_DEFAULTS=[
+    {hat:'none',uniform:'green',insigniaCount:0},    // Rekrut
+    {hat:'beret',uniform:'olive',insigniaCount:1},    // Ksatria Macan
+    {hat:'peaked',uniform:'navy',insigniaCount:2},    // Sayap Cendrawasih
+    {hat:'helmet',uniform:'black',insigniaCount:3},   // Naga Komodo
+    {hat:'peaked',uniform:'navy',insigniaCount:4},    // Garuda Emas
+  ];
+
   /* ─── 3D AVATAR ───────────────────────────────────────────────────── */
-  function Avatar3D({initials='AS',color=C.primary,size=48,animal=null,editable=false}){
+  function Avatar3D({initials='AS',color=C.primary,size=48,rankIdx=1,editable=false,onEdit}){
     const s=size;
     const id=`av_${Math.random().toString(36).slice(2,6)}`;
+    const cfg=RANK_AVATAR_DEFAULTS[rankIdx]||RANK_AVATAR_DEFAULTS[0];
+    const uni=AVATAR_UNIFORMS[cfg.uniform]||AVATAR_UNIFORMS.green;
+    const skin=AVATAR_SKINS[0];
+    const hatType=cfg.hat;
+    const showDetail=s>=28;
+    const showFine=s>=40;
+    const rankColors=[C.textMuted,C.primary,C.secondary,C.purple,C.accent];
+    const rc=rankColors[rankIdx]||C.primary;
+
     return(
-      <div style={{width:s,height:s,position:'relative',cursor:editable?'pointer':'default'}} onClick={editable?()=>showToast('Edit avatar coming soon'):undefined}>
+      <div style={{width:s,height:s,position:'relative',cursor:editable?'pointer':'default'}} onClick={editable?(onEdit||(() => showToast('Kustomisasi avatar segera hadir'))):undefined}>
         <svg viewBox="0 0 48 48" width={s} height={s}>
           <defs>
             <linearGradient id={`${id}bg`} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={color}/><stop offset="100%" stopColor={color+'CC'}/>
+              <stop offset="0%" stopColor={rc}/><stop offset="100%" stopColor={rc+'CC'}/>
+            </linearGradient>
+            <linearGradient id={`${id}uni`} x1="16" y1="30" x2="32" y2="48" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={uni.accent}/><stop offset="100%" stopColor={uni.fill}/>
+            </linearGradient>
+            <linearGradient id={`${id}skin`} x1="20" y1="12" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={skin}/><stop offset="100%" stopColor={`${skin}DD`}/>
             </linearGradient>
             <radialGradient id={`${id}hi`} cx="18" cy="14" r="20" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="white" stopOpacity="0.3"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+              <stop offset="0%" stopColor="white" stopOpacity="0.25"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
             </radialGradient>
-            <filter id={`${id}sh`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={`${color}50`}/></filter>
+            <filter id={`${id}sh`}><feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor={`${rc}40`}/></filter>
           </defs>
+          {/* BG circle */}
           <g filter={`url(#${id}sh)`}>
             <circle cx="24" cy="24" r="22" fill={`url(#${id}bg)`}/>
             <circle cx="24" cy="24" r="22" fill={`url(#${id}hi)`}/>
-            <circle cx="24" cy="24" r="21" fill="none" stroke="white" strokeWidth="0.5" opacity="0.2"/>
+            <circle cx="24" cy="24" r="21" fill="none" stroke="white" strokeWidth="0.5" opacity="0.15"/>
           </g>
-          {animal?<g transform="translate(6,4) scale(0.75)">
-            {animal==='macan'&&<>
-              <ellipse cx="24" cy="20" rx="14" ry="12" fill="white" opacity="0.2"/>
-              <path d="M14 14 L12 8 L18 12 Z" fill="white" opacity="0.4"/>
-              <path d="M34 14 L36 8 L30 12 Z" fill="white" opacity="0.4"/>
-              <ellipse cx="24" cy="20" rx="12" ry="10" fill="white" opacity="0.15"/>
-              <ellipse cx="19" cy="18" rx="2.5" ry="3" fill="white" opacity="0.7"/>
-              <ellipse cx="29" cy="18" rx="2.5" ry="3" fill="white" opacity="0.7"/>
-              <circle cx="19.5" cy="18.5" r="1.5" fill={color+'CC'}/>
-              <circle cx="29.5" cy="18.5" r="1.5" fill={color+'CC'}/>
-              <ellipse cx="24" cy="23" rx="2" ry="1.5" fill="white" opacity="0.5"/>
+          {/* Body/Uniform — shoulders & torso */}
+          <path d="M12 44 C12 36 16 32 24 30 C32 32 36 36 36 44 Z" fill={`url(#${id}uni)`}/>
+          {/* Collar */}
+          {showDetail&&<>
+            <path d="M20 30 L24 33 L28 30" fill="none" stroke={uni.accent} strokeWidth="1" opacity="0.6"/>
+            {/* Shoulder epaulettes */}
+            <rect x="12" y="34" width="5" height="2" rx="1" fill={rc} opacity="0.7"/>
+            <rect x="31" y="34" width="5" height="2" rx="1" fill={rc} opacity="0.7"/>
+          </>}
+          {/* Rank insignia stripes on chest */}
+          {showFine&&cfg.insigniaCount>0&&<g opacity="0.8">
+            {Array.from({length:Math.min(cfg.insigniaCount,4)}).map((_,i)=>(
+              <rect key={i} x="22" y={35+i*2.5} width="4" height="1.2" rx="0.5" fill={rc}/>
+            ))}
+          </g>}
+          {/* Neck */}
+          <rect x="21" y="26" width="6" height="5" rx="2" fill={`url(#${id}skin)`}/>
+          {/* Head */}
+          <ellipse cx="24" cy="20" rx="8" ry="9" fill={`url(#${id}skin)`}/>
+          {/* Face highlights */}
+          <ellipse cx="22" cy="18.5" rx="1" ry="0.6" fill="white" opacity="0.15"/>
+          {/* Eyes */}
+          {showDetail&&<>
+            <ellipse cx="20.5" cy="20" rx="1.2" ry="1.4" fill="white" opacity="0.9"/>
+            <ellipse cx="27.5" cy="20" rx="1.2" ry="1.4" fill="white" opacity="0.9"/>
+            <circle cx="20.8" cy="20.2" r="0.8" fill="#1A1A2E"/>
+            <circle cx="27.8" cy="20.2" r="0.8" fill="#1A1A2E"/>
+            {/* Eyebrows — stern military look */}
+            <line x1="19" y1="17.8" x2="22.5" y2="18" stroke="#4A3728" strokeWidth="0.8" strokeLinecap="round"/>
+            <line x1="25.5" y1="18" x2="29" y2="17.8" stroke="#4A3728" strokeWidth="0.8" strokeLinecap="round"/>
+            {/* Mouth */}
+            <line x1="22" y1="23.5" x2="26" y2="23.5" stroke="#8B6F5E" strokeWidth="0.7" strokeLinecap="round"/>
+          </>}
+          {/* Hat */}
+          {hatType==='beret'&&<>
+            <ellipse cx="24" cy="12.5" rx="9" ry="4" fill={rc}/>
+            <path d="M16 13 Q15 8 20 9 Q24 7 28 9 Q33 8 32 13" fill={rc}/>
+            <ellipse cx="24" cy="13" rx="8.5" ry="1.5" fill={rc} opacity="0.6"/>
+            {showFine&&<circle cx="28" cy="9.5" r="1" fill="white" opacity="0.3"/>}
+          </>}
+          {hatType==='peaked'&&<>
+            {/* Peaked officer cap */}
+            <rect x="15" y="11" width="18" height="5" rx="2" fill={uni.fill}/>
+            <ellipse cx="24" cy="11.5" rx="10" ry="3" fill={uni.accent}/>
+            <rect x="15" y="13.5" width="18" height="1.5" fill={rc}/>
+            {/* Visor */}
+            <ellipse cx="24" cy="15" rx="10" ry="2.5" fill={uni.fill}/>
+            {showFine&&<>
+              <ellipse cx="24" cy="14.5" rx="9" ry="1.5" fill="none" stroke="white" strokeWidth="0.3" opacity="0.2"/>
+              {/* Cap badge */}
+              <circle cx="24" cy="11" r="1.5" fill={rc} opacity="0.8"/>
             </>}
-          </g>:<text x="24" y="26" textAnchor="middle" dominantBaseline="middle" style={{fontSize:s>40?16:12,fontWeight:800,fill:'white',fontFamily:"'Inter'",letterSpacing:1}}>{initials}</text>}
+          </>}
+          {hatType==='helmet'&&<>
+            <path d="M14 18 Q14 7 24 6 Q34 7 34 18" fill={uni.fill}/>
+            <path d="M14 18 Q14 7 24 6 Q34 7 34 18" fill="white" opacity="0.08"/>
+            {showFine&&<>
+              <line x1="16" y1="16" x2="32" y2="16" stroke={rc} strokeWidth="1" opacity="0.5"/>
+              <ellipse cx="24" cy="18" rx="10" ry="1" fill="black" opacity="0.1"/>
+            </>}
+          </>}
+          {hatType==='boonie'&&<>
+            <ellipse cx="24" cy="13" rx="12" ry="3" fill={uni.accent}/>
+            <path d="M16 13 Q16 8 24 7 Q32 8 32 13" fill={uni.fill}/>
+            {showFine&&<ellipse cx="24" cy="13" rx="11" ry="2" fill="none" stroke="white" strokeWidth="0.3" opacity="0.2"/>}
+          </>}
+          {/* Initials fallback for very small sizes */}
+          {s<28&&<text x="24" y="40" textAnchor="middle" dominantBaseline="middle" style={{fontSize:8,fontWeight:800,fill:'white',fontFamily:"'Inter'"}}>{initials}</text>}
         </svg>
-        {editable&&<div style={{position:'absolute',bottom:-1,right:-1,width:16,height:16,borderRadius:'50%',background:C.primary,border:`2px solid ${C.bg}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <MI name="edit" size={8} style={{color:'white'}}/>
+        {editable&&<div style={{position:'absolute',bottom:-1,right:-1,width:s>40?18:14,height:s>40?18:14,borderRadius:'50%',background:C.primary,border:`2px solid ${C.bg}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <MI name="edit" size={s>40?9:7} style={{color:'white'}}/>
         </div>}
       </div>
     );
@@ -942,16 +1039,15 @@ export default function App(){
     const curRank=1;
     return(
     <div key={k} className="flex flex-col pb-4">
-      {/* ═══════ ORANGE HEADER BLOCK ═══════ */}
+      {/* ═══════ ORANGE HEADER (compact) ═══════ */}
       <div className="stagger-1" style={{
         margin:'-16px -16px 0',padding:'0 16px',position:'relative',overflow:'hidden',
-        background:`linear-gradient(180deg, #C2410C 0%, ${C.primary} 40%, ${C.primaryAccent} 100%)`,
+        background:`linear-gradient(180deg, #7C2D12 0%, #9A3412 50%, ${C.primary} 100%)`,
         borderRadius:'0 0 24px 24px',
       }}>
         {/* Decorative circles */}
-        <div style={{position:'absolute',top:-40,right:-30,width:140,height:140,borderRadius:'50%',background:'rgba(255,255,255,0.06)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:20,left:-50,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,0.04)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:40,right:10,width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:-40,right:-30,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,0.05)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:-20,left:-40,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
 
         {/* Top bar: Logo + Notification */}
         <div className="flex items-center justify-between" style={{paddingTop:16,paddingBottom:8}}>
@@ -959,26 +1055,26 @@ export default function App(){
             <GerakMark size={24}/>
             <div>
               <h2 style={{fontSize:14,fontWeight:900,color:'white',letterSpacing:2,lineHeight:1}}>GERAK</h2>
-              <p style={{fontSize:8,fontWeight:600,color:'rgba(255,255,255,0.6)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
+              <p style={{fontSize:8,fontWeight:600,color:'rgba(255,255,255,0.85)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
             </div>
           </div>
           <div role="button" aria-label="Notifications" style={{position:'relative',cursor:'pointer'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
-            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.12)',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.15)'}}>
+            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.2)'}}>
               <MI name="notifications" size={18} style={{color:'white'}}/>
             </div>
-            <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:'2px solid #C2410C'}} className="urgency-pulse"/>
+            <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:'2px solid #7C2D12'}} className="urgency-pulse"/>
           </div>
         </div>
 
         {/* User greeting row */}
         <div className="flex items-center gap-3" style={{padding:'8px 0 12px'}}>
-          <Avatar3D initials="AS" color="rgba(255,255,255,0.2)" size={48} animal={RANKS[curRank].animal} editable/>
+          <Avatar3D initials="AS" size={48} rankIdx={curRank} editable/>
           <div className="flex-1" style={{minWidth:0}}>
-            <p style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.65)',letterSpacing:1,textTransform:'uppercase'}}>Selamat Pagi,</p>
+            <p style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.9)',letterSpacing:1,textTransform:'uppercase'}}>Selamat Pagi,</p>
             <h1 style={{fontSize:18,fontWeight:800,color:'white',lineHeight:1.2,marginTop:2}}>Arif Santoso</h1>
           </div>
           <div style={{textAlign:'right'}}>
-            <div className="flex items-center gap-1" style={{background:'rgba(255,255,255,0.12)',borderRadius:8,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.15)'}}>
+            <div className="flex items-center gap-1" style={{background:'rgba(0,0,0,0.2)',borderRadius:8,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.12)'}}>
               <Animal3D type={RANKS[curRank].animal||'garuda'} size={20}/>
               <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:0.5}}>{RANKS[curRank].name}</span>
             </div>
@@ -986,101 +1082,104 @@ export default function App(){
         </div>
 
         {/* XP Progress */}
-        <div style={{padding:'0 0 14px'}}>
-          <div className="flex items-center justify-between mb-1">
-            <span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.6)'}}>Kemajuan Pangkat</span>
+        <div style={{padding:'0 0 16px'}}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.9)'}}>Kemajuan Pangkat</span>
             <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'white'}}>4.820 / 5.000 XP</span>
           </div>
-          <div style={{height:6,borderRadius:9999,background:'rgba(255,255,255,0.15)',overflow:'hidden'}}>
-            <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:'linear-gradient(90deg,white,rgba(255,255,255,0.7),white)',backgroundSize:'200% 100%'}}/>
+          <div style={{height:6,borderRadius:9999,background:'rgba(0,0,0,0.25)',overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>
+            <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:'linear-gradient(90deg,#FDE68A,#FBBF24,#FDE68A)',backgroundSize:'200% 100%'}}/>
           </div>
-          <div className="flex items-center justify-between mt-1">
-            <span style={{fontSize:9,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>{RANKS[curRank].name}</span>
-            <span style={{fontSize:9,color:'rgba(255,255,255,0.5)',display:'flex',alignItems:'center',gap:2}}>
-              <MI name="arrow_forward" size={10} style={{color:'rgba(255,255,255,0.5)'}}/>{RANKS[curRank+1]?.name||'MAX'}
+          <div className="flex items-center justify-between mt-1.5">
+            <span style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>{RANKS[curRank].name}</span>
+            <span style={{fontSize:9,fontWeight:600,color:'rgba(255,255,255,0.85)',display:'flex',alignItems:'center',gap:2}}>
+              <MI name="arrow_forward" size={10} style={{color:'rgba(255,255,255,0.85)'}}/>{RANKS[curRank+1]?.name||'MAX'}
             </span>
           </div>
         </div>
+      </div>
 
-        {/* ═══ PODIUM LEADERBOARD (Top 3) ═══ */}
-        <div style={{paddingBottom:20,paddingTop:6}}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 style={{fontSize:13,fontWeight:700,color:'white',display:'flex',alignItems:'center',gap:4}}>
-              <MI name="emoji_events" size={16} fill style={{color:'#FDE68A'}}/>Leaderboard
+      {/* ═══ PODIUM LEADERBOARD (separate card, dark bg) ═══ */}
+      <Card className="stagger-2" style={{marginTop:16,padding:0,overflow:'hidden',position:'relative'}}>
+        <div style={{position:'absolute',inset:0,background:`linear-gradient(135deg,${C.primaryFaint},transparent)`,pointerEvents:'none'}}/>
+        <div style={{padding:'14px 16px 6px',position:'relative'}}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 style={{fontSize:14,fontWeight:700,color:C.text,display:'flex',alignItems:'center',gap:5}}>
+              <MI name="emoji_events" size={16} fill style={{color:C.gold}}/>Leaderboard
             </h3>
-            <button onClick={()=>nav('pangkat')} style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.7)',background:'none',border:'none',cursor:'pointer'}}>
-              Lihat Semua <MI name="arrow_forward" size={12} style={{color:'rgba(255,255,255,0.5)'}}/>
+            <button onClick={()=>nav('pangkat')} className="link-action" style={{fontSize:11,fontWeight:600,color:C.primary,background:'none',border:'none',cursor:'pointer'}}>
+              Lihat Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/>
             </button>
           </div>
+        </div>
 
-          {/* Podium — 2nd, 1st, 3rd */}
-          <div className="flex items-end justify-center gap-3" style={{paddingTop:8}}>
-            {/* 2nd Place */}
-            <div style={{flex:1,textAlign:'center'}}>
-              <div style={{position:'relative',display:'inline-block'}}>
-                <Avatar3D initials={LEADERBOARD[1].avatar} color={C.secondary} size={44}/>
-                <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#C0C0C0,#E8E8E8)',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid rgba(255,255,255,0.3)',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}>
-                  <span style={{fontSize:9,fontWeight:800,color:'#666'}}>2</span>
-                </div>
-              </div>
-              <p style={{fontSize:10,fontWeight:700,color:'white',marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[1].name.split(' ').slice(-1)[0]}</p>
-              <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A',marginTop:1}}>{LEADERBOARD[1].xp.toLocaleString()}</p>
-              {/* Podium bar */}
-              <div style={{height:48,background:'rgba(255,255,255,0.1)',borderRadius:'8px 8px 0 0',marginTop:6,border:'1px solid rgba(255,255,255,0.08)',borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <span style={{fontSize:14,fontWeight:800,color:'rgba(255,255,255,0.15)'}}>2</span>
+        {/* Podium — 2nd, 1st, 3rd */}
+        <div className="flex items-end justify-center gap-3" style={{padding:'4px 16px 0',position:'relative'}}>
+          {/* 2nd Place */}
+          <div style={{flex:1,textAlign:'center'}}>
+            <div style={{position:'relative',display:'inline-block'}}>
+              <Avatar3D initials={LEADERBOARD[1].avatar} size={44} rankIdx={LEADERBOARD[1].rankIdx}/>
+              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#C0C0C0,#E8E8E8)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 6px rgba(0,0,0,0.3)'}}>
+                <span style={{fontSize:9,fontWeight:800,color:'#555'}}>2</span>
               </div>
             </div>
-
-            {/* 1st Place (center, tallest) */}
-            <div style={{flex:1,textAlign:'center'}}>
-              <div style={{position:'relative',display:'inline-block'}}>
-                {/* Crown */}
-                <div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',zIndex:1}}>
-                  <svg width="24" height="14" viewBox="0 0 24 14" fill="none">
-                    <path d="M2 12 L5 4 L8 8 L12 1 L16 8 L19 4 L22 12 Z" fill="#FDE68A" stroke="#FBBF24" strokeWidth="0.5"/>
-                  </svg>
-                </div>
-                <Avatar3D initials={LEADERBOARD[0].avatar} color="#FBBF24" size={52}/>
-                <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:20,height:20,borderRadius:'50%',background:'linear-gradient(135deg,#FBBF24,#FDE68A)',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid rgba(255,255,255,0.4)',boxShadow:'0 2px 8px rgba(251,191,36,0.4)'}}>
-                  <span style={{fontSize:10,fontWeight:800,color:'#92400E'}}>1</span>
-                </div>
-              </div>
-              <p style={{fontSize:11,fontWeight:700,color:'white',marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[0].name.split(' ').slice(-1)[0]}</p>
-              <p style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A',marginTop:1}}>{LEADERBOARD[0].xp.toLocaleString()}</p>
-              {/* Podium bar — tallest */}
-              <div style={{height:68,background:'rgba(255,255,255,0.12)',borderRadius:'8px 8px 0 0',marginTop:6,border:'1px solid rgba(255,255,255,0.1)',borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <span style={{fontSize:18,fontWeight:800,color:'rgba(255,255,255,0.15)'}}>1</span>
-              </div>
-            </div>
-
-            {/* 3rd Place */}
-            <div style={{flex:1,textAlign:'center'}}>
-              <div style={{position:'relative',display:'inline-block'}}>
-                <Avatar3D initials={LEADERBOARD[2].avatar} color={C.accent} size={40}/>
-                <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#CD7F32,#DDA15E)',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid rgba(255,255,255,0.3)',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}>
-                  <span style={{fontSize:9,fontWeight:800,color:'#5C3A1E'}}>3</span>
-                </div>
-              </div>
-              <p style={{fontSize:10,fontWeight:700,color:'white',marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[2].name.split(' ').slice(-1)[0]}</p>
-              <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A',marginTop:1}}>{LEADERBOARD[2].xp.toLocaleString()}</p>
-              {/* Podium bar */}
-              <div style={{height:36,background:'rgba(255,255,255,0.08)',borderRadius:'8px 8px 0 0',marginTop:6,border:'1px solid rgba(255,255,255,0.06)',borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <span style={{fontSize:12,fontWeight:800,color:'rgba(255,255,255,0.12)'}}>3</span>
-              </div>
+            <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[1].name.split(' ').slice(-1)[0]}</p>
+            <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary,marginTop:1}}>{LEADERBOARD[1].xp.toLocaleString()}</p>
+            {/* Podium bar */}
+            <div style={{height:44,background:`linear-gradient(180deg,${C.surfaceLight},${C.surface})`,borderRadius:'8px 8px 0 0',marginTop:6,border:`1px solid ${C.border}`,borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{fontSize:14,fontWeight:800,color:C.textMuted+'40'}}>2</span>
             </div>
           </div>
 
-          {/* Your rank row */}
-          <div style={{background:'rgba(255,255,255,0.1)',borderRadius:10,padding:'8px 12px',marginTop:8,border:'1px solid rgba(255,255,255,0.08)',display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontSize:12,fontWeight:800,color:'rgba(255,255,255,0.5)',fontFamily:"'JetBrains Mono'",width:20,textAlign:'center'}}>#4</span>
-            <Avatar3D initials="AS" color="rgba(255,255,255,0.2)" size={28} animal={RANKS[curRank].animal}/>
-            <div className="flex-1" style={{minWidth:0}}>
-              <p style={{fontSize:11,fontWeight:700,color:'white'}}>Arif Santoso <span style={{fontSize:9,fontWeight:600,color:'rgba(255,255,255,0.5)',marginLeft:4}}>Kamu</span></p>
+          {/* 1st Place (center, tallest) */}
+          <div style={{flex:1,textAlign:'center'}}>
+            <div style={{position:'relative',display:'inline-block'}}>
+              {/* Crown */}
+              <div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',zIndex:1}}>
+                <svg width="24" height="14" viewBox="0 0 24 14" fill="none">
+                  <path d="M2 12 L5 4 L8 8 L12 1 L16 8 L19 4 L22 12 Z" fill="#FDE68A" stroke="#FBBF24" strokeWidth="0.5"/>
+                </svg>
+              </div>
+              <Avatar3D initials={LEADERBOARD[0].avatar} size={52} rankIdx={LEADERBOARD[0].rankIdx}/>
+              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:20,height:20,borderRadius:'50%',background:'linear-gradient(135deg,#FBBF24,#FDE68A)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 8px rgba(251,191,36,0.4)'}}>
+                <span style={{fontSize:10,fontWeight:800,color:'#92400E'}}>1</span>
+              </div>
             </div>
-            <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FDE68A'}}>4,820</span>
+            <p style={{fontSize:11,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[0].name.split(' ').slice(-1)[0]}</p>
+            <p style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.gold,marginTop:1}}>{LEADERBOARD[0].xp.toLocaleString()}</p>
+            {/* Podium bar — tallest */}
+            <div style={{height:60,background:`linear-gradient(180deg,${C.primaryLight},${C.primaryFaint})`,borderRadius:'8px 8px 0 0',marginTop:6,border:`1px solid ${C.primary}25`,borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{fontSize:18,fontWeight:800,color:C.primary+'20'}}>1</span>
+            </div>
+          </div>
+
+          {/* 3rd Place */}
+          <div style={{flex:1,textAlign:'center'}}>
+            <div style={{position:'relative',display:'inline-block'}}>
+              <Avatar3D initials={LEADERBOARD[2].avatar} size={40} rankIdx={LEADERBOARD[2].rankIdx}/>
+              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#CD7F32,#DDA15E)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 6px rgba(0,0,0,0.3)'}}>
+                <span style={{fontSize:9,fontWeight:800,color:'#5C3A1E'}}>3</span>
+              </div>
+            </div>
+            <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[2].name.split(' ').slice(-1)[0]}</p>
+            <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary,marginTop:1}}>{LEADERBOARD[2].xp.toLocaleString()}</p>
+            {/* Podium bar */}
+            <div style={{height:32,background:`linear-gradient(180deg,${C.surfaceLight},${C.surface})`,borderRadius:'8px 8px 0 0',marginTop:6,border:`1px solid ${C.border}`,borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{fontSize:12,fontWeight:800,color:C.textMuted+'30'}}>3</span>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Your rank row */}
+        <div style={{background:C.primaryLight,padding:'10px 16px',marginTop:0,borderTop:`1px solid ${C.primary}20`,display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",width:20,textAlign:'center'}}>#4</span>
+          <Avatar3D initials="AS" size={28} rankIdx={curRank}/>
+          <div className="flex-1" style={{minWidth:0}}>
+            <p style={{fontSize:11,fontWeight:700,color:C.text}}>Arif Santoso <span style={{fontSize:9,fontWeight:600,color:C.primary,marginLeft:4}}>Kamu</span></p>
+          </div>
+          <span style={{fontSize:12,fontWeight:800,fontFamily:"'JetBrains Mono'",color:C.primary}}>4,820</span>
+        </div>
+      </Card>
 
       {/* ═══ QUICK STATS (below orange block) ═══ */}
       <div className="stagger-3 grid grid-cols-3 gap-3" style={{marginTop:16,marginBottom:16}}>
@@ -1246,14 +1345,14 @@ export default function App(){
             <div key={i} className="flex items-center gap-3 lb-row" style={{padding:'12px 16px',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
               {i===0?<span className="rank-crown" style={{fontSize:16,width:20,textAlign:'center'}}>👑</span>:
               <span style={{fontSize:14,fontWeight:800,color:i===1?C.silver:'#CD7F32',width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>{p.rank}</span>}
-              <div style={{width:32,height:32,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:i===0?C.goldLight:i===1?'rgba(192,192,192,0.1)':C.primaryLight,fontSize:12,fontWeight:700,color:i===0?C.gold:i===1?C.silver:C.primary,border:`1px solid ${i===0?'rgba(249,115,22,0.2)':i===1?'rgba(192,192,192,0.15)':C.goldLight}`}}>{p.avatar}</div>
+              <Avatar3D initials={p.avatar} size={32} rankIdx={p.rankIdx}/>
               <div className="flex-1"><p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.name}</p></div>
               <span style={{fontSize:12,fontWeight:700,color:C.textSec,fontFamily:"'JetBrains Mono'"}}>{p.xp.toLocaleString()}</span>
             </div>
           ))}
           <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(249,115,22,0.15)`,borderLeft:`3px solid ${C.primary}`}}>
             <span style={{fontSize:14,fontWeight:800,color:C.primary,width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>#4</span>
-            <div style={{width:32,height:32,borderRadius:12,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:C.white,boxShadow:`0 0 12px ${C.primaryGlow}`}}>AS</div>
+            <Avatar3D initials="AS" size={32} rankIdx={1}/>
             <div className="flex-1"><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Kamu <MI name="star" size={12} fill style={{color:C.gold,verticalAlign:'middle',marginLeft:2}}/></p></div>
             <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>#4 · 4,820</span>
           </div>
@@ -1369,6 +1468,55 @@ export default function App(){
         </div>
       </Card>
 
+      {/* ─── Avatar & Seragam (connected to rank) ─── */}
+      <Card className="stagger-2b" style={{padding:0,overflow:'hidden'}}>
+        <div style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+          <Avatar3D initials="AS" size={64} rankIdx={1} editable/>
+          <div className="flex-1" style={{minWidth:0}}>
+            <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:4}}>Avatar & Seragam</h3>
+            <p style={{fontSize:11,color:C.textMuted,lineHeight:1.4}}>Seragam & atribut berubah sesuai pangkat. Naik pangkat untuk membuka gaya baru!</p>
+          </div>
+        </div>
+        {/* Rank uniform progression preview */}
+        <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px',display:'flex',alignItems:'center',gap:8,overflowX:'auto'}} className="hide-scrollbar">
+          {RANKS.map((r,i)=>{
+            const cur=i===1,unlocked=i<=1;
+            return(
+              <div key={i} style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:4,opacity:unlocked?1:0.35,position:'relative'}}>
+                <Avatar3D initials={cur?'AS':'??'} size={40} rankIdx={i}/>
+                <span style={{fontSize:8,fontWeight:700,color:cur?C.primary:unlocked?C.textSec:C.textMuted,textAlign:'center',maxWidth:56,lineHeight:1.2}}>{r.name}</span>
+                {cur&&<div style={{position:'absolute',top:-3,right:-3,width:10,height:10,borderRadius:'50%',background:C.primary,border:`1.5px solid ${C.bg}`}}/>}
+                {!unlocked&&<MI name="lock" size={10} style={{color:C.textMuted,position:'absolute',top:14,left:'50%',transform:'translateX(-50%)'}}/>}
+              </div>
+            );
+          })}
+        </div>
+        {/* Unlockable items tied to badges */}
+        <div style={{borderTop:`1px solid ${C.border}`,padding:'12px 20px'}}>
+          <p style={{fontSize:10,fontWeight:600,color:C.textMuted,marginBottom:8,letterSpacing:0.5,textTransform:'uppercase'}}>Item Terbuka dari Lencana</p>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              {name:'Baret Ksatria',badge:'Naik Pangkat',unlocked:true,icon:'military_tech'},
+              {name:'Helm Tempur',badge:'Krisis Hero',unlocked:true,icon:'security'},
+              {name:'Topi Rimba',badge:'Field Agent',unlocked:true,icon:'forest'},
+              {name:'Seragam Hitam',badge:'Elite',unlocked:false,icon:'diamond'},
+              {name:'Seragam Desert',badge:'Streak 30',unlocked:true,icon:'whatshot'},
+            ].map((item,i)=>(
+              <div key={i} style={{
+                display:'flex',alignItems:'center',gap:4,padding:'4px 10px',borderRadius:8,
+                background:item.unlocked?`${C.primaryLight}`:`${C.surface}`,
+                border:`1px solid ${item.unlocked?C.primary+'30':C.border}`,
+                opacity:item.unlocked?1:0.5,
+              }}>
+                <MI name={item.icon} size={12} style={{color:item.unlocked?C.primary:C.textMuted}}/>
+                <span style={{fontSize:10,fontWeight:600,color:item.unlocked?C.text:C.textMuted}}>{item.name}</span>
+                {!item.unlocked&&<MI name="lock" size={8} style={{color:C.textMuted}}/>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
       {/* ─── Rank Ladder — visual cards ─── */}
       <div className="stagger-3">
         <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:12}}>Jenjang Pangkat</h3>
@@ -1395,8 +1543,8 @@ export default function App(){
                 {/* 3D Animal illustration or basic insignia for Rekrut */}
                 {r.animal?<Animal3D type={r.animal} size={68}/>:<RankInsignia rank={0} size={56} showLabel={false}/>}
                 <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
-                {r.subtitle&&<p style={{fontSize:8,fontWeight:600,color:cur?rankColors.accent+'80':C.textMuted,marginTop:1,letterSpacing:0.3,lineHeight:1.2}}>{r.subtitle}</p>}
-                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3}}>{r.xp.toLocaleString()} XP</p>
+                {r.subtitle&&<p style={{fontSize:8,fontWeight:600,color:cur?rankColors.accent:C.textMuted,marginTop:1,letterSpacing:0.3,lineHeight:1.2,opacity:cur?0.7:1}}>{r.subtitle}</p>}
+                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3,opacity:cur?0.8:1}}>{r.xp.toLocaleString()} XP</p>
                 {cur&&<div style={{marginTop:5,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 8px',display:'inline-block'}}>
                   <span style={{fontSize:10,fontWeight:700,color:rankColors.accent,letterSpacing:0.5}}>SAAT INI</span>
                 </div>}
@@ -1450,8 +1598,8 @@ export default function App(){
       {/* Profile Header */}
       <Card className="stagger-1" style={{textAlign:'center',padding:24,position:'relative',overflow:'hidden'}}>
         <div className="orb orb-2" style={{width:120,height:120,background:'radial-gradient(circle,rgba(249,115,22,0.12),transparent 70%)',top:-20,left:-30}}/>
-        <div style={{width:72,height:72,borderRadius:16,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',border:'2px solid rgba(249,115,22,0.3)',boxShadow:'0 0 24px rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>
-          <span style={{fontSize:24,fontWeight:800,color:C.white}}>AS</span>
+        <div style={{margin:'0 auto 12px',position:'relative',zIndex:1,display:'flex',justifyContent:'center'}}>
+          <Avatar3D initials="AS" size={72} rankIdx={1} editable/>
         </div>
         <h2 style={{fontSize:18,fontWeight:800,color:C.text,position:'relative',zIndex:1}}>Mayor Arif Santoso</h2>
         <p style={{fontSize:11,color:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
