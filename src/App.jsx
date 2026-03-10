@@ -94,6 +94,226 @@ function GerakMark({size=28}){return(
   </svg>
 )}
 
+/* ─── 3D-STYLE ANIMAL ILLUSTRATIONS (Rank Emblems) ───────────────── */
+/* Stylized 3D vector: soft rounded forms, gradient depth, glossy highlights */
+
+function Animal3D({type='garuda',size=80}){
+  const s=size;const id=`a3d_${type}_${Math.random().toString(36).slice(2,6)}`;
+  return(
+    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>
+      <svg viewBox="0 0 80 80" width={s} height={s} fill="none">
+        <defs>
+          {/* Shadow filter */}
+          <filter id={`${id}sh`}><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(0,0,0,0.35)"/></filter>
+          <filter id={`${id}gl`}><feGaussianBlur stdDeviation="1.5"/></filter>
+          {type==='macan'&&<>
+            <linearGradient id={`${id}body`} x1="20" y1="10" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#FB923C"/><stop offset="50%" stopColor="#F97316"/><stop offset="100%" stopColor="#C2410C"/>
+            </linearGradient>
+            <radialGradient id={`${id}hi`} cx="35" cy="25" r="20" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="0.4"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+          </>}
+          {type==='cendrawasih'&&<>
+            <linearGradient id={`${id}body`} x1="20" y1="10" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#38BDF8"/><stop offset="50%" stopColor="#0EA5E9"/><stop offset="100%" stopColor="#0369A1"/>
+            </linearGradient>
+            <linearGradient id={`${id}plume`} x1="20" y1="40" x2="60" y2="75" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#F472B6"/><stop offset="50%" stopColor="#EC4899"/><stop offset="100%" stopColor="#BE185D"/>
+            </linearGradient>
+            <radialGradient id={`${id}hi`} cx="35" cy="25" r="18" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="0.35"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+          </>}
+          {type==='komodo'&&<>
+            <linearGradient id={`${id}body`} x1="10" y1="20" x2="70" y2="65" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#34D399"/><stop offset="50%" stopColor="#10B981"/><stop offset="100%" stopColor="#047857"/>
+            </linearGradient>
+            <radialGradient id={`${id}hi`} cx="35" cy="30" r="22" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="0.3"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+          </>}
+          {type==='garuda'&&<>
+            <linearGradient id={`${id}body`} x1="20" y1="5" x2="60" y2="75" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#FDBA74"/><stop offset="30%" stopColor="#F97316"/><stop offset="100%" stopColor="#9A3412"/>
+            </linearGradient>
+            <linearGradient id={`${id}wing`} x1="10" y1="20" x2="70" y2="50" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#FB923C"/><stop offset="100%" stopColor="#C2410C"/>
+            </linearGradient>
+            <radialGradient id={`${id}hi`} cx="40" cy="22" r="20" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="0.4"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+          </>}
+        </defs>
+
+        {type==='macan'&&<g filter={`url(#${id}sh)`}>
+          {/* Ambient glow */}
+          <ellipse cx="40" cy="68" rx="22" ry="4" fill="#F97316" opacity="0.15" filter={`url(#${id}gl)`}/>
+          {/* Ears — 3D rounded triangles */}
+          <path d="M22 22 Q18 10 26 14 L30 22 Z" fill={`url(#${id}body)`}/>
+          <path d="M58 22 Q62 10 54 14 L50 22 Z" fill={`url(#${id}body)`}/>
+          <path d="M24 20 Q22 14 28 16 L30 22 Z" fill="#FED7AA" opacity="0.5"/>
+          <path d="M56 20 Q58 14 52 16 L50 22 Z" fill="#FED7AA" opacity="0.5"/>
+          {/* Head — rounded 3D shape */}
+          <ellipse cx="40" cy="34" rx="20" ry="18" fill={`url(#${id}body)`}/>
+          {/* Highlight sheen */}
+          <ellipse cx="40" cy="34" rx="20" ry="18" fill={`url(#${id}hi)`}/>
+          {/* White muzzle area — 3D volume */}
+          <ellipse cx="40" cy="40" rx="11" ry="9" fill="#FFF7ED" opacity="0.85"/>
+          <ellipse cx="40" cy="38" rx="8" ry="5" fill="white" opacity="0.15"/>
+          {/* Eyes — glossy 3D */}
+          <ellipse cx="32" cy="30" rx="4" ry="4.5" fill="white"/>
+          <ellipse cx="48" cy="30" rx="4" ry="4.5" fill="white"/>
+          <ellipse cx="33" cy="31" rx="2.5" ry="3" fill="#1E293B"/>
+          <ellipse cx="49" cy="31" rx="2.5" ry="3" fill="#1E293B"/>
+          <circle cx="34" cy="29.5" r="1.2" fill="white" opacity="0.9"/>
+          <circle cx="50" cy="29.5" r="1.2" fill="white" opacity="0.9"/>
+          {/* Nose — glossy */}
+          <ellipse cx="40" cy="37" rx="3.5" ry="2.5" fill="#1E293B" opacity="0.8"/>
+          <ellipse cx="39.5" cy="36.5" rx="1.5" ry="1" fill="white" opacity="0.25"/>
+          {/* Mouth */}
+          <path d="M37 40 Q40 44 43 40" stroke="#9A3412" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+          {/* Stripes — soft 3D */}
+          <path d="M24 24 Q26 28 24 34" stroke="#9A3412" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.5"/>
+          <path d="M56 24 Q54 28 56 34" stroke="#9A3412" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.5"/>
+          <path d="M40 18 L40 23" stroke="#9A3412" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
+          {/* Whiskers */}
+          <line x1="28" y1="40" x2="16" y2="38" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
+          <line x1="28" y1="42" x2="16" y2="43" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
+          <line x1="52" y1="40" x2="64" y2="38" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
+          <line x1="52" y1="42" x2="64" y2="43" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
+          {/* Body */}
+          <ellipse cx="40" cy="58" rx="16" ry="12" fill={`url(#${id}body)`}/>
+          <ellipse cx="40" cy="56" rx="12" ry="6" fill="white" opacity="0.06"/>
+          {/* Chest patch */}
+          <ellipse cx="40" cy="58" rx="9" ry="7" fill="#FED7AA" opacity="0.45"/>
+          {/* Body stripes */}
+          <path d="M30 52 Q32 56 30 60" stroke="#9A3412" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.35"/>
+          <path d="M50 52 Q48 56 50 60" stroke="#9A3412" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.35"/>
+          {/* Feet — rounded 3D */}
+          <ellipse cx="30" cy="68" rx="5" ry="3" fill="#C2410C"/>
+          <ellipse cx="50" cy="68" rx="5" ry="3" fill="#C2410C"/>
+          <ellipse cx="29" cy="67.5" rx="2" ry="1" fill="white" opacity="0.12"/>
+          <ellipse cx="49" cy="67.5" rx="2" ry="1" fill="white" opacity="0.12"/>
+        </g>}
+
+        {type==='cendrawasih'&&<g filter={`url(#${id}sh)`}>
+          <ellipse cx="40" cy="72" rx="18" ry="3" fill="#0EA5E9" opacity="0.12" filter={`url(#${id}gl)`}/>
+          {/* Crest feathers — 3D tubes */}
+          <path d="M38 14 Q36 4 34 2" stroke="#0EA5E9" strokeWidth="3" strokeLinecap="round" opacity="0.7"/>
+          <path d="M40 14 Q40 2 40 0" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" opacity="0.6"/>
+          <path d="M42 14 Q44 4 46 2" stroke="#0EA5E9" strokeWidth="3" strokeLinecap="round" opacity="0.7"/>
+          {/* Head — glossy sphere */}
+          <circle cx="40" cy="22" r="10" fill={`url(#${id}body)`}/>
+          <circle cx="40" cy="22" r="10" fill={`url(#${id}hi)`}/>
+          {/* Eye */}
+          <ellipse cx="44" cy="20" rx="3" ry="3.5" fill="white"/>
+          <circle cx="45" cy="20.5" r="2" fill="#1E293B"/>
+          <circle cx="45.5" cy="19.5" r="0.9" fill="white" opacity="0.9"/>
+          {/* Beak — glossy */}
+          <path d="M48 24 L56 26 L48 28 Z" fill="#FBBF24"/>
+          <path d="M48 24 L54 25.5 L48 26 Z" fill="#FDE68A" opacity="0.5"/>
+          {/* Body — rounded 3D */}
+          <ellipse cx="38" cy="42" rx="12" ry="14" fill={`url(#${id}body)`}/>
+          <ellipse cx="36" cy="38" rx="6" ry="6" fill="white" opacity="0.08"/>
+          {/* Chest */}
+          <ellipse cx="38" cy="44" rx="7" ry="8" fill="#BAE6FD" opacity="0.4"/>
+          {/* Wing — 3D layered */}
+          <path d="M28 34 Q18 38 16 48 Q18 50 26 46 L32 40 Z" fill={`url(#${id}body)`} opacity="0.8"/>
+          <path d="M28 36 Q22 38 20 44 L26 42 Z" fill="white" opacity="0.08"/>
+          {/* Tail plumes — glossy 3D ribbons */}
+          <path d="M32 52 Q18 58 10 72" stroke={`url(#${id}plume)`} strokeWidth="4" strokeLinecap="round" fill="none"/>
+          <path d="M34 54 Q22 62 16 74" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.7"/>
+          <path d="M36 54 Q28 64 24 76" stroke="#F472B6" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5"/>
+          <path d="M44 52 Q58 58 66 72" stroke={`url(#${id}plume)`} strokeWidth="4" strokeLinecap="round" fill="none"/>
+          <path d="M42 54 Q54 62 60 74" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.7"/>
+          {/* Highlight on plumes */}
+          <path d="M30 54 Q20 58 14 68" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.2"/>
+          <path d="M46 54 Q56 58 62 68" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.2"/>
+          {/* Feet */}
+          <path d="M34 54 L32 60 L30 58 M34 54 L36 60 L38 58" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
+        </g>}
+
+        {type==='komodo'&&<g filter={`url(#${id}sh)`}>
+          <ellipse cx="40" cy="66" rx="28" ry="3" fill="#10B981" opacity="0.12" filter={`url(#${id}gl)`}/>
+          {/* Body — long, low, 3D volume */}
+          <ellipse cx="38" cy="48" rx="22" ry="12" fill={`url(#${id}body)`}/>
+          <ellipse cx="36" cy="44" rx="14" ry="5" fill="white" opacity="0.06"/>
+          {/* Belly — lighter underside */}
+          <ellipse cx="38" cy="52" rx="16" ry="6" fill="#6EE7B7" opacity="0.3"/>
+          {/* Head — elongated 3D */}
+          <path d="M56 42 Q64 34 70 36 Q72 40 70 44 Q64 48 56 46 Z" fill={`url(#${id}body)`}/>
+          <path d="M58 40 Q64 36 68 38 Q66 38 62 40 Z" fill="white" opacity="0.1"/>
+          {/* Eye — reptilian, glossy */}
+          <ellipse cx="64" cy="38" rx="3" ry="2.5" fill="#FDE68A" opacity="0.9"/>
+          <ellipse cx="64.5" cy="38" rx="1.2" ry="2.2" fill="#1E293B"/>
+          <circle cx="64" cy="37" r="0.7" fill="white" opacity="0.6"/>
+          {/* Nostril */}
+          <circle cx="69" cy="39" r="1" fill="#047857" opacity="0.6"/>
+          {/* Tongue — forked */}
+          <path d="M70 40 Q74 39 76 37 M74 39 Q76 41 78 40" stroke="#EF4444" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.7"/>
+          {/* Back ridges — 3D bumps */}
+          <path d="M24 40 Q26 36 28 40 Q30 36 32 40 Q34 36 36 40 Q38 36 40 40 Q42 36 44 40 Q46 36 48 40 Q50 36 52 40" stroke="#047857" strokeWidth="1.5" fill="none" opacity="0.35"/>
+          {/* Front legs — 3D volume */}
+          <path d="M26 52 Q22 58 18 62 Q20 62 22 60 Q24 58 28 54" fill={`url(#${id}body)`}/>
+          <path d="M50 52 Q54 58 58 62 Q56 62 54 60 Q52 58 48 54" fill={`url(#${id}body)`}/>
+          {/* Claws */}
+          <circle cx="18" cy="62" r="1.5" fill="#047857"/>
+          <circle cx="58" cy="62" r="1.5" fill="#047857"/>
+          {/* Tail — thick, 3D taper */}
+          <path d="M16 46 Q8 44 4 48 Q6 46 10 46 L16 48 Z" fill={`url(#${id}body)`} opacity="0.8"/>
+          {/* Scales texture — subtle */}
+          <ellipse cx="32" cy="46" rx="2" ry="1.5" fill="white" opacity="0.05"/>
+          <ellipse cx="38" cy="44" rx="2" ry="1.5" fill="white" opacity="0.05"/>
+          <ellipse cx="44" cy="46" rx="2" ry="1.5" fill="white" opacity="0.05"/>
+        </g>}
+
+        {type==='garuda'&&<g filter={`url(#${id}sh)`}>
+          <ellipse cx="40" cy="74" rx="20" ry="3" fill="#F97316" opacity="0.15" filter={`url(#${id}gl)`}/>
+          {/* Crown — golden 3D */}
+          <path d="M32 16 L34 8 L37 14 L40 4 L43 14 L46 8 L48 16 L46 18 L34 18 Z" fill="#FBBF24"/>
+          <path d="M34 10 L37 14 L40 6 L43 14 L46 10 L46 16 L34 16 Z" fill="#FDE68A" opacity="0.4"/>
+          {/* Head — glossy sphere */}
+          <circle cx="40" cy="24" r="8" fill={`url(#${id}body)`}/>
+          <circle cx="40" cy="24" r="8" fill={`url(#${id}hi)`}/>
+          {/* Eyes */}
+          <ellipse cx="37" cy="23" rx="2.5" ry="3" fill="white"/>
+          <ellipse cx="43" cy="23" rx="2.5" ry="3" fill="white"/>
+          <circle cx="37.5" cy="23.5" r="1.5" fill="#1E293B"/>
+          <circle cx="43.5" cy="23.5" r="1.5" fill="#1E293B"/>
+          <circle cx="38" cy="22.5" r="0.7" fill="white" opacity="0.9"/>
+          <circle cx="44" cy="22.5" r="0.7" fill="white" opacity="0.9"/>
+          {/* Beak — glossy golden */}
+          <path d="M38 28 L40 34 L42 28 Z" fill="#FBBF24"/>
+          <path d="M39 28 L40 32 L41 28 Z" fill="#FDE68A" opacity="0.4"/>
+          {/* Body — 3D rounded */}
+          <ellipse cx="40" cy="46" rx="12" ry="14" fill={`url(#${id}body)`}/>
+          <ellipse cx="38" cy="42" rx="6" ry="6" fill="white" opacity="0.08"/>
+          {/* Chest */}
+          <ellipse cx="40" cy="48" rx="7" ry="8" fill="#FDBA74" opacity="0.35"/>
+          {/* Wings — spread, 3D layered */}
+          <path d="M28 36 L22 32 L14 28 L18 36 L8 34 L16 40 L10 44 L20 42 L16 50 L24 44 L28 48 Z" fill={`url(#${id}wing)`}/>
+          <path d="M52 36 L58 32 L66 28 L62 36 L72 34 L64 40 L70 44 L60 42 L64 50 L56 44 L52 48 Z" fill={`url(#${id}wing)`}/>
+          {/* Wing highlights */}
+          <path d="M26 36 L20 32 L16 30 L18 36 Z" fill="white" opacity="0.1"/>
+          <path d="M54 36 L60 32 L64 30 L62 36 Z" fill="white" opacity="0.1"/>
+          {/* Wing feather detail */}
+          <path d="M14 30 L18 36 M10 36 L16 40 M12 42 L20 42" stroke="white" strokeWidth="0.5" opacity="0.15"/>
+          <path d="M66 30 L62 36 M70 36 L64 40 M68 42 L60 42" stroke="white" strokeWidth="0.5" opacity="0.15"/>
+          {/* Tail feathers — 3D */}
+          <path d="M34 58 L40 70 L46 58" fill={`url(#${id}body)`} opacity="0.7"/>
+          <path d="M36 60 L40 68 L44 60" fill="#FDBA74" opacity="0.2"/>
+          {/* Feet */}
+          <ellipse cx="34" cy="62" rx="4" ry="2.5" fill="#C2410C"/>
+          <ellipse cx="46" cy="62" rx="4" ry="2.5" fill="#C2410C"/>
+          <ellipse cx="33.5" cy="61.5" rx="1.5" ry="0.8" fill="white" opacity="0.12"/>
+          <ellipse cx="45.5" cy="61.5" rx="1.5" ry="0.8" fill="white" opacity="0.12"/>
+        </g>}
+      </svg>
+    </div>
+  );
+}
+
 /* ─── SOCIAL SVG ICONS ───────────────────────────────────────────── */
 function IgIcon({size=18,color='#191919'}){return<svg width={size} height={size} viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={color} strokeWidth="2"/><circle cx="12" cy="12" r="5" stroke={color} strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill={color}/></svg>}
 function TiktokIcon({size=18,color='#191919'}){return<svg width={size} height={size} viewBox="0 0 24 24" fill={color}><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0011.14 4.13V13a8.16 8.16 0 005.3 1.93V11.5a4.85 4.85 0 01-3.77-1.93V6.69h3.77z"/></svg>}
@@ -714,11 +934,10 @@ export default function App(){
           {/* Top accent line */}
           <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rt.accent},transparent)`,opacity:0.4}}/>
           <div style={{padding:20,display:'flex',alignItems:'center',gap:16,position:'relative'}}>
-            {/* Rank Insignia */}
-            <div style={{flexShrink:0,position:'relative'}}>
-              <RankInsignia rank={curRank} size={100}/>
-              <div style={{position:'absolute',inset:-6,borderRadius:'50%',border:`1px solid ${rt.accent}20`,pointerEvents:'none'}}/>
-              <div style={{position:'absolute',inset:-12,borderRadius:'50%',border:`1px solid ${rt.accent}10`,pointerEvents:'none'}}/>
+            {/* Rank Animal + Insignia */}
+            <div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+              <Animal3D type={RANKS[curRank].animal||'garuda'} size={80}/>
+              <RankInsignia rank={curRank} size={36} showLabel={false}/>
             </div>
             {/* Greeting + Info */}
             <div className="flex-1" style={{minWidth:0}}>
@@ -1008,10 +1227,11 @@ export default function App(){
         {/* Gradient bg */}
         <div style={{position:'absolute',inset:0,background:`linear-gradient(135deg,${C.primaryLight},${C.primaryFaint},transparent)`,pointerEvents:'none'}}/>
         <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:`radial-gradient(circle,${C.primaryGlow}40,transparent 70%)`,pointerEvents:'none'}}/>
-        <div style={{padding:'24px 20px',display:'flex',alignItems:'center',gap:20,position:'relative'}}>
-          {/* Rank insignia */}
-          <div style={{flexShrink:0}}>
-            <RankInsignia rank={1} size={110}/>
+        <div style={{padding:'24px 20px',display:'flex',alignItems:'center',gap:16,position:'relative'}}>
+          {/* Rank animal + insignia */}
+          <div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+            <Animal3D type="macan" size={72}/>
+            <RankInsignia rank={1} size={48} showLabel={false}/>
           </div>
           {/* Info */}
           <div className="flex-1" style={{minWidth:0}}>
@@ -1048,25 +1268,27 @@ export default function App(){
               {bg:`linear-gradient(135deg,${C.purple}20,${C.surface})`,border:C.purple,accent:C.purple},
               {bg:`linear-gradient(135deg,${C.accent}20,${C.surface})`,border:C.accent,accent:C.accent},
             ][i];
+            const animalTypes=[null,'macan','cendrawasih','komodo','garuda'];
             const animalLabels=[null,'Macan','Cendrawasih','Komodo','Garuda'];
             return(
               <div key={i} style={{
-                flexShrink:0,width:120,borderRadius:12,overflow:'hidden',
+                flexShrink:0,width:130,borderRadius:12,overflow:'hidden',
                 background:cur?rankColors.bg:`linear-gradient(135deg,${C.surface},${C.bg})`,
                 border:`1.5px solid ${cur?rankColors.border:done?C.green+'40':C.border}`,
-                padding:'16px 12px',textAlign:'center',position:'relative',
+                padding:'14px 10px 12px',textAlign:'center',position:'relative',
                 boxShadow:cur?`0 4px 20px ${rankColors.accent}20`:'none',
                 opacity:!cur&&!done?0.5:1,
               }}>
                 {cur&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rankColors.accent},transparent)`,opacity:0.6}}/>}
-                <RankInsignia rank={i} size={72} showLabel={false}/>
-                <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:8,lineHeight:1.2}}>{r.name}</p>
-                {animalLabels[i]&&<p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'99':C.textMuted,marginTop:2,textTransform:'uppercase',letterSpacing:1}}>{animalLabels[i]}</p>}
-                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:4}}>{r.xp.toLocaleString()} XP</p>
-                {cur&&<div style={{marginTop:6,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 8px',display:'inline-block'}}>
+                {/* 3D Animal illustration */}
+                {animalTypes[i]?<Animal3D type={animalTypes[i]} size={64}/>:<RankInsignia rank={0} size={56} showLabel={false}/>}
+                <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
+                {animalLabels[i]&&<p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'99':C.textMuted,marginTop:1,textTransform:'uppercase',letterSpacing:1}}>{animalLabels[i]}</p>}
+                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3}}>{r.xp.toLocaleString()} XP</p>
+                {cur&&<div style={{marginTop:5,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 8px',display:'inline-block'}}>
                   <span style={{fontSize:10,fontWeight:700,color:rankColors.accent,letterSpacing:0.5}}>SAAT INI</span>
                 </div>}
-                {done&&<div style={{marginTop:6}}><MI name="check_circle" size={14} fill style={{color:C.green}}/></div>}
+                {done&&<div style={{marginTop:5}}><MI name="check_circle" size={14} fill style={{color:C.green}}/></div>}
               </div>
             );
           })}
