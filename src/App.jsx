@@ -94,148 +94,6 @@ function GerakMark({size=28}){return(
   </svg>
 )}
 
-/* ─── EMBLEM ILLUSTRATIONS (Military-style Indonesian Fauna) ──── */
-/* Geometric, monochromatic, heraldic — like unit insignia patches */
-
-function EmblemGaruda({size=64,color}){
-  const c=color||C.primary;const s=size;
-  return(
-    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center',opacity:0.9}}>
-      <svg viewBox="0 0 64 64" width={s} height={s} fill="none">
-        {/* Shield shape */}
-        <path d="M32 4 L56 16 L56 38 Q56 52 32 60 Q8 52 8 38 L8 16 Z" fill={c} opacity="0.08" stroke={c} strokeWidth="1.5"/>
-        {/* Garuda silhouette — spread wings */}
-        <path d="M32 16 L28 22 L16 18 L22 26 L12 28 L24 32 L20 38 L28 34 L30 42 L32 34 L34 42 L36 34 L44 38 L40 32 L52 28 L42 26 L48 18 L36 22 Z" fill={c} opacity="0.85"/>
-        {/* Head detail */}
-        <circle cx="32" cy="20" r="3" fill={c}/>
-        {/* Eye */}
-        <circle cx="32" cy="19.5" r="1" fill={C.bg}/>
-        {/* Beak */}
-        <polygon points="31,23 32,26 33,23" fill={c} opacity="0.7"/>
-        {/* Tail feathers */}
-        <path d="M26 42 L32 52 L38 42" fill={c} opacity="0.5"/>
-        <path d="M28 44 L32 50 L36 44" fill={c} opacity="0.3"/>
-      </svg>
-    </div>
-  );
-}
-
-function EmblemMacan({size=64,color}){
-  const c=color||C.primary;const s=size;
-  return(
-    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center',opacity:0.9}}>
-      <svg viewBox="0 0 64 64" width={s} height={s} fill="none">
-        {/* Shield */}
-        <path d="M32 4 L56 16 L56 38 Q56 52 32 60 Q8 52 8 38 L8 16 Z" fill={c} opacity="0.08" stroke={c} strokeWidth="1.5"/>
-        {/* Tiger head — geometric/angular */}
-        <path d="M20 18 L16 10 L24 16 Z" fill={c} opacity="0.6"/>
-        <path d="M44 18 L48 10 L40 16 Z" fill={c} opacity="0.6"/>
-        {/* Head shape */}
-        <path d="M20 22 Q20 14 32 14 Q44 14 44 22 L44 34 Q44 44 32 46 Q20 44 20 34 Z" fill={c} opacity="0.8"/>
-        {/* Eyes — angular slits */}
-        <path d="M24 24 L28 22 L28 26 Z" fill={C.bg}/>
-        <path d="M40 24 L36 22 L36 26 Z" fill={C.bg}/>
-        {/* Nose */}
-        <polygon points="30,30 32,28 34,30 32,32" fill={C.bg} opacity="0.7"/>
-        {/* Stripes */}
-        <line x1="22" y1="18" x2="24" y2="24" stroke={C.bg} strokeWidth="1.5" opacity="0.4"/>
-        <line x1="42" y1="18" x2="40" y2="24" stroke={C.bg} strokeWidth="1.5" opacity="0.4"/>
-        <line x1="32" y1="14" x2="32" y2="18" stroke={C.bg} strokeWidth="1.5" opacity="0.4"/>
-        {/* Jaw line */}
-        <path d="M26 36 Q32 42 38 36" stroke={C.bg} strokeWidth="1" opacity="0.3"/>
-      </svg>
-    </div>
-  );
-}
-
-function EmblemCendrawasih({size=64,color}){
-  const c=color||C.secondary;const s=size;
-  return(
-    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center',opacity:0.9}}>
-      <svg viewBox="0 0 64 64" width={s} height={s} fill="none">
-        {/* Shield */}
-        <path d="M32 4 L56 16 L56 38 Q56 52 32 60 Q8 52 8 38 L8 16 Z" fill={c} opacity="0.08" stroke={c} strokeWidth="1.5"/>
-        {/* Bird body */}
-        <ellipse cx="32" cy="30" rx="8" ry="10" fill={c} opacity="0.8"/>
-        {/* Head */}
-        <circle cx="32" cy="18" r="5" fill={c} opacity="0.85"/>
-        {/* Eye */}
-        <circle cx="33" cy="17" r="1.2" fill={C.bg}/>
-        {/* Crest */}
-        <path d="M30 14 L28 8 M32 13 L32 7 M34 14 L36 8" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-        {/* Beak */}
-        <polygon points="36,18 40,20 36,21" fill={c} opacity="0.6"/>
-        {/* Tail plumes — long elegant curves */}
-        <path d="M28 38 Q16 44 12 54" stroke={c} strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
-        <path d="M30 40 Q20 48 18 56" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity="0.35"/>
-        <path d="M36 38 Q48 44 52 54" stroke={c} strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
-        <path d="M34 40 Q44 48 46 56" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity="0.35"/>
-        {/* Wing */}
-        <path d="M24 26 Q16 30 18 38 L26 34 Z" fill={c} opacity="0.5"/>
-        <path d="M40 26 Q48 30 46 38 L38 34 Z" fill={c} opacity="0.5"/>
-      </svg>
-    </div>
-  );
-}
-
-function EmblemKomodo({size=64,color}){
-  const c=color||C.green;const s=size;
-  return(
-    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center',opacity:0.9}}>
-      <svg viewBox="0 0 64 64" width={s} height={s} fill="none">
-        {/* Shield */}
-        <path d="M32 4 L56 16 L56 38 Q56 52 32 60 Q8 52 8 38 L8 16 Z" fill={c} opacity="0.08" stroke={c} strokeWidth="1.5"/>
-        {/* Komodo body — low profile, angular */}
-        <path d="M14 34 Q14 28 24 26 L40 26 Q50 28 50 34 L48 40 Q44 44 32 44 Q20 44 16 40 Z" fill={c} opacity="0.75"/>
-        {/* Head */}
-        <path d="M40 28 L52 22 L54 26 L50 30 L44 30 Z" fill={c} opacity="0.85"/>
-        {/* Eye */}
-        <circle cx="50" cy="24" r="1.5" fill={C.bg} opacity="0.8"/>
-        {/* Jaw */}
-        <path d="M50 28 L54 28 L52 26" fill={c} opacity="0.5"/>
-        {/* Tongue */}
-        <line x1="54" y1="26" x2="58" y2="24" stroke={c} strokeWidth="1" strokeLinecap="round" opacity="0.5"/>
-        {/* Back ridges */}
-        <path d="M24 26 L26 22 L28 26 L30 22 L32 26 L34 22 L36 26 L38 22 L40 26" stroke={c} strokeWidth="1.2" fill="none" opacity="0.4"/>
-        {/* Legs */}
-        <path d="M22 40 L18 48 L22 46" fill={c} opacity="0.5"/>
-        <path d="M42 40 L46 48 L42 46" fill={c} opacity="0.5"/>
-        {/* Tail */}
-        <path d="M14 34 Q8 32 6 36 Q8 34 12 34" fill={c} opacity="0.5"/>
-      </svg>
-    </div>
-  );
-}
-
-function EmblemOrangutan({size=64,color}){
-  const c=color||C.orange;const s=size;
-  return(
-    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center',opacity:0.9}}>
-      <svg viewBox="0 0 64 64" width={s} height={s} fill="none">
-        {/* Shield */}
-        <path d="M32 4 L56 16 L56 38 Q56 52 32 60 Q8 52 8 38 L8 16 Z" fill={c} opacity="0.08" stroke={c} strokeWidth="1.5"/>
-        {/* Head */}
-        <circle cx="32" cy="22" r="10" fill={c} opacity="0.8"/>
-        {/* Face disc */}
-        <circle cx="32" cy="24" r="6.5" fill={c} opacity="0.5"/>
-        {/* Eyes */}
-        <circle cx="29" cy="22" r="1.5" fill={C.bg}/>
-        <circle cx="35" cy="22" r="1.5" fill={C.bg}/>
-        {/* Nose/mouth area */}
-        <ellipse cx="32" cy="26" rx="2.5" ry="1.5" fill={C.bg} opacity="0.4"/>
-        {/* Body */}
-        <path d="M24 30 Q24 38 32 42 Q40 38 40 30 Z" fill={c} opacity="0.7"/>
-        {/* Arms — long, reaching down */}
-        <path d="M24 32 Q14 36 12 46 L16 44 Q18 38 24 36 Z" fill={c} opacity="0.55"/>
-        <path d="M40 32 Q50 36 52 46 L48 44 Q46 38 40 36 Z" fill={c} opacity="0.55"/>
-        {/* Hands */}
-        <circle cx="12" cy="46" r="2.5" fill={c} opacity="0.5"/>
-        <circle cx="52" cy="46" r="2.5" fill={c} opacity="0.5"/>
-      </svg>
-    </div>
-  );
-}
-
 /* ─── SOCIAL SVG ICONS ───────────────────────────────────────────── */
 function IgIcon({size=18,color='#191919'}){return<svg width={size} height={size} viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={color} strokeWidth="2"/><circle cx="12" cy="12" r="5" stroke={color} strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill={color}/></svg>}
 function TiktokIcon({size=18,color='#191919'}){return<svg width={size} height={size} viewBox="0 0 24 24" fill={color}><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0011.14 4.13V13a8.16 8.16 0 005.3 1.93V11.5a4.85 4.85 0 01-3.77-1.93V6.69h3.77z"/></svg>}
@@ -379,9 +237,11 @@ const MISSIONS=[
 ];
 
 const RANKS=[
-  {name:'Rekrut Digital',xp:0,icon:'person'},{name:'Perwira Muda',xp:1000,icon:'military_tech'},
-  {name:'Perwira Madya',xp:5000,icon:'shield'},{name:'Perwira Utama',xp:15000,icon:'stars'},
-  {name:'Komandan Garuda',xp:50000,icon:'workspace_premium'},
+  {name:'Rekrut Digital',xp:0,icon:'person',animal:null},
+  {name:'Perwira Muda',xp:1000,icon:'military_tech',animal:'macan'},
+  {name:'Perwira Madya',xp:5000,icon:'shield',animal:'cendrawasih'},
+  {name:'Perwira Utama',xp:15000,icon:'stars',animal:'komodo'},
+  {name:'Komandan Garuda',xp:50000,icon:'workspace_premium',animal:'garuda'},
 ];
 
 /* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
@@ -432,51 +292,81 @@ function RankInsignia({rank=0,size=120,showLabel=true}){
       {/* Inner hex border */}
       <path d={hexPath(60,52,34)} fill="none" stroke={c.accent} strokeWidth="0.5" opacity="0.3"/>
 
-      {/* Rank-specific center emblem */}
+      {/* Rank-specific center emblem — animal silhouettes */}
       {rank===0&&<g filter={`url(#${id}fi)`}>
-        <path d="M60 36 L72 48 L60 44 L48 48 Z" fill="white" opacity="0.9"/>
-        <path d="M60 50 L72 62 L60 58 L48 62 Z" fill="white" opacity="0.5"/>
+        {/* Rekrut: simple chevron */}
+        <path d="M60 38 L72 50 L60 46 L48 50 Z" fill="white" opacity="0.85"/>
+        <path d="M60 52 L72 64 L60 60 L48 64 Z" fill="white" opacity="0.45"/>
       </g>}
 
       {rank===1&&<g filter={`url(#${id}fi)`}>
-        <polygon points="60,32 64,44 76,44 67,52 70,64 60,56 50,64 53,52 44,44 56,44" fill="white" opacity="0.95"/>
+        {/* Macan (tiger) — angular head silhouette */}
+        <path d="M48 32 L44 24 L52 30 Z" fill="white" opacity="0.7"/>
+        <path d="M72 32 L76 24 L68 30 Z" fill="white" opacity="0.7"/>
+        <path d="M48 34 Q48 28 60 26 Q72 28 72 34 L72 50 Q72 60 60 64 Q48 60 48 50 Z" fill="white" opacity="0.85"/>
+        {/* Eyes */}
+        <path d="M52 40 L56 38 L56 42 Z" fill={c.dark} opacity="0.6"/>
+        <path d="M68 40 L64 38 L64 42 Z" fill={c.dark} opacity="0.6"/>
+        {/* Nose */}
+        <polygon points="58,48 60,46 62,48 60,50" fill={c.dark} opacity="0.4"/>
+        {/* Stripes */}
+        <line x1="50" y1="32" x2="52" y2="38" stroke={c.dark} strokeWidth="1.2" opacity="0.3"/>
+        <line x1="70" y1="32" x2="68" y2="38" stroke={c.dark} strokeWidth="1.2" opacity="0.3"/>
+        <line x1="60" y1="26" x2="60" y2="30" stroke={c.dark} strokeWidth="1.2" opacity="0.3"/>
       </g>}
 
       {rank===2&&<g filter={`url(#${id}fi)`}>
-        {/* Wings */}
-        <path d="M38 50 Q22 42 20 52 Q22 62 36 58" fill="white" opacity="0.3"/>
-        <path d="M82 50 Q98 42 100 52 Q98 62 84 58" fill="white" opacity="0.3"/>
-        {/* Shield */}
-        <path d="M60 34 L74 42 L74 58 Q74 66 60 72 Q46 66 46 58 L46 42 Z" fill="white" opacity="0.15" stroke="white" strokeWidth="1" strokeOpacity="0.5"/>
-        {/* Two stars */}
-        <polygon points="52,48 53.5,52 58,52 54.5,55 55.5,59 52,56.5 48.5,59 49.5,55 46,52 50.5,52" fill="white" opacity="0.9"/>
-        <polygon points="68,48 69.5,52 74,52 70.5,55 71.5,59 68,56.5 64.5,59 65.5,55 62,52 66.5,52" fill="white" opacity="0.9"/>
+        {/* Cendrawasih (bird of paradise) — elegant profile */}
+        <circle cx="60" cy="36" r="6" fill="white" opacity="0.85"/>
+        <circle cx="61" cy="35" r="1.2" fill={c.dark} opacity="0.5"/>
+        {/* Beak */}
+        <polygon points="65,37 72,39 65,40" fill="white" opacity="0.7"/>
+        {/* Crest feathers */}
+        <path d="M58 31 L56 22 M60 30 L60 20 M62 31 L64 22" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+        {/* Body */}
+        <ellipse cx="58" cy="48" rx="8" ry="10" fill="white" opacity="0.75"/>
+        {/* Tail plumes — flowing */}
+        <path d="M52 54 Q38 58 32 70" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5"/>
+        <path d="M54 56 Q42 62 38 72" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.35"/>
+        <path d="M64 54 Q78 58 84 70" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5"/>
+        {/* Wing */}
+        <path d="M50 44 Q42 48 44 56 L52 52 Z" fill="white" opacity="0.45"/>
       </g>}
 
       {rank===3&&<g filter={`url(#${id}fi)`}>
-        {/* Laurel arcs */}
-        <path d="M36 68 Q30 52 34 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3"/>
-        <path d="M84 68 Q90 52 86 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3"/>
-        {/* Shield */}
-        <path d="M60 32 L78 42 L78 60 Q78 72 60 78 Q42 72 42 60 L42 42 Z" fill="white" opacity="0.1" stroke="white" strokeWidth="1" strokeOpacity="0.4"/>
-        {/* Three stars */}
-        <polygon points="60,36 62.5,44 70,44 64,49 66.5,57 60,52 53.5,57 56,49 50,44 57.5,44" fill="white" opacity="0.95"/>
-        <polygon points="48,56 49.5,60 53,60 50,62.5 51,66 48,64 45,66 46,62.5 43,60 46.5,60" fill="white" opacity="0.6"/>
-        <polygon points="72,56 73.5,60 77,60 74,62.5 75,66 72,64 69,66 70,62.5 67,60 70.5,60" fill="white" opacity="0.6"/>
+        {/* Komodo dragon — low angular profile */}
+        {/* Laurel frame */}
+        <path d="M36 68 Q30 52 34 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.25"/>
+        <path d="M84 68 Q90 52 86 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.25"/>
+        {/* Body */}
+        <path d="M32 50 Q32 42 46 38 L74 38 Q84 42 84 50 L80 58 Q72 64 60 64 Q48 64 40 58 Z" fill="white" opacity="0.8"/>
+        {/* Head */}
+        <path d="M74 40 L90 32 L92 38 L86 44 L78 44 Z" fill="white" opacity="0.85"/>
+        {/* Eye */}
+        <circle cx="86" cy="36" r="1.5" fill={c.dark} opacity="0.5"/>
+        {/* Back ridges */}
+        <path d="M46 38 L48 32 L50 38 L52 32 L54 38 L56 32 L58 38 L60 32 L62 38 L64 32 L66 38 L68 32 L70 38" stroke="white" strokeWidth="1" fill="none" opacity="0.35"/>
+        {/* Legs */}
+        <path d="M44 58 L38 66 L42 64" fill="white" opacity="0.5"/>
+        <path d="M76 58 L82 66 L78 64" fill="white" opacity="0.5"/>
+        {/* Tail */}
+        <path d="M32 50 Q24 48 20 52 Q24 50 30 50" fill="white" opacity="0.45"/>
       </g>}
 
       {rank===4&&<g filter={`url(#${id}fi)`}>
-        {/* Crown */}
-        <path d="M44 30 L48 22 L54 28 L60 18 L66 28 L72 22 L76 30 L74 34 L46 34 Z" fill="white" opacity="0.9"/>
-        {/* Garuda wings */}
-        <path d="M36 52 Q18 40 16 50 Q18 62 34 58" fill="white" opacity="0.25"/>
-        <path d="M84 52 Q102 40 104 50 Q102 62 86 58" fill="white" opacity="0.25"/>
-        {/* Shield */}
-        <path d="M60 36 L80 48 L80 64 Q80 78 60 86 Q40 78 40 64 L40 48 Z" fill="white" opacity="0.1" stroke="white" strokeWidth="1" strokeOpacity="0.4"/>
-        {/* Big star */}
-        <polygon points="60,44 63.5,54 74,54 66,60 69,70 60,64 51,70 54,60 46,54 56.5,54" fill="white" opacity="0.95"/>
-        {/* Dots */}
-        <circle cx="48" cy="52" r="2" fill="white" opacity="0.6"/><circle cx="72" cy="52" r="2" fill="white" opacity="0.6"/>
+        {/* Garuda — spread wings, crown */}
+        <path d="M48 26 L52 18 L56 24 L60 14 L64 24 L68 18 L72 26 L70 30 L50 30 Z" fill="white" opacity="0.9"/>
+        {/* Spread wings */}
+        <path d="M60 36 L56 42 L38 34 L46 46 L28 42 L42 50 L34 56 L48 52 L50 62 L54 52 L60 54" fill="white" opacity="0.8"/>
+        <path d="M60 36 L64 42 L82 34 L74 46 L92 42 L78 50 L86 56 L72 52 L70 62 L66 52 L60 54" fill="white" opacity="0.8"/>
+        {/* Head */}
+        <circle cx="60" cy="38" r="4" fill="white" opacity="0.9"/>
+        <circle cx="60" cy="37" r="1.2" fill={c.dark} opacity="0.5"/>
+        {/* Beak */}
+        <polygon points="59,42 60,46 61,42" fill="white" opacity="0.7"/>
+        {/* Tail */}
+        <path d="M52 62 L60 74 L68 62" fill="white" opacity="0.5"/>
+        <path d="M54 64 L60 72 L66 64" fill="white" opacity="0.3"/>
       </g>}
 
       {/* Rank label */}
@@ -791,7 +681,7 @@ export default function App(){
       {/* GERAK Branding Bar */}
       <div className="stagger-1 flex items-center justify-between pt-2" style={{marginBottom:12}}>
         <div className="flex items-center gap-2.5">
-          <EmblemGaruda size={28}/>
+          <GerakMark size={28}/>
           <div>
             <h2 style={{fontSize:15,fontWeight:900,color:C.text,letterSpacing:2,lineHeight:1}}>GERAK</h2>
             <p style={{fontSize:9,fontWeight:600,color:C.textMuted,letterSpacing:1.2,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
@@ -846,7 +736,6 @@ export default function App(){
                 </div>
                 <div style={{height:5,borderRadius:9999,background:C.overlay06,overflow:'hidden',position:'relative'}}>
                   <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${rt.accent},${rt.light},${rt.accent})`,backgroundSize:'200% 100%'}}/>
-                  <div style={{position:'absolute',top:-18,right:'4%',zIndex:2,opacity:0.6}}><EmblemGaruda size={18} color={rt.accent}/></div>
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <span style={{fontSize:9,fontWeight:600,color:rt.accent}}>{RANKS[curRank].name}</span>
@@ -866,7 +755,6 @@ export default function App(){
           <Card key={i} style={{textAlign:'center',padding:12}}>
             <div className="stat-icon" style={{width:36,height:36,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px',cursor:'default',position:'relative'}}>
               <MI name={s.icon} size={18} fill style={{color:s.color}}/>
-              {s.icon==='local_fire_department'&&<div style={{position:'absolute',top:-8,right:-8,opacity:0.5}}><EmblemMacan size={18}/></div>}
             </div>
             <p className={`num-pop num-pop-d${i+1}`} style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
             <p className="flex items-center justify-center gap-1" style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label} <Tip text={s.tip}><MI name="info" size={9} style={{color:C.textMuted,opacity:0.5}}/></Tip></p>
@@ -1025,12 +913,12 @@ export default function App(){
             <div key={i} className="flex items-center gap-3 lb-row" style={{padding:'12px 16px',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
               {i===0?<span className="rank-crown" style={{fontSize:16,width:20,textAlign:'center'}}>👑</span>:
               <span style={{fontSize:14,fontWeight:800,color:i===1?C.silver:'#CD7F32',width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>{p.rank}</span>}
-              <div style={{width:32,height:32,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:i===0?C.goldLight:i===1?'rgba(192,192,192,0.1)':C.primaryLight,fontSize:12,fontWeight:700,color:i===0?C.gold:i===1?C.silver:C.primary,border:`1px solid ${i===0?'rgba(251,191,36,0.2)':i===1?'rgba(192,192,192,0.15)':C.goldLight}`}}>{p.avatar}</div>
+              <div style={{width:32,height:32,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:i===0?C.goldLight:i===1?'rgba(192,192,192,0.1)':C.primaryLight,fontSize:12,fontWeight:700,color:i===0?C.gold:i===1?C.silver:C.primary,border:`1px solid ${i===0?'rgba(249,115,22,0.2)':i===1?'rgba(192,192,192,0.15)':C.goldLight}`}}>{p.avatar}</div>
               <div className="flex-1"><p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.name}</p></div>
               <span style={{fontSize:12,fontWeight:700,color:C.textSec,fontFamily:"'JetBrains Mono'"}}>{p.xp.toLocaleString()}</span>
             </div>
           ))}
-          <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(201,168,76,0.15)`,borderLeft:`3px solid ${C.primary}`}}>
+          <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(249,115,22,0.15)`,borderLeft:`3px solid ${C.primary}`}}>
             <span style={{fontSize:14,fontWeight:800,color:C.primary,width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>#4</span>
             <div style={{width:32,height:32,borderRadius:12,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:C.white,boxShadow:`0 0 12px ${C.primaryGlow}`}}>AS</div>
             <div className="flex-1"><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Kamu <MI name="star" size={12} fill style={{color:C.gold,verticalAlign:'middle',marginLeft:2}}/></p></div>
@@ -1051,7 +939,7 @@ export default function App(){
       </div>
       {filtered.length===0&&(
         <Card className="stagger-3" style={{textAlign:'center',padding:'32px 16px'}}>
-          <div className="empty-float" style={{opacity:0.4}}><EmblemCendrawasih size={64}/></div>
+          <div className="empty-float"><MI name="search_off" size={40} style={{color:C.textMuted,opacity:0.5}}/></div>
           <p style={{fontSize:14,fontWeight:700,color:C.textMuted,marginTop:8}}>Tidak ada misi</p>
           <p style={{fontSize:12,color:C.textMuted,marginTop:2}}>Coba filter lain untuk melihat misi</p>
           <button onClick={()=>setFilter('Semua')} style={{marginTop:12,padding:'8px 20px',borderRadius:8,border:`1px solid ${C.primary}`,background:'transparent',color:C.primary,fontSize:12,fontWeight:700,cursor:'pointer'}}>Reset Filter</button>
@@ -1118,8 +1006,8 @@ export default function App(){
       {/* ─── Current Rank Hero Card ─── */}
       <Card className="stagger-2" style={{padding:0,overflow:'hidden',position:'relative'}}>
         {/* Gradient bg */}
-        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.02),transparent)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:'radial-gradient(circle,rgba(201,168,76,0.12),transparent 70%)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',inset:0,background:`linear-gradient(135deg,${C.primaryLight},${C.primaryFaint},transparent)`,pointerEvents:'none'}}/>
+        <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:`radial-gradient(circle,${C.primaryGlow}40,transparent 70%)`,pointerEvents:'none'}}/>
         <div style={{padding:'24px 20px',display:'flex',alignItems:'center',gap:20,position:'relative'}}>
           {/* Rank insignia */}
           <div style={{flexShrink:0}}>
@@ -1130,7 +1018,7 @@ export default function App(){
             <span style={{fontSize:9,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Pangkat Saat Ini</span>
             <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Perwira Muda</h2>
             <div className="flex items-center gap-2 mt-2">
-              <span style={{background:'linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.05))',borderRadius:9999,padding:'3px 10px',border:`1px solid rgba(201,168,76,0.25)`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>4,820 XP</span>
+              <span style={{background:`linear-gradient(135deg,${C.primaryMid},${C.primaryFaint})`,borderRadius:9999,padding:'3px 10px',border:`1px solid ${C.primary}40`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>4,820 XP</span>
               <span style={{fontSize:10,color:C.textMuted}}>/ 5,000</span>
             </div>
             {/* Progress */}
@@ -1160,20 +1048,22 @@ export default function App(){
               {bg:`linear-gradient(135deg,${C.purple}20,${C.surface})`,border:C.purple,accent:C.purple},
               {bg:`linear-gradient(135deg,${C.accent}20,${C.surface})`,border:C.accent,accent:C.accent},
             ][i];
+            const animalLabels=[null,'Macan','Cendrawasih','Komodo','Garuda'];
             return(
               <div key={i} style={{
-                flexShrink:0,width:100,borderRadius:16,overflow:'hidden',
+                flexShrink:0,width:120,borderRadius:12,overflow:'hidden',
                 background:cur?rankColors.bg:`linear-gradient(135deg,${C.surface},${C.bg})`,
                 border:`1.5px solid ${cur?rankColors.border:done?C.green+'40':C.border}`,
-                padding:'14px 10px',textAlign:'center',position:'relative',
+                padding:'16px 12px',textAlign:'center',position:'relative',
                 boxShadow:cur?`0 4px 20px ${rankColors.accent}20`:'none',
                 opacity:!cur&&!done?0.5:1,
               }}>
                 {cur&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rankColors.accent},transparent)`,opacity:0.6}}/>}
-                <RankInsignia rank={i} size={56} showLabel={false}/>
-                <p style={{fontSize:10,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
-                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3}}>{r.xp.toLocaleString()} XP</p>
-                {cur&&<div style={{marginTop:6,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 6px',display:'inline-block'}}>
+                <RankInsignia rank={i} size={72} showLabel={false}/>
+                <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:8,lineHeight:1.2}}>{r.name}</p>
+                {animalLabels[i]&&<p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'99':C.textMuted,marginTop:2,textTransform:'uppercase',letterSpacing:1}}>{animalLabels[i]}</p>}
+                <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent+'AA':C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:4}}>{r.xp.toLocaleString()} XP</p>
+                {cur&&<div style={{marginTop:6,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 8px',display:'inline-block'}}>
                   <span style={{fontSize:10,fontWeight:700,color:rankColors.accent,letterSpacing:0.5}}>SAAT INI</span>
                 </div>}
                 {done&&<div style={{marginTop:6}}><MI name="check_circle" size={14} fill style={{color:C.green}}/></div>}
@@ -1225,13 +1115,13 @@ export default function App(){
     <div key={k} className="flex flex-col gap-4 pb-4">
       {/* Profile Header */}
       <Card className="stagger-1" style={{textAlign:'center',padding:24,position:'relative',overflow:'hidden'}}>
-        <div className="orb orb-2" style={{width:120,height:120,background:'radial-gradient(circle,rgba(201,168,76,0.12),transparent 70%)',top:-20,left:-30}}/>
-        <div style={{width:72,height:72,borderRadius:16,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',border:'2px solid rgba(201,168,76,0.3)',boxShadow:'0 0 24px rgba(201,168,76,0.2)',position:'relative',zIndex:1}}>
+        <div className="orb orb-2" style={{width:120,height:120,background:'radial-gradient(circle,rgba(249,115,22,0.12),transparent 70%)',top:-20,left:-30}}/>
+        <div style={{width:72,height:72,borderRadius:16,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',border:'2px solid rgba(249,115,22,0.3)',boxShadow:'0 0 24px rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>
           <span style={{fontSize:24,fontWeight:800,color:C.white}}>AS</span>
         </div>
         <h2 style={{fontSize:18,fontWeight:800,color:C.text,position:'relative',zIndex:1}}>Mayor Arif Santoso</h2>
         <p style={{fontSize:11,color:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
-        <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(251,191,36,0.2)',position:'relative',zIndex:1}}>Perwira Muda</span>
+        <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>Perwira Muda</span>
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[{l:'Misi',v:'24'},{l:'XP',v:'4,820'},{l:'Rank',v:'#12'}].map((s,i)=>(
             <div key={i} style={{background:C.surfaceLight,borderRadius:12,padding:'8px 0',textAlign:'center',border:`1px solid ${C.border}`,position:'relative',zIndex:1}}>
@@ -1309,7 +1199,7 @@ export default function App(){
           <div key={i} className="flex items-center justify-between" style={{padding:'10px 0',borderBottom:`1px solid ${C.borderLight}`}}>
             <div><p style={{fontSize:13,fontWeight:600,color:C.text}}>{s.label}</p><p style={{fontSize:11,color:C.textMuted}}>{s.desc}</p></div>
             <button onClick={s.toggle} style={{width:44,height:24,borderRadius:12,position:'relative',border:'none',cursor:'pointer',background:s.on?C.primary:C.border,transition:'background 200ms ease'}}>
-              <span className="toggle-knob" style={{width:18,height:18,borderRadius:'50%',background:C.white,position:'absolute',top:3,left:s.on?23:3,boxShadow:s.on?`0 0 8px rgba(201,168,76,0.4), 0 1px 3px rgba(0,0,0,0.15)`:'0 1px 3px rgba(0,0,0,0.15)'}}/>
+              <span className="toggle-knob" style={{width:18,height:18,borderRadius:'50%',background:C.white,position:'absolute',top:3,left:s.on?23:3,boxShadow:s.on?`0 0 8px rgba(249,115,22,0.4), 0 1px 3px rgba(0,0,0,0.15)`:'0 1px 3px rgba(0,0,0,0.15)'}}/>
             </button>
           </div>
         ))}
@@ -1360,12 +1250,12 @@ export default function App(){
 
         {/* Reach & Engagement */}
         <div className="stagger-4 grid grid-cols-2 gap-3">
-          <Card style={{padding:14,background:'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.08))',border:'1px solid rgba(201,168,76,0.2)'}}>
+          <Card style={{padding:14,background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(249,115,22,0.08))',border:'1px solid rgba(249,115,22,0.2)'}}>
             <MI name="public" size={20} style={{color:C.primary}}/>
             <p style={{fontSize:22,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'JetBrains Mono'"}}>{ADMIN_STATS.totalReach}</p>
             <p style={{fontSize:11,color:C.textSec}}>Total Reach</p>
           </Card>
-          <Card style={{padding:14,background:'linear-gradient(135deg,rgba(251,191,36,0.1),rgba(245,158,11,0.06))',border:'1px solid rgba(251,191,36,0.15)'}}>
+          <Card style={{padding:14,background:'linear-gradient(135deg,rgba(249,115,22,0.1),rgba(245,158,11,0.06))',border:'1px solid rgba(249,115,22,0.15)'}}>
             <MI name="trending_up" size={20} style={{color:C.gold}}/>
             <p style={{fontSize:22,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'JetBrains Mono'"}}>{ADMIN_STATS.avgEngagement}</p>
             <p style={{fontSize:11,color:C.textSec}}>Avg Engagement</p>
@@ -1631,7 +1521,7 @@ export default function App(){
     return(<div key={k} className="flex flex-col gap-4 pb-4">
       <div className="stagger-1 flex items-center justify-between" style={{paddingTop:4}}>
         <h1 style={{fontSize:22,fontWeight:800,color:C.text}}>Konten Saya</h1>
-        {totalXpEarned>0&&<div style={{background:C.goldLight,borderRadius:8,padding:'4px 12px',border:'1px solid rgba(201,168,76,0.2)',display:'flex',alignItems:'center',gap:4}}>
+        {totalXpEarned>0&&<div style={{background:C.goldLight,borderRadius:8,padding:'4px 12px',border:'1px solid rgba(249,115,22,0.2)',display:'flex',alignItems:'center',gap:4}}>
           <MI name="stars" size={14} fill style={{color:C.gold}}/>
           <span style={{fontSize:13,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{totalXpEarned} XP</span>
         </div>}
@@ -1769,7 +1659,7 @@ export default function App(){
                 color:post.status==='SELESAI'?C.green:C.orange,
               }}>{post.status==='SELESAI'?'Selesai':'Direview'}</span>
               {post.status==='SELESAI'&&post.xpEarned>0&&(
-                <span style={{fontSize:10,fontWeight:800,color:C.gold,background:C.goldLight,borderRadius:6,padding:'2px 8px',fontFamily:"'JetBrains Mono'",border:'1px solid rgba(201,168,76,0.2)'}}>+{post.xpEarned} XP</span>
+                <span style={{fontSize:10,fontWeight:800,color:C.gold,background:C.goldLight,borderRadius:6,padding:'2px 8px',fontFamily:"'JetBrains Mono'",border:'1px solid rgba(249,115,22,0.2)'}}>+{post.xpEarned} XP</span>
               )}
               {post.status==='REVIEW'&&(
                 <span style={{fontSize:9,color:C.textMuted,fontStyle:'italic'}}>Menunggu</span>
@@ -1805,7 +1695,7 @@ export default function App(){
       {/* Header + Points Balance */}
       <div className="stagger-1">
         <h1 style={{fontSize:22,fontWeight:800,color:C.text,paddingTop:4,marginBottom:8}}>Toko Poin</h1>
-        <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(232,212,139,0.08))',borderRadius:12,padding:'16px 14px',border:`1px solid rgba(201,168,76,0.2)`,position:'relative',overflow:'hidden'}}>
+        <div style={{background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(249,115,22,0.08))',borderRadius:12,padding:'16px 14px',border:`1px solid rgba(249,115,22,0.2)`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-10,top:-10,opacity:0.06}}><MI name="stars" size={80} fill style={{color:C.gold}}/></div>
           <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:1,marginBottom:2}}>Poin Tersedia</p>
           <div className="flex items-end gap-2">
@@ -1938,7 +1828,7 @@ export default function App(){
         </div>
         <h2 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.2,marginBottom:6}}>{m.title}</h2>
         <div className="flex items-center gap-3 flex-wrap">
-          <span style={{background:C.goldLight,color:C.gold,borderRadius:8,padding:'4px 12px',fontSize:13,fontWeight:800,fontFamily:"'JetBrains Mono'",border:'1px solid rgba(251,191,36,0.2)'}}>+{m.xp} XP</span>
+          <span style={{background:C.goldLight,color:C.gold,borderRadius:8,padding:'4px 12px',fontSize:13,fontWeight:800,fontFamily:"'JetBrains Mono'",border:'1px solid rgba(249,115,22,0.2)'}}>+{m.xp} XP</span>
           {m.bonus&&<span style={{background:C.greenLight,color:C.green,borderRadius:8,padding:'4px 10px',fontSize:11,fontWeight:700,border:'1px solid rgba(34,197,94,0.2)'}}>+{m.bonus} bonus</span>}
           <span style={{fontSize:11,color:C.textMuted}}>
             <MI name="group" size={14} style={{verticalAlign:'middle',marginRight:2}}/>{m.participants}
@@ -2097,7 +1987,7 @@ export default function App(){
 
           {/* Hashtags */}
           {m.hashtags&&(
-            <div style={{background:C.primaryLight,borderRadius:8,padding:10,border:'1px solid rgba(201,168,76,0.15)',marginBottom:10}}>
+            <div style={{background:C.primaryLight,borderRadius:8,padding:10,border:'1px solid rgba(249,115,22,0.15)',marginBottom:10}}>
               <div className="flex items-center gap-2 mb-1">
                 <MI name="tag" size={14} fill style={{color:C.primary}}/>
                 <span style={{fontSize:10,fontWeight:700,color:C.primary,textTransform:'uppercase',letterSpacing:0.5}}>Hashtag Wajib</span>
@@ -2287,7 +2177,7 @@ export default function App(){
               width:22,height:22,borderRadius:6,marginTop:1,flexShrink:0,
               background:consent?C.primary:'transparent',border:consent?'none':`2px solid ${C.border}`,
               display:'flex',alignItems:'center',justifyContent:'center',transition:'all 150ms',
-              boxShadow:consent?'0 0 8px rgba(201,168,76,0.3)':'none',
+              boxShadow:consent?'0 0 8px rgba(249,115,22,0.3)':'none',
             }}>{consent&&<MI name="check" size={14} style={{color:C.white}}/>}</div>
             <span style={{fontSize:12,color:consent?C.text:C.textMuted,lineHeight:1.4,fontWeight:consent?600:400,transition:'color 200ms'}}>Saya setuju berpartisipasi secara sukarela sesuai kebijakan yang berlaku.</span>
           </label>
@@ -2705,13 +2595,13 @@ export default function App(){
     return(
       <div style={{display:'flex',minHeight:'100vh',background:C.bg,position:'relative',overflow:'hidden'}}>
         {/* Background Orbs */}
-        <div className="orb orb-1" style={{width:400,height:400,background:'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)',top:-100,right:'20%'}}/>
-        <div className="orb orb-2" style={{width:300,height:300,background:'radial-gradient(circle,rgba(201,168,76,0.06),transparent 70%)',bottom:100,left:'10%'}}/>
+        <div className="orb orb-1" style={{width:400,height:400,background:'radial-gradient(circle,rgba(249,115,22,0.08),transparent 70%)',top:-100,right:'20%'}}/>
+        <div className="orb orb-2" style={{width:300,height:300,background:'radial-gradient(circle,rgba(249,115,22,0.06),transparent 70%)',bottom:100,left:'10%'}}/>
 
         {/* Sidebar */}
         <aside style={{width:260,background:'linear-gradient(180deg,rgba(15,15,26,0.95),rgba(11,17,32,0.98))',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',borderRight:`1px solid ${C.border}`,padding:'24px 0',flexShrink:0,display:'flex',flexDirection:'column',zIndex:2}}>
           <div className="flex items-center gap-3 px-6 mb-8">
-            <div style={{width:36,height:36,borderRadius:12,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 20px rgba(201,168,76,0.3)'}}>
+            <div style={{width:36,height:36,borderRadius:12,background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 20px rgba(249,115,22,0.3)'}}>
               <GerakMark size={20}/>
             </div>
             <div>
@@ -2726,7 +2616,7 @@ export default function App(){
               return(
               <button key={s.id} onClick={()=>{setAdSideTab(s.id);setAdSubTab(s.id==='dashboard'?'ringkasan':s.id==='narasi'?'monitoring':'');}} style={{
                 display:'flex',alignItems:'center',gap:10,padding:'11px 14px',borderRadius:12,border:'none',cursor:'pointer',position:'relative',
-                background:active?'linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))':'transparent',
+                background:active?'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(249,115,22,0.05))':'transparent',
                 color:active?C.primary:C.textSec,
                 fontSize:13,fontWeight:active?700:500,textAlign:'left',transition:'all 200ms',width:'100%',
               }}>
@@ -2737,7 +2627,7 @@ export default function App(){
             })}
           </nav>
           <div style={{margin:'auto 16px 0',display:'flex',flexDirection:'column',gap:12}}>
-            <div style={{padding:16,borderRadius:12,background:'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.02))',border:`1px solid rgba(201,168,76,0.15)`}}>
+            <div style={{padding:16,borderRadius:12,background:'linear-gradient(135deg,rgba(249,115,22,0.08),rgba(249,115,22,0.02))',border:`1px solid rgba(249,115,22,0.15)`}}>
               <div className="flex items-center gap-2 mb-2">
                 <MI name="bolt" size={16} fill style={{color:C.gold}}/>
                 <span style={{fontSize:11,fontWeight:700,color:C.gold}}>Sistem Aktif</span>
@@ -3089,7 +2979,7 @@ export default function App(){
             {adSubTab==='monitoring'&&(<>
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
-              <button onClick={()=>setAdSubTab('create')} className="btn-primary" style={{padding:'10px 20px',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+              <button onClick={()=>setAdSubTab('create')} className="btn-primary" style={{padding:'10px 20px',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                 <MI name="add_circle" size={18} style={{color:C.bg}}/>Buat Misi Baru
               </button>
               <p style={{fontSize:12,color:C.textMuted}}>Pilih topik di bawah untuk membuat misi dari data sosial media</p>
@@ -3274,7 +3164,7 @@ export default function App(){
                       </button>
                     )}
                     {!narrativeMissionFlow||narrativeMissionFlow.narrativeId!==n.id?(
-                      <button onClick={()=>setNarrativeMissionFlow({narrativeId:n.id,step:0,prompt:userAction==='TOLAK'?`Counter-narasi untuk "${n.topic}": ${n.aiSuggestion}`:`Amplifikasi narasi "${n.topic}": ${n.aiSuggestion}`,impactLevel:50,people:0,points:0})} className="btn-primary" style={{width:'100%',marginTop:8,padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                      <button onClick={()=>setNarrativeMissionFlow({narrativeId:n.id,step:0,prompt:userAction==='TOLAK'?`Counter-narasi untuk "${n.topic}": ${n.aiSuggestion}`:`Amplifikasi narasi "${n.topic}": ${n.aiSuggestion}`,impactLevel:50,people:0,points:0})} className="btn-primary" style={{width:'100%',marginTop:8,padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                         <MI name="auto_awesome" size={20} style={{color:C.bg}}/> Buat Misi dari Narasi Ini
                       </button>
                     ):(
@@ -3321,7 +3211,7 @@ export default function App(){
                                 {type:'AMPLIFIKASI',title:'Amplifikasi Konten Positif',desc:'Boost konten positif yang sudah ada',urgency:'RENDAH'},
                               ],
                               selectedPlatform:null,selectedEvent:null,
-                            }))} className="btn-primary" style={{width:'100%',marginTop:12,padding:'12px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                            }))} className="btn-primary" style={{width:'100%',marginTop:12,padding:'12px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                               <MI name="smart_toy" size={16} style={{color:C.white}}/> Analisis dengan AI
                             </button>
                           </div>)}
@@ -3449,7 +3339,7 @@ export default function App(){
                               <SentimentChart breakdown={narrativeMissionFlow.aiAudience?.sentiment}/>
                             </div>
 
-                            <button onClick={()=>setNarrativeMissionFlow(f=>({...f,step:3}))} className="btn-primary" style={{width:'100%',marginTop:14,padding:'12px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                            <button onClick={()=>setNarrativeMissionFlow(f=>({...f,step:3}))} className="btn-primary" style={{width:'100%',marginTop:14,padding:'12px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                               Lanjut: Tentukan Impact <MI name="arrow_forward" size={16}/>
                             </button>
                           </div>)}
@@ -3489,12 +3379,12 @@ export default function App(){
 
                               {/* Calculated Results */}
                               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
-                                <div style={{background:C.primaryLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(201,168,76,0.15)'}}>
+                                <div style={{background:C.primaryLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
                                   <MI name="group" size={20} style={{color:C.primary}}/>
                                   <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",marginTop:4}}>{peopleNeeded.toLocaleString()}</p>
                                   <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>ORANG DIBUTUHKAN</p>
                                 </div>
-                                <div style={{background:C.goldLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(251,191,36,0.15)'}}>
+                                <div style={{background:C.goldLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
                                   <MI name="toll" size={20} style={{color:C.gold}}/>
                                   <p style={{fontSize:20,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'",marginTop:4}}>{pointsPerPerson}</p>
                                   <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>XP PER ORANG</p>
@@ -3516,7 +3406,7 @@ export default function App(){
                                 </p>
                               </div>
 
-                              <button onClick={()=>setNarrativeMissionFlow(f=>({...f,step:4,people:peopleNeeded,points:pointsPerPerson,totalPoints,impactLabel}))} className="btn-primary" style={{width:'100%',padding:'12px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                              <button onClick={()=>setNarrativeMissionFlow(f=>({...f,step:4,people:peopleNeeded,points:pointsPerPerson,totalPoints,impactLabel}))} className="btn-primary" style={{width:'100%',padding:'12px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                                 Review & Buat Misi <MI name="arrow_forward" size={16}/>
                               </button>
                             </div>);
@@ -3582,7 +3472,7 @@ export default function App(){
                               setAdSubTab('create');
                               setNarrativeMissionFlow(null);
                               showToast('Data AI diteruskan ke Editor Misi');
-                            }} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                            }} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                               <MI name="edit_note" size={18} style={{color:C.bg}}/> Lanjutkan ke Editor Misi
                             </button>
                             <button onClick={()=>setNarrativeMissionFlow(f=>({...f,step:3}))} style={{width:'100%',marginTop:8,padding:'10px 0',borderRadius:12,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer'}}>Kembali ke Impact</button>
@@ -3625,7 +3515,7 @@ export default function App(){
             <div className="flex flex-col gap-5">
             {/* Source indicator */}
             {missionForm.fromNarasi&&(
-              <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04))',borderRadius:12,padding:'14px 18px',border:`1px solid rgba(201,168,76,0.2)`,display:'flex',alignItems:'center',gap:12}}>
+              <div style={{background:'linear-gradient(135deg,rgba(249,115,22,0.12),rgba(249,115,22,0.04))',borderRadius:12,padding:'14px 18px',border:`1px solid rgba(249,115,22,0.2)`,display:'flex',alignItems:'center',gap:12}}>
                 <div style={{width:36,height:36,borderRadius:12,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><MI name="auto_awesome" size={20} style={{color:C.primary}}/></div>
                 <div className="flex-1">
                   <p style={{fontSize:13,fontWeight:700,color:C.primary}}>Misi dari Narasi: "{missionForm.narasiTopic}"</p>
@@ -3818,7 +3708,7 @@ export default function App(){
                 {(()=>{
                   const alloc=missionForm.personaAlloc||{};
                   const totalAlloc=Object.values(alloc).reduce((s,v)=>s+(v||0),0);
-                  return <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:12,padding:14,border:`1px solid rgba(201,168,76,0.15)`}}>
+                  return <div style={{background:'linear-gradient(135deg,rgba(249,115,22,0.1),rgba(249,115,22,0.05))',borderRadius:12,padding:14,border:`1px solid rgba(249,115,22,0.15)`}}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <MI name="group" size={18} style={{color:C.primary}}/>
@@ -3904,7 +3794,7 @@ export default function App(){
                     </div>
                   </L>
                   {/* Budget summary */}
-                  <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',borderRadius:12,padding:12,border:`1px solid rgba(201,168,76,0.15)`}}>
+                  <div style={{background:'linear-gradient(135deg,rgba(249,115,22,0.1),rgba(249,115,22,0.05))',borderRadius:12,padding:12,border:`1px solid rgba(249,115,22,0.15)`}}>
                     <div className="flex items-end justify-between">
                       <div>
                         <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>Budget XP</p>
@@ -4006,7 +3896,7 @@ export default function App(){
                     ))}
                   </div>
                   {/* Publish */}
-                  <button onClick={()=>setMissionForm(f=>({...f,showReview:true}))} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(201,168,76,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                  <button onClick={()=>setMissionForm(f=>({...f,showReview:true}))} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',boxShadow:'0 4px 15px rgba(249,115,22,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
                     <MI name="rate_review" size={18} style={{color:C.bg}}/> Review & Publikasi
                   </button>
                   <button onClick={()=>showToast('Draft tersimpan')} style={{width:'100%',padding:'10px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
@@ -4229,7 +4119,7 @@ export default function App(){
                   {/* Generate button */}
                   {captions.length===0?(
                     <div style={{textAlign:'center',padding:20}}>
-                      <div style={{width:56,height:56,borderRadius:16,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',border:`1px solid rgba(201,168,76,0.2)`}}>
+                      <div style={{width:56,height:56,borderRadius:16,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',border:`1px solid rgba(249,115,22,0.2)`}}>
                         <MI name="auto_awesome" size={28} style={{color:C.primary}}/>
                       </div>
                       <h4 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:4}}>Generate Caption Unik</h4>
@@ -4237,7 +4127,7 @@ export default function App(){
                         AI akan membuat <b style={{color:C.primary}}>{totalPeople} caption berbeda</b> — satu untuk setiap peserta.
                         Disesuaikan dengan tipe misi ({missionForm.type}), persona target, dan tone yang berbeda-beda.
                       </p>
-                      <button onClick={()=>setMissionForm(f=>({...f,aiCaptions:generateCaptions(Math.min(totalPeople,50))}))} className="btn-primary" style={{padding:'14px 32px',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:8,boxShadow:'0 4px 15px rgba(201,168,76,0.3)'}}>
+                      <button onClick={()=>setMissionForm(f=>({...f,aiCaptions:generateCaptions(Math.min(totalPeople,50))}))} className="btn-primary" style={{padding:'14px 32px',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:14,fontWeight:700,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:8,boxShadow:'0 4px 15px rgba(249,115,22,0.3)'}}>
                         <MI name="smart_toy" size={18} style={{color:C.bg}}/> Generate {Math.min(totalPeople,50)} Caption
                       </button>
                       {totalPeople>50&&<p style={{fontSize:10,color:C.textMuted,marginTop:8}}>Preview 50 pertama, sisanya auto-generated saat publish</p>}
@@ -4245,7 +4135,7 @@ export default function App(){
                   ):(
                     <div className="flex flex-col gap-3">
                       {/* Stats bar */}
-                      <div className="flex items-center gap-3" style={{padding:12,borderRadius:12,background:'linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05))',border:`1px solid rgba(201,168,76,0.15)`}}>
+                      <div className="flex items-center gap-3" style={{padding:12,borderRadius:12,background:'linear-gradient(135deg,rgba(249,115,22,0.1),rgba(249,115,22,0.05))',border:`1px solid rgba(249,115,22,0.15)`}}>
                         <MI name="auto_awesome" size={18} style={{color:C.primary}}/>
                         <div className="flex-1">
                           <p style={{fontSize:12,fontWeight:700,color:C.primary}}>{captions.length} Caption Dibuat</p>
@@ -4448,11 +4338,11 @@ export default function App(){
 
                     {/* Stats summary */}
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10}}>
-                      <div style={{background:C.primaryLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(201,168,76,0.15)'}}>
+                      <div style={{background:C.primaryLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
                         <p style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{totalPeople}</p>
                         <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>TARGET ORANG</p>
                       </div>
-                      <div style={{background:C.goldLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(251,191,36,0.15)'}}>
+                      <div style={{background:C.goldLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
                         <p style={{fontSize:18,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{((missionForm.xp||200)*totalPeople/1000).toFixed(1)}K</p>
                         <p style={{fontSize:9,color:C.textMuted,fontWeight:600}}>TOTAL XP</p>
                       </div>
@@ -4467,7 +4357,7 @@ export default function App(){
                     </div>
 
                     {/* AI Recommendation */}
-                    <div style={{background:C.primaryLight,borderRadius:12,padding:14,border:'1px solid rgba(201,168,76,0.15)'}}>
+                    <div style={{background:C.primaryLight,borderRadius:12,padding:14,border:'1px solid rgba(249,115,22,0.15)'}}>
                       <div className="flex items-center gap-2 mb-2">
                         <MI name="smart_toy" size={16} style={{color:C.primary}}/>
                         <span style={{fontSize:12,fontWeight:700,color:C.primary}}>AI Review</span>
@@ -4624,7 +4514,7 @@ export default function App(){
                       </div>
                       <h2 style={{fontSize:20,fontWeight:800,color:C.text,marginTop:4}}>{m.title}</h2>
                     </div>
-                    <span style={{fontSize:16,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'",background:C.goldLight,padding:'6px 14px',borderRadius:8,border:'1px solid rgba(201,168,76,0.2)'}}>+{m.xp} XP</span>
+                    <span style={{fontSize:16,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'",background:C.goldLight,padding:'6px 14px',borderRadius:8,border:'1px solid rgba(249,115,22,0.2)'}}>+{m.xp} XP</span>
                   </div>
                   <p style={{fontSize:13,color:C.textSec,lineHeight:1.5}}>{m.desc}</p>
                 </div>
@@ -4708,7 +4598,7 @@ export default function App(){
                   (post.likedBy||[]).forEach(liker=>{
                     const lp=missionPosts.find(p=>p.agent===liker);
                     if(lp&&lp.agent!==post.agent){
-                      arcs.push({startLat:lp.lat,startLng:lp.lng,endLat:post.lat,endLng:post.lng,color:['rgba(201,168,76,0.6)','rgba(201,168,76,0.15)'],label:`${liker} → liked → ${post.agent}`,type:'like'});
+                      arcs.push({startLat:lp.lat,startLng:lp.lng,endLat:post.lat,endLng:post.lng,color:['rgba(249,115,22,0.6)','rgba(249,115,22,0.15)'],label:`${liker} → liked → ${post.agent}`,type:'like'});
                       graphLinks.push({source:lp.agent,target:post.agent,type:'like',color:'rgba(236,72,153,0.5)'});
                     }
                   });
@@ -4820,7 +4710,7 @@ export default function App(){
                       {/* Interaction insight */}
                       <div style={{position:'absolute',bottom:16,left:16,right:16,display:'flex',gap:8}}>
                         {missionPosts.sort((a,b)=>(interactionMap[b.agent]?.total||0)-(interactionMap[a.agent]?.total||0)).slice(0,3).map((p,i)=>(
-                          <div key={p.agent} style={{flex:1,background:C.surfaceGlass,backdropFilter:'blur(12px)',borderRadius:8,padding:'10px 12px',border:`1px solid ${i===0?C.primaryGlow:C.overlay06}`,boxShadow:i===0?'0 0 20px rgba(201,168,76,0.1)':'none'}}>
+                          <div key={p.agent} style={{flex:1,background:C.surfaceGlass,backdropFilter:'blur(12px)',borderRadius:8,padding:'10px 12px',border:`1px solid ${i===0?C.primaryGlow:C.overlay06}`,boxShadow:i===0?'0 0 20px rgba(249,115,22,0.1)':'none'}}>
                             <div className="flex items-center gap-2 mb-1">
                               {i===0&&<MI name="emoji_events" size={14} fill style={{color:C.gold}}/>}
                               <span style={{fontSize:11,fontWeight:700,color:i===0?C.gold:C.text}}>{p.agent.split(' ')[0]}</span>
@@ -4849,7 +4739,7 @@ export default function App(){
                         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
                         bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                         backgroundImageUrl="" backgroundColor="rgba(0,0,0,0)"
-                        atmosphereColor="rgba(201,168,76,0.25)" atmosphereAltitude={0.18}
+                        atmosphereColor="rgba(249,115,22,0.25)" atmosphereAltitude={0.18}
                         htmlElementsData={htmlData}
                         htmlLat="lat" htmlLng="lng"
                         htmlAltitude={0.01}
@@ -4891,9 +4781,9 @@ export default function App(){
                       )}
                       {/* ── SELECTED POST DETAIL CARD ── */}
                       {selP&&(
-                        <div style={{position:'absolute',top:16,right:16,width:320,background:`${C.bg}f2`,backdropFilter:'blur(20px)',borderRadius:12,border:'1px solid rgba(201,168,76,0.2)',boxShadow:'0 20px 60px rgba(0,0,0,0.7)',overflow:'hidden',animation:'fadeInUp 250ms ease'}}>
+                        <div style={{position:'absolute',top:16,right:16,width:320,background:`${C.bg}f2`,backdropFilter:'blur(20px)',borderRadius:12,border:'1px solid rgba(249,115,22,0.2)',boxShadow:'0 20px 60px rgba(0,0,0,0.7)',overflow:'hidden',animation:'fadeInUp 250ms ease'}}>
                           {/* Header */}
-                          <div style={{background:'linear-gradient(135deg,rgba(201,168,76,0.1),transparent)',padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:12}}>
+                          <div style={{background:'linear-gradient(135deg,rgba(249,115,22,0.1),transparent)',padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:12}}>
                             <div style={{width:44,height:44,borderRadius:12,background:`${pColor(selP.platform)}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:pColor(selP.platform),border:`2px solid ${pColor(selP.platform)}50`,flexShrink:0}}>
                               {selP.avatar}
                             </div>
@@ -5262,8 +5152,8 @@ export default function App(){
   return(
     <div className="flex items-center justify-center noise-bg mesh-bg" style={{minHeight:'100vh',background:C.bg,paddingTop:20,paddingBottom:20,position:'relative',overflow:'hidden'}}>
       {/* Decorative Orbs */}
-      <div className="orb orb-1" style={{width:300,height:300,background:'radial-gradient(circle,rgba(201,168,76,0.15),transparent 70%)',top:-50,left:-80}}/>
-      <div className="orb orb-2" style={{width:250,height:250,background:'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)',bottom:100,right:-60}}/>
+      <div className="orb orb-1" style={{width:300,height:300,background:'radial-gradient(circle,rgba(249,115,22,0.15),transparent 70%)',top:-50,left:-80}}/>
+      <div className="orb orb-2" style={{width:250,height:250,background:'radial-gradient(circle,rgba(249,115,22,0.08),transparent 70%)',bottom:100,right:-60}}/>
 
       {/* Admin Toggle — top-right corner */}
       <div style={{position:'fixed',top:12,right:12,zIndex:200,display:'flex',alignItems:'center',gap:8}}>
