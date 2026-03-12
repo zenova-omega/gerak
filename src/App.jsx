@@ -126,9 +126,9 @@ const C={
   teal:'#0D9488', tealLight:'rgba(13,148,136,0.08)',
   gold:'#92400E', goldLight:'rgba(146,64,14,0.1)',
   silver:'#64748B', bronze:'#78350F',
-  glass:'rgba(255,255,255,0.7)', glassBorder:'#E2DDD4',
-  surface:'#FFFFFF', surfaceLight:'#F5F0E8', surfaceDark:'#EDE8DF',
-  surfaceGlass:'rgba(255,255,255,0.92)', surfaceGlass2:'rgba(255,255,255,0.95)',
+  glass:'rgba(255,255,255,0.55)', glassBorder:'rgba(255,255,255,0.45)',
+  surface:'rgba(255,255,255,0.6)', surfaceLight:'rgba(245,240,232,0.7)', surfaceDark:'#EDE8DF',
+  surfaceGlass:'rgba(255,255,255,0.45)', surfaceGlass2:'rgba(255,255,255,0.55)',
 };
 
 const typeColor=t=>({EDUKASI:C.secondary,AMPLIFIKASI:C.accent,KRISIS:C.red,KOMUNITAS:C.green,VISIT:C.purple,SOCIAL:C.primary}[t]||C.primary);
@@ -588,9 +588,13 @@ export default function App(){
 
   /* ─── SHARED COMPONENTS ─────────────────────────────────────────── */
   function Card({children,style={},className='',onClick,accent}){
-    return <div onClick={onClick} className={`${className} ${onClick?'card-interactive':'card-hover'}`} style={{
-      background:C.surface,borderRadius:12,padding:16,border:`1px solid ${C.border}`,
-      cursor:onClick?'pointer':'default',boxShadow:`0 4px 20px ${C.shadowLight}`,
+    return <div onClick={onClick} className={`${className} ${onClick?'card-interactive':'card-hover'} glass-card`} style={{
+      background:'rgba(255,255,255,0.55)',
+      backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
+      borderRadius:16,padding:16,
+      border:'1px solid rgba(255,255,255,0.45)',
+      cursor:onClick?'pointer':'default',
+      boxShadow:'0 4px 30px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
       borderLeft:accent?`3px solid ${accent}`:undefined,
       ...style
     }}>{children}</div>;
@@ -624,10 +628,11 @@ export default function App(){
         style={{
           ...badgeSpring,
           position:'relative',overflow:'hidden',borderRadius:16,
-          background:unlocked?`linear-gradient(145deg,${C.surface},${C.bg})`:`linear-gradient(145deg,${C.surfaceLight}60,${C.bg})`,
-          border:`1px solid ${unlocked?`${col}25`:`${col}10`}`,
+          background:unlocked?'rgba(255,255,255,0.5)':'rgba(255,255,255,0.3)',
+          backdropFilter:'blur(20px) saturate(180%)',WebkitBackdropFilter:'blur(20px) saturate(180%)',
+          border:`1px solid ${unlocked?'rgba(255,255,255,0.45)':'rgba(255,255,255,0.25)'}`,
           padding:'16px 10px 12px',textAlign:'center',cursor:'pointer',
-          boxShadow:unlocked?`0 4px 20px ${col}15, 0 1px 3px rgba(0,0,0,0.2)`:'0 2px 8px rgba(0,0,0,0.15)',
+          boxShadow:unlocked?`0 4px 30px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)`:'0 2px 16px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.3)',
         }}>
         {/* Top rarity accent line — uses real color, CSS controls visibility */}
         <div className={unlocked?'':'badge-locked-accent'} style={{position:'absolute',top:0,left:0,right:0,height:unlocked?2:2,background:rc.gradient,opacity:unlocked?0.8:0.15}}/>
@@ -787,7 +792,7 @@ export default function App(){
       {/* ═══ BENTO STATS GRID ═══ */}
       <div className="stagger-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
         {/* Large stat: Missions */}
-        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',gridRow:'span 2',display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative',overflow:'hidden'}} onClick={()=>nav('misi')}>
+        <div className="tap-bounce glass-card" style={{background:'rgba(255,255,255,0.5)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderRadius:16,padding:14,border:'1px solid rgba(255,255,255,0.45)',boxShadow:'0 4px 30px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',cursor:'pointer',gridRow:'span 2',display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative',overflow:'hidden'}} onClick={()=>nav('misi')}>
           <div style={{position:'absolute',bottom:-10,right:-10,width:64,height:64,borderRadius:'50%',background:C.primaryLight,opacity:0.5,pointerEvents:'none'}}/>
           <div style={{width:36,height:36,borderRadius:10,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:8}}>
             <MI name="target" size={18} fill style={{color:C.primary}}/>
@@ -811,7 +816,7 @@ export default function App(){
           </div>
         </div>
         {/* Streak */}
-        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',position:'relative',overflow:'hidden'}} onClick={()=>showToast('Streak: 7 hari berturut-turut!')}>
+        <div className="tap-bounce glass-card" style={{background:'rgba(255,255,255,0.5)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderRadius:16,padding:14,border:'1px solid rgba(255,255,255,0.45)',boxShadow:'0 4px 30px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',cursor:'pointer',position:'relative',overflow:'hidden'}} onClick={()=>showToast('Streak: 7 hari berturut-turut!')}>
           <div style={{position:'absolute',top:-8,right:-8,width:40,height:40,borderRadius:'50%',background:C.orangeLight,opacity:0.6,pointerEvents:'none'}}/>
           <div className="flex items-center justify-between">
             <div style={{width:30,height:30,borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -829,7 +834,7 @@ export default function App(){
           </div>
         </div>
         {/* Rank */}
-        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',position:'relative',overflow:'hidden'}} onClick={()=>nav('pangkat')}>
+        <div className="tap-bounce glass-card" style={{background:'rgba(255,255,255,0.5)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderRadius:16,padding:14,border:'1px solid rgba(255,255,255,0.45)',boxShadow:'0 4px 30px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',cursor:'pointer',position:'relative',overflow:'hidden'}} onClick={()=>nav('pangkat')}>
           <div style={{position:'absolute',bottom:-6,right:-6,width:36,height:36,borderRadius:'50%',background:C.tealLight,opacity:0.5,pointerEvents:'none'}}/>
           <div className="flex items-center justify-between">
             <div style={{width:30,height:30,borderRadius:8,background:C.tealLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -968,7 +973,7 @@ export default function App(){
             {l:'Review',v:Object.values(joinedMissions).filter(j=>j.status==='REVIEW').length,c:C.purple,icon:'rate_review'},
             {l:'Selesai',v:Object.values(joinedMissions).filter(j=>j.status==='SELESAI').length,c:C.green,icon:'check_circle'},
           ].map((s,i)=>(
-            <div key={i} style={{background:C.surface,borderRadius:8,padding:'8px 4px',textAlign:'center',border:`1px solid ${C.border}`}}>
+            <div key={i} style={{background:'rgba(255,255,255,0.45)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderRadius:10,padding:'8px 4px',textAlign:'center',border:'1px solid rgba(255,255,255,0.4)',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.5)'}}>
               <MI name={s.icon} size={14} style={{color:s.c}}/>
               <p style={{fontSize:16,fontWeight:800,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</p>
               <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
@@ -1033,8 +1038,9 @@ export default function App(){
             return(
             <div key={m.id} className="tap-bounce" onClick={()=>openM(m)} style={{
               minWidth:200,flexShrink:0,scrollSnapAlign:'start',borderRadius:16,overflow:'hidden',
-              background:C.surface,border:`1px solid ${C.border}`,cursor:'pointer',
-              boxShadow:`0 2px 8px ${C.shadowLight}`,
+              background:'rgba(255,255,255,0.5)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
+              border:'1px solid rgba(255,255,255,0.45)',cursor:'pointer',
+              boxShadow:'0 4px 30px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)',
             }}>
               {/* Colored header strip */}
               <div style={{height:4,background:typeGradient(m.type)}}/>
@@ -1070,7 +1076,7 @@ export default function App(){
             {icon:'share',label:'Undang',color:C.purple,bg:C.purpleLight,action:()=>showToast('Link undangan disalin!')},
             {icon:'help',label:'Panduan',color:C.orange,bg:C.orangeLight,action:()=>showToast('Panduan GERAK')},
           ].map((a,i)=>(
-            <div key={i} className="tap-bounce flex-1" onClick={a.action} style={{background:C.surface,borderRadius:14,padding:'12px 4px',textAlign:'center',border:`1px solid ${C.border}`,cursor:'pointer'}}>
+            <div key={i} className="tap-bounce flex-1 glass-card" onClick={a.action} style={{background:'rgba(255,255,255,0.45)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderRadius:14,padding:'12px 4px',textAlign:'center',border:'1px solid rgba(255,255,255,0.4)',boxShadow:'0 2px 16px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.5)',cursor:'pointer'}}>
               <div style={{width:36,height:36,borderRadius:10,background:a.bg,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
                 <MI name={a.icon} size={18} style={{color:a.color}}/>
               </div>
@@ -5392,7 +5398,7 @@ export default function App(){
 
         {/* Bottom Nav */}
         {screen!=='detail'&&(
-          <nav className="flex" role="tablist" aria-label="Main navigation" style={{padding:'6px 4px 28px',flexShrink:0,background:C.surfaceGlass2,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderTop:`1px solid ${C.border}`}}>
+          <nav className="flex" role="tablist" aria-label="Main navigation" style={{padding:'6px 4px 28px',flexShrink:0,background:'rgba(255,255,255,0.55)',backdropFilter:'blur(24px) saturate(180%)',WebkitBackdropFilter:'blur(24px) saturate(180%)',borderTop:'1px solid rgba(255,255,255,0.45)',boxShadow:'0 -4px 30px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.6)'}}>
             {tabs.map(tab=>{const active=screen===tab.id;return(
               <button key={tab.id} role="tab" aria-selected={active} aria-label={tab.label} onClick={()=>nav(tab.id)} className="flex flex-1 flex-col items-center justify-center gap-0.5 tap-bounce" style={{background:'none',border:'none',cursor:'pointer',padding:'10px 0',minHeight:48,position:'relative'}}>
                 <div style={{width:active?30:26,height:active?30:26,borderRadius:active?12:8,background:active?`linear-gradient(135deg,${C.primary},${C.primaryAccent})`:'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 250ms cubic-bezier(.16,1,.3,1)',boxShadow:active?`0 4px 12px ${C.primaryGlow}`:'none'}}>

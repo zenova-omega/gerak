@@ -13,6 +13,11 @@
 
 body {
   background: #F5F0E8;
+  background-image:
+    radial-gradient(ellipse at 15% 5%, rgba(27,94,32,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(146,64,14,0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 80%, rgba(13,148,136,0.03) 0%, transparent 50%);
+  background-attachment: fixed;
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -133,40 +138,65 @@ h1, h2, h3, h4, h5, h6 {
   50% { transform: scale(1.8); opacity: 1; }
 }
 
-/* ─── GLASS CARDS ─────────────────────────────────────────────── */
+/* ─── GLASS CARDS (iOS-style glassmorphism) ──────────────────── */
+.glass-card {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.45);
+  box-shadow:
+    0 4px 30px rgba(0,0,0,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(255,255,255,0.1);
+  transition: background 200ms ease, box-shadow 280ms ease, transform 280ms cubic-bezier(.16,1,.3,1), border-color 200ms ease;
+}
+.glass-card:hover {
+  background: rgba(255,255,255,0.65);
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    inset 0 -1px 0 rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.55);
+}
+.glass-card:active {
+  transform: scale(0.98);
+  transition-duration: 100ms;
+}
 .glass {
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(27,94,32,0.08);
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.35);
 }
 .glass-light {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 .glass-strong {
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 /* ─── INTERACTIVE CARDS ───────────────────────────────────────── */
 .card-interactive {
-  transition: transform 280ms cubic-bezier(.16,1,.3,1), box-shadow 280ms ease, border-color 280ms ease;
+  transition: transform 280ms cubic-bezier(.16,1,.3,1), box-shadow 280ms ease, border-color 280ms ease, background 200ms ease;
 }
 .card-interactive:hover {
-  border-color: rgba(27,94,32,0.15);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.65);
+  border-color: rgba(255,255,255,0.55);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7);
 }
 .card-interactive:active {
   transform: translateY(0) scale(0.975);
   transition-duration: 100ms;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.5);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
 /* ─── ADMIN TABLE ROW HIGHLIGHT ──────────────────────────────── */
@@ -341,7 +371,7 @@ h1, h2, h3, h4, h5, h6 {
 .scroll-peek::after {
   content: ''; position: absolute;
   right: 0; top: 0; bottom: 0; width: 32px;
-  background: linear-gradient(to right, transparent, #F5F0E8);
+  background: linear-gradient(to right, transparent, rgba(245,240,232,0.9));
   pointer-events: none; z-index: 1;
 }
 
