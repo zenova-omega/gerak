@@ -40,8 +40,8 @@ body {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(27,94,32,0.03) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 80%, rgba(141,110,55,0.02) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 10%, rgba(27,94,32,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(141,110,55,0.03) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(55,71,79,0.02) 0%, transparent 40%);
 }
 
