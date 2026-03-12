@@ -246,138 +246,181 @@ const RANKS=[
 ];
 
 /* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
-/* ─── RANK MEDAL — Garuda-winged shield ────────────────────────── */
+/* ─── RANK INSIGNIA — 3D illustrated style (Achievr-inspired) ──── */
 function RankInsignia({rank=0,size=120,showLabel=true}){
   const s=size;
-  const colors=[
-    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.2)',accent:'#CBD5E1',dark:'#334155',shine:'#B0BEC5'},
-    {primary:'#1B5E20',secondary:'#2E7D32',glow:'rgba(27,94,32,0.25)',accent:'#4CAF50',dark:'#0D3B0F',shine:'#81C784'},
-    {primary:'#37474F',secondary:'#546E7A',glow:'rgba(55,71,79,0.25)',accent:'#78909C',dark:'#263238',shine:'#B0BEC5'},
-    {primary:'#4E342E',secondary:'#6D4C41',glow:'rgba(78,52,46,0.25)',accent:'#8D6E63',dark:'#3E2723',shine:'#BCAAA4'},
-    {primary:'#8D6E37',secondary:'#A68B5B',glow:'rgba(141,110,55,0.3)',accent:'#C9A96E',dark:'#5D4E37',shine:'#E6D5A8'},
+  const palettes=[
+    {base:'#78909C',mid:'#546E7A',dark:'#37474F',rim:'#B0BEC5',glow:'rgba(120,144,156,0.35)',spec:'#CFD8DC'},
+    {base:'#43A047',mid:'#2E7D32',dark:'#1B5E20',rim:'#81C784',glow:'rgba(67,160,71,0.35)',spec:'#A5D6A7'},
+    {base:'#607D8B',mid:'#455A64',dark:'#263238',rim:'#90A4AE',glow:'rgba(96,125,139,0.35)',spec:'#CFD8DC'},
+    {base:'#8D6E63',mid:'#6D4C41',dark:'#4E342E',rim:'#BCAAA4',glow:'rgba(141,110,99,0.35)',spec:'#D7CCC8'},
+    {base:'#C9A96E',mid:'#A68B5B',dark:'#8D6E37',rim:'#E6D5A8',glow:'rgba(201,169,110,0.4)',spec:'#F5E6C8'},
   ];
-  const c=colors[rank]||colors[0];
-  const id=`rank${rank}_${Math.random().toString(36).slice(2,8)}`;
+  const p=palettes[rank]||palettes[0];
+  const id=`ri_${rank}_${Math.random().toString(36).slice(2,8)}`;
   const labels=['PRAJURIT','KOPRAL','SERSAN','LETNAN','KAPTEN'];
-  const starCount=[0,1,1,2,3][rank];
 
   return(
-    <svg width={s} height={s} viewBox="0 0 120 130" fill="none">
+    <svg width={s} height={s*1.08} viewBox="0 0 120 130" fill="none">
       <defs>
-        <linearGradient id={`${id}bg`} x1="30" y1="10" x2="90" y2="110" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.shine}/><stop offset="30%" stopColor={c.secondary}/><stop offset="70%" stopColor={c.primary}/><stop offset="100%" stopColor={c.dark}/>
+        {/* Main body 3D gradient — light top, dark bottom */}
+        <linearGradient id={`${id}body`} x1="60" y1="12" x2="60" y2="105" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={p.rim}/><stop offset="25%" stopColor={p.base}/><stop offset="75%" stopColor={p.mid}/><stop offset="100%" stopColor={p.dark}/>
         </linearGradient>
-        <linearGradient id={`${id}sh`} x1="40" y1="15" x2="80" y2="70" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="white" stopOpacity="0.35"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
-        </linearGradient>
-        <linearGradient id={`${id}wg`} x1="0" y1="40" x2="60" y2="70" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.accent} stopOpacity="0.3"/><stop offset="50%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.dark}/>
-        </linearGradient>
-        <linearGradient id={`${id}wr`} x1="120" y1="40" x2="60" y2="70" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.accent} stopOpacity="0.3"/><stop offset="50%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.dark}/>
-        </linearGradient>
-        <radialGradient id={`${id}gl`} cx="60" cy="50" r="55" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.accent} stopOpacity="0.12"/><stop offset="100%" stopColor={c.accent} stopOpacity="0"/>
+        {/* Specular highlight — top-left glossy bloom */}
+        <radialGradient id={`${id}spec`} cx="46" cy="32" r="30" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="white" stopOpacity="0.55"/><stop offset="60%" stopColor="white" stopOpacity="0.12"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
         </radialGradient>
-        <filter id={`${id}ds`}><feDropShadow dx="0" dy="3" stdDeviation="5" floodColor={c.glow}/></filter>
-        <filter id={`${id}em`}><feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="rgba(0,0,0,0.5)"/></filter>
+        {/* Rim light — bottom edge catch light */}
+        <linearGradient id={`${id}rim`} x1="60" y1="85" x2="60" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="white" stopOpacity="0"/><stop offset="100%" stopColor="white" stopOpacity="0.15"/>
+        </linearGradient>
+        {/* Wing gradient */}
+        <linearGradient id={`${id}wl`} x1="4" y1="40" x2="40" y2="65" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={p.rim} stopOpacity="0.5"/><stop offset="100%" stopColor={p.mid}/>
+        </linearGradient>
+        <linearGradient id={`${id}wr`} x1="116" y1="40" x2="80" y2="65" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={p.rim} stopOpacity="0.5"/><stop offset="100%" stopColor={p.mid}/>
+        </linearGradient>
+        {/* Ambient glow */}
+        <radialGradient id={`${id}ag`} cx="60" cy="58" r="60" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={p.base} stopOpacity="0.2"/><stop offset="100%" stopColor={p.base} stopOpacity="0"/>
+        </radialGradient>
+        {/* Soft shadow */}
+        <filter id={`${id}sh`}><feGaussianBlur stdDeviation="4"/></filter>
+        <filter id={`${id}ds`}><feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(0,0,0,0.25)"/></filter>
+        <filter id={`${id}em`}><feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.5)"/></filter>
       </defs>
-      {/* Ambient glow */}
-      <circle cx="60" cy="55" r="55" fill={`url(#${id}gl)`}/>
-      {/* Left wing — stylized garuda feathers */}
-      <g opacity="0.9">
-        <path d={`M38 48 Q20 38 6 52 Q14 46 24 48 Q14 50 8 62 Q18 54 28 54 Q20 58 14 70 Q26 60 34 58 L40 62 Z`} fill={`url(#${id}wg)`} stroke={c.accent} strokeWidth="0.5" strokeOpacity="0.4"/>
+      {/* Ambient glow behind */}
+      <ellipse cx="60" cy="60" rx="55" ry="50" fill={`url(#${id}ag)`}/>
+      {/* Ground shadow */}
+      <ellipse cx="60" cy="118" rx="32" ry="6" fill={p.dark} opacity="0.15" filter={`url(#${id}sh)`}/>
+
+      {/* ── Wings (3D feathered, 3 layers each) ── */}
+      <g opacity="0.92">
+        {/* Left wing — 3 feather layers */}
+        <path d="M36 52 C28 42 14 38 4 48 C12 44 20 46 26 50 C16 48 8 54 4 64 C14 56 24 54 30 56 C22 56 14 62 10 72 C22 64 30 60 36 60 Z" fill={`url(#${id}wl)`}/>
+        <path d="M36 52 C28 42 14 38 4 48 C12 44 20 46 26 50 C16 48 8 54 4 64 C14 56 24 54 30 56 C22 56 14 62 10 72 C22 64 30 60 36 60 Z" fill="white" opacity="0.08"/>
+        {/* Feather highlight lines */}
+        <path d="M28 48 C20 46 12 50 8 58" fill="none" stroke="white" strokeWidth="0.5" opacity="0.15"/>
+        <path d="M32 54 C24 54 16 58 12 66" fill="none" stroke="white" strokeWidth="0.4" opacity="0.1"/>
+        {/* Right wing — mirror */}
+        <path d="M84 52 C92 42 106 38 116 48 C108 44 100 46 94 50 C104 48 112 54 116 64 C106 56 96 54 90 56 C98 56 106 62 110 72 C98 64 90 60 84 60 Z" fill={`url(#${id}wr)`}/>
+        <path d="M84 52 C92 42 106 38 116 48 C108 44 100 46 94 50 C104 48 112 54 116 64 C106 56 96 54 90 56 C98 56 106 62 110 72 C98 64 90 60 84 60 Z" fill="white" opacity="0.08"/>
+        <path d="M92 48 C100 46 108 50 112 58" fill="none" stroke="white" strokeWidth="0.5" opacity="0.15"/>
+        <path d="M88 54 C96 54 104 58 108 66" fill="none" stroke="white" strokeWidth="0.4" opacity="0.1"/>
       </g>
-      {/* Right wing — mirror */}
-      <g opacity="0.9">
-        <path d={`M82 48 Q100 38 114 52 Q106 46 96 48 Q106 50 112 62 Q102 54 92 54 Q100 58 106 70 Q94 60 86 58 L80 62 Z`} fill={`url(#${id}wr)`} stroke={c.accent} strokeWidth="0.5" strokeOpacity="0.4"/>
-      </g>
-      {/* Shield body */}
+
+      {/* ── Shield body (rounded, 3D) ── */}
       <g filter={`url(#${id}ds)`}>
-        <path d="M60 14 L88 28 L88 62 Q88 82 60 100 Q32 82 32 62 L32 28 Z" fill={`url(#${id}bg)`} stroke={c.accent} strokeWidth="1.5" strokeOpacity="0.6"/>
-        <path d="M60 14 L88 28 L88 62 Q88 82 60 100 Q32 82 32 62 L32 28 Z" fill={`url(#${id}sh)`}/>
+        {/* Main shape — rounded shield */}
+        <path d="M60 16 C72 16 82 22 86 30 L86 62 C86 80 74 94 60 102 C46 94 34 80 34 62 L34 30 C38 22 48 16 60 16 Z" fill={`url(#${id}body)`}/>
+        {/* Specular gloss */}
+        <path d="M60 16 C72 16 82 22 86 30 L86 62 C86 80 74 94 60 102 C46 94 34 80 34 62 L34 30 C38 22 48 16 60 16 Z" fill={`url(#${id}spec)`}/>
+        {/* Rim light */}
+        <path d="M60 16 C72 16 82 22 86 30 L86 62 C86 80 74 94 60 102 C46 94 34 80 34 62 L34 30 C38 22 48 16 60 16 Z" fill={`url(#${id}rim)`}/>
+        {/* Edge stroke — subtle */}
+        <path d="M60 16 C72 16 82 22 86 30 L86 62 C86 80 74 94 60 102 C46 94 34 80 34 62 L34 30 C38 22 48 16 60 16 Z" fill="none" stroke={p.rim} strokeWidth="1" strokeOpacity="0.35"/>
       </g>
-      {/* Inner shield border */}
-      <path d="M60 20 L83 32 L83 61 Q83 78 60 93 Q37 78 37 61 L37 32 Z" fill="none" stroke={c.accent} strokeWidth="0.7" strokeOpacity="0.3"/>
-      {/* Metallic highlight streak */}
-      <path d="M44 24 L52 20 L54 34 L44 38 Z" fill="white" opacity="0.08"/>
-      {/* Center emblem */}
+
+      {/* Inner border ring */}
+      <path d="M60 22 C70 22 78 27 81 33 L81 61 C81 76 71 88 60 95 C49 88 39 76 39 61 L39 33 C42 27 50 22 60 22 Z" fill="none" stroke={p.rim} strokeWidth="0.6" strokeOpacity="0.2"/>
+
+      {/* ── Rank emblem (white, embossed feel) ── */}
       {rank===0&&<g filter={`url(#${id}em)`}>
-        <path d="M60 44 L70 56 L60 52 L50 56 Z" fill="white" opacity="0.85"/>
-        <rect x="52" y="60" width="16" height="2" rx="1" fill="white" opacity="0.5"/>
+        <path d="M60 46 L72 60 L60 55 L48 60 Z" fill="white" opacity="0.9"/>
+        <rect x="52" y="65" width="16" height="2.5" rx="1.25" fill="white" opacity="0.5"/>
       </g>}
       {rank===1&&<g filter={`url(#${id}em)`}>
-        <path d="M60 38 L70 48 L60 44 L50 48 Z" fill="white" opacity="0.85"/>
-        <path d="M60 50 L70 60 L60 56 L50 60 Z" fill="white" opacity="0.65"/>
+        <path d="M60 38 L72 50 L60 45 L48 50 Z" fill="white" opacity="0.9"/>
+        <path d="M60 52 L72 64 L60 59 L48 64 Z" fill="white" opacity="0.7"/>
       </g>}
       {rank===2&&<g filter={`url(#${id}em)`}>
-        <path d="M60 34 L70 43 L60 39 L50 43 Z" fill="white" opacity="0.85"/>
-        <path d="M60 46 L70 55 L60 51 L50 55 Z" fill="white" opacity="0.7"/>
-        <path d="M60 58 L70 67 L60 63 L50 67 Z" fill="white" opacity="0.5"/>
+        <path d="M60 32 L72 43 L60 38 L48 43 Z" fill="white" opacity="0.9"/>
+        <path d="M60 46 L72 57 L60 52 L48 57 Z" fill="white" opacity="0.75"/>
+        <path d="M60 60 L72 71 L60 66 L48 71 Z" fill="white" opacity="0.55"/>
       </g>}
       {rank===3&&<g filter={`url(#${id}em)`}>
-        <polygon points="52,36 54,44 62,44 56,49 58,57 52,52 46,57 48,49 42,44 50,44" fill="white" opacity="0.85"/>
-        <polygon points="68,36 70,44 78,44 72,49 74,57 68,52 62,57 64,49 58,44 66,44" fill="white" opacity="0.85"/>
-        <rect x="44" y="64" width="32" height="2.5" rx="1.25" fill="white" opacity="0.6"/>
+        <polygon points="52,38 54.5,46 63,46 56.5,51 59,59 52,53.5 45,59 47.5,51 41,46 49.5,46" fill="white" opacity="0.9"/>
+        <polygon points="68,38 70.5,46 79,46 72.5,51 75,59 68,53.5 61,59 63.5,51 57,46 65.5,46" fill="white" opacity="0.9"/>
+        <rect x="44" y="66" width="32" height="2.5" rx="1.25" fill="white" opacity="0.5"/>
       </g>}
       {rank===4&&<g filter={`url(#${id}em)`}>
-        {/* Garuda silhouette */}
-        <path d="M60 30 L64 38 L72 38 L66 43 L68 51 L60 46 L52 51 L54 43 L48 38 L56 38 Z" fill="white" opacity="0.9"/>
-        <path d="M48 54 L52 52 L60 58 L68 52 L72 54 L60 64 Z" fill="white" opacity="0.6"/>
-        <rect x="46" y="68" width="28" height="2.5" rx="1.25" fill="white" opacity="0.5"/>
-        <rect x="50" y="73" width="20" height="2" rx="1" fill="white" opacity="0.35"/>
+        {/* Central garuda star */}
+        <polygon points="60,28 63.5,38 74,38 66,44 69,54 60,47 51,54 54,44 46,38 56.5,38" fill="white" opacity="0.95"/>
+        {/* Spread tail */}
+        <path d="M48 56 L52 53 L60 60 L68 53 L72 56 L60 68 Z" fill="white" opacity="0.6"/>
+        <rect x="46" y="72" width="28" height="2.5" rx="1.25" fill="white" opacity="0.45"/>
+        <rect x="50" y="77" width="20" height="2" rx="1" fill="white" opacity="0.3"/>
       </g>}
-      {/* Star decorations at top */}
-      {starCount>0&&Array.from({length:starCount}).map((_,i)=>{
-        const sx=60+((i-(starCount-1)/2)*14);
-        return <polygon key={i} points={`${sx},8 ${sx+1.8},13 ${sx+5.5},13 ${sx+2.5},16 ${sx+3.5},21 ${sx},18 ${sx-3.5},21 ${sx-2.5},16 ${sx-5.5},13 ${sx-1.8},13`} fill={c.accent} opacity="0.7" stroke="white" strokeWidth="0.3" strokeOpacity="0.4"/>;
+
+      {/* Top stars */}
+      {[0,1,1,2,3][rank]>0&&Array.from({length:[0,1,1,2,3][rank]}).map((_,i)=>{
+        const ct=[0,1,1,2,3][rank];const sx=60+((i-(ct-1)/2)*14);
+        return <g key={i}><polygon points={`${sx},6 ${sx+2},12 ${sx+6},12 ${sx+3},15.5 ${sx+4},21 ${sx},18 ${sx-4},21 ${sx-3},15.5 ${sx-6},12 ${sx-2},12`} fill={p.spec} stroke={p.rim} strokeWidth="0.4"/><polygon points={`${sx},6 ${sx+2},12 ${sx+6},12 ${sx+3},15.5 ${sx+4},21 ${sx},18 ${sx-4},21 ${sx-3},15.5 ${sx-6},12 ${sx-2},12`} fill="white" opacity="0.2"/></g>;
       })}
-      {/* Rank label */}
-      {showLabel&&<text x="60" y="122" textAnchor="middle" style={{fontSize:7,fontWeight:800,fill:c.primary,letterSpacing:2,fontFamily:"'Inter'"}}>{labels[rank]}</text>}
+
+      {/* Label */}
+      {showLabel&&<text x="60" y="122" textAnchor="middle" style={{fontSize:7,fontWeight:800,fill:p.mid,letterSpacing:2,fontFamily:"'Inter'"}}>{labels[rank]}</text>}
     </svg>
   );
 }
 
-/* ─── BADGE SHAPE SVG — Shield with wings ────────────────────────── */
+/* ─── BADGE SHAPE — 3D illustrated medal (Achievr-inspired) ───── */
 function BadgeShape({color,size=64,icon,unlocked=true,rarity='common'}){
   const rc=RARITY_COLORS[rarity]||RARITY_COLORS.common;
   const s=size;
   const id=`bs_${Math.random().toString(36).slice(2,8)}`;
-  // Shield proportions in viewbox 0 0 64 72
+  /* Derive lighter/darker shades from the base color for 3D depth */
+  const col=unlocked?color:'#94A3B8';
   return(
-    <div className={unlocked?'':'badge-locked-hex'} style={{position:'relative',width:s,height:s*1.1}}>
-      {unlocked&&<div style={{position:'absolute',inset:-6,borderRadius:'50%',background:`radial-gradient(circle,${rc.glow},transparent 70%)`,filter:'blur(8px)',animation:rarity==='legendary'?'pulse 2.5s ease-in-out infinite':undefined}}/>}
-      <svg width={s} height={s*1.1} viewBox="0 0 64 72" fill="none" style={{position:'relative',zIndex:1}}>
+    <div className={unlocked?'':'badge-locked-hex'} style={{position:'relative',width:s,height:s*1.12}}>
+      {/* Ambient glow */}
+      {unlocked&&<div style={{position:'absolute',inset:-8,borderRadius:'50%',background:`radial-gradient(circle,${rc.glow} 0%,transparent 65%)`,filter:'blur(10px)',animation:rarity==='legendary'?'pulse 2.5s ease-in-out infinite':rarity==='epic'?'pulse 4s ease-in-out infinite':undefined}}/>}
+      <svg width={s} height={s*1.12} viewBox="0 0 64 72" fill="none" style={{position:'relative',zIndex:1}}>
         <defs>
-          <linearGradient id={`${id}bg`} x1="12" y1="4" x2="52" y2="64" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor={unlocked?color:C.textMuted}/><stop offset="40%" stopColor={unlocked?color:C.textMuted+'CC'}/><stop offset="100%" stopColor={unlocked?`${color}BB`:C.textMuted+'88'}/>
+          {/* 3D body gradient — light top to dark bottom */}
+          <linearGradient id={`${id}body`} x1="32" y1="4" x2="32" y2="66" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={col} stopOpacity="1"/><stop offset="50%" stopColor={col} stopOpacity="0.85"/><stop offset="100%" stopColor={col} stopOpacity="0.6"/>
           </linearGradient>
-          <linearGradient id={`${id}hl`} x1="18" y1="6" x2="46" y2="40" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="white" stopOpacity={unlocked?"0.4":"0.15"}/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+          {/* Specular gloss — radial top-left */}
+          <radialGradient id={`${id}gloss`} cx="24" cy="18" r="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="white" stopOpacity={unlocked?"0.55":"0.2"}/><stop offset="70%" stopColor="white" stopOpacity={unlocked?"0.1":"0.03"}/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+          </radialGradient>
+          {/* Bottom rim light */}
+          <linearGradient id={`${id}rim`} x1="32" y1="52" x2="32" y2="66" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="white" stopOpacity="0"/><stop offset="100%" stopColor="white" stopOpacity={unlocked?"0.18":"0.05"}/>
           </linearGradient>
-          <filter id={`${id}ds`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={unlocked?`${color}50`:'rgba(0,0,0,0.15)'}/></filter>
-          <filter id={`${id}em`}><feDropShadow dx="0" dy="0.5" stdDeviation="0.8" floodColor="rgba(0,0,0,0.4)"/></filter>
+          {/* Wing gradient */}
+          <linearGradient id={`${id}wl`} x1="0" y1="20" x2="20" y2="36" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={col} stopOpacity="0.4"/><stop offset="100%" stopColor={col} stopOpacity="0.8"/>
+          </linearGradient>
+          <filter id={`${id}ds`}><feDropShadow dx="0" dy="2.5" stdDeviation="3.5" floodColor={unlocked?`${color}40`:'rgba(0,0,0,0.1)'}/></filter>
         </defs>
-        {/* Mini wings */}
-        <g opacity={unlocked?0.75:0.25}>
-          <path d="M18 22 Q8 16 2 26 Q10 22 14 24 Q8 28 4 36 Q14 30 18 30 Z" fill={unlocked?color:C.textMuted} opacity="0.6"/>
-          <path d="M46 22 Q56 16 62 26 Q54 22 50 24 Q56 28 60 36 Q50 30 46 30 Z" fill={unlocked?color:C.textMuted} opacity="0.6"/>
+        {/* Ground shadow */}
+        <ellipse cx="32" cy="68" rx="18" ry="3" fill="black" opacity={unlocked?0.08:0.03}/>
+        {/* Wings — small, stylized */}
+        <g opacity={unlocked?0.85:0.2}>
+          <path d="M18 24 C14 18 6 16 2 22 C8 20 12 22 14 25 C8 24 4 30 2 36 C10 30 16 28 18 30 Z" fill={`url(#${id}wl)`}/>
+          <path d="M18 24 C14 18 6 16 2 22 C8 20 12 22 14 25 C8 24 4 30 2 36 C10 30 16 28 18 30 Z" fill="white" opacity="0.1"/>
+          <path d="M46 24 C50 18 58 16 62 22 C56 20 52 22 50 25 C56 24 60 30 62 36 C54 30 48 28 46 30 Z" fill={`url(#${id}wl)`}/>
+          <path d="M46 24 C50 18 58 16 62 22 C56 20 52 22 50 25 C56 24 60 30 62 36 C54 30 48 28 46 30 Z" fill="white" opacity="0.1"/>
         </g>
-        {/* Shield */}
+        {/* Shield body — rounded */}
         <g filter={`url(#${id}ds)`}>
-          <path d="M32 6 L52 16 L52 38 Q52 54 32 66 Q12 54 12 38 L12 16 Z" fill={`url(#${id}bg)`} stroke={unlocked?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.08)'} strokeWidth="1"/>
-          <path d="M32 6 L52 16 L52 38 Q52 54 32 66 Q12 54 12 38 L12 16 Z" fill={`url(#${id}hl)`}/>
+          <path d="M32 6 C40 6 48 10 50 16 L50 38 C50 52 42 60 32 66 C22 60 14 52 14 38 L14 16 C16 10 24 6 32 6 Z" fill={`url(#${id}body)`}/>
+          <path d="M32 6 C40 6 48 10 50 16 L50 38 C50 52 42 60 32 66 C22 60 14 52 14 38 L14 16 C16 10 24 6 32 6 Z" fill={`url(#${id}gloss)`}/>
+          <path d="M32 6 C40 6 48 10 50 16 L50 38 C50 52 42 60 32 66 C22 60 14 52 14 38 L14 16 C16 10 24 6 32 6 Z" fill={`url(#${id}rim)`}/>
+          <path d="M32 6 C40 6 48 10 50 16 L50 38 C50 52 42 60 32 66 C22 60 14 52 14 38 L14 16 C16 10 24 6 32 6 Z" fill="none" stroke="white" strokeWidth="0.8" strokeOpacity={unlocked?0.25:0.08}/>
         </g>
-        {/* Inner shield line */}
-        <path d="M32 11 L48 19 L48 37 Q48 51 32 61 Q16 51 16 37 L16 19 Z" fill="none" stroke="white" strokeWidth="0.5" opacity={unlocked?0.2:0.06}/>
-        {/* Metallic shine streak */}
-        {unlocked&&<path d="M20 12 L26 9 L27 22 L21 24 Z" fill="white" opacity="0.1"/>}
+        {/* Inner border */}
+        <path d="M32 11 C38 11 44 14 46 19 L46 37 C46 49 39 56 32 61 C25 56 18 49 18 37 L18 19 C20 14 26 11 32 11 Z" fill="none" stroke="white" strokeWidth="0.4" strokeOpacity={unlocked?0.15:0.05}/>
       </svg>
-      {/* Icon overlay */}
-      <div className={unlocked?'':'badge-locked-lock'} style={{position:'absolute',top:0,left:0,width:s,height:s*1.1,display:'flex',alignItems:'center',justifyContent:'center',paddingBottom:s*0.08,zIndex:2}}>
-        <MI name={unlocked?icon:'lock'} size={s*0.34} fill={unlocked} style={{color:C.white,filter:unlocked?'drop-shadow(0 1px 3px rgba(0,0,0,0.4))':'none',opacity:unlocked?1:0.5}}/>
+      {/* Icon */}
+      <div className={unlocked?'':'badge-locked-lock'} style={{position:'absolute',top:0,left:0,width:s,height:s*1.12,display:'flex',alignItems:'center',justifyContent:'center',paddingBottom:s*0.06,zIndex:2}}>
+        <MI name={unlocked?icon:'lock'} size={s*0.34} fill={unlocked} style={{color:'white',filter:unlocked?'drop-shadow(0 1.5px 3px rgba(0,0,0,0.45))':'none',opacity:unlocked?1:0.4}}/>
       </div>
-      {!unlocked&&<div className="badge-locked-overlay" style={{position:'absolute',inset:0,borderRadius:'50%',background:`${C.bg}50`}}/>}
+      {!unlocked&&<div style={{position:'absolute',inset:0,background:`${C.bg}40`,borderRadius:'50%',zIndex:3}}/>}
     </div>
   );
 }
@@ -408,7 +451,7 @@ const BADGES=[
   {name:'Top 10',desc:'Masuk 10 besar ranking',icon:'leaderboard',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'rare',cat:'Pangkat'},
   {name:'Patriot',desc:'Agen paling berdedikasi',icon:'flag',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
 ];
-const RARITY_COLORS={common:{label:'Standar',gradient:'linear-gradient(135deg,#475569,#64748B)',border:'#64748B',glow:'rgba(100,116,139,0.2)'},rare:{label:'Lanjutan',gradient:'linear-gradient(135deg,#37474F,#546E7A)',border:'#546E7A',glow:'rgba(55,71,79,0.2)'},epic:{label:'Elite',gradient:'linear-gradient(135deg,#4E342E,#6D4C41)',border:'#6D4C41',glow:'rgba(78,52,46,0.2)'},legendary:{label:'Kehormatan',gradient:'linear-gradient(135deg,#8D6E37,#A68B5B)',border:'#8D6E37',glow:'rgba(141,110,55,0.25)'}};
+const RARITY_COLORS={common:{label:'Standar',gradient:'linear-gradient(135deg,#78909C,#B0BEC5)',border:'#78909C',glow:'rgba(120,144,156,0.25)'},rare:{label:'Lanjutan',gradient:'linear-gradient(135deg,#1565C0,#42A5F5)',border:'#1E88E5',glow:'rgba(30,136,229,0.3)'},epic:{label:'Elite',gradient:'linear-gradient(135deg,#6A1B9A,#AB47BC)',border:'#8E24AA',glow:'rgba(142,36,170,0.3)'},legendary:{label:'Kehormatan',gradient:'linear-gradient(135deg,#8D6E37,#E6D5A8)',border:'#C9A96E',glow:'rgba(201,169,110,0.35)'}};
 
 const ACTIVITY=[
   {mission:'Literasi Digital',type:'EDUKASI',date:'8 Mar',xp:250,status:'SELESAI'},
@@ -649,33 +692,40 @@ export default function App(){
     }}>{label}</button>;
   }
 
-  /* ─── RANK BADGE (mini shield with rank color) ─── */
+  /* ─── RANK BADGE (mini 3D shield) ─── */
   function RankBadge({rankIdx=1,size=48}){
     const s=size;
-    const rankColors=[
-      {bg:'#64748B',light:'#94A3B8'},
-      {bg:'#1B5E20',light:'#4CAF50'},
-      {bg:'#37474F',light:'#78909C'},
-      {bg:'#4E342E',light:'#8D6E63'},
-      {bg:'#8D6E37',light:'#C9A96E'},
+    const palettes=[
+      {top:'#B0BEC5',mid:'#78909C',bot:'#455A64',rim:'#CFD8DC'},
+      {top:'#81C784',mid:'#43A047',bot:'#1B5E20',rim:'#A5D6A7'},
+      {top:'#90A4AE',mid:'#607D8B',bot:'#37474F',rim:'#B0BEC5'},
+      {top:'#BCAAA4',mid:'#8D6E63',bot:'#4E342E',rim:'#D7CCC8'},
+      {top:'#E6D5A8',mid:'#C9A96E',bot:'#8D6E37',rim:'#F5E6C8'},
     ];
-    const rc=rankColors[rankIdx]||rankColors[0];
+    const p=palettes[rankIdx]||palettes[0];
     const rankIcons=['person','military_tech','shield','stars','workspace_premium'];
+    const id=`rb_${rankIdx}_${s}`;
     return(
       <div style={{width:s,height:s,position:'relative'}}>
         <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
           <defs>
-            <linearGradient id={`rb${rankIdx}${s}`} x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={rc.light}/><stop offset="100%" stopColor={rc.bg}/>
+            <linearGradient id={`${id}bg`} x1="24" y1="3" x2="24" y2="46" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={p.top}/><stop offset="45%" stopColor={p.mid}/><stop offset="100%" stopColor={p.bot}/>
             </linearGradient>
+            <radialGradient id={`${id}gl`} cx="18" cy="14" r="16" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="white" stopOpacity="0.5"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+            <filter id={`${id}ds`}><feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodColor="rgba(0,0,0,0.2)"/></filter>
           </defs>
-          {/* Shield */}
-          <path d="M24 4 L40 12 L40 26 Q40 38 24 46 Q8 38 8 26 L8 12 Z" fill={`url(#rb${rankIdx}${s})`} stroke={rc.light} strokeWidth="1" strokeOpacity="0.4"/>
-          <path d="M24 4 L40 12 L40 26 Q40 38 24 46 Q8 38 8 26 L8 12 Z" fill="white" opacity="0.15"/>
-          <path d="M24 8 L37 14.5 L37 25.5 Q37 36 24 42.5 Q11 36 11 25.5 L11 14.5 Z" fill="none" stroke="white" strokeWidth="0.5" opacity="0.15"/>
+          <g filter={`url(#${id}ds)`}>
+            {/* Rounded shield */}
+            <path d="M24 4 C30 4 36 7 38 11 L38 26 C38 36 32 42 24 46 C16 42 10 36 10 26 L10 11 C12 7 18 4 24 4 Z" fill={`url(#${id}bg)`}/>
+            <path d="M24 4 C30 4 36 7 38 11 L38 26 C38 36 32 42 24 46 C16 42 10 36 10 26 L10 11 C12 7 18 4 24 4 Z" fill={`url(#${id}gl)`}/>
+            <path d="M24 4 C30 4 36 7 38 11 L38 26 C38 36 32 42 24 46 C16 42 10 36 10 26 L10 11 C12 7 18 4 24 4 Z" fill="none" stroke={p.rim} strokeWidth="0.8" strokeOpacity="0.3"/>
+          </g>
         </svg>
         <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',paddingBottom:s*0.04}}>
-          <MI name={rankIcons[rankIdx]||'military_tech'} size={s*0.38} fill style={{color:'white',filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'}}/>
+          <MI name={rankIcons[rankIdx]||'military_tech'} size={s*0.36} fill style={{color:'white',filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.35))'}}/>
         </div>
       </div>
     );
