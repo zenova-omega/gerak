@@ -14,10 +14,13 @@
 body {
   background: #F5F0E8;
   background-image:
-    radial-gradient(ellipse at 15% 5%, rgba(27,94,32,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 85% 20%, rgba(146,64,14,0.04) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 80%, rgba(13,148,136,0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 60% 50% at 10% 0%, rgba(27,94,32,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 90% 15%, rgba(146,64,14,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 50% 50%, rgba(13,148,136,0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 20% 85%, rgba(109,40,217,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 75%, rgba(27,94,32,0.10) 0%, transparent 55%);
   background-attachment: fixed;
+  min-height: 100vh;
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
