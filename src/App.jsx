@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import ForceGraph3D from 'react-force-graph-3d';
 import { useSpring, animated } from '@react-spring/web';
-import Lottie from 'lottie-react';
 import {
   Plus, PlusCircle, UserGear, ChartLine, ArrowLeft, ArrowRight,
   Sparkle, BatteryFull, Lightning, ChatDots, ChatCenteredDots, Check, CheckCircle, X,
@@ -2423,8 +2422,8 @@ export default function App(){
       {step===3&&(<div key="step3" className="step-enter flex flex-col gap-4" style={{position:'relative'}}>
         {/* Confetti celebration on AI pass */}
         {aiResult&&aiResult.pass&&(
-          <div style={{position:'absolute',top:-60,left:'50%',transform:'translateX(-50%)',width:300,height:300,pointerEvents:'none',zIndex:30}}>
-            <Lottie animationData={null} path="https://assets10.lottiefiles.com/packages/lf20_touohxv0.json" loop={false} style={{width:'100%',height:'100%'}}/>
+          <div style={{position:'absolute',top:-40,left:'50%',transform:'translateX(-50%)',pointerEvents:'none',zIndex:30,fontSize:40,animation:'fadeInUp 400ms ease both',textAlign:'center'}}>
+            🎉
           </div>
         )}
         {/* AI Quality Check */}
