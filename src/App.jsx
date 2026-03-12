@@ -346,7 +346,7 @@ function RankInsignia({rank=0,size=120,showLabel=true}){
         {/* Ground shadow */}
         <ellipse cx="60" cy="98" rx="22" ry="3.5" fill={p.body[3]} opacity="0.1"/>
       </svg>
-      {showLabel&&<span style={{fontSize:Math.max(9,s*0.065),fontWeight:800,color:p.label,letterSpacing:2,fontFamily:"'Inter'",textTransform:'uppercase'}}>{labels[rank]}</span>}
+      {showLabel&&<span style={{fontSize:Math.max(9,s*0.065),fontWeight:800,color:p.label,letterSpacing:2,fontFamily:"'Plus Jakarta Sans'",textTransform:'uppercase'}}>{labels[rank]}</span>}
     </div>
   );
 }
@@ -533,7 +533,7 @@ function PositiveMeter({percent,size='sm'}){
   return(
     <div style={{display:'flex',alignItems:'center',gap:s?6:8}}>
       <div style={{width:s?32:44,height:s?32:44,borderRadius:'50%',background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${color}`,position:'relative'}}>
-        <span style={{fontSize:s?10:13,fontWeight:800,color,fontFamily:"'Inter'"}}>{percent}%</span>
+        <span style={{fontSize:s?10:13,fontWeight:800,color,fontFamily:"'Plus Jakarta Sans'"}}>{percent}%</span>
       </div>
       <span style={{fontSize:s?10:11,color:C.textMuted,fontWeight:500}}>Positif</span>
     </div>
@@ -774,7 +774,7 @@ export default function App(){
             <div style={{marginTop:8}}>
               <div className="flex items-center justify-between mb-1">
                 <span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.5)'}}>XP</span>
-                <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FFFFFF'}}>{xpCur.toLocaleString()} / {xpMax.toLocaleString()}</span>
+                <span style={{fontSize:11,fontWeight:700,fontFamily:"'Space Mono'",color:'#FFFFFF'}}>{xpCur.toLocaleString()} / {xpMax.toLocaleString()}</span>
               </div>
               <div style={{height:5,borderRadius:9999,background:'rgba(255,255,255,0.12)',overflow:'hidden'}}>
                 <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:`${xpPct}%`,background:'linear-gradient(90deg,rgba(255,255,255,0.6),rgba(255,255,255,0.9),rgba(255,255,255,0.6))',backgroundSize:'200% 100%'}}/>
@@ -787,40 +787,62 @@ export default function App(){
       {/* ═══ BENTO STATS GRID ═══ */}
       <div className="stagger-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
         {/* Large stat: Missions */}
-        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',gridRow:'span 2',display:'flex',flexDirection:'column',justifyContent:'space-between'}} onClick={()=>nav('misi')}>
+        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',gridRow:'span 2',display:'flex',flexDirection:'column',justifyContent:'space-between',position:'relative',overflow:'hidden'}} onClick={()=>nav('misi')}>
+          <div style={{position:'absolute',bottom:-10,right:-10,width:64,height:64,borderRadius:'50%',background:C.primaryLight,opacity:0.5,pointerEvents:'none'}}/>
           <div style={{width:36,height:36,borderRadius:10,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:8}}>
             <MI name="target" size={18} fill style={{color:C.primary}}/>
           </div>
           <div>
-            <p style={{fontSize:28,fontWeight:900,color:C.text,fontFamily:"'JetBrains Mono'",lineHeight:1}}>24</p>
-            <p style={{fontSize:11,color:C.textSec,fontWeight:600,marginTop:2}}>Misi Selesai</p>
+            <p style={{fontSize:32,fontWeight:800,color:C.text,fontFamily:"'Plus Jakarta Sans'",lineHeight:1}}>24</p>
+            <p style={{fontSize:11,color:C.textSec,fontWeight:600,marginTop:4}}>Misi Selesai</p>
           </div>
-          <div className="flex items-center gap-1" style={{marginTop:8}}>
-            <MI name="trending_up" size={14} style={{color:C.green}}/>
-            <span style={{fontSize:11,fontWeight:700,color:C.green}}>+3 minggu ini</span>
+          <div style={{marginTop:10}}>
+            <div className="flex items-center justify-between mb-1">
+              <span style={{fontSize:10,color:C.textMuted}}>Target 30</span>
+              <span style={{fontSize:10,fontWeight:700,color:C.primary}}>80%</span>
+            </div>
+            <div style={{height:4,borderRadius:99,background:C.primaryLight,overflow:'hidden'}}>
+              <div style={{width:'80%',height:'100%',borderRadius:99,background:`linear-gradient(90deg,${C.primary},${C.primaryAccent})`}}/>
+            </div>
+          </div>
+          <div className="flex items-center gap-1" style={{marginTop:6}}>
+            <MI name="trending_up" size={13} style={{color:C.green}}/>
+            <span style={{fontSize:10,fontWeight:700,color:C.green}}>+3 minggu ini</span>
           </div>
         </div>
         {/* Streak */}
-        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer'}} onClick={()=>showToast('Streak: 7 hari berturut-turut!')}>
+        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',position:'relative',overflow:'hidden'}} onClick={()=>showToast('Streak: 7 hari berturut-turut!')}>
+          <div style={{position:'absolute',top:-8,right:-8,width:40,height:40,borderRadius:'50%',background:C.orangeLight,opacity:0.6,pointerEvents:'none'}}/>
           <div className="flex items-center justify-between">
-            <div style={{width:32,height:32,borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <MI name="local_fire_department" size={16} fill style={{color:C.orange}}/>
+            <div style={{width:30,height:30,borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="local_fire_department" size={15} fill style={{color:C.orange}}/>
             </div>
             <span style={{fontSize:10,fontWeight:700,color:C.orange,background:C.orangeLight,borderRadius:6,padding:'2px 6px'}}>AKTIF</span>
           </div>
-          <p style={{fontSize:22,fontWeight:900,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:6,lineHeight:1}}>7<span style={{fontSize:13,fontWeight:600,color:C.textMuted,marginLeft:2}}>hari</span></p>
-          <p style={{fontSize:11,color:C.textSec,fontWeight:500,marginTop:2}}>Streak</p>
+          <p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'Plus Jakarta Sans'",marginTop:8,lineHeight:1}}>7<span style={{fontSize:12,fontWeight:600,color:C.textMuted,marginLeft:2}}>hari</span></p>
+          <p style={{fontSize:10,color:C.textSec,fontWeight:500,marginTop:2}}>Streak Berturut</p>
+          {/* Mini streak dots */}
+          <div className="flex gap-1" style={{marginTop:6}}>
+            {[1,1,1,1,1,1,1].map((_,i)=>(
+              <div key={i} style={{width:6,height:6,borderRadius:'50%',background:C.orange,opacity:0.7+i*0.04}}/>
+            ))}
+          </div>
         </div>
         {/* Rank */}
-        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer'}} onClick={()=>nav('pangkat')}>
+        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',position:'relative',overflow:'hidden'}} onClick={()=>nav('pangkat')}>
+          <div style={{position:'absolute',bottom:-6,right:-6,width:36,height:36,borderRadius:'50%',background:C.tealLight,opacity:0.5,pointerEvents:'none'}}/>
           <div className="flex items-center justify-between">
-            <div style={{width:32,height:32,borderRadius:8,background:C.tealLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <MI name="leaderboard" size={16} fill style={{color:C.teal}}/>
+            <div style={{width:30,height:30,borderRadius:8,background:C.tealLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="leaderboard" size={15} fill style={{color:C.teal}}/>
             </div>
             <MI name="arrow_forward" size={14} style={{color:C.textMuted}}/>
           </div>
-          <p style={{fontSize:22,fontWeight:900,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:6,lineHeight:1}}>#4<span style={{fontSize:13,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p>
-          <p style={{fontSize:11,color:C.textSec,fontWeight:500,marginTop:2}}>Peringkat</p>
+          <p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'Plus Jakarta Sans'",marginTop:8,lineHeight:1}}>#4<span style={{fontSize:12,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p>
+          <p style={{fontSize:10,color:C.textSec,fontWeight:500,marginTop:2}}>Peringkat</p>
+          <div className="flex items-center gap-1" style={{marginTop:4}}>
+            <MI name="arrow_upward" size={11} style={{color:C.teal}}/>
+            <span style={{fontSize:10,fontWeight:600,color:C.teal}}>Naik 2 posisi</span>
+          </div>
         </div>
       </div>
 
@@ -843,26 +865,26 @@ export default function App(){
             <div key={i} className="flex flex-col items-center" style={{flex:1}}>
               <RankBadge rankIdx={lb.rankIdx} size={isFirst?38:30}/>
               <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:4,textAlign:'center',lineHeight:1.2}} className="truncate" title={lb.name}>{lb.name.split(' ')[0]}</p>
-              <span style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.textMuted,marginTop:1}}>{lb.xp.toLocaleString()}</span>
+              <span style={{fontSize:10,fontWeight:700,fontFamily:"'Space Mono'",color:C.textMuted,marginTop:1}}>{lb.xp.toLocaleString()}</span>
               <div style={{
                 width:'100%',height:heights[i],borderRadius:'10px 10px 0 0',marginTop:6,
                 background:isFirst?`linear-gradient(180deg,${C.primary},${C.primaryDark})`:
                   i===0?'linear-gradient(180deg,#C0C0C0,#A0A0A0)':'linear-gradient(180deg,#CD9B6A,#A67B4B)',
                 display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:6,
               }}>
-                <span style={{fontSize:14,fontWeight:900,color:'#FFFFFF',fontFamily:"'JetBrains Mono'"}}>{order[i]}</span>
+                <span style={{fontSize:14,fontWeight:900,color:'#FFFFFF',fontFamily:"'Space Mono'"}}>{order[i]}</span>
               </div>
             </div>);
           })}
         </div>
         {/* Your rank */}
         <div className="flex items-center gap-3" style={{padding:'10px 14px',borderTop:`1px solid ${C.border}`,background:C.primaryLight}}>
-          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>4</span>
+          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",width:18,textAlign:'center'}}>4</span>
           <RankBadge rankIdx={curRank} size={30}/>
           <div className="flex-1" style={{minWidth:0}}>
             <p style={{fontSize:12,fontWeight:600,color:C.text}}>Arif Santoso <span style={{fontSize:10,fontWeight:700,color:C.primary,marginLeft:4}}>Kamu</span></p>
           </div>
-          <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4,820</span>
+          <span style={{fontSize:12,fontWeight:700,fontFamily:"'Space Mono'",color:C.primary}}>4,820</span>
         </div>
       </Card>
 
@@ -879,11 +901,8 @@ export default function App(){
         {/* Horizontal scroll badges */}
         <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2 scroll-peek" style={{scrollSnapType:'x mandatory'}}>
           {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
-            <div key={i} className="tap-bounce" style={{flexShrink:0,width:90,scrollSnapAlign:'start',
-              background:C.surface,borderRadius:14,padding:'10px 6px 8px',border:`1px solid ${C.border}`,
-              textAlign:'center',cursor:'pointer',
-            }}>
-              <Badge badge={b} size={44}/>
+            <div key={i} className="tap-bounce" style={{flexShrink:0,scrollSnapAlign:'start'}}>
+              <Badge badge={b} size={44} compact/>
             </div>
           ))}
           {/* See all */}
@@ -893,13 +912,13 @@ export default function App(){
             alignItems:'center',justifyContent:'center',cursor:'pointer',gap:3,
             background:C.primaryFaint,minHeight:100,
           }}>
-            <span style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>+{Math.max(0,BADGES.filter(b=>b.unlocked).length-5)}</span>
+            <span style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'"}}>+{Math.max(0,BADGES.filter(b=>b.unlocked).length-5)}</span>
             <span style={{fontSize:10,color:C.primary,fontWeight:600}}>Lihat</span>
           </div>
         </div>
         {/* Collection progress */}
         <div className="flex items-center gap-3 mt-2.5" style={{padding:'0 2px'}}>
-          <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{BADGES.filter(b=>b.unlocked).length}/{BADGES.length}</span>
+          <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>{BADGES.filter(b=>b.unlocked).length}/{BADGES.length}</span>
           <div className="flex-1"><ProgressBar progress={BADGES.filter(b=>b.unlocked).length/BADGES.length} color={C.gold} height={4}/></div>
           <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>{Math.round(BADGES.filter(b=>b.unlocked).length/BADGES.length*100)}%</span>
         </div>
@@ -922,7 +941,7 @@ export default function App(){
           </div>
           <h3 style={{fontSize:16,fontWeight:700,color:'#FFFFFF',lineHeight:1.3,marginBottom:10}}>Distribusi Materi Literasi Digital ke 5 Grup</h3>
           <div className="flex items-center gap-3" style={{marginBottom:14}}>
-            <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FFFFFF'}}>+250 XP</span>
+            <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:11,fontWeight:700,fontFamily:"'Space Mono'",color:'#FFFFFF'}}>+250 XP</span>
             <span style={{color:'rgba(255,255,255,0.6)',fontSize:11,fontWeight:500}}>Deadline: 12 Mar</span>
           </div>
           <button onClick={()=>openM(MISSIONS[0])} className="btn-primary tap-bounce" style={{
@@ -951,7 +970,7 @@ export default function App(){
           ].map((s,i)=>(
             <div key={i} style={{background:C.surface,borderRadius:8,padding:'8px 4px',textAlign:'center',border:`1px solid ${C.border}`}}>
               <MI name={s.icon} size={14} style={{color:s.c}}/>
-              <p style={{fontSize:16,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+              <p style={{fontSize:16,fontWeight:800,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</p>
               <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
             </div>
           ))}
@@ -975,7 +994,7 @@ export default function App(){
                   <div className="flex-1" style={{minWidth:0}}>
                     <h4 style={{fontSize:12,fontWeight:700,color:C.text,lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{m.title}</h4>
                     <div className="flex items-center gap-2" style={{marginTop:3}}>
-                      <span style={{fontSize:10,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
+                      <span style={{fontSize:10,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'"}}>+{m.xp} XP</span>
                       <span style={{fontSize:10,color:C.textMuted}}>{m.deadline}</span>
                     </div>
                   </div>
@@ -1028,7 +1047,7 @@ export default function App(){
                 </div>
                 <h4 style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:8,minHeight:34}} className="line-clamp-2">{m.title}</h4>
                 <div className="flex items-center gap-2" style={{marginBottom:10}}>
-                  <span style={{fontSize:11,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
+                  <span style={{fontSize:11,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'"}}>+{m.xp} XP</span>
                   <span style={{fontSize:10,color:C.textMuted,fontWeight:500}}>{m.deadline}</span>
                 </div>
                 <div style={{
@@ -1104,7 +1123,7 @@ export default function App(){
           <p style={{fontSize:12,color:C.textMuted,marginBottom:8,lineHeight:1.4,position:'relative',zIndex:1}} className="line-clamp-2">{m.desc}</p>
           <div className="flex items-center justify-between" style={{position:'relative',zIndex:1}}>
             <div className="flex items-center gap-3">
-              <span style={{fontSize:12,fontWeight:700,color:done?C.textMuted:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
+              <span style={{fontSize:12,fontWeight:700,color:done?C.textMuted:C.gold,fontFamily:"'Space Mono'"}}>+{m.xp} XP</span>
               <span style={{fontSize:11,color:C.textMuted}}>
                 <MI name="group" size={14} style={{color:C.textMuted,verticalAlign:'middle',marginRight:2}}/>{m.participants}
               </span>
@@ -1144,16 +1163,15 @@ export default function App(){
         <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:`radial-gradient(circle,${C.primaryGlow}40,transparent 70%)`,pointerEvents:'none'}}/>
         <div style={{padding:'24px 20px',display:'flex',alignItems:'center',gap:16,position:'relative'}}>
           {/* Rank insignia */}
-          <div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-            <RankInsignia rank={1} size={72} showLabel={false}/>
-            <RankInsignia rank={1} size={48} showLabel={false}/>
+          <div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center'}}>
+            <RankInsignia rank={1} size={80} showLabel={false}/>
           </div>
           {/* Info */}
           <div className="flex-1" style={{minWidth:0}}>
             <span style={{fontSize:10,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Pangkat Saat Ini</span>
             <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Kopral</h2>
             <div className="flex items-center gap-2 mt-2">
-              <span style={{background:`linear-gradient(135deg,${C.primaryMid},${C.primaryFaint})`,borderRadius:9999,padding:'3px 10px',border:`1px solid ${C.primary}40`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>4,820 XP</span>
+              <span style={{background:`linear-gradient(135deg,${C.primaryMid},${C.primaryFaint})`,borderRadius:9999,padding:'3px 10px',border:`1px solid ${C.primary}40`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'Space Mono'"}}>4,820 XP</span>
               <span style={{fontSize:10,color:C.textMuted}}>/ 5,000</span>
             </div>
             {/* Progress */}
@@ -1246,7 +1264,7 @@ export default function App(){
                 <RankInsignia rank={i} size={56} showLabel={false}/>
                 <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
                 {r.subtitle&&<p style={{fontSize:10,fontWeight:600,color:cur?rankColors.accent:C.textMuted,marginTop:1,letterSpacing:0.3,lineHeight:1.2,opacity:cur?0.7:1}}>{r.subtitle}</p>}
-                <p style={{fontSize:10,fontWeight:600,color:cur?rankColors.accent:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3,opacity:cur?0.8:1}}>{r.xp.toLocaleString()} XP</p>
+                <p style={{fontSize:10,fontWeight:600,color:cur?rankColors.accent:C.textMuted,fontFamily:"'Space Mono'",marginTop:3,opacity:cur?0.8:1}}>{r.xp.toLocaleString()} XP</p>
                 {cur&&<div style={{marginTop:5,background:`${rankColors.accent}20`,borderRadius:9999,padding:'2px 8px',display:'inline-block'}}>
                   <span style={{fontSize:10,fontWeight:700,color:rankColors.accent,letterSpacing:0.5}}>SAAT INI</span>
                 </div>}
@@ -1261,7 +1279,7 @@ export default function App(){
       <div className="stagger-4">
         <div className="flex justify-between items-center mb-2">
           <h3 style={{fontSize:16,fontWeight:700,color:C.text}}>Koleksi Lencana</h3>
-          <span style={{fontSize:12,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{unlocked}/{BADGES.length}</span>
+          <span style={{fontSize:12,fontWeight:700,color:C.primary,fontFamily:"'Space Mono'"}}>{unlocked}/{BADGES.length}</span>
         </div>
         {/* Progress */}
         <div className="flex items-center gap-3 mb-3">
@@ -1304,12 +1322,12 @@ export default function App(){
           <RankBadge rankIdx={1} size={72}/>
         </div>
         <h2 style={{fontSize:18,fontWeight:800,color:C.text,position:'relative',zIndex:1}}>Mayor Arif Santoso</h2>
-        <p style={{fontSize:11,color:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
+        <p style={{fontSize:11,color:C.textMuted,fontFamily:"'Space Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
         <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>Kopral</span>
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[{l:'Misi',v:'24'},{l:'XP',v:'4,820'},{l:'Rank',v:'#12'}].map((s,i)=>(
             <div key={i} style={{background:C.surfaceLight,borderRadius:12,padding:'8px 0',textAlign:'center',border:`1px solid ${C.border}`,position:'relative',zIndex:1}}>
-              <p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+              <p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{s.v}</p>
               <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
             </div>
           ))}
@@ -1329,7 +1347,7 @@ export default function App(){
               <p style={{fontSize:11,color:C.textMuted}}>{s.handle}</p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.followers}</span>
+              <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>{s.followers}</span>
               <span style={{fontSize:10,padding:'2px 6px',borderRadius:4,fontWeight:700,background:C.greenLight,color:C.green}}>Connected</span>
             </div>
           </div>
@@ -1367,7 +1385,7 @@ export default function App(){
               <p style={{fontSize:10,color:C.textMuted}}>{a.date}</p>
             </div>
             <div className="flex flex-col items-end gap-1" style={{flexShrink:0}}>
-              <span style={{fontSize:11,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{a.xp}</span>
+              <span style={{fontSize:11,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'"}}>+{a.xp}</span>
               <span style={{fontSize:10,padding:'2px 6px',borderRadius:4,fontWeight:700,
                 background:a.status==='SELESAI'?C.greenLight:C.orangeLight,
                 color:a.status==='SELESAI'?C.green:C.orange}}>{a.status}</span>
@@ -1426,7 +1444,7 @@ export default function App(){
               <div style={{width:32,height:32,borderRadius:8,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:8}}>
                 <MI name={s.icon} size={18} fill style={{color:s.color}}/>
               </div>
-              <p style={{fontSize:20,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+              <p style={{fontSize:20,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{s.value}</p>
               <p style={{fontSize:11,color:C.textMuted,fontWeight:500}}>{s.label}</p>
             </Card>
           ))}
@@ -1436,12 +1454,12 @@ export default function App(){
         <div className="stagger-4 grid grid-cols-2 gap-3">
           <Card style={{padding:14,background:'linear-gradient(135deg,rgba(249,115,22,0.15),rgba(249,115,22,0.08))',border:'1px solid rgba(249,115,22,0.2)'}}>
             <MI name="public" size={20} style={{color:C.primary}}/>
-            <p style={{fontSize:22,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'JetBrains Mono'"}}>{ADMIN_STATS.totalReach}</p>
+            <p style={{fontSize:22,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'Space Mono'"}}>{ADMIN_STATS.totalReach}</p>
             <p style={{fontSize:11,color:C.textSec}}>Total Reach</p>
           </Card>
           <Card style={{padding:14,background:'linear-gradient(135deg,rgba(249,115,22,0.1),rgba(245,158,11,0.06))',border:'1px solid rgba(249,115,22,0.15)'}}>
             <MI name="trending_up" size={20} style={{color:C.gold}}/>
-            <p style={{fontSize:22,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'JetBrains Mono'"}}>{ADMIN_STATS.avgEngagement}</p>
+            <p style={{fontSize:22,fontWeight:800,color:C.text,marginTop:4,fontFamily:"'Space Mono'"}}>{ADMIN_STATS.avgEngagement}</p>
             <p style={{fontSize:11,color:C.textSec}}>Avg Engagement</p>
           </Card>
         </div>
@@ -1484,7 +1502,7 @@ export default function App(){
                 <p style={{fontSize:10,color:C.textMuted}}>Reach: {p.reach}</p>
               </div>
               <div className="flex flex-col items-end">
-                <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{p.engagement}</span>
+                <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>{p.engagement}</span>
                 <span style={{fontSize:10,fontWeight:600,color:p.trend.startsWith('+')?C.green:p.trend.startsWith('-')?C.red:C.textMuted}}>{p.trend}</span>
               </div>
             </div>
@@ -1542,7 +1560,7 @@ export default function App(){
                   <SentimentChart breakdown={n.sentimentBreakdown}/>
                   <div className="flex items-center gap-2 mt-3" style={{borderTop:`1px solid ${C.border}`,paddingTop:8}}>
                     <span style={{fontSize:11,fontWeight:600,color:C.textSec}}>Sentimen positif keseluruhan:</span>
-                    <span style={{fontSize:14,fontWeight:800,color:n.positivePercent>=50?C.green:n.positivePercent>=25?C.orange:C.red,fontFamily:"'JetBrains Mono'"}}>{n.positivePercent}%</span>
+                    <span style={{fontSize:14,fontWeight:800,color:n.positivePercent>=50?C.green:n.positivePercent>=25?C.orange:C.red,fontFamily:"'Space Mono'"}}>{n.positivePercent}%</span>
                   </div>
                 </div>
 
@@ -1592,7 +1610,7 @@ export default function App(){
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span style={{fontSize:11,fontWeight:700,color:C.text}}>{s.platform.charAt(0).toUpperCase()+s.platform.slice(1)}</span>
-                        <span style={{fontSize:10,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>{s.count}</span>
+                        <span style={{fontSize:10,color:C.textMuted,fontFamily:"'Space Mono'"}}>{s.count}</span>
                       </div>
                       <p style={{fontSize:11,color:C.textSec,fontStyle:'italic'}}>"{s.sample}"</p>
                     </div>
@@ -1654,7 +1672,7 @@ export default function App(){
             <div className="grid grid-cols-3 gap-2">
               {[{l:'Posts',v:p.posts},{l:'Reach',v:p.reach},{l:'Engage',v:p.engagement}].map((s,j)=>(
                 <div key={j} style={{background:C.surfaceLight,borderRadius:8,padding:'8px 4px',textAlign:'center'}}>
-                  <p style={{fontSize:14,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                  <p style={{fontSize:14,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{s.v}</p>
                   <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
                 </div>
               ))}
@@ -1707,7 +1725,7 @@ export default function App(){
         <h1 style={{fontSize:22,fontWeight:800,color:C.text}}>Konten Saya</h1>
         {totalXpEarned>0&&<div style={{background:C.goldLight,borderRadius:8,padding:'4px 12px',border:'1px solid rgba(249,115,22,0.2)',display:'flex',alignItems:'center',gap:4}}>
           <MI name="stars" size={14} fill style={{color:C.gold}}/>
-          <span style={{fontSize:13,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{totalXpEarned} XP</span>
+          <span style={{fontSize:13,fontWeight:800,color:C.gold,fontFamily:"'Space Mono'"}}>{totalXpEarned} XP</span>
         </div>}
       </div>
 
@@ -1746,7 +1764,7 @@ export default function App(){
         {[{l:'Views',v:totalViews,icon:'visibility',c:C.primary},{l:'Likes',v:totalLikes,icon:'favorite',c:C.pink},{l:'Shares',v:totalShares,icon:'share',c:C.teal},{l:'Avg Rate',v:avgRate,icon:'trending_up',c:C.orange}].map((s,i)=>(
           <div key={i} className={`num-pop num-pop-d${Math.min(i+1,3)}`} style={{background:C.surface,borderRadius:12,padding:'10px 6px',textAlign:'center',border:`1px solid ${C.border}`}}>
             <MI name={s.icon} size={16} style={{color:s.c}}/>
-            <p style={{fontSize:13,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:2}}>{s.v}</p>
+            <p style={{fontSize:13,fontWeight:800,color:C.text,fontFamily:"'Space Mono'",marginTop:2}}>{s.v}</p>
             <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
           </div>
         ))}
@@ -1770,7 +1788,7 @@ export default function App(){
                 <p style={{fontSize:10,color:C.textMuted}}>{d.posts} konten</p>
               </div>
               <div style={{textAlign:'right'}}>
-                <p style={{fontSize:13,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{d.views}</p>
+                <p style={{fontSize:13,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{d.views}</p>
                 <p style={{fontSize:10,color:C.green}}>Best: {d.topRate}%</p>
               </div>
             </div>
@@ -1820,7 +1838,7 @@ export default function App(){
             {[{l:'Views',v:post.views,icon:'visibility'},{l:'Likes',v:post.likes,icon:'favorite'},{l:'Comments',v:post.comments,icon:'chat_bubble'},{l:'Shares',v:post.shares,icon:'share'},{l:'Saves',v:post.saves,icon:'bookmark'}].map((m,j)=>(
               <div key={j} style={{background:C.surfaceLight,borderRadius:6,padding:'6px 2px',textAlign:'center'}}>
                 <MI name={m.icon} size={12} style={{color:C.textMuted}}/>
-                <p style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{m.v}</p>
+                <p style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>{m.v}</p>
                 <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{m.l}</p>
               </div>
             ))}
@@ -1830,7 +1848,7 @@ export default function App(){
           <div className="flex items-center gap-2" style={{padding:'0 14px 12px'}}>
             <span style={{fontSize:10,color:C.textMuted,fontWeight:600}}>Engagement</span>
             <div className="flex-1"><ProgressBar progress={post.rate/25} color={post.rate>15?C.green:post.rate>10?C.orange:C.textSec} height={4}/></div>
-            <span style={{fontSize:11,fontWeight:700,color:post.rate>15?C.green:post.rate>10?C.orange:C.text,fontFamily:"'JetBrains Mono'"}}>{post.rate}%</span>
+            <span style={{fontSize:11,fontWeight:700,color:post.rate>15?C.green:post.rate>10?C.orange:C.text,fontFamily:"'Space Mono'"}}>{post.rate}%</span>
           </div>
 
           {/* Mission Link + Status + XP */}
@@ -1843,7 +1861,7 @@ export default function App(){
                 color:post.status==='SELESAI'?C.green:C.orange,
               }}>{post.status==='SELESAI'?'Selesai':'Direview'}</span>
               {post.status==='SELESAI'&&post.xpEarned>0&&(
-                <span style={{fontSize:10,fontWeight:800,color:C.gold,background:C.goldLight,borderRadius:6,padding:'2px 8px',fontFamily:"'JetBrains Mono'",border:'1px solid rgba(249,115,22,0.2)'}}>+{post.xpEarned} XP</span>
+                <span style={{fontSize:10,fontWeight:800,color:C.gold,background:C.goldLight,borderRadius:6,padding:'2px 8px',fontFamily:"'Space Mono'",border:'1px solid rgba(249,115,22,0.2)'}}>+{post.xpEarned} XP</span>
               )}
               {post.status==='REVIEW'&&(
                 <span style={{fontSize:10,color:C.textMuted,fontStyle:'italic'}}>Menunggu</span>
@@ -1883,7 +1901,7 @@ export default function App(){
           <div style={{position:'absolute',right:-10,top:-10,opacity:0.06}}><MI name="stars" size={80} fill style={{color:C.gold}}/></div>
           <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:1,marginBottom:2}}>Poin Tersedia</p>
           <div className="flex items-end gap-2">
-            <p style={{fontSize:32,fontWeight:900,color:C.gold,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{userPoints.toLocaleString()}</p>
+            <p style={{fontSize:32,fontWeight:900,color:C.gold,fontFamily:"'Space Mono'",lineHeight:1}}>{userPoints.toLocaleString()}</p>
             <p style={{fontSize:12,color:C.textSec,marginBottom:2}}>XP</p>
           </div>
           <div className="flex items-center gap-2 mt-2">
@@ -1919,7 +1937,7 @@ export default function App(){
               <p style={{fontSize:10,color:C.textMuted,marginBottom:8,lineHeight:1.3}}>{item.desc}</p>
               <div className="flex items-center justify-center gap-1 mb-2">
                 <MI name="stars" size={14} fill style={{color:C.gold}}/>
-                <span style={{fontSize:15,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{item.cost.toLocaleString()}</span>
+                <span style={{fontSize:15,fontWeight:800,color:C.gold,fontFamily:"'Space Mono'"}}>{item.cost.toLocaleString()}</span>
               </div>
               <p style={{fontSize:10,color:C.textMuted}}>Stok: {item.stock}</p>
             </div>
@@ -1956,7 +1974,7 @@ export default function App(){
               <p style={{fontSize:12,fontWeight:600,color:C.text}}>{h.name}</p>
               <p style={{fontSize:10,color:C.textMuted}}>{h.date}</p>
             </div>
-            <span style={{fontSize:11,fontWeight:700,color:C.red,fontFamily:"'JetBrains Mono'"}}>-{h.cost}</span>
+            <span style={{fontSize:11,fontWeight:700,color:C.red,fontFamily:"'Space Mono'"}}>-{h.cost}</span>
           </div>
         ))}
       </Card>
@@ -2012,7 +2030,7 @@ export default function App(){
         </div>
         <h2 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.2,marginBottom:6}}>{m.title}</h2>
         <div className="flex items-center gap-3 flex-wrap">
-          <span style={{background:C.goldLight,color:C.gold,borderRadius:8,padding:'4px 12px',fontSize:13,fontWeight:800,fontFamily:"'JetBrains Mono'",border:'1px solid rgba(249,115,22,0.2)'}}>+{m.xp} XP</span>
+          <span style={{background:C.goldLight,color:C.gold,borderRadius:8,padding:'4px 12px',fontSize:13,fontWeight:800,fontFamily:"'Space Mono'",border:'1px solid rgba(249,115,22,0.2)'}}>+{m.xp} XP</span>
           {m.bonus&&<span style={{background:C.greenLight,color:C.green,borderRadius:8,padding:'4px 10px',fontSize:11,fontWeight:700,border:'1px solid rgba(34,197,94,0.2)'}}>+{m.bonus} bonus</span>}
           <span style={{fontSize:11,color:C.textMuted}}>
             <MI name="group" size={14} style={{verticalAlign:'middle',marginRight:2}}/>{m.participants}
@@ -2138,7 +2156,7 @@ export default function App(){
                     <MI name="location_on" size={14} fill style={{color:C.white,transform:'rotate(45deg)'}}/>
                   </div>
                 </div>
-                <div style={{position:'absolute',bottom:4,left:4,background:C.surface,borderRadius:4,padding:'2px 6px',fontSize:10,color:C.textSec,fontFamily:"'JetBrains Mono'",border:`1px solid ${C.border}`}}>
+                <div style={{position:'absolute',bottom:4,left:4,background:C.surface,borderRadius:4,padding:'2px 6px',fontSize:10,color:C.textSec,fontFamily:"'Space Mono'",border:`1px solid ${C.border}`}}>
                   {m.lat.toFixed(4)}, {m.lng.toFixed(4)}
                 </div>
               </div>
@@ -2176,7 +2194,7 @@ export default function App(){
                 <MI name="tag" size={14} fill style={{color:C.primary}}/>
                 <span style={{fontSize:10,fontWeight:700,color:C.primary,textTransform:'uppercase',letterSpacing:0.5}}>Hashtag Wajib</span>
               </div>
-              <p style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",lineHeight:1.6}}>{m.hashtags}</p>
+              <p style={{fontSize:13,fontWeight:700,color:C.text,fontFamily:"'Space Mono'",lineHeight:1.6}}>{m.hashtags}</p>
             </div>
           )}
 
@@ -2243,7 +2261,7 @@ export default function App(){
             <div className="flex gap-2">
               {[{time:'07-09',label:'Pagi',pct:72},{time:'12-13',label:'Siang',pct:65},{time:'18-21',label:'Malam',pct:92}].map((slot,si)=>(
                 <div key={si} style={{flex:1,textAlign:'center',padding:6,borderRadius:6,background:si===2?C.primaryLight:C.bg,border:`1px solid ${si===2?C.primaryMid:C.borderLight}`}}>
-                  <p style={{fontSize:12,fontWeight:800,color:si===2?C.primary:C.text,fontFamily:"'JetBrains Mono'"}}>{slot.pct}%</p>
+                  <p style={{fontSize:12,fontWeight:800,color:si===2?C.primary:C.text,fontFamily:"'Space Mono'"}}>{slot.pct}%</p>
                   <p style={{fontSize:10,fontWeight:600,color:si===2?C.primary:C.textMuted}}>{slot.time}</p>
                 </div>
               ))}
@@ -2289,7 +2307,7 @@ export default function App(){
           <div style={{background:C.surfaceLight,borderRadius:12,padding:12,border:`1px solid ${C.border}`,marginBottom:10}}>
             <div className="flex items-center justify-between mb-2">
               <span style={{fontSize:11,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:1}}>Poin Dasar</span>
-              <span style={{fontSize:16,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{m.xp} XP</span>
+              <span style={{fontSize:16,fontWeight:800,color:C.gold,fontFamily:"'Space Mono'"}}>{m.xp} XP</span>
             </div>
             <p style={{fontSize:11,color:C.textSec,lineHeight:1.4}}>Didapat setelah submit diterima & lolos review</p>
           </div>
@@ -2330,7 +2348,7 @@ export default function App(){
                 <div key={i} className="flex items-center gap-3" style={{padding:'6px 8px',borderRadius:8,background:t.bg,border:`1px solid ${t.color}20`}}>
                   <MI name={t.icon} size={16} fill style={{color:t.color}}/>
                   <span style={{fontSize:12,fontWeight:600,color:C.text,flex:1}}>{t.views} views</span>
-                  <span style={{fontSize:12,fontWeight:800,color:t.color,fontFamily:"'JetBrains Mono'"}}>{t.bonus}</span>
+                  <span style={{fontSize:12,fontWeight:800,color:t.color,fontFamily:"'Space Mono'"}}>{t.bonus}</span>
                 </div>
               ))}
             </div>
@@ -2342,13 +2360,13 @@ export default function App(){
             <div style={{background:C.tealLight,borderRadius:8,padding:10,border:`1px solid ${C.teal}20`,textAlign:'center'}}>
               <MI name="speed" size={18} fill style={{color:C.teal}}/>
               <p style={{fontSize:11,fontWeight:700,color:C.teal,marginTop:2}}>Early Bird</p>
-              <p style={{fontSize:14,fontWeight:800,color:C.teal,fontFamily:"'JetBrains Mono'"}}>+{m.bonus||50} XP</p>
+              <p style={{fontSize:14,fontWeight:800,color:C.teal,fontFamily:"'Space Mono'"}}>+{m.bonus||50} XP</p>
               <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>10 orang pertama</p>
             </div>
             <div style={{background:C.purpleLight,borderRadius:8,padding:10,border:`1px solid ${C.purple}20`,textAlign:'center'}}>
               <MI name="military_tech" size={18} fill style={{color:C.purple}}/>
               <p style={{fontSize:11,fontWeight:700,color:C.purple,marginTop:2}}>Streak Bonus</p>
-              <p style={{fontSize:14,fontWeight:800,color:C.purple,fontFamily:"'JetBrains Mono'"}}>+2x Multi</p>
+              <p style={{fontSize:14,fontWeight:800,color:C.purple,fontFamily:"'Space Mono'"}}>+2x Multi</p>
               <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>3 misi berturut-turut</p>
             </div>
           </div>
@@ -2496,7 +2514,7 @@ export default function App(){
                 </div>
               </div>
               {m.visitLocation&&m.lat&&(
-                <div style={{position:'absolute',bottom:6,left:6,background:C.surface,borderRadius:4,padding:'2px 8px',fontSize:10,color:C.textSec,fontFamily:"'JetBrains Mono'",display:'flex',alignItems:'center',gap:3,border:`1px solid ${C.border}`}}>
+                <div style={{position:'absolute',bottom:6,left:6,background:C.surface,borderRadius:4,padding:'2px 8px',fontSize:10,color:C.textSec,fontFamily:"'Space Mono'",display:'flex',alignItems:'center',gap:3,border:`1px solid ${C.border}`}}>
                   <MI name="location_on" size={10} fill style={{color:C.pink}}/>{m.lat.toFixed(4)}, {m.lng.toFixed(4)}
                 </div>
               )}
@@ -2541,7 +2559,7 @@ export default function App(){
                   <MI name="location_on" size={14} fill style={{color:C.pink}}/>
                   <span style={{fontSize:12,fontWeight:600,color:C.text}}>{m.visitLocation}</span>
                 </div>
-                <p style={{fontSize:10,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>Geo: {m.lat?.toFixed(6)}, {m.lng?.toFixed(6)}</p>
+                <p style={{fontSize:10,color:C.textMuted,fontFamily:"'Space Mono'"}}>Geo: {m.lat?.toFixed(6)}, {m.lng?.toFixed(6)}</p>
                 <p style={{fontSize:10,color:C.textMuted}}>Timestamp: 8 Mar 2026, 10:32 WIB</p>
                 <div className="flex items-center gap-1 mt-2">
                   <MI name="check_circle" size={12} fill style={{color:C.green}}/>
@@ -2587,7 +2605,7 @@ export default function App(){
               {/* Score */}
               <div className="flex items-center gap-3 mb-4" style={{background:aiResult.pass?C.greenLight:C.orangeLight,borderRadius:12,padding:14}}>
                 <div style={{width:48,height:48,borderRadius:12,background:aiResult.pass?C.green:C.orange,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <span style={{fontSize:18,fontWeight:900,color:C.white,fontFamily:"'JetBrains Mono'"}}>{aiResult.score}</span>
+                  <span style={{fontSize:18,fontWeight:900,color:C.white,fontFamily:"'Space Mono'"}}>{aiResult.score}</span>
                 </div>
                 <div>
                   <p style={{fontSize:14,fontWeight:700,color:aiResult.pass?C.green:C.orange}}>{aiResult.pass?'Konten Sesuai':'Perlu Perbaikan'}</p>
@@ -2650,7 +2668,7 @@ export default function App(){
             <div className="grid grid-cols-4 gap-2 mb-2">
               {[{l:'Views',v:'1.2K'},{l:'Likes',v:'89'},{l:'Comments',v:'12'},{l:'Shares',v:'34'}].map((s,j)=>(
                 <div key={j} style={{background:C.surfaceLight,borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
-                  <p style={{fontSize:14,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                  <p style={{fontSize:14,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>{s.v}</p>
                   <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
                 </div>
               ))}
@@ -2658,7 +2676,7 @@ export default function App(){
             <div className="flex items-center gap-2">
               <span style={{fontSize:10,color:C.textMuted,fontWeight:600}}>Rate</span>
               <div className="flex-1"><ProgressBar progress={0.42} color={C.green} height={4}/></div>
-              <span style={{fontSize:11,fontWeight:700,color:C.green,fontFamily:"'JetBrains Mono'"}}>8.4%</span>
+              <span style={{fontSize:11,fontWeight:700,color:C.green,fontFamily:"'Space Mono'"}}>8.4%</span>
             </div>
           </Card>
         )}
@@ -2910,7 +2928,7 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{position:'relative'}}>
-                      <p style={{fontSize:28,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",letterSpacing:-1,lineHeight:1}}>{s.value}</p>
+                      <p style={{fontSize:28,fontWeight:800,color:C.text,fontFamily:"'Space Mono'",letterSpacing:-1,lineHeight:1}}>{s.value}</p>
                       <p style={{fontSize:12,color:C.textMuted,marginTop:6,fontWeight:500}}>{s.label}</p>
                       <p style={{fontSize:10,color:s.color,fontWeight:600,marginTop:6,opacity:0.8}}>{s.sub}</p>
                     </div>
@@ -2939,7 +2957,7 @@ export default function App(){
                           <circle cx="22" cy="22" r="18" fill="none" stroke={s.aiPass?C.green:C.orange} strokeWidth="3" strokeDasharray={`${s.aiScore*1.13} 113`} strokeLinecap="round"/>
                         </svg>
                         <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column'}}>
-                          <span style={{fontSize:12,fontWeight:800,color:s.aiPass?C.green:C.orange,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.aiScore}</span>
+                          <span style={{fontSize:12,fontWeight:800,color:s.aiPass?C.green:C.orange,fontFamily:"'Space Mono'",lineHeight:1}}>{s.aiScore}</span>
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -2948,7 +2966,7 @@ export default function App(){
                         <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{s.time}</p>
                       </div>
                       <div style={{textAlign:'center',flexShrink:0}}>
-                        <p style={{fontSize:16,fontWeight:800,color:s.briefMatch>=80?C.green:s.briefMatch>=60?C.orange:C.red,fontFamily:"'JetBrains Mono'"}}>{s.briefMatch}%</p>
+                        <p style={{fontSize:16,fontWeight:800,color:s.briefMatch>=80?C.green:s.briefMatch>=60?C.orange:C.red,fontFamily:"'Space Mono'"}}>{s.briefMatch}%</p>
                         <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:0.5}}>BRIEF</p>
                       </div>
                     </div>
@@ -2986,7 +3004,7 @@ export default function App(){
                         <div className="flex items-center justify-between mb-1">
                           <p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.platform==='x'?'X (Twitter)':p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</p>
                           <div className="flex items-center gap-2">
-                            <span style={{fontSize:15,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{p.engagement}</span>
+                            <span style={{fontSize:15,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{p.engagement}</span>
                             <span style={{fontSize:10,fontWeight:700,color:p.trend.startsWith('+')?C.green:C.red,padding:'2px 6px',borderRadius:4,background:p.trend.startsWith('+')?C.greenLight:C.redLight}}>{p.trend}</span>
                           </div>
                         </div>
@@ -3026,7 +3044,7 @@ export default function App(){
                     </div>
                     <p style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.4,marginBottom:10}} className="line-clamp-2">{m.title}</p>
                     <div className="flex items-center justify-between mb-3">
-                      <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'",display:'flex',alignItems:'center',gap:3}}><MI name="star" size={13} fill style={{color:C.gold}}/>+{m.xp} XP</span>
+                      <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'",display:'flex',alignItems:'center',gap:3}}><MI name="star" size={13} fill style={{color:C.gold}}/>+{m.xp} XP</span>
                       <span style={{fontSize:10,color:C.textMuted}}><b style={{color:C.text}}>{m.participants}</b> joined · {m.deadline}</span>
                     </div>
                     {m.analytics&&(
@@ -3034,7 +3052,7 @@ export default function App(){
                         <div className="grid grid-cols-3 gap-2 mb-3">
                           {[{v:m.analytics.reach,l:'Reach',c:C.text},{v:m.analytics.engagement,l:'Engage',c:C.green},{v:m.analytics.completion+'%',l:'Selesai',c:m.analytics.completion>=70?C.green:m.analytics.completion>=40?C.orange:C.red}].map((x,xi)=>(
                             <div key={xi} style={{textAlign:'center',padding:'6px 0',borderRadius:8,background:`${x.c}08`}}>
-                              <p style={{fontSize:14,fontWeight:800,color:x.c,fontFamily:"'JetBrains Mono'"}}>{x.v}</p>
+                              <p style={{fontSize:14,fontWeight:800,color:x.c,fontFamily:"'Space Mono'"}}>{x.v}</p>
                               <p style={{fontSize:10,color:C.textMuted,fontWeight:600,marginTop:2}}>{x.l}</p>
                             </div>
                           ))}
@@ -3073,7 +3091,7 @@ export default function App(){
                       </svg>
                     </div>
                     <MI name={s.icon} size={20} fill style={{color:s.color,marginBottom:8,display:'block'}}/>
-                    <p style={{fontSize:30,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",letterSpacing:-1}}>{s.value}</p>
+                    <p style={{fontSize:30,fontWeight:800,color:C.text,fontFamily:"'Space Mono'",letterSpacing:-1}}>{s.value}</p>
                     <p style={{fontSize:12,color:C.textMuted,marginTop:4,fontWeight:500}}>{s.label}</p>
                     <p style={{fontSize:10,color:s.color,fontWeight:600,marginTop:6}}>{s.sub}</p>
                   </div>
@@ -3101,7 +3119,7 @@ export default function App(){
                     <div className="grid grid-cols-3 gap-2">
                       {[{v:t.join,l:'Join'},{v:t.engagement,l:'Engage'},{v:t.completed,l:'Selesai'}].map((x,xi)=>(
                         <div key={xi}>
-                          <p style={{fontSize:17,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{x.v}</p>
+                          <p style={{fontSize:17,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{x.v}</p>
                           <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{x.l}</p>
                         </div>
                       ))}
@@ -3120,7 +3138,7 @@ export default function App(){
                     <circle cx="60" cy="60" r="48" fill="none" stroke={C.textMuted} strokeWidth="12" strokeDasharray={`${43*3.015} ${100*3.015}`} strokeDashoffset={`${-(15+42)*3.015}`} style={{transform:'rotate(-90deg)',transformOrigin:'center'}}/>
                     <circle cx="60" cy="60" r="48" fill="none" stroke={C.primary} strokeWidth="12" strokeDasharray={`${42*3.015} ${100*3.015}`} strokeDashoffset={`${-15*3.015}`} style={{transform:'rotate(-90deg)',transformOrigin:'center'}}/>
                     <circle cx="60" cy="60" r="48" fill="none" stroke={C.orange} strokeWidth="12" strokeDasharray={`${15*3.015} ${100*3.015}`} style={{transform:'rotate(-90deg)',transformOrigin:'center'}}/>
-                    <text x="60" y="56" textAnchor="middle" style={{fontSize:20,fontWeight:800,fill:C.text,fontFamily:"'JetBrains Mono'"}}>1,247</text>
+                    <text x="60" y="56" textAnchor="middle" style={{fontSize:20,fontWeight:800,fill:C.text,fontFamily:"'Space Mono'"}}>1,247</text>
                     <text x="60" y="72" textAnchor="middle" style={{fontSize:10,fill:C.textMuted}}>Total</text>
                   </svg>
                   <div className="flex flex-col gap-3 flex-1">
@@ -3129,7 +3147,7 @@ export default function App(){
                         <MI name={t.icon} size={16} fill style={{color:t.color}}/>
                         <span style={{fontSize:12,fontWeight:600,color:t.color,width:50}}>{t.tier}</span>
                         <div className="flex-1"><ProgressBar progress={t.pct/100} color={t.color} height={6}/></div>
-                        <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:40,textAlign:'right'}}>{t.count}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'",width:40,textAlign:'right'}}>{t.count}</span>
                       </div>
                     ))}
                   </div>
@@ -3147,7 +3165,7 @@ export default function App(){
                         </div>
                       </div>
                     </div>
-                    <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:40,textAlign:'right'}}>{a.count}</span>
+                    <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'",width:40,textAlign:'right'}}>{a.count}</span>
                   </div>
                 ))}
                 </div>
@@ -3186,7 +3204,7 @@ export default function App(){
                     <div style={{width:40,height:40,borderRadius:12,background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',border:`1px solid ${C.border}`}}>
                       {p.platform==='facebook'?<MI name="thumb_up" size={20} style={{color:p.color}}/>:<SocialIcon platform={p.platform} size={20} color={p.color}/>}
                     </div>
-                    <p style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{p.reach}</p>
+                    <p style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{p.reach}</p>
                     <p style={{fontSize:10,color:C.textMuted}}>Reach</p>
                     <p style={{fontSize:11,fontWeight:700,color:p.trend.startsWith('+')?C.green:C.red,marginTop:4}}>{p.trend}</p>
                   </div>
@@ -3247,7 +3265,7 @@ export default function App(){
                                 <span style={{fontSize:16,width:24}}>{e.emoji}</span>
                                 <span style={{fontSize:12,fontWeight:600,color:C.text,width:50}}>{e.label}</span>
                                 <div style={{flex:1}}><ProgressBar progress={n.sentimentBreakdown[e.key]/100} color={e.color} height={8}/></div>
-                                <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:36,textAlign:'right'}}>{n.sentimentBreakdown[e.key]}%</span>
+                                <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'",width:36,textAlign:'right'}}>{n.sentimentBreakdown[e.key]}%</span>
                               </div>
                             ))}
                           </div>
@@ -3256,7 +3274,7 @@ export default function App(){
                         <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
                           <div style={{width:100,height:100,borderRadius:'50%',background:n.positivePercent>=50?`${C.green}15`:n.positivePercent>=25?`${C.orange}15`:`${C.red}15`,display:'flex',alignItems:'center',justifyContent:'center',border:`3px solid ${n.positivePercent>=50?C.green:n.positivePercent>=25?C.orange:C.red}`}}>
                             <div style={{textAlign:'center'}}>
-                              <p style={{fontSize:28,fontWeight:900,color:n.positivePercent>=50?C.green:n.positivePercent>=25?C.orange:C.red,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{n.positivePercent}%</p>
+                              <p style={{fontSize:28,fontWeight:900,color:n.positivePercent>=50?C.green:n.positivePercent>=25?C.orange:C.red,fontFamily:"'Space Mono'",lineHeight:1}}>{n.positivePercent}%</p>
                               <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>POSITIF</p>
                             </div>
                           </div>
@@ -3429,7 +3447,7 @@ export default function App(){
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2">
                                         <span style={{fontSize:13,fontWeight:700,color:C.text}}>{p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</span>
-                                        <span style={{fontSize:11,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",background:C.primaryLight,padding:'1px 6px',borderRadius:4}}>{p.score}%</span>
+                                        <span style={{fontSize:11,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",background:C.primaryLight,padding:'1px 6px',borderRadius:4}}>{p.score}%</span>
                                       </div>
                                       <p style={{fontSize:11,color:C.textMuted,marginTop:2}}>{p.reason}</p>
                                     </div>
@@ -3484,7 +3502,7 @@ export default function App(){
                             <h4 style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:12}}>Analisis Audience</h4>
                             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
                               <div style={{background:C.surfaceLight,borderRadius:12,padding:14,border:`1px solid ${C.border}`,textAlign:'center'}}>
-                                <p style={{fontSize:24,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{(narrativeMissionFlow.aiAudience?.totalTalking||0).toLocaleString()}</p>
+                                <p style={{fontSize:24,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",lineHeight:1}}>{(narrativeMissionFlow.aiAudience?.totalTalking||0).toLocaleString()}</p>
                                 <p style={{fontSize:10,color:C.textMuted,marginTop:4}}>Orang membicarakan</p>
                               </div>
                               <div style={{background:C.surfaceLight,borderRadius:12,padding:14,border:`1px solid ${C.border}`,textAlign:'center'}}>
@@ -3513,7 +3531,7 @@ export default function App(){
                                 <div key={ai} className="flex items-center gap-3" style={{marginBottom:6}}>
                                   <span style={{fontSize:12,fontWeight:600,color:C.text,width:50}}>{ag.age}</span>
                                   <div className="flex-1"><ProgressBar progress={ag.pct/100} color={C.primary} height={6}/></div>
-                                  <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",width:35,textAlign:'right'}}>{ag.pct}%</span>
+                                  <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'",width:35,textAlign:'right'}}>{ag.pct}%</span>
                                 </div>
                               ))}
                             </div>
@@ -3556,7 +3574,7 @@ export default function App(){
                               <div style={{background:C.surfaceLight,borderRadius:16,padding:20,border:`1px solid ${C.border}`,marginBottom:16}}>
                                 <div className="flex items-center justify-between mb-3">
                                   <span style={{fontSize:12,fontWeight:700,color:C.textMuted}}>LEVEL DAMPAK</span>
-                                  <span style={{fontSize:18,fontWeight:800,color:impactColor,fontFamily:"'JetBrains Mono'"}}>{imp}%</span>
+                                  <span style={{fontSize:18,fontWeight:800,color:impactColor,fontFamily:"'Space Mono'"}}>{imp}%</span>
                                 </div>
                                 <input type="range" min={10} max={100} value={imp} onChange={e=>setNarrativeMissionFlow(f=>({...f,impactLevel:parseInt(e.target.value)}))} style={{width:'100%',accentColor:C.primary,height:6,marginBottom:8}}/>
                                 <div className="flex justify-between">
@@ -3576,17 +3594,17 @@ export default function App(){
                               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
                                 <div style={{background:C.primaryLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
                                   <MI name="group" size={20} style={{color:C.primary}}/>
-                                  <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",marginTop:4}}>{peopleNeeded.toLocaleString()}</p>
+                                  <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",marginTop:4}}>{peopleNeeded.toLocaleString()}</p>
                                   <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>ORANG DIBUTUHKAN</p>
                                 </div>
                                 <div style={{background:C.goldLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
                                   <MI name="toll" size={20} style={{color:C.gold}}/>
-                                  <p style={{fontSize:20,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'",marginTop:4}}>{pointsPerPerson}</p>
+                                  <p style={{fontSize:20,fontWeight:800,color:C.gold,fontFamily:"'Space Mono'",marginTop:4}}>{pointsPerPerson}</p>
                                   <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>XP PER ORANG</p>
                                 </div>
                                 <div style={{background:C.greenLight,borderRadius:12,padding:14,textAlign:'center',border:'1px solid rgba(34,197,94,0.15)'}}>
                                   <MI name="savings" size={20} style={{color:C.green}}/>
-                                  <p style={{fontSize:20,fontWeight:800,color:C.green,fontFamily:"'JetBrains Mono'",marginTop:4}}>{(totalPoints/1000).toFixed(1)}K</p>
+                                  <p style={{fontSize:20,fontWeight:800,color:C.green,fontFamily:"'Space Mono'",marginTop:4}}>{(totalPoints/1000).toFixed(1)}K</p>
                                   <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>TOTAL POIN MISI</p>
                                 </div>
                               </div>
@@ -3811,7 +3829,7 @@ export default function App(){
                         <div className="flex items-center gap-2">
                           <span style={{fontSize:10,color:C.textMuted,flex:1}}>Platform: <b style={{color:persona.color}}>{persona.bestPlatform||''}</b></span>
                           <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.max(0,qty-10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
-                          <input type="number" value={qty} onChange={e=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available||500,Math.max(0,parseInt(e.target.value)||0))}}))} style={{width:48,padding:'4px 0',borderRadius:4,border:`1px solid ${active?persona.color:C.border}`,fontSize:12,color:active?persona.color:C.textSec,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
+                          <input type="number" value={qty} onChange={e=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available||500,Math.max(0,parseInt(e.target.value)||0))}}))} style={{width:48,padding:'4px 0',borderRadius:4,border:`1px solid ${active?persona.color:C.border}`,fontSize:12,color:active?persona.color:C.textSec,fontFamily:"'Space Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
                           <button onClick={()=>setMissionForm(f=>({...f,personaAlloc:{...(f.personaAlloc||{}),[persona.id]:Math.min(persona.available||500,qty+10)}}))} style={{width:24,height:24,borderRadius:4,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
                         </div>
                       </div>;
@@ -3908,7 +3926,7 @@ export default function App(){
                       <div className="flex items-center gap-3">
                         <MI name="group" size={18} style={{color:C.primary}}/>
                         <div>
-                          <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalAlloc||estPeople}</p>
+                          <p style={{fontSize:20,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",lineHeight:1}}>{totalAlloc||estPeople}</p>
                           <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{totalAlloc?'total dari persona terpilih':'anggota memenuhi kriteria'}</p>
                         </div>
                       </div>
@@ -3960,7 +3978,7 @@ export default function App(){
                         <button key={v} onClick={()=>setMissionForm(f=>({...f,xp:v}))} style={{
                           padding:'8px 0',flex:1,borderRadius:6,border:`1px solid ${missionForm.xp===v?C.primary:C.border}`,
                           background:missionForm.xp===v?C.primaryLight:C.glass,color:missionForm.xp===v?C.primary:C.textSec,
-                          fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:"'JetBrains Mono'",textAlign:'center',
+                          fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:"'Space Mono'",textAlign:'center',
                         }}>{v}</button>
                       ))}
                     </div>
@@ -3982,7 +4000,7 @@ export default function App(){
                         <div key={b.key} className="flex items-center gap-3" style={{padding:'7px 10px',background:C.surfaceLight,borderRadius:8,border:`1px solid ${C.border}`}}>
                           <MI name={b.icon} size={14} style={{color:b.color}}/>
                           <span className="flex-1" style={{fontSize:11,color:C.text}}>{b.label}</span>
-                          <input type="number" value={b.val} onChange={e=>setMissionForm(f=>({...f,[b.key]:parseInt(e.target.value)||0}))} style={{width:56,padding:'3px 6px',borderRadius:4,border:`1px solid ${C.border}`,fontSize:11,color:b.color,fontFamily:"'JetBrains Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
+                          <input type="number" value={b.val} onChange={e=>setMissionForm(f=>({...f,[b.key]:parseInt(e.target.value)||0}))} style={{width:56,padding:'3px 6px',borderRadius:4,border:`1px solid ${C.border}`,fontSize:11,color:b.color,fontFamily:"'Space Mono'",fontWeight:700,background:C.bg,textAlign:'center'}}/>
                           <span style={{fontSize:10,color:C.textMuted}}>XP</span>
                         </div>
                       ))}
@@ -3993,7 +4011,7 @@ export default function App(){
                     <div className="flex items-end justify-between">
                       <div>
                         <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>Budget XP</p>
-                        <p style={{fontSize:24,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{totalBudget.toLocaleString()}</p>
+                        <p style={{fontSize:24,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",lineHeight:1}}>{totalBudget.toLocaleString()}</p>
                       </div>
                       <p style={{fontSize:10,color:C.textMuted}}>{missionForm.xp||200} × {Math.min(estPeople,missionForm.maxPeople||estPeople)} orang</p>
                     </div>
@@ -4068,7 +4086,7 @@ export default function App(){
                     <h4 style={{fontSize:14,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:4}}>{missionForm.title||'Judul misi...'}</h4>
                     <p style={{fontSize:11,color:C.textMuted,lineHeight:1.3,marginBottom:8}} className="line-clamp-3">{missionForm.desc||'Deskripsi misi...'}</p>
                     <div className="flex items-center gap-2">
-                      <span style={{background:C.goldLight,color:C.gold,borderRadius:4,padding:'2px 8px',fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>+{missionForm.xp||200} XP</span>
+                      <span style={{background:C.goldLight,color:C.gold,borderRadius:4,padding:'2px 8px',fontSize:11,fontWeight:700,fontFamily:"'Space Mono'"}}>+{missionForm.xp||200} XP</span>
                       {(missionForm.bonus>0)&&<span style={{background:C.greenLight,color:C.green,borderRadius:4,padding:'2px 8px',fontSize:10,fontWeight:700}}>+{missionForm.bonus}</span>}
                     </div>
                     <div className="flex items-center gap-1 mt-2">
@@ -4227,7 +4245,7 @@ export default function App(){
                         <div className="flex gap-2">
                           {[{time:'07:00-09:00',label:'Pagi',pct:72,color:C.orange},{time:'12:00-13:00',label:'Siang',pct:65,color:C.primary},{time:'18:00-21:00',label:'Malam',pct:92,color:C.purple}].map((slot,si)=>(
                             <div key={si} style={{flex:1,textAlign:'center',padding:8,borderRadius:6,background:C.bg,border:`1px solid ${C.borderLight}`}}>
-                              <p style={{fontSize:12,fontWeight:800,color:slot.color,fontFamily:"'JetBrains Mono'"}}>{slot.pct}%</p>
+                              <p style={{fontSize:12,fontWeight:800,color:slot.color,fontFamily:"'Space Mono'"}}>{slot.pct}%</p>
                               <p style={{fontSize:10,fontWeight:600,color:C.text}}>{slot.time}</p>
                               <p style={{fontSize:10,color:C.textMuted}}>{slot.label}</p>
                             </div>
@@ -4363,7 +4381,7 @@ export default function App(){
                           return <div key={cap.id} style={{padding:12,borderRadius:12,background:cap.approved?`${C.green}06`:C.glass,border:`1px solid ${cap.approved?`${C.green}20`:cap.edited?`${C.orange}20`:C.border}`,transition:'all 200ms'}}>
                             <div className="flex items-start gap-3">
                               <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2,minWidth:32}}>
-                                <span style={{fontSize:10,fontWeight:800,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>{String(cap.id+1).padStart(2,'0')}</span>
+                                <span style={{fontSize:10,fontWeight:800,color:C.textMuted,fontFamily:"'Space Mono'"}}>{String(cap.id+1).padStart(2,'0')}</span>
                                 <span style={{fontSize:14}}>{pm.emoji}</span>
                               </div>
                               <div className="flex-1" style={{minWidth:0}}>
@@ -4406,7 +4424,7 @@ export default function App(){
                       <div style={{background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`}}>
                         <div className="flex items-center justify-between mb-2">
                           <span style={{fontSize:10,fontWeight:700,color:C.textMuted}}>PROGRESS REVIEW</span>
-                          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{captions.filter(c=>c.approved).length}/{captions.length}</span>
+                          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'"}}>{captions.filter(c=>c.approved).length}/{captions.length}</span>
                         </div>
                         <ProgressBar progress={captions.filter(c=>c.approved).length/captions.length} color={C.green} height={6}/>
                       </div>
@@ -4466,7 +4484,7 @@ export default function App(){
                     <div className="flex gap-4">
                       <div style={{width:100,height:100,borderRadius:'50%',background:aiScore>=80?`${C.green}12`:aiScore>=60?`${C.orange}12`:`${C.red}12`,display:'flex',alignItems:'center',justifyContent:'center',border:`3px solid ${aiScore>=80?C.green:aiScore>=60?C.orange:C.red}`,flexShrink:0}}>
                         <div style={{textAlign:'center'}}>
-                          <p style={{fontSize:28,fontWeight:900,color:aiScore>=80?C.green:aiScore>=60?C.orange:C.red,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{aiScore}</p>
+                          <p style={{fontSize:28,fontWeight:900,color:aiScore>=80?C.green:aiScore>=60?C.orange:C.red,fontFamily:"'Space Mono'",lineHeight:1}}>{aiScore}</p>
                           <p style={{fontSize:10,fontWeight:700,color:C.textMuted}}>AI SCORE</p>
                         </div>
                       </div>
@@ -4501,7 +4519,7 @@ export default function App(){
                       <h4 style={{fontSize:16,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:4}}>{missionForm.title||'Judul belum diisi'}</h4>
                       <p style={{fontSize:12,color:C.textMuted,lineHeight:1.4,marginBottom:10}}>{missionForm.desc||'Deskripsi belum diisi'}</p>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span style={{background:C.goldLight,color:C.gold,borderRadius:4,padding:'3px 10px',fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>+{missionForm.xp||200} XP</span>
+                        <span style={{background:C.goldLight,color:C.gold,borderRadius:4,padding:'3px 10px',fontSize:12,fontWeight:700,fontFamily:"'Space Mono'"}}>+{missionForm.xp||200} XP</span>
                         {(missionForm.bonus>0)&&<span style={{background:C.greenLight,color:C.green,borderRadius:4,padding:'3px 10px',fontSize:11,fontWeight:700}}>+{missionForm.bonus} early bird</span>}
                         {missionForm.deadline&&<span style={{background:C.surfaceLight,color:C.textSec,borderRadius:4,padding:'3px 10px',fontSize:11,fontWeight:600}}>Deadline: {missionForm.deadline}</span>}
                       </div>
@@ -4534,19 +4552,19 @@ export default function App(){
                     {/* Stats summary */}
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10}}>
                       <div style={{background:C.primaryLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
-                        <p style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{totalPeople}</p>
+                        <p style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'"}}>{totalPeople}</p>
                         <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>TARGET ORANG</p>
                       </div>
                       <div style={{background:C.goldLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(249,115,22,0.15)'}}>
-                        <p style={{fontSize:18,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{((missionForm.xp||200)*totalPeople/1000).toFixed(1)}K</p>
+                        <p style={{fontSize:18,fontWeight:800,color:C.gold,fontFamily:"'Space Mono'"}}>{((missionForm.xp||200)*totalPeople/1000).toFixed(1)}K</p>
                         <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>TOTAL XP</p>
                       </div>
                       <div style={{background:C.greenLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(34,197,94,0.15)'}}>
-                        <p style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:"'JetBrains Mono'"}}>{missionForm.platforms.length}</p>
+                        <p style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:"'Space Mono'"}}>{missionForm.platforms.length}</p>
                         <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>PLATFORM</p>
                       </div>
                       <div style={{background:C.purpleLight,borderRadius:8,padding:12,textAlign:'center',border:'1px solid rgba(168,85,247,0.15)'}}>
-                        <p style={{fontSize:18,fontWeight:800,color:C.purple,fontFamily:"'JetBrains Mono'"}}>{captions.length>0?`${captionApproved}/${captions.length}`:'—'}</p>
+                        <p style={{fontSize:18,fontWeight:800,color:C.purple,fontFamily:"'Space Mono'"}}>{captions.length>0?`${captionApproved}/${captions.length}`:'—'}</p>
                         <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>CAPTION OK</p>
                       </div>
                     </div>
@@ -4592,7 +4610,7 @@ export default function App(){
                     <MI name={s.icon} size={16} fill style={{color:s.color}}/>
                     <span style={{fontSize:11,color:C.textMuted}}>{s.label}</span>
                   </div>
-                  <p style={{fontSize:22,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+                  <p style={{fontSize:22,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{s.value}</p>
                 </div>
               ))}
             </div>
@@ -4619,7 +4637,7 @@ export default function App(){
                   <tbody>
                     {agentsList.map((a,i)=>(
                       <tr key={i} style={{borderBottom:`1px solid ${C.borderLight}`,cursor:'pointer',transition:'background 150ms'}} onMouseEnter={e=>e.currentTarget.style.background=C.glass} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                        <td style={{padding:'12px 16px',fontSize:12,color:C.textMuted,fontFamily:"'JetBrains Mono'",fontWeight:600}}>{i+1}</td>
+                        <td style={{padding:'12px 16px',fontSize:12,color:C.textMuted,fontFamily:"'Space Mono'",fontWeight:600}}>{i+1}</td>
                         <td style={{padding:'12px 16px'}}>
                           <div className="flex items-center gap-3">
                             <div style={{width:36,height:36,borderRadius:12,background:`linear-gradient(135deg,${a.tier==='Gold'?C.orangeLight:a.tier==='Silver'?C.primaryHover:C.surfaceLight},transparent)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:a.tier==='Gold'?C.orange:C.primary,border:`1px solid ${a.tier==='Gold'?C.orange+'33':C.border}`}}>{a.avatar}</div>
@@ -4639,16 +4657,16 @@ export default function App(){
                             <MI name={a.tier==='Gold'?'workspace_premium':a.tier==='Silver'?'military_tech':'shield'} size={12} fill style={{color:a.tier==='Gold'?C.orange:a.tier==='Silver'?C.primary:C.textMuted}}/>{a.tier}
                           </span>
                         </td>
-                        <td style={{padding:'12px 16px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'"}}>{a.missions}</td>
+                        <td style={{padding:'12px 16px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Space Mono'"}}>{a.missions}</td>
                         <td style={{padding:'12px 16px'}}>
-                          <span style={{fontSize:13,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{a.xp.toLocaleString()}</span>
+                          <span style={{fontSize:13,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'"}}>{a.xp.toLocaleString()}</span>
                         </td>
                         <td style={{padding:'12px 16px'}}>
                           <div className="flex items-center gap-2">
                             <div style={{width:40,height:4,borderRadius:2,background:C.overlay06,overflow:'hidden'}}>
                               <div style={{height:'100%',borderRadius:2,background:parseFloat(a.engagement)>=15?C.green:parseFloat(a.engagement)>=10?C.orange:C.red,width:`${parseFloat(a.engagement)/25*100}%`}}/>
                             </div>
-                            <span style={{fontSize:12,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'"}}>{a.engagement}</span>
+                            <span style={{fontSize:12,fontWeight:600,color:C.text,fontFamily:"'Space Mono'"}}>{a.engagement}</span>
                           </div>
                         </td>
                         <td style={{padding:'12px 16px'}}>
@@ -4709,7 +4727,7 @@ export default function App(){
                       </div>
                       <h2 style={{fontSize:20,fontWeight:800,color:C.text,marginTop:4}}>{m.title}</h2>
                     </div>
-                    <span style={{fontSize:16,fontWeight:800,color:C.gold,fontFamily:"'JetBrains Mono'",background:C.goldLight,padding:'6px 14px',borderRadius:8,border:'1px solid rgba(249,115,22,0.2)'}}>+{m.xp} XP</span>
+                    <span style={{fontSize:16,fontWeight:800,color:C.gold,fontFamily:"'Space Mono'",background:C.goldLight,padding:'6px 14px',borderRadius:8,border:'1px solid rgba(249,115,22,0.2)'}}>+{m.xp} XP</span>
                   </div>
                   <p style={{fontSize:13,color:C.textSec,lineHeight:1.5}}>{m.desc}</p>
                 </div>
@@ -4725,7 +4743,7 @@ export default function App(){
                   ].map((s,i)=>(
                     <div key={i} style={{padding:'16px 8px',textAlign:'center',borderRight:i<5?`1px solid ${C.borderLight}`:'none'}}>
                       <MI name={s.icon} size={14} style={{color:s.c,marginBottom:4}}/>
-                      <p style={{fontSize:18,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                      <p style={{fontSize:18,fontWeight:800,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</p>
                       <p style={{fontSize:10,color:C.textMuted,fontWeight:600,marginTop:2}}>{s.l}</p>
                     </div>
                   ))}
@@ -4738,7 +4756,7 @@ export default function App(){
                       {l:'Avg Time',v:m.analytics.avgTime,c:C.textSec},
                     ].map((s,i)=>(
                       <div key={i} style={{background:C.surfaceLight,borderRadius:8,padding:12,textAlign:'center'}}>
-                        <p style={{fontSize:16,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                        <p style={{fontSize:16,fontWeight:800,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</p>
                         <p style={{fontSize:10,color:C.textMuted}}>{s.l}</p>
                       </div>
                     ))}
@@ -4758,7 +4776,7 @@ export default function App(){
                     <React.Fragment key={i}>
                       <div style={{flex:1,textAlign:'center'}}>
                         <div style={{width:48,height:48,borderRadius:'50%',background:`${s.color}15`,border:`2px solid ${s.color}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
-                          <span style={{fontSize:18,fontWeight:800,color:s.color,fontFamily:"'JetBrains Mono'"}}>{s.count}</span>
+                          <span style={{fontSize:18,fontWeight:800,color:s.color,fontFamily:"'Space Mono'"}}>{s.count}</span>
                         </div>
                         <p style={{fontSize:10,fontWeight:700,color:s.color}}>{s.label}</p>
                         {i>0&&<p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{arr[0].count>0?Math.round(s.count/arr[0].count*100):0}%</p>}
@@ -4837,7 +4855,7 @@ export default function App(){
                         <div key={s.l} className="flex items-center gap-2">
                           <div style={{width:8,height:8,borderRadius:'50%',background:s.c}}/>
                           <span style={{fontSize:11,color:C.textMuted}}>{s.l}:</span>
-                          <span style={{fontSize:12,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</span>
+                          <span style={{fontSize:12,fontWeight:800,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</span>
                         </div>
                       ))}
                     </div>
@@ -4914,7 +4932,7 @@ export default function App(){
                             <div className="flex items-center gap-3">
                               <span style={{fontSize:10,color:C.pink}}><MI name="favorite" size={10} fill style={{verticalAlign:'middle'}}/> {interactionMap[p.agent]?.likes||0}</span>
                               <span style={{fontSize:10,color:C.teal}}><MI name="share" size={10} style={{verticalAlign:'middle'}}/> {interactionMap[p.agent]?.shares||0}</span>
-                              <span style={{fontSize:10,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",marginLeft:'auto'}}>{interactionMap[p.agent]?.total||0}</span>
+                              <span style={{fontSize:10,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'",marginLeft:'auto'}}>{interactionMap[p.agent]?.total||0}</span>
                             </div>
                           </div>
                         ))}
@@ -4963,7 +4981,7 @@ export default function App(){
                         {[{l:'Konten',v:missionPosts.length,c:C.primary},{l:'Kota',v:new Set(missionPosts.map(p=>p.city)).size,c:C.teal},{l:'Avg Rate',v:(missionPosts.reduce((s,p)=>s+p.rate,0)/missionPosts.length).toFixed(1)+'%',c:C.green}].map(s=>(
                           <div key={s.l} style={{background:C.surfaceGlass2,backdropFilter:'blur(12px)',borderRadius:8,padding:'8px 14px',border:`1px solid ${C.overlay06}`}}>
                             <p style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:1}}>{s.l}</p>
-                            <p style={{fontSize:20,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                            <p style={{fontSize:20,fontWeight:800,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</p>
                           </div>
                         ))}
                       </div>
@@ -5006,7 +5024,7 @@ export default function App(){
                             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:12}}>
                               {[{l:'Views',v:selP.views,c:C.primary},{l:'Likes',v:selP.likes,c:C.accent},{l:'Comments',v:selP.comments,c:C.secondary},{l:'Shares',v:selP.shares,c:C.orange}].map(s=>(
                                 <div key={s.l} style={{background:C.glass,borderRadius:6,padding:'6px 4px',textAlign:'center'}}>
-                                  <p style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                                  <p style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</p>
                                   <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
                                 </div>
                               ))}
@@ -5015,7 +5033,7 @@ export default function App(){
                             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
                               <div style={{display:'flex',alignItems:'center',gap:6}}>
                                 <div style={{background:selP.rate>15?C.greenLight:selP.rate>10?C.orangeLight:`${C.textSec}1a`,borderRadius:6,padding:'4px 10px'}}>
-                                  <span style={{fontSize:16,fontWeight:800,color:selP.rate>15?C.green:selP.rate>10?C.orange:C.textSec,fontFamily:"'JetBrains Mono'"}}>{selP.rate}%</span>
+                                  <span style={{fontSize:16,fontWeight:800,color:selP.rate>15?C.green:selP.rate>10?C.orange:C.textSec,fontFamily:"'Space Mono'"}}>{selP.rate}%</span>
                                 </div>
                                 <span style={{fontSize:10,color:C.textMuted}}>engagement</span>
                               </div>
@@ -5089,11 +5107,11 @@ export default function App(){
                                   {[{l:'Views',v:post.views,ic:'visibility',c:C.primary},{l:'Likes',v:post.likes,ic:'favorite',c:C.pink},{l:'Comments',v:post.comments,ic:'chat_bubble',c:C.teal},{l:'Shares',v:post.shares,ic:'share',c:C.orange}].map(s=>(
                                     <div key={s.l} className="flex items-center gap-1">
                                       <MI name={s.ic} size={12} style={{color:s.c}}/>
-                                      <span style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</span>
+                                      <span style={{fontSize:12,fontWeight:700,color:s.c,fontFamily:"'Space Mono'"}}>{s.v}</span>
                                     </div>
                                   ))}
                                   <div style={{marginLeft:'auto',background:post.rate>15?C.greenLight:post.rate>10?C.orangeLight:C.surfaceLight,borderRadius:6,padding:'2px 10px'}}>
-                                    <span style={{fontSize:13,fontWeight:800,color:post.rate>15?C.green:post.rate>10?C.orange:C.textSec,fontFamily:"'JetBrains Mono'"}}>{post.rate}%</span>
+                                    <span style={{fontSize:13,fontWeight:800,color:post.rate>15?C.green:post.rate>10?C.orange:C.textSec,fontFamily:"'Space Mono'"}}>{post.rate}%</span>
                                   </div>
                                 </div>
                               </div>
@@ -5102,7 +5120,7 @@ export default function App(){
                                 <div className="flex items-center justify-between mb-3">
                                   <p style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>Interaksi Antar Anggota</p>
                                   <div style={{background:`${C.primary}15`,borderRadius:6,padding:'2px 8px',border:`1px solid ${C.primary}30`}}>
-                                    <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>{ti.total}</span>
+                                    <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'Space Mono'"}}>{ti.total}</span>
                                   </div>
                                 </div>
                                 {post.likedBy&&post.likedBy.length>0&&(
@@ -5158,7 +5176,7 @@ export default function App(){
                       const ti=interactionMap[post.agent]||{likes:0,shares:0,total:0};
                       return(
                       <div key={post.agent} className="flex items-center gap-3" style={{padding:'10px 0',borderBottom:i<missionPosts.length-1?`1px solid ${C.borderLight}`:'none'}}>
-                        <span style={{fontSize:14,fontWeight:800,color:i===0?C.gold:i===1?C.textSec:i===2?C.orange:C.textMuted,fontFamily:"'JetBrains Mono'",width:24,textAlign:'center'}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`}</span>
+                        <span style={{fontSize:14,fontWeight:800,color:i===0?C.gold:i===1?C.textSec:i===2?C.orange:C.textMuted,fontFamily:"'Space Mono'",width:24,textAlign:'center'}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`}</span>
                         <div style={{width:32,height:32,borderRadius:8,background:`${pColor(post.platform)}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:pColor(post.platform),border:`1px solid ${pColor(post.platform)}30`}}>{post.avatar}</div>
                         <div className="flex-1">
                           <p style={{fontSize:12,fontWeight:700,color:C.text}}>{post.agent}</p>
@@ -5169,7 +5187,7 @@ export default function App(){
                           </div>
                         </div>
                         <div style={{textAlign:'right'}}>
-                          <p style={{fontSize:16,fontWeight:800,color:i===0?C.gold:C.primary,fontFamily:"'JetBrains Mono'"}}>{ti.total}</p>
+                          <p style={{fontSize:16,fontWeight:800,color:i===0?C.gold:C.primary,fontFamily:"'Space Mono'"}}>{ti.total}</p>
                           <p style={{fontSize:10,color:C.textMuted}}>interaksi</p>
                         </div>
                       </div>);
@@ -5263,13 +5281,13 @@ export default function App(){
                             </div>
                           </td>
                           <td style={{padding:'12px',maxWidth:200}}><p style={{fontSize:12,fontWeight:600,color:C.text,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{post.title}</p><p style={{fontSize:10,color:C.textMuted}}>{post.date}</p></td>
-                          <td style={{padding:'12px'}}><span style={{fontSize:11,color:C.primary,fontFamily:"'JetBrains Mono'",cursor:'pointer',textDecoration:'underline',textDecorationColor:C.primaryGlow}}>{post.link}</span></td>
-                          <td style={{padding:'12px',fontSize:13,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'",whiteSpace:'nowrap'}}>{post.views}</td>
-                          <td style={{padding:'12px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'JetBrains Mono'",whiteSpace:'nowrap'}}>{post.likes}</td>
+                          <td style={{padding:'12px'}}><span style={{fontSize:11,color:C.primary,fontFamily:"'Space Mono'",cursor:'pointer',textDecoration:'underline',textDecorationColor:C.primaryGlow}}>{post.link}</span></td>
+                          <td style={{padding:'12px',fontSize:13,fontWeight:700,color:C.text,fontFamily:"'Space Mono'",whiteSpace:'nowrap'}}>{post.views}</td>
+                          <td style={{padding:'12px',fontSize:13,fontWeight:600,color:C.text,fontFamily:"'Space Mono'",whiteSpace:'nowrap'}}>{post.likes}</td>
                           <td style={{padding:'12px'}}>
                             <div className="flex items-center gap-2">
                               <ProgressBar progress={post.rate/25} color={post.rate>15?C.green:post.rate>10?C.orange:C.textSec} height={4}/>
-                              <span style={{fontSize:11,fontWeight:700,color:post.rate>15?C.green:post.rate>10?C.orange:C.text,fontFamily:"'JetBrains Mono'",whiteSpace:'nowrap'}}>{post.rate}%</span>
+                              <span style={{fontSize:11,fontWeight:700,color:post.rate>15?C.green:post.rate>10?C.orange:C.text,fontFamily:"'Space Mono'",whiteSpace:'nowrap'}}>{post.rate}%</span>
                             </div>
                           </td>
                           <td style={{padding:'12px'}}><span style={{fontSize:10,fontWeight:700,padding:'3px 10px',borderRadius:4,background:stBg,color:stCol,whiteSpace:'nowrap'}}>{post.status==='SELESAI'?'Selesai':post.status==='REVIEW'?'Direview':'Ditolak'}</span></td>
@@ -5284,7 +5302,7 @@ export default function App(){
                                 </button>
                               </div>
                             )}
-                            {post.status==='SELESAI'&&<span style={{fontSize:10,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{post.xp} XP</span>}
+                            {post.status==='SELESAI'&&<span style={{fontSize:10,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'"}}>+{post.xp} XP</span>}
                           </td>
                         </tr>);
                       })}
@@ -5305,7 +5323,7 @@ export default function App(){
                         <SocialIcon platform={plat} size={20} color={pColor(plat)}/>
                       </div>
                       <p style={{fontSize:14,fontWeight:700,color:C.text}}>{pName(plat)}</p>
-                      <p style={{fontSize:20,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:4}}>{posts.length}</p>
+                      <p style={{fontSize:20,fontWeight:800,color:C.text,fontFamily:"'Space Mono'",marginTop:4}}>{posts.length}</p>
                       <p style={{fontSize:10,color:C.textMuted}}>postingan</p>
                       <p style={{fontSize:11,color:C.textSec,marginTop:4}}>Avg Rate: <b style={{color:posts.length?C.green:C.textMuted}}>{posts.length?(posts.reduce((s,p)=>s+p.rate,0)/posts.length).toFixed(1):0}%</b></p>
                     </div>
@@ -5360,7 +5378,7 @@ export default function App(){
       <div style={{width:390,maxWidth:'100vw',height:844,maxHeight:'calc(100vh - 40px)',background:C.bg,borderRadius:44,overflow:'hidden',position:'relative',border:'1px solid #E2DDD4',boxShadow:'0 20px 60px rgba(0,0,0,0.12)',display:'flex',flexDirection:'column'}}>
         {/* Status Bar */}
         <div className="flex justify-between items-center" style={{padding:'14px 28px 6px',fontSize:12,color:C.text,fontWeight:600,flexShrink:0}}>
-          <span style={{fontFamily:"'JetBrains Mono'",fontSize:13,fontWeight:600,color:C.text}}>09:41</span>
+          <span style={{fontFamily:"'Space Mono'",fontSize:13,fontWeight:600,color:C.text}}>09:41</span>
           <div style={{width:120,height:30,background:C.text,borderRadius:16,border:`1px solid ${C.overlay06}`}}/>
           <div className="flex gap-1 items-center">
             <MI name="signal_cellular_alt" size={14} style={{color:C.text}}/>
