@@ -392,6 +392,15 @@ button:focus-visible { border-radius: 8px; }
 .link-action:hover { color: #1B5E20 !important; gap: 6px; opacity: 0.9; }
 .link-action:active { transform: scale(0.96); }
 
+/* ─── REDUCED MOTION ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ─── BACK BUTTON ───────────────────────────────────────────── */
 .back-btn {
   transition: color 150ms ease, gap 150ms ease, transform 150ms ease;

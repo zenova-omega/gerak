@@ -708,77 +708,125 @@ export default function App(){
   /* ─── BERANDA ──────────────────────────────────────────────────── */
   function Beranda(){
     const curRank=1;
+    const xpCur=4820,xpMax=5000,xpPct=Math.round(xpCur/xpMax*100);
+    /* SVG circular progress ring */
+    const ringR=38,ringC=2*Math.PI*ringR,ringOff=ringC*(1-xpCur/xpMax);
+
     return(
     <div key={k} className="flex flex-col pb-4">
-      {/* ═══════ CLEAN HEADER ═══════ */}
-      <div className="stagger-1" style={{paddingTop:4,marginBottom:4}}>
+
+      {/* ═══════ DARK GRADIENT HERO ═══════ */}
+      <div className="stagger-1" style={{
+        background:`linear-gradient(145deg,${C.primaryDark},${C.primary} 60%,${C.primaryAccent})`,
+        borderRadius:20,padding:'20px 16px 24px',marginBottom:16,position:'relative',overflow:'hidden',
+        boxShadow:`0 8px 32px rgba(27,94,32,0.25)`,
+      }}>
+        {/* Decorative orbs */}
+        <div style={{position:'absolute',top:-30,right:-30,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,0.06)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:-20,left:-20,width:80,height:80,borderRadius:'50%',background:'rgba(255,255,255,0.04)',pointerEvents:'none'}}/>
+
         {/* Top bar: Logo + Notification */}
-        <div className="flex items-center justify-between" style={{marginBottom:16}}>
+        <div className="flex items-center justify-between" style={{marginBottom:20,position:'relative',zIndex:1}}>
           <div className="flex items-center gap-2.5">
-            <GerakMark size={24}/>
+            <div style={{width:28,height:28,borderRadius:8,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="rocket_launch" size={16} fill style={{color:'#FFFFFF'}}/>
+            </div>
             <div>
-              <h2 style={{fontSize:14,fontWeight:900,color:C.text,letterSpacing:2,lineHeight:1}}>GERAK</h2>
-              <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
+              <h2 style={{fontSize:14,fontWeight:900,color:'#FFFFFF',letterSpacing:2,lineHeight:1}}>GERAK</h2>
+              <p style={{fontSize:10,fontWeight:500,color:'rgba(255,255,255,0.6)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:2}}>Gerakan Komunikasi</p>
             </div>
           </div>
-          <div role="button" aria-label="Notifications" style={{position:'relative',cursor:'pointer'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
-            <div style={{width:36,height:36,borderRadius:12,background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
-              <MI name="notifications" size={18} style={{color:C.text}}/>
+          <div className="flex items-center gap-2">
+            <div role="button" aria-label="Notifications" style={{position:'relative',cursor:'pointer'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
+              <div style={{width:36,height:36,borderRadius:12,background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.15)'}}>
+                <MI name="notifications" size={18} style={{color:'#FFFFFF'}}/>
+              </div>
+              <div style={{position:'absolute',top:5,right:5,width:7,height:7,borderRadius:'50%',background:'#EF4444',border:'2px solid rgba(0,0,0,0.2)'}} className="urgency-pulse"/>
             </div>
-            <div style={{position:'absolute',top:5,right:5,width:7,height:7,borderRadius:'50%',background:C.red,border:`2px solid ${C.bg}`}} className="urgency-pulse"/>
           </div>
         </div>
 
-        {/* User greeting + rank card */}
-        <div style={{background:C.surface,borderRadius:16,padding:16,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:C.primaryFaint,pointerEvents:'none'}}/>
-          <div className="flex items-center gap-3" style={{position:'relative',zIndex:1}}>
-            <RankBadge rankIdx={curRank} size={48}/>
-            <div className="flex-1" style={{minWidth:0}}>
-              <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:0.5}}>Selamat Pagi,</p>
-              <h1 style={{fontSize:18,fontWeight:800,color:C.text,lineHeight:1.2,marginTop:1}}>Arif Santoso</h1>
+        {/* User + Circular XP Ring */}
+        <div className="flex items-center gap-4" style={{position:'relative',zIndex:1}}>
+          {/* Circular XP progress ring with rank emblem inside */}
+          <div style={{position:'relative',width:88,height:88,flexShrink:0}}>
+            <svg width="88" height="88" viewBox="0 0 88 88" style={{transform:'rotate(-90deg)'}}>
+              <circle cx="44" cy="44" r={ringR} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="5"/>
+              <circle cx="44" cy="44" r={ringR} fill="none" stroke="#FFFFFF" strokeWidth="5"
+                strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringOff}
+                className="progress-ring-stroke" style={{filter:'drop-shadow(0 0 6px rgba(255,255,255,0.3))'}}/>
+            </svg>
+            <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <RankBadge rankIdx={curRank} size={48}/>
             </div>
-            <div style={{textAlign:'right'}}>
-              <div className="flex items-center gap-1" style={{background:C.primaryLight,borderRadius:8,padding:'5px 10px',border:`1px solid ${C.primaryMid}`}}>
-                <MI name="military_tech" size={14} fill style={{color:C.primary}}/>
-                <span style={{fontSize:10,fontWeight:700,color:C.primary,letterSpacing:0.3}}>{RANKS[curRank].name}</span>
+          </div>
+
+          <div className="flex-1" style={{minWidth:0}}>
+            <p style={{fontSize:12,fontWeight:500,color:'rgba(255,255,255,0.7)'}}>Selamat Pagi,</p>
+            <h1 style={{fontSize:20,fontWeight:800,color:'#FFFFFF',lineHeight:1.2,marginTop:2}}>Arif Santoso</h1>
+            <div className="flex items-center gap-2" style={{marginTop:6}}>
+              <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:11,fontWeight:700,color:'#FFFFFF',letterSpacing:0.3,border:'1px solid rgba(255,255,255,0.1)'}}>
+                {RANKS[curRank].name}
+              </span>
+              <span style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.6)'}}>Lv.{curRank+1}</span>
+            </div>
+            {/* XP inline */}
+            <div style={{marginTop:8}}>
+              <div className="flex items-center justify-between mb-1">
+                <span style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.5)'}}>XP</span>
+                <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FFFFFF'}}>{xpCur.toLocaleString()} / {xpMax.toLocaleString()}</span>
+              </div>
+              <div style={{height:5,borderRadius:9999,background:'rgba(255,255,255,0.12)',overflow:'hidden'}}>
+                <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:`${xpPct}%`,background:'linear-gradient(90deg,rgba(255,255,255,0.6),rgba(255,255,255,0.9),rgba(255,255,255,0.6))',backgroundSize:'200% 100%'}}/>
               </div>
             </div>
           </div>
-
-          {/* XP Progress */}
-          <div style={{marginTop:14,position:'relative',zIndex:1}}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span style={{fontSize:10,fontWeight:600,color:C.textSec}}>Kemajuan Pangkat</span>
-              <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.text}}>4.820 / 5.000 XP</span>
-            </div>
-            <div style={{height:6,borderRadius:9999,background:C.overlay08,overflow:'hidden'}}>
-              <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${C.primary},${C.primaryAccent},${C.primary})`,backgroundSize:'200% 100%'}}/>
-            </div>
-            <div className="flex items-center justify-between mt-1.5">
-              <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>{RANKS[curRank].name}</span>
-              <span style={{fontSize:10,fontWeight:600,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
-                <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>{RANKS[curRank+1]?.name||'MAX'}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* ═══ QUICK STATS ═══ */}
-      <div className="stagger-2 grid grid-cols-3 gap-2" style={{marginTop:12,marginBottom:16}}>
-        {[{icon:'target',label:'Misi',value:'24',color:C.primary},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal}].map((s,i)=>(
-          <div key={i} style={{background:C.surface,borderRadius:12,padding:'10px 8px',textAlign:'center',border:`1px solid ${C.border}`}}>
-            <MI name={s.icon} size={16} fill style={{color:s.color}}/>
-            <p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:2}}>{s.value}</p>
-            <p style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label}</p>
+      {/* ═══ BENTO STATS GRID ═══ */}
+      <div className="stagger-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
+        {/* Large stat: Missions */}
+        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer',gridRow:'span 2',display:'flex',flexDirection:'column',justifyContent:'space-between'}} onClick={()=>nav('misi')}>
+          <div style={{width:36,height:36,borderRadius:10,background:C.primaryLight,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:8}}>
+            <MI name="target" size={18} fill style={{color:C.primary}}/>
           </div>
-        ))}
+          <div>
+            <p style={{fontSize:28,fontWeight:900,color:C.text,fontFamily:"'JetBrains Mono'",lineHeight:1}}>24</p>
+            <p style={{fontSize:11,color:C.textSec,fontWeight:600,marginTop:2}}>Misi Selesai</p>
+          </div>
+          <div className="flex items-center gap-1" style={{marginTop:8}}>
+            <MI name="trending_up" size={14} style={{color:C.green}}/>
+            <span style={{fontSize:11,fontWeight:700,color:C.green}}>+3 minggu ini</span>
+          </div>
+        </div>
+        {/* Streak */}
+        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer'}} onClick={()=>showToast('Streak: 7 hari berturut-turut!')}>
+          <div className="flex items-center justify-between">
+            <div style={{width:32,height:32,borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="local_fire_department" size={16} fill style={{color:C.orange}}/>
+            </div>
+            <span style={{fontSize:10,fontWeight:700,color:C.orange,background:C.orangeLight,borderRadius:6,padding:'2px 6px'}}>AKTIF</span>
+          </div>
+          <p style={{fontSize:22,fontWeight:900,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:6,lineHeight:1}}>7<span style={{fontSize:13,fontWeight:600,color:C.textMuted,marginLeft:2}}>hari</span></p>
+          <p style={{fontSize:11,color:C.textSec,fontWeight:500,marginTop:2}}>Streak</p>
+        </div>
+        {/* Rank */}
+        <div className="tap-bounce" style={{background:C.surface,borderRadius:16,padding:14,border:`1px solid ${C.border}`,cursor:'pointer'}} onClick={()=>nav('pangkat')}>
+          <div className="flex items-center justify-between">
+            <div style={{width:32,height:32,borderRadius:8,background:C.tealLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="leaderboard" size={16} fill style={{color:C.teal}}/>
+            </div>
+            <MI name="arrow_forward" size={14} style={{color:C.textMuted}}/>
+          </div>
+          <p style={{fontSize:22,fontWeight:900,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:6,lineHeight:1}}>#4<span style={{fontSize:13,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p>
+          <p style={{fontSize:11,color:C.textSec,fontWeight:500,marginTop:2}}>Peringkat</p>
+        </div>
       </div>
 
-      {/* ═══ LEADERBOARD (compact row style) ═══ */}
+      {/* ═══ LEADERBOARD — Mini Podium ═══ */}
       <Card className="stagger-3" style={{padding:0,overflow:'hidden',marginBottom:16}}>
-        <div className="flex items-center justify-between" style={{padding:'12px 14px 8px'}}>
+        <div className="flex items-center justify-between" style={{padding:'12px 14px 0'}}>
           <h3 style={{fontSize:13,fontWeight:700,color:C.text,display:'flex',alignItems:'center',gap:5}}>
             <MI name="emoji_events" size={15} fill style={{color:C.gold}}/>Leaderboard
           </h3>
@@ -786,21 +834,29 @@ export default function App(){
             Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/>
           </button>
         </div>
-        {/* Top 3 as rows */}
-        {LEADERBOARD.slice(0,3).map((lb,i)=>{
-          const medals=['#C9A96E','#A8A8A8','#CD7F32'];
-          return(
-          <div key={i} className="flex items-center gap-3" style={{padding:'8px 14px',borderTop:`1px solid ${C.borderLight}`,background:i===0?C.primaryFaint:'transparent'}}>
-            <span style={{fontSize:12,fontWeight:800,color:medals[i],fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>{i+1}</span>
-            <RankBadge rankIdx={lb.rankIdx} size={30}/>
-            <div className="flex-1" style={{minWidth:0}}>
-              <p style={{fontSize:12,fontWeight:600,color:C.text}} className="truncate">{lb.name}</p>
-            </div>
-            <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:i===0?C.gold:C.text}}>{lb.xp.toLocaleString()}</span>
-          </div>);
-        })}
+        {/* Mini Podium — 2nd | 1st | 3rd */}
+        <div className="flex items-end justify-center gap-3" style={{padding:'12px 14px 14px'}}>
+          {[LEADERBOARD[1],LEADERBOARD[0],LEADERBOARD[2]].map((lb,i)=>{
+            const order=[2,1,3];const heights=[56,72,48];const medalColors=['#A8A8A8','#C9A96E','#CD7F32'];
+            const isFirst=i===1;
+            return(
+            <div key={i} className="flex flex-col items-center" style={{flex:1}}>
+              <RankBadge rankIdx={lb.rankIdx} size={isFirst?38:30}/>
+              <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:4,textAlign:'center',lineHeight:1.2}} className="truncate" title={lb.name}>{lb.name.split(' ')[0]}</p>
+              <span style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.textMuted,marginTop:1}}>{lb.xp.toLocaleString()}</span>
+              <div style={{
+                width:'100%',height:heights[i],borderRadius:'10px 10px 0 0',marginTop:6,
+                background:isFirst?`linear-gradient(180deg,${C.primary},${C.primaryDark})`:
+                  i===0?'linear-gradient(180deg,#C0C0C0,#A0A0A0)':'linear-gradient(180deg,#CD9B6A,#A67B4B)',
+                display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:6,
+              }}>
+                <span style={{fontSize:14,fontWeight:900,color:'#FFFFFF',fontFamily:"'JetBrains Mono'"}}>{order[i]}</span>
+              </div>
+            </div>);
+          })}
+        </div>
         {/* Your rank */}
-        <div className="flex items-center gap-3" style={{padding:'8px 14px',borderTop:`1px solid ${C.border}`,background:C.primaryLight}}>
+        <div className="flex items-center gap-3" style={{padding:'10px 14px',borderTop:`1px solid ${C.border}`,background:C.primaryLight}}>
           <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>4</span>
           <RankBadge rankIdx={curRank} size={30}/>
           <div className="flex-1" style={{minWidth:0}}>
@@ -810,57 +866,73 @@ export default function App(){
         </div>
       </Card>
 
-      {/* Badge Showcase — card style */}
+      {/* ═══ BADGE SHOWCASE ═══ */}
       <div className="stagger-5" style={{marginBottom:20}}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Lencana Terbaru <Tip text="Lencana didapat dari pencapaian khusus. Kumpulkan semua!"><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
-          <button onClick={()=>nav('pangkat')} className="link-action" style={{color:C.primary,fontSize:12,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>
-            Semua <MI name="arrow_forward" size={14} style={{color:'inherit'}}/>
+          <h3 className="flex items-center gap-1" style={{fontSize:14,fontWeight:700,color:C.text}}>
+            <MI name="workspace_premium" size={16} fill style={{color:C.gold}}/> Lencana Terbaru
+          </h3>
+          <button onClick={()=>nav('pangkat')} className="link-action" style={{color:C.primary,fontSize:11,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>
+            Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/>
           </button>
         </div>
-        {/* Horizontal scroll of card badges */}
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 scroll-peek" style={{scrollSnapType:'x mandatory'}}>
+        {/* Horizontal scroll badges */}
+        <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2 scroll-peek" style={{scrollSnapType:'x mandatory'}}>
           {BADGES.filter(b=>b.unlocked).slice(0,5).map((b,i)=>(
-            <div key={i} style={{flexShrink:0,width:100,scrollSnapAlign:'start'}}>
-              <Badge badge={b} size={48}/>
+            <div key={i} className="tap-bounce" style={{flexShrink:0,width:90,scrollSnapAlign:'start',
+              background:C.surface,borderRadius:14,padding:'10px 6px 8px',border:`1px solid ${C.border}`,
+              textAlign:'center',cursor:'pointer',
+            }}>
+              <Badge badge={b} size={44}/>
             </div>
           ))}
-          {/* See all card */}
-          <div onClick={()=>nav('pangkat')} style={{
-            flexShrink:0,width:100,scrollSnapAlign:'start',borderRadius:16,
+          {/* See all */}
+          <div onClick={()=>nav('pangkat')} className="tap-bounce" style={{
+            flexShrink:0,width:90,scrollSnapAlign:'start',borderRadius:14,
             border:`2px dashed ${C.border}`,display:'flex',flexDirection:'column',
-            alignItems:'center',justifyContent:'center',cursor:'pointer',gap:4,
-            background:`linear-gradient(135deg,${C.surface}80,transparent)`,minHeight:140,
+            alignItems:'center',justifyContent:'center',cursor:'pointer',gap:3,
+            background:C.primaryFaint,minHeight:100,
           }}>
-            <span style={{fontSize:20,fontWeight:800,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>+{BADGES.filter(b=>b.unlocked).length-5}</span>
-            <span style={{fontSize:10,color:C.textMuted,fontWeight:600}}>Lihat Semua</span>
+            <span style={{fontSize:18,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>+{Math.max(0,BADGES.filter(b=>b.unlocked).length-5)}</span>
+            <span style={{fontSize:10,color:C.primary,fontWeight:600}}>Lihat</span>
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="flex items-center gap-3 mt-3" style={{padding:'0 2px'}}>
-          <div className="flex items-center gap-1.5">
-            <MI name="workspace_premium" size={14} fill style={{color:C.gold}}/>
-            <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{BADGES.filter(b=>b.unlocked).length}/{BADGES.length}</span>
-          </div>
+        {/* Collection progress */}
+        <div className="flex items-center gap-3 mt-2.5" style={{padding:'0 2px'}}>
+          <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'JetBrains Mono'"}}>{BADGES.filter(b=>b.unlocked).length}/{BADGES.length}</span>
           <div className="flex-1"><ProgressBar progress={BADGES.filter(b=>b.unlocked).length/BADGES.length} color={C.gold} height={4}/></div>
+          <span style={{fontSize:10,fontWeight:600,color:C.textMuted}}>{Math.round(BADGES.filter(b=>b.unlocked).length/BADGES.length*100)}%</span>
         </div>
       </div>
 
-      {/* Daily Brief */}
-      <Card className="stagger-6" style={{borderLeft:`3px solid ${C.primary}`,marginBottom:20}}>
-        <div className="flex items-center justify-between" style={{marginBottom:8}}>
-          <span className="flex items-center gap-1" style={{fontSize:10,fontWeight:700,color:C.primary,letterSpacing:1.5,textTransform:'uppercase'}}>Misi Hari Ini <Tip text="Misi prioritas dari admin. Selesaikan untuk bonus early bird!"><MI name="info" size={10} style={{color:C.primary,opacity:0.6,cursor:'pointer'}}/></Tip></span>
-          <span style={{display:'inline-flex',alignItems:'center',gap:4,background:C.primaryLight,color:C.primary,borderRadius:6,padding:'2px 8px',fontSize:10,fontWeight:700}}>BRIEFING</span>
+      {/* ═══ DAILY BRIEF — Featured Mission ═══ */}
+      <div className="stagger-6" style={{marginBottom:20,borderRadius:18,overflow:'hidden',position:'relative',
+        background:`linear-gradient(135deg,${C.primaryDark},${C.primary} 70%,${C.primaryAccent})`,
+        boxShadow:`0 4px 20px rgba(27,94,32,0.2)`,
+      }}>
+        {/* Decorative pattern */}
+        <div style={{position:'absolute',top:-20,right:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,0.05)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:-10,left:40,width:60,height:60,borderRadius:'50%',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
+        <div style={{padding:'16px 16px 14px',position:'relative',zIndex:1}}>
+          <div className="flex items-center justify-between" style={{marginBottom:10}}>
+            <span className="flex items-center gap-1.5" style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.7)',letterSpacing:1.5,textTransform:'uppercase'}}>
+              <MI name="wb_sunny" size={12} fill style={{color:'rgba(255,255,255,0.8)'}}/> Misi Hari Ini
+            </span>
+            <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:10,fontWeight:700,color:'#FFFFFF',backdropFilter:'blur(4px)',border:'1px solid rgba(255,255,255,0.1)'}}>BRIEFING</span>
+          </div>
+          <h3 style={{fontSize:16,fontWeight:700,color:'#FFFFFF',lineHeight:1.3,marginBottom:10}}>Distribusi Materi Literasi Digital ke 5 Grup</h3>
+          <div className="flex items-center gap-3" style={{marginBottom:14}}>
+            <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'#FFFFFF'}}>+250 XP</span>
+            <span style={{color:'rgba(255,255,255,0.6)',fontSize:11,fontWeight:500}}>Deadline: 12 Mar</span>
+          </div>
+          <button onClick={()=>openM(MISSIONS[0])} className="btn-primary tap-bounce" style={{
+            background:'rgba(255,255,255,0.95)',border:'none',borderRadius:12,padding:'10px 20px',
+            color:C.primary,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4,
+          }}>
+            Mulai Misi <span className="arrow-nudge" style={{display:'inline-flex'}}><MI name="arrow_forward" size={16} style={{color:C.primary}}/></span>
+          </button>
         </div>
-        <h3 style={{fontSize:15,fontWeight:700,color:C.text,lineHeight:1.3,marginBottom:8}}>Distribusi Materi Literasi Digital ke 5 Grup</h3>
-        <div className="flex items-center gap-2" style={{marginBottom:12}}>
-          <span style={{background:C.goldLight,color:C.gold,borderRadius:6,padding:'3px 8px',fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>+250 XP</span>
-          <span style={{color:C.textMuted,fontSize:11,fontWeight:500}}>12 Mar</span>
-        </div>
-        <button onClick={()=>openM(MISSIONS[0])} className="btn-primary" style={{background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,border:'none',borderRadius:12,padding:'10px 20px',color:C.bg,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-          Lihat Misi <span className="arrow-nudge" style={{display:'inline-flex'}}><MI name="arrow_forward" size={16} style={{color:C.bg}}/></span>
-        </button>
-      </Card>
+      </div>
 
       {/* ── Misi Saya (Joined Missions Pipeline) ── */}
       {Object.keys(joinedMissions).length>0&&(
@@ -928,51 +1000,65 @@ export default function App(){
         </div>
       </div>)}
 
-      {/* Active Missions (not joined) */}
+      {/* ═══ ACTIVE MISSIONS ═══ */}
       <div className="stagger-6" style={{marginBottom:20}}>
         <div className="flex justify-between items-center mb-3">
-          <h3 className="flex items-center gap-1" style={{fontSize:16,fontWeight:700,color:C.text}}>Misi Aktif <Tip text="Misi yang sedang berjalan. Tap untuk lihat detail dan mulai mengerjakan."><MI name="info" size={12} style={{color:C.textMuted,cursor:'pointer'}}/></Tip></h3>
-          <button onClick={()=>nav('misi')} className="link-action" style={{color:C.primary,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua <MI name="arrow_forward" size={14} style={{color:'inherit'}}/></button>
+          <h3 className="flex items-center gap-1" style={{fontSize:14,fontWeight:700,color:C.text}}>
+            <MI name="rocket_launch" size={16} fill style={{color:C.primary}}/> Misi Aktif
+          </h3>
+          <button onClick={()=>nav('misi')} className="link-action" style={{color:C.primary,fontSize:11,fontWeight:600,background:'none',border:'none',cursor:'pointer'}}>Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/></button>
         </div>
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 scroll-peek">
-          {MISSIONS.filter(m=>m.status!=='SELESAI'&&!joinedMissions[m.id]).slice(0,4).map(m=>(
-            <Card key={m.id} onClick={()=>openM(m)} accent={typeColor(m.type)} style={{minWidth:220,flexShrink:0,padding:14}}>
-              <div className="flex items-center gap-2 mb-2">
-                <div style={{width:26,height:26,borderRadius:8,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <MI name={typeIcon(m.type)} size={14} fill style={{color:typeColor(m.type)}}/>
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 scroll-peek" style={{scrollSnapType:'x mandatory'}}>
+          {MISSIONS.filter(m=>m.status!=='SELESAI'&&!joinedMissions[m.id]).slice(0,4).map(m=>{
+            const tc=typeColor(m.type);
+            return(
+            <div key={m.id} className="tap-bounce" onClick={()=>openM(m)} style={{
+              minWidth:200,flexShrink:0,scrollSnapAlign:'start',borderRadius:16,overflow:'hidden',
+              background:C.surface,border:`1px solid ${C.border}`,cursor:'pointer',
+              boxShadow:`0 2px 8px ${C.shadowLight}`,
+            }}>
+              {/* Colored header strip */}
+              <div style={{height:4,background:typeGradient(m.type)}}/>
+              <div style={{padding:'12px 14px 14px'}}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div style={{width:28,height:28,borderRadius:8,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <MI name={typeIcon(m.type)} size={14} fill style={{color:tc}}/>
+                  </div>
+                  <span style={{fontSize:10,fontWeight:700,color:tc,textTransform:'uppercase',letterSpacing:0.5}}>{m.type}</span>
                 </div>
-                <span style={{fontSize:10,fontWeight:700,color:typeColor(m.type),textTransform:'uppercase',letterSpacing:0.5}}>{m.type}</span>
+                <h4 style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:8,minHeight:34}} className="line-clamp-2">{m.title}</h4>
+                <div className="flex items-center gap-2" style={{marginBottom:10}}>
+                  <span style={{fontSize:11,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
+                  <span style={{fontSize:10,color:C.textMuted,fontWeight:500}}>{m.deadline}</span>
+                </div>
+                <div style={{
+                  background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,
+                  borderRadius:10,padding:'7px 0',textAlign:'center',
+                  fontSize:11,fontWeight:700,color:'#FFFFFF',letterSpacing:0.5,
+                }}>IKUT MISI</div>
               </div>
-              <h4 style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:10}} className="line-clamp-2">{m.title}</h4>
-              <div className="flex items-center justify-between">
-                <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
-                <span className="btn-gold" style={{background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,borderRadius:8,padding:'4px 12px',fontSize:10,fontWeight:700,color:C.bg,display:'inline-block',letterSpacing:0.5}}>IKUT</span>
-              </div>
-            </Card>
-          ))}
+            </div>);
+          })}
         </div>
       </div>
 
-      {/* Leaderboard */}
-      <div className="stagger-7">
-        <h3 style={{fontSize:16,fontWeight:700,color:C.text,marginBottom:12}}>Peringkat</h3>
-        <Card style={{padding:0,overflow:'hidden'}}>
-          {LEADERBOARD.slice(0,3).map((p,i)=>(
-            <div key={i} className="flex items-center gap-3 lb-row" style={{padding:'12px 16px',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
-              {i===0?<span className="rank-crown" style={{fontSize:16,width:20,textAlign:'center'}}>👑</span>:
-              <span style={{fontSize:14,fontWeight:800,color:i===1?C.silver:'#CD7F32',width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>{p.rank}</span>}
-              <RankBadge rankIdx={p.rankIdx} size={32}/>
-              <div className="flex-1"><p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.name}</p></div>
-              <span style={{fontSize:12,fontWeight:700,color:C.textSec,fontFamily:"'JetBrains Mono'"}}>{p.xp.toLocaleString()}</span>
+      {/* ═══ QUICK ACTIONS ═══ */}
+      <div className="stagger-7" style={{marginBottom:16}}>
+        <div className="flex gap-2">
+          {[
+            {icon:'add_task',label:'Buat Misi',color:C.primary,bg:C.primaryLight,action:()=>showToast('Segera hadir!')},
+            {icon:'qr_code_scanner',label:'Scan QR',color:C.teal,bg:C.tealLight,action:()=>showToast('Scan QR misi')},
+            {icon:'share',label:'Undang',color:C.purple,bg:C.purpleLight,action:()=>showToast('Link undangan disalin!')},
+            {icon:'help',label:'Panduan',color:C.orange,bg:C.orangeLight,action:()=>showToast('Panduan GERAK')},
+          ].map((a,i)=>(
+            <div key={i} className="tap-bounce flex-1" onClick={a.action} style={{background:C.surface,borderRadius:14,padding:'12px 4px',textAlign:'center',border:`1px solid ${C.border}`,cursor:'pointer'}}>
+              <div style={{width:36,height:36,borderRadius:10,background:a.bg,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
+                <MI name={a.icon} size={18} style={{color:a.color}}/>
+              </div>
+              <p style={{fontSize:10,fontWeight:600,color:C.textSec}}>{a.label}</p>
             </div>
           ))}
-          <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(249,115,22,0.15)`,borderLeft:`3px solid ${C.primary}`}}>
-            <span style={{fontSize:14,fontWeight:800,color:C.primary,width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>#4</span>
-            <RankBadge rankIdx={1} size={32}/>
-            <div className="flex-1"><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Kamu <MI name="star" size={12} fill style={{color:C.gold,verticalAlign:'middle',marginLeft:2}}/></p></div>
-            <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>#4 · 4,820</span>
-          </div>
-        </Card>
+        </div>
       </div>
     </div>
   );}
