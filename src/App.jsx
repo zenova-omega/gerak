@@ -662,160 +662,105 @@ export default function App(){
     const curRank=1;
     return(
     <div key={k} className="flex flex-col pb-4">
-      {/* ═══════ ORANGE HEADER (compact) ═══════ */}
-      <div className="stagger-1" style={{
-        margin:'-16px -16px 0',padding:'0 16px',position:'relative',overflow:'hidden',
-        background:`linear-gradient(180deg, #0D3B0F 0%, #1B5E20 50%, #2E7D32 100%)`,
-        borderRadius:'0 0 24px 24px',
-      }}>
-        {/* Decorative circles */}
-        <div style={{position:'absolute',top:-40,right:-30,width:120,height:120,borderRadius:'50%',background:'rgba(255,255,255,0.05)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:-20,left:-40,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,0.03)',pointerEvents:'none'}}/>
-
+      {/* ═══════ CLEAN HEADER ═══════ */}
+      <div className="stagger-1" style={{paddingTop:4,marginBottom:4}}>
         {/* Top bar: Logo + Notification */}
-        <div className="flex items-center justify-between" style={{paddingTop:16,paddingBottom:8}}>
+        <div className="flex items-center justify-between" style={{marginBottom:16}}>
           <div className="flex items-center gap-2.5">
             <GerakMark size={24}/>
             <div>
-              <h2 style={{fontSize:14,fontWeight:900,color:'white',letterSpacing:2,lineHeight:1}}>GERAK</h2>
-              <p style={{fontSize:8,fontWeight:600,color:'rgba(255,255,255,0.85)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
+              <h2 style={{fontSize:14,fontWeight:900,color:C.text,letterSpacing:2,lineHeight:1}}>GERAK</h2>
+              <p style={{fontSize:8,fontWeight:600,color:C.textMuted,letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:1}}>Gerakan Komunikasi</p>
             </div>
           </div>
           <div role="button" aria-label="Notifications" style={{position:'relative',cursor:'pointer'}} className="tap-bounce" onClick={()=>showToast('Tidak ada notifikasi baru')}>
-            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.2)'}}>
-              <MI name="notifications" size={18} style={{color:'white'}}/>
+            <div style={{width:36,height:36,borderRadius:12,background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
+              <MI name="notifications" size={18} style={{color:C.text}}/>
             </div>
-            <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:'2px solid #0D3B0F'}} className="urgency-pulse"/>
+            <div style={{position:'absolute',top:5,right:5,width:7,height:7,borderRadius:'50%',background:C.red,border:`2px solid ${C.bg}`}} className="urgency-pulse"/>
           </div>
         </div>
 
-        {/* User greeting row */}
-        <div className="flex items-center gap-3" style={{padding:'8px 0 12px'}}>
-          <Avatar3D initials="AS" size={48} rankIdx={curRank} editable/>
-          <div className="flex-1" style={{minWidth:0}}>
-            <p style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.9)',letterSpacing:1,textTransform:'uppercase'}}>Selamat Pagi,</p>
-            <h1 style={{fontSize:18,fontWeight:800,color:'white',lineHeight:1.2,marginTop:2}}>Arif Santoso</h1>
-          </div>
-          <div style={{textAlign:'right'}}>
-            <div className="flex items-center gap-1" style={{background:'rgba(0,0,0,0.2)',borderRadius:8,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.12)'}}>
-              <MI name="military_tech" size={16} fill style={{color:'white'}}/>
-              <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:0.5}}>{RANKS[curRank].name}</span>
+        {/* User greeting + rank card */}
+        <div style={{background:C.surface,borderRadius:16,padding:16,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:C.primaryFaint,pointerEvents:'none'}}/>
+          <div className="flex items-center gap-3" style={{position:'relative',zIndex:1}}>
+            <Avatar3D initials="AS" size={48} rankIdx={curRank} editable/>
+            <div className="flex-1" style={{minWidth:0}}>
+              <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:0.5}}>Selamat Pagi,</p>
+              <h1 style={{fontSize:18,fontWeight:800,color:C.text,lineHeight:1.2,marginTop:1}}>Arif Santoso</h1>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div className="flex items-center gap-1" style={{background:C.primaryLight,borderRadius:8,padding:'5px 10px',border:`1px solid ${C.primaryMid}`}}>
+                <MI name="military_tech" size={14} fill style={{color:C.primary}}/>
+                <span style={{fontSize:10,fontWeight:700,color:C.primary,letterSpacing:0.3}}>{RANKS[curRank].name}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* XP Progress */}
-        <div style={{padding:'0 0 16px'}}>
-          <div className="flex items-center justify-between mb-1.5">
-            <span style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.9)'}}>Kemajuan Pangkat</span>
-            <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'white'}}>4.820 / 5.000 XP</span>
-          </div>
-          <div style={{height:6,borderRadius:9999,background:'rgba(255,255,255,0.25)',overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>
-            <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:'linear-gradient(90deg,#43A047,#66BB6A,#43A047)',backgroundSize:'200% 100%'}}/>
-          </div>
-          <div className="flex items-center justify-between mt-1.5">
-            <span style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>{RANKS[curRank].name}</span>
-            <span style={{fontSize:9,fontWeight:600,color:'rgba(255,255,255,0.85)',display:'flex',alignItems:'center',gap:2}}>
-              <MI name="arrow_forward" size={10} style={{color:'rgba(255,255,255,0.85)'}}/>{RANKS[curRank+1]?.name||'MAX'}
-            </span>
+          {/* XP Progress */}
+          <div style={{marginTop:14,position:'relative',zIndex:1}}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span style={{fontSize:10,fontWeight:600,color:C.textSec}}>Kemajuan Pangkat</span>
+              <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.text}}>4.820 / 5.000 XP</span>
+            </div>
+            <div style={{height:6,borderRadius:9999,background:C.overlay08,overflow:'hidden'}}>
+              <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:`linear-gradient(90deg,${C.primary},${C.primaryAccent},${C.primary})`,backgroundSize:'200% 100%'}}/>
+            </div>
+            <div className="flex items-center justify-between mt-1.5">
+              <span style={{fontSize:9,fontWeight:600,color:C.textMuted}}>{RANKS[curRank].name}</span>
+              <span style={{fontSize:9,fontWeight:600,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
+                <MI name="arrow_forward" size={10} style={{color:C.textMuted}}/>{RANKS[curRank+1]?.name||'MAX'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ═══ PODIUM LEADERBOARD (separate card, dark bg) ═══ */}
-      <Card className="stagger-2" style={{marginTop:16,padding:0,overflow:'hidden',position:'relative'}}>
-        <div style={{position:'absolute',inset:0,background:`linear-gradient(135deg,${C.primaryFaint},transparent)`,pointerEvents:'none'}}/>
-        <div style={{padding:'14px 16px 6px',position:'relative'}}>
-          <div className="flex items-center justify-between mb-2">
-            <h3 style={{fontSize:14,fontWeight:700,color:C.text,display:'flex',alignItems:'center',gap:5}}>
-              <MI name="emoji_events" size={16} fill style={{color:C.gold}}/>Leaderboard
-            </h3>
-            <button onClick={()=>nav('pangkat')} className="link-action" style={{fontSize:11,fontWeight:600,color:C.primary,background:'none',border:'none',cursor:'pointer'}}>
-              Lihat Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/>
-            </button>
-          </div>
-        </div>
-
-        {/* Podium — 2nd, 1st, 3rd */}
-        <div className="flex items-end justify-center gap-3" style={{padding:'4px 16px 0',position:'relative'}}>
-          {/* 2nd Place */}
-          <div style={{flex:1,textAlign:'center'}}>
-            <div style={{position:'relative',display:'inline-block'}}>
-              <Avatar3D initials={LEADERBOARD[1].avatar} size={44} rankIdx={LEADERBOARD[1].rankIdx}/>
-              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#C0C0C0,#E8E8E8)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 6px rgba(0,0,0,0.3)'}}>
-                <span style={{fontSize:9,fontWeight:800,color:'#555'}}>2</span>
-              </div>
-            </div>
-            <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[1].name.split(' ').slice(-1)[0]}</p>
-            <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary,marginTop:1}}>{LEADERBOARD[1].xp.toLocaleString()}</p>
-            {/* Podium bar */}
-            <div style={{height:44,background:`linear-gradient(180deg,${C.surfaceLight},${C.surface})`,borderRadius:'8px 8px 0 0',marginTop:6,border:`1px solid ${C.border}`,borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <span style={{fontSize:14,fontWeight:800,color:C.textMuted+'40'}}>2</span>
-            </div>
-          </div>
-
-          {/* 1st Place (center, tallest) */}
-          <div style={{flex:1,textAlign:'center'}}>
-            <div style={{position:'relative',display:'inline-block'}}>
-              {/* Crown */}
-              <div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',zIndex:1}}>
-                <svg width="24" height="14" viewBox="0 0 24 14" fill="none">
-                  <path d="M2 12 L5 4 L8 8 L12 1 L16 8 L19 4 L22 12 Z" fill="#C9A96E" stroke="#8D6E37" strokeWidth="0.5"/>
-                </svg>
-              </div>
-              <Avatar3D initials={LEADERBOARD[0].avatar} size={52} rankIdx={LEADERBOARD[0].rankIdx}/>
-              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:20,height:20,borderRadius:'50%',background:'linear-gradient(135deg,#8D6E37,#C9A96E)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 8px rgba(141,110,55,0.3)'}}>
-                <span style={{fontSize:10,fontWeight:800,color:'#3E2723'}}>1</span>
-              </div>
-            </div>
-            <p style={{fontSize:11,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[0].name.split(' ').slice(-1)[0]}</p>
-            <p style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.gold,marginTop:1}}>{LEADERBOARD[0].xp.toLocaleString()}</p>
-            {/* Podium bar — tallest */}
-            <div style={{height:60,background:`linear-gradient(180deg,${C.primaryLight},${C.primaryFaint})`,borderRadius:'8px 8px 0 0',marginTop:6,border:`1px solid ${C.primary}25`,borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <span style={{fontSize:18,fontWeight:800,color:C.primary+'20'}}>1</span>
-            </div>
-          </div>
-
-          {/* 3rd Place */}
-          <div style={{flex:1,textAlign:'center'}}>
-            <div style={{position:'relative',display:'inline-block'}}>
-              <Avatar3D initials={LEADERBOARD[2].avatar} size={40} rankIdx={LEADERBOARD[2].rankIdx}/>
-              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:18,height:18,borderRadius:'50%',background:'linear-gradient(135deg,#CD7F32,#DDA15E)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 6px rgba(0,0,0,0.3)'}}>
-                <span style={{fontSize:9,fontWeight:800,color:'#5C3A1E'}}>3</span>
-              </div>
-            </div>
-            <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[2].name.split(' ').slice(-1)[0]}</p>
-            <p style={{fontSize:10,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary,marginTop:1}}>{LEADERBOARD[2].xp.toLocaleString()}</p>
-            {/* Podium bar */}
-            <div style={{height:32,background:`linear-gradient(180deg,${C.surfaceLight},${C.surface})`,borderRadius:'8px 8px 0 0',marginTop:6,border:`1px solid ${C.border}`,borderBottom:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <span style={{fontSize:12,fontWeight:800,color:C.textMuted+'30'}}>3</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Your rank row */}
-        <div style={{background:C.primaryLight,padding:'10px 16px',marginTop:0,borderTop:`1px solid ${C.primary}20`,display:'flex',alignItems:'center',gap:10}}>
-          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",width:20,textAlign:'center'}}>#4</span>
-          <Avatar3D initials="AS" size={28} rankIdx={curRank}/>
-          <div className="flex-1" style={{minWidth:0}}>
-            <p style={{fontSize:11,fontWeight:700,color:C.text}}>Arif Santoso <span style={{fontSize:9,fontWeight:600,color:C.primary,marginLeft:4}}>Kamu</span></p>
-          </div>
-          <span style={{fontSize:12,fontWeight:800,fontFamily:"'JetBrains Mono'",color:C.primary}}>4,820</span>
-        </div>
-      </Card>
-
-      {/* ═══ QUICK STATS (below orange block) ═══ */}
-      <div className="stagger-3 grid grid-cols-3 gap-3" style={{marginTop:16,marginBottom:16}}>
+      {/* ═══ QUICK STATS ═══ */}
+      <div className="stagger-2 grid grid-cols-3 gap-2" style={{marginTop:12,marginBottom:16}}>
         {[{icon:'target',label:'Misi',value:'24',color:C.primary},{icon:'local_fire_department',label:'Streak',value:'7d',color:C.orange},{icon:'leaderboard',label:'Rank',value:'#12',color:C.teal}].map((s,i)=>(
-          <Card key={i} style={{textAlign:'center',padding:12}}>
-            <div style={{width:32,height:32,borderRadius:10,background:`${s.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
-              <MI name={s.icon} size={16} fill style={{color:s.color}}/>
-            </div>
-            <p style={{fontSize:18,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'"}}>{s.value}</p>
+          <div key={i} style={{background:C.surface,borderRadius:12,padding:'10px 8px',textAlign:'center',border:`1px solid ${C.border}`}}>
+            <MI name={s.icon} size={16} fill style={{color:s.color}}/>
+            <p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:"'JetBrains Mono'",marginTop:2}}>{s.value}</p>
             <p style={{fontSize:9,color:C.textMuted,fontWeight:600,textTransform:'uppercase',letterSpacing:0.5}}>{s.label}</p>
-          </Card>
+          </div>
         ))}
       </div>
+
+      {/* ═══ LEADERBOARD (compact row style) ═══ */}
+      <Card className="stagger-3" style={{padding:0,overflow:'hidden',marginBottom:16}}>
+        <div className="flex items-center justify-between" style={{padding:'12px 14px 8px'}}>
+          <h3 style={{fontSize:13,fontWeight:700,color:C.text,display:'flex',alignItems:'center',gap:5}}>
+            <MI name="emoji_events" size={15} fill style={{color:C.gold}}/>Leaderboard
+          </h3>
+          <button onClick={()=>nav('pangkat')} className="link-action" style={{fontSize:11,fontWeight:600,color:C.primary,background:'none',border:'none',cursor:'pointer'}}>
+            Semua <MI name="arrow_forward" size={12} style={{color:'inherit'}}/>
+          </button>
+        </div>
+        {/* Top 3 as rows */}
+        {LEADERBOARD.slice(0,3).map((lb,i)=>{
+          const medals=['#C9A96E','#A8A8A8','#CD7F32'];
+          return(
+          <div key={i} className="flex items-center gap-3" style={{padding:'8px 14px',borderTop:`1px solid ${C.borderLight}`,background:i===0?C.primaryFaint:'transparent'}}>
+            <span style={{fontSize:12,fontWeight:800,color:medals[i],fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>{i+1}</span>
+            <Avatar3D initials={lb.avatar} size={30} rankIdx={lb.rankIdx}/>
+            <div className="flex-1" style={{minWidth:0}}>
+              <p style={{fontSize:12,fontWeight:600,color:C.text}} className="truncate">{lb.name}</p>
+            </div>
+            <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:i===0?C.gold:C.text}}>{lb.xp.toLocaleString()}</span>
+          </div>);
+        })}
+        {/* Your rank */}
+        <div className="flex items-center gap-3" style={{padding:'8px 14px',borderTop:`1px solid ${C.border}`,background:C.primaryLight}}>
+          <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>4</span>
+          <Avatar3D initials="AS" size={30} rankIdx={curRank}/>
+          <div className="flex-1" style={{minWidth:0}}>
+            <p style={{fontSize:12,fontWeight:600,color:C.text}}>Arif Santoso <span style={{fontSize:9,fontWeight:700,color:C.primary,marginLeft:4}}>Kamu</span></p>
+          </div>
+          <span style={{fontSize:12,fontWeight:700,fontFamily:"'JetBrains Mono'",color:C.primary}}>4,820</span>
+        </div>
+      </Card>
 
       {/* Badge Showcase — card style */}
       <div className="stagger-5" style={{marginBottom:20}}>
@@ -1255,7 +1200,7 @@ export default function App(){
             </div>
           </div>
         ))}
-        <button className="btn-admin" style={{width:'100%',marginTop:12,padding:'10px 0',borderRadius:8,border:`1px dashed ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+        <button onClick={()=>showToast('Fitur hubungkan akun segera hadir')} className="btn-admin" style={{width:'100%',marginTop:12,padding:'10px 0',borderRadius:8,border:`1px dashed ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
           <MI name="add" size={16} style={{color:'inherit'}}/> Hubungkan Akun Lain
         </button>
       </Card>
@@ -2188,7 +2133,7 @@ export default function App(){
             </p>
           </div>
           <div className="flex gap-2">
-            <button onClick={()=>showToast('Caption disalin!')} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:C.white,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+            <button onClick={()=>{const cap=m.type==='KRISIS'?`⚠️ KLARIFIKASI: Berita soal ${m.title.split(':')[1]||m.title} yang viral itu TIDAK BENAR. Ini faktanya 👇\n\nBerdasarkan data resmi... [isi dengan fakta]. Jangan mudah percaya info yang belum terverifikasi!\n\n${m.hashtags||'#GERAK #Klarifikasi'}`:m.type==='EDUKASI'?`Tau nggak sih? ${m.title} itu ternyata lebih penting dari yang kita kira! 📚\n\nIni dia 3 fakta penting yang perlu kamu tau... [isi dengan fakta edukatif]\n\nShare ke teman biar makin banyak yang paham! 💡\n\n${m.hashtags||'#GERAK #Edukasi'}`:`Hai guys! Yuk ikutan campaign ${m.title}! 🔥\n\nIni cara gue berpartisipasi... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu! ✨\n\n${m.hashtags||'#GERAK #GerakDigital'}`;copyText(cap)}} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:C.white,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
               <MI name="content_copy" size={14} style={{color:C.white}}/> Salin Caption
             </button>
             <button onClick={()=>showToast('Kamu boleh edit caption sesuai gayamu')} style={{flex:1,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
@@ -2600,6 +2545,17 @@ export default function App(){
                 display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
               <MI name="arrow_back" size={20} style={{color:C.textSec}}/>
               Kembali ke Misi
+            </button>
+          ) : step===0&&isJoined&&!done ? (
+            <button
+              onClick={()=>setStep(1)}
+              className="btn-gold tap-bounce"
+              style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',
+                background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.bg,fontSize:15,fontWeight:700,cursor:'pointer',
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                boxShadow:`0 4px 16px ${C.primaryGlow}`}}>
+              <MI name="arrow_forward" size={20} style={{color:C.bg}}/>
+              Lanjut ke Kit
             </button>
           ) : step===0&&!isJoined ? (
             <button
