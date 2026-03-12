@@ -246,121 +246,138 @@ const RANKS=[
 ];
 
 /* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
+/* ─── RANK MEDAL — Garuda-winged shield ────────────────────────── */
 function RankInsignia({rank=0,size=120,showLabel=true}){
   const s=size;
   const colors=[
-    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.2)',accent:'#CBD5E1',dark:'#334155'},
-    {primary:'#1B5E20',secondary:'#2E7D32',glow:'rgba(27,94,32,0.25)',accent:'#4CAF50',dark:'#0D3B0F'},
-    {primary:'#37474F',secondary:'#546E7A',glow:'rgba(55,71,79,0.25)',accent:'#78909C',dark:'#263238'},
-    {primary:'#4E342E',secondary:'#6D4C41',glow:'rgba(78,52,46,0.25)',accent:'#8D6E63',dark:'#3E2723'},
-    {primary:'#8D6E37',secondary:'#A68B5B',glow:'rgba(141,110,55,0.3)',accent:'#C9A96E',dark:'#5D4E37'},
+    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.2)',accent:'#CBD5E1',dark:'#334155',shine:'#B0BEC5'},
+    {primary:'#1B5E20',secondary:'#2E7D32',glow:'rgba(27,94,32,0.25)',accent:'#4CAF50',dark:'#0D3B0F',shine:'#81C784'},
+    {primary:'#37474F',secondary:'#546E7A',glow:'rgba(55,71,79,0.25)',accent:'#78909C',dark:'#263238',shine:'#B0BEC5'},
+    {primary:'#4E342E',secondary:'#6D4C41',glow:'rgba(78,52,46,0.25)',accent:'#8D6E63',dark:'#3E2723',shine:'#BCAAA4'},
+    {primary:'#8D6E37',secondary:'#A68B5B',glow:'rgba(141,110,55,0.3)',accent:'#C9A96E',dark:'#5D4E37',shine:'#E6D5A8'},
   ];
   const c=colors[rank]||colors[0];
-  const id=`rank${rank}_${Math.random().toString(36).slice(2,6)}`;
+  const id=`rank${rank}_${Math.random().toString(36).slice(2,8)}`;
   const labels=['PRAJURIT','KOPRAL','SERSAN','LETNAN','KAPTEN'];
-
-  // Hexagonal badge shape path for all ranks
-  const hexPath=(cx,cy,r)=>{
-    const pts=[];for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;pts.push(`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`);}
-    return`M${pts[0]}L${pts[1]}L${pts[2]}L${pts[3]}L${pts[4]}L${pts[5]}Z`;
-  };
+  const starCount=[0,1,1,2,3][rank];
 
   return(
-    <svg width={s} height={s} viewBox="0 0 120 120" fill="none">
+    <svg width={s} height={s} viewBox="0 0 120 130" fill="none">
       <defs>
-        <linearGradient id={`${id}g`} x1="20" y1="10" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.dark}/>
+        <linearGradient id={`${id}bg`} x1="30" y1="10" x2="90" y2="110" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.shine}/><stop offset="30%" stopColor={c.secondary}/><stop offset="70%" stopColor={c.primary}/><stop offset="100%" stopColor={c.dark}/>
         </linearGradient>
-        <linearGradient id={`${id}g2`} x1="40" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="white" stopOpacity="0.25"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+        <linearGradient id={`${id}sh`} x1="40" y1="15" x2="80" y2="70" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="white" stopOpacity="0.35"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
         </linearGradient>
-        <radialGradient id={`${id}r`} cx="60" cy="55" r="50" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={c.primary} stopOpacity="0.15"/><stop offset="100%" stopColor={c.primary} stopOpacity="0"/>
+        <linearGradient id={`${id}wg`} x1="0" y1="40" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.accent} stopOpacity="0.3"/><stop offset="50%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.dark}/>
+        </linearGradient>
+        <linearGradient id={`${id}wr`} x1="120" y1="40" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.accent} stopOpacity="0.3"/><stop offset="50%" stopColor={c.secondary}/><stop offset="100%" stopColor={c.dark}/>
+        </linearGradient>
+        <radialGradient id={`${id}gl`} cx="60" cy="50" r="55" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={c.accent} stopOpacity="0.12"/><stop offset="100%" stopColor={c.accent} stopOpacity="0"/>
         </radialGradient>
-        <filter id={`${id}f`}><feDropShadow dx="0" dy="3" stdDeviation="6" floodColor={c.glow}/></filter>
-        <filter id={`${id}fi`}><feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="rgba(0,0,0,0.4)"/></filter>
-        <clipPath id={`${id}clip`}><path d={hexPath(60,52,38)}/></clipPath>
+        <filter id={`${id}ds`}><feDropShadow dx="0" dy="3" stdDeviation="5" floodColor={c.glow}/></filter>
+        <filter id={`${id}em`}><feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="rgba(0,0,0,0.5)"/></filter>
       </defs>
       {/* Ambient glow */}
-      <circle cx="60" cy="55" r="52" fill={`url(#${id}r)`}/>
-      {/* Outer hex ring */}
-      <path d={hexPath(60,52,46)} fill="none" stroke={c.primary} strokeWidth="1" opacity="0.15"/>
-      {/* Main hexagonal badge */}
-      <g filter={`url(#${id}f)`}>
-        <path d={hexPath(60,52,40)} fill={`url(#${id}g)`} stroke={c.accent} strokeWidth="1.5" strokeOpacity="0.5"/>
-        <path d={hexPath(60,52,40)} fill={`url(#${id}g2)`}/>
+      <circle cx="60" cy="55" r="55" fill={`url(#${id}gl)`}/>
+      {/* Left wing — stylized garuda feathers */}
+      <g opacity="0.9">
+        <path d={`M38 48 Q20 38 6 52 Q14 46 24 48 Q14 50 8 62 Q18 54 28 54 Q20 58 14 70 Q26 60 34 58 L40 62 Z`} fill={`url(#${id}wg)`} stroke={c.accent} strokeWidth="0.5" strokeOpacity="0.4"/>
       </g>
-      {/* Inner hex border */}
-      <path d={hexPath(60,52,34)} fill="none" stroke={c.accent} strokeWidth="0.5" opacity="0.3"/>
-
-      {/* Rank-specific center emblem — military insignia */}
-      {rank===0&&<g filter={`url(#${id}fi)`}>
-        {/* Prajurit: single chevron */}
-        <path d="M60 42 L72 54 L60 50 L48 54 Z" fill="white" opacity="0.85"/>
+      {/* Right wing — mirror */}
+      <g opacity="0.9">
+        <path d={`M82 48 Q100 38 114 52 Q106 46 96 48 Q106 50 112 62 Q102 54 92 54 Q100 58 106 70 Q94 60 86 58 L80 62 Z`} fill={`url(#${id}wr)`} stroke={c.accent} strokeWidth="0.5" strokeOpacity="0.4"/>
+      </g>
+      {/* Shield body */}
+      <g filter={`url(#${id}ds)`}>
+        <path d="M60 14 L88 28 L88 62 Q88 82 60 100 Q32 82 32 62 L32 28 Z" fill={`url(#${id}bg)`} stroke={c.accent} strokeWidth="1.5" strokeOpacity="0.6"/>
+        <path d="M60 14 L88 28 L88 62 Q88 82 60 100 Q32 82 32 62 L32 28 Z" fill={`url(#${id}sh)`}/>
+      </g>
+      {/* Inner shield border */}
+      <path d="M60 20 L83 32 L83 61 Q83 78 60 93 Q37 78 37 61 L37 32 Z" fill="none" stroke={c.accent} strokeWidth="0.7" strokeOpacity="0.3"/>
+      {/* Metallic highlight streak */}
+      <path d="M44 24 L52 20 L54 34 L44 38 Z" fill="white" opacity="0.08"/>
+      {/* Center emblem */}
+      {rank===0&&<g filter={`url(#${id}em)`}>
+        <path d="M60 44 L70 56 L60 52 L50 56 Z" fill="white" opacity="0.85"/>
+        <rect x="52" y="60" width="16" height="2" rx="1" fill="white" opacity="0.5"/>
       </g>}
-
-      {rank===1&&<g filter={`url(#${id}fi)`}>
-        {/* Kopral: double chevron */}
-        <path d="M60 36 L72 46 L60 42 L48 46 Z" fill="white" opacity="0.85"/>
-        <path d="M60 48 L72 58 L60 54 L48 58 Z" fill="white" opacity="0.65"/>
+      {rank===1&&<g filter={`url(#${id}em)`}>
+        <path d="M60 38 L70 48 L60 44 L50 48 Z" fill="white" opacity="0.85"/>
+        <path d="M60 50 L70 60 L60 56 L50 60 Z" fill="white" opacity="0.65"/>
       </g>}
-
-      {rank===2&&<g filter={`url(#${id}fi)`}>
-        {/* Sersan: triple chevron */}
-        <path d="M60 30 L72 40 L60 36 L48 40 Z" fill="white" opacity="0.85"/>
-        <path d="M60 42 L72 52 L60 48 L48 52 Z" fill="white" opacity="0.7"/>
-        <path d="M60 54 L72 64 L60 60 L48 64 Z" fill="white" opacity="0.55"/>
+      {rank===2&&<g filter={`url(#${id}em)`}>
+        <path d="M60 34 L70 43 L60 39 L50 43 Z" fill="white" opacity="0.85"/>
+        <path d="M60 46 L70 55 L60 51 L50 55 Z" fill="white" opacity="0.7"/>
+        <path d="M60 58 L70 67 L60 63 L50 67 Z" fill="white" opacity="0.5"/>
       </g>}
-
-      {rank===3&&<g filter={`url(#${id}fi)`}>
-        {/* Letnan: star + bar */}
-        <polygon points="60,28 63,38 74,38 66,44 69,54 60,48 51,54 54,44 46,38 57,38" fill="white" opacity="0.85"/>
-        <rect x="46" y="60" width="28" height="3" rx="1.5" fill="white" opacity="0.6"/>
+      {rank===3&&<g filter={`url(#${id}em)`}>
+        <polygon points="52,36 54,44 62,44 56,49 58,57 52,52 46,57 48,49 42,44 50,44" fill="white" opacity="0.85"/>
+        <polygon points="68,36 70,44 78,44 72,49 74,57 68,52 62,57 64,49 58,44 66,44" fill="white" opacity="0.85"/>
+        <rect x="44" y="64" width="32" height="2.5" rx="1.25" fill="white" opacity="0.6"/>
       </g>}
-
-      {rank===4&&<g filter={`url(#${id}fi)`}>
-        {/* Kapten: two stars + bar */}
-        <polygon points="50,28 52.5,36 61,36 54.5,41 57,49 50,44 43,49 45.5,41 39,36 47.5,36" fill="white" opacity="0.85"/>
-        <polygon points="70,28 72.5,36 81,36 74.5,41 77,49 70,44 63,49 65.5,41 59,36 67.5,36" fill="white" opacity="0.85"/>
-        <rect x="42" y="56" width="36" height="3" rx="1.5" fill="white" opacity="0.6"/>
-        <rect x="42" y="62" width="36" height="3" rx="1.5" fill="white" opacity="0.4"/>
+      {rank===4&&<g filter={`url(#${id}em)`}>
+        {/* Garuda silhouette */}
+        <path d="M60 30 L64 38 L72 38 L66 43 L68 51 L60 46 L52 51 L54 43 L48 38 L56 38 Z" fill="white" opacity="0.9"/>
+        <path d="M48 54 L52 52 L60 58 L68 52 L72 54 L60 64 Z" fill="white" opacity="0.6"/>
+        <rect x="46" y="68" width="28" height="2.5" rx="1.25" fill="white" opacity="0.5"/>
+        <rect x="50" y="73" width="20" height="2" rx="1" fill="white" opacity="0.35"/>
       </g>}
-
+      {/* Star decorations at top */}
+      {starCount>0&&Array.from({length:starCount}).map((_,i)=>{
+        const sx=60+((i-(starCount-1)/2)*14);
+        return <polygon key={i} points={`${sx},8 ${sx+1.8},13 ${sx+5.5},13 ${sx+2.5},16 ${sx+3.5},21 ${sx},18 ${sx-3.5},21 ${sx-2.5},16 ${sx-5.5},13 ${sx-1.8},13`} fill={c.accent} opacity="0.7" stroke="white" strokeWidth="0.3" strokeOpacity="0.4"/>;
+      })}
       {/* Rank label */}
-      {showLabel&&<text x="60" y={rank===4?112:108} textAnchor="middle" style={{fontSize:rank===4?5.5:7,fontWeight:800,fill:c.primary,letterSpacing:rank===4?1.5:2,fontFamily:"'Inter'"}}>{labels[rank]}</text>}
+      {showLabel&&<text x="60" y="122" textAnchor="middle" style={{fontSize:7,fontWeight:800,fill:c.primary,letterSpacing:2,fontFamily:"'Inter'"}}>{labels[rank]}</text>}
     </svg>
   );
 }
 
-/* ─── BADGE SHAPE SVG ────────────────────────────────────────────── */
+/* ─── BADGE SHAPE SVG — Shield with wings ────────────────────────── */
 function BadgeShape({color,size=64,icon,unlocked=true,rarity='common'}){
   const rc=RARITY_COLORS[rarity]||RARITY_COLORS.common;
   const s=size;
-  const id=`bs_${Math.random().toString(36).slice(2,6)}`;
-  const hexPts=(cx,cy,r)=>{const p=[];for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return p;};
-  const pts=hexPts(s/2,s/2,s*0.42);
-  const pStr=pts.map(p=>p.join(',')).join(' ');
+  const id=`bs_${Math.random().toString(36).slice(2,8)}`;
+  // Shield proportions in viewbox 0 0 64 72
   return(
-    <div className={unlocked?'':'badge-locked-hex'} style={{position:'relative',width:s,height:s}}>
-      {unlocked&&<div style={{position:'absolute',inset:-4,borderRadius:'50%',background:`radial-gradient(circle,${rc.glow},transparent 70%)`,filter:'blur(6px)',animation:rarity==='legendary'?'breathe 3s ease-in-out infinite':undefined}}/>}
-      <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+    <div className={unlocked?'':'badge-locked-hex'} style={{position:'relative',width:s,height:s*1.1}}>
+      {unlocked&&<div style={{position:'absolute',inset:-6,borderRadius:'50%',background:`radial-gradient(circle,${rc.glow},transparent 70%)`,filter:'blur(8px)',animation:rarity==='legendary'?'pulse 2.5s ease-in-out infinite':undefined}}/>}
+      <svg width={s} height={s*1.1} viewBox="0 0 64 72" fill="none" style={{position:'relative',zIndex:1}}>
         <defs>
-          {/* Always use the real color in gradient — CSS filter handles locked grayscale */}
-          <linearGradient id={`${id}g`} x1="0" y1="0" x2={s} y2={s} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor={color}/><stop offset="100%" stopColor={color+'CC'}/>
+          <linearGradient id={`${id}bg`} x1="12" y1="4" x2="52" y2="64" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor={unlocked?color:C.textMuted}/><stop offset="40%" stopColor={unlocked?color:C.textMuted+'CC'}/><stop offset="100%" stopColor={unlocked?`${color}BB`:C.textMuted+'88'}/>
           </linearGradient>
-          <filter id={`${id}f`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={`${color}40`}/></filter>
+          <linearGradient id={`${id}hl`} x1="18" y1="6" x2="46" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="white" stopOpacity={unlocked?"0.4":"0.15"}/><stop offset="100%" stopColor="white" stopOpacity="0"/>
+          </linearGradient>
+          <filter id={`${id}ds`}><feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={unlocked?`${color}50`:'rgba(0,0,0,0.15)'}/></filter>
+          <filter id={`${id}em`}><feDropShadow dx="0" dy="0.5" stdDeviation="0.8" floodColor="rgba(0,0,0,0.4)"/></filter>
         </defs>
-        <g filter={`url(#${id}f)`}>
-          <polygon points={pStr} fill={`url(#${id}g)`} stroke={`${color}80`} strokeWidth="1.5"/>
+        {/* Mini wings */}
+        <g opacity={unlocked?0.75:0.25}>
+          <path d="M18 22 Q8 16 2 26 Q10 22 14 24 Q8 28 4 36 Q14 30 18 30 Z" fill={unlocked?color:C.textMuted} opacity="0.6"/>
+          <path d="M46 22 Q56 16 62 26 Q54 22 50 24 Q56 28 60 36 Q50 30 46 30 Z" fill={unlocked?color:C.textMuted} opacity="0.6"/>
         </g>
-        {/* Inner hex */}
-        <polygon points={hexPts(s/2,s/2,s*0.32).map(p=>p.join(',')).join(' ')} fill="none" stroke="white" strokeWidth="0.5" opacity={unlocked?0.2:0.08}/>
+        {/* Shield */}
+        <g filter={`url(#${id}ds)`}>
+          <path d="M32 6 L52 16 L52 38 Q52 54 32 66 Q12 54 12 38 L12 16 Z" fill={`url(#${id}bg)`} stroke={unlocked?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.08)'} strokeWidth="1"/>
+          <path d="M32 6 L52 16 L52 38 Q52 54 32 66 Q12 54 12 38 L12 16 Z" fill={`url(#${id}hl)`}/>
+        </g>
+        {/* Inner shield line */}
+        <path d="M32 11 L48 19 L48 37 Q48 51 32 61 Q16 51 16 37 L16 19 Z" fill="none" stroke="white" strokeWidth="0.5" opacity={unlocked?0.2:0.06}/>
+        {/* Metallic shine streak */}
+        {unlocked&&<path d="M20 12 L26 9 L27 22 L21 24 Z" fill="white" opacity="0.1"/>}
       </svg>
-      <div className={unlocked?'':'badge-locked-lock'} style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <MI name={unlocked?icon:'lock'} size={s*0.36} fill={unlocked} style={{color:C.white,filter:'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',opacity:unlocked?1:0.7}}/>
+      {/* Icon overlay */}
+      <div className={unlocked?'':'badge-locked-lock'} style={{position:'absolute',top:0,left:0,width:s,height:s*1.1,display:'flex',alignItems:'center',justifyContent:'center',paddingBottom:s*0.08,zIndex:2}}>
+        <MI name={unlocked?icon:'lock'} size={s*0.34} fill={unlocked} style={{color:C.white,filter:unlocked?'drop-shadow(0 1px 3px rgba(0,0,0,0.4))':'none',opacity:unlocked?1:0.5}}/>
       </div>
-      {!unlocked&&<div className="badge-locked-overlay" style={{position:'absolute',inset:0,borderRadius:'50%',background:`${C.bg}80`}}/>}
+      {!unlocked&&<div className="badge-locked-overlay" style={{position:'absolute',inset:0,borderRadius:'50%',background:`${C.bg}50`}}/>}
     </div>
   );
 }
@@ -632,26 +649,34 @@ export default function App(){
     }}>{label}</button>;
   }
 
-  /* ─── AVATAR (simple initials circle) ─── */
-
-  function Avatar3D({initials='AS',color=C.primary,size=48,rankIdx=1,editable=false,onEdit}){
+  /* ─── RANK BADGE (mini shield with rank color) ─── */
+  function RankBadge({rankIdx=1,size=48}){
     const s=size;
-    const rankColors=[C.textMuted,C.primary,C.secondary,C.purple,C.accent];
-    const rc=rankColors[rankIdx]||C.primary;
+    const rankColors=[
+      {bg:'#64748B',light:'#94A3B8'},
+      {bg:'#1B5E20',light:'#4CAF50'},
+      {bg:'#37474F',light:'#78909C'},
+      {bg:'#4E342E',light:'#8D6E63'},
+      {bg:'#8D6E37',light:'#C9A96E'},
+    ];
+    const rc=rankColors[rankIdx]||rankColors[0];
+    const rankIcons=['person','military_tech','shield','stars','workspace_premium'];
     return(
-      <div style={{width:s,height:s,position:'relative',cursor:editable?'pointer':'default'}} onClick={editable?(onEdit||(() => showToast('Kustomisasi profil segera hadir'))):undefined}>
-        <div style={{
-          width:s,height:s,borderRadius:'50%',
-          background:`linear-gradient(135deg,${rc},${rc}CC)`,
-          display:'flex',alignItems:'center',justifyContent:'center',
-          border:`2px solid ${rc}40`,
-          boxShadow:`0 2px 8px ${rc}20`,
-        }}>
-          <span style={{fontSize:s*0.36,fontWeight:700,color:'white',fontFamily:"'Inter'",letterSpacing:0.5,lineHeight:1}}>{initials}</span>
+      <div style={{width:s,height:s,position:'relative'}}>
+        <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
+          <defs>
+            <linearGradient id={`rb${rankIdx}${s}`} x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor={rc.light}/><stop offset="100%" stopColor={rc.bg}/>
+            </linearGradient>
+          </defs>
+          {/* Shield */}
+          <path d="M24 4 L40 12 L40 26 Q40 38 24 46 Q8 38 8 26 L8 12 Z" fill={`url(#rb${rankIdx}${s})`} stroke={rc.light} strokeWidth="1" strokeOpacity="0.4"/>
+          <path d="M24 4 L40 12 L40 26 Q40 38 24 46 Q8 38 8 26 L8 12 Z" fill="white" opacity="0.15"/>
+          <path d="M24 8 L37 14.5 L37 25.5 Q37 36 24 42.5 Q11 36 11 25.5 L11 14.5 Z" fill="none" stroke="white" strokeWidth="0.5" opacity="0.15"/>
+        </svg>
+        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',paddingBottom:s*0.04}}>
+          <MI name={rankIcons[rankIdx]||'military_tech'} size={s*0.38} fill style={{color:'white',filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'}}/>
         </div>
-        {editable&&<div style={{position:'absolute',bottom:-1,right:-1,width:s>40?18:14,height:s>40?18:14,borderRadius:'50%',background:C.primary,border:`2px solid ${C.bg}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <MI name="edit" size={s>40?9:7} style={{color:'white'}}/>
-        </div>}
       </div>
     );
   }
@@ -684,7 +709,7 @@ export default function App(){
         <div style={{background:C.surface,borderRadius:16,padding:16,border:`1px solid ${C.border}`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-20,top:-20,width:100,height:100,borderRadius:'50%',background:C.primaryFaint,pointerEvents:'none'}}/>
           <div className="flex items-center gap-3" style={{position:'relative',zIndex:1}}>
-            <Avatar3D initials="AS" size={48} rankIdx={curRank} editable/>
+            <RankBadge rankIdx={curRank} size={48}/>
             <div className="flex-1" style={{minWidth:0}}>
               <p style={{fontSize:10,fontWeight:600,color:C.textMuted,letterSpacing:0.5}}>Selamat Pagi,</p>
               <h1 style={{fontSize:18,fontWeight:800,color:C.text,lineHeight:1.2,marginTop:1}}>Arif Santoso</h1>
@@ -743,7 +768,7 @@ export default function App(){
           return(
           <div key={i} className="flex items-center gap-3" style={{padding:'8px 14px',borderTop:`1px solid ${C.borderLight}`,background:i===0?C.primaryFaint:'transparent'}}>
             <span style={{fontSize:12,fontWeight:800,color:medals[i],fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>{i+1}</span>
-            <Avatar3D initials={lb.avatar} size={30} rankIdx={lb.rankIdx}/>
+            <RankBadge rankIdx={lb.rankIdx} size={30}/>
             <div className="flex-1" style={{minWidth:0}}>
               <p style={{fontSize:12,fontWeight:600,color:C.text}} className="truncate">{lb.name}</p>
             </div>
@@ -753,7 +778,7 @@ export default function App(){
         {/* Your rank */}
         <div className="flex items-center gap-3" style={{padding:'8px 14px',borderTop:`1px solid ${C.border}`,background:C.primaryLight}}>
           <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'",width:18,textAlign:'center'}}>4</span>
-          <Avatar3D initials="AS" size={30} rankIdx={curRank}/>
+          <RankBadge rankIdx={curRank} size={30}/>
           <div className="flex-1" style={{minWidth:0}}>
             <p style={{fontSize:12,fontWeight:600,color:C.text}}>Arif Santoso <span style={{fontSize:9,fontWeight:700,color:C.primary,marginLeft:4}}>Kamu</span></p>
           </div>
@@ -912,14 +937,14 @@ export default function App(){
             <div key={i} className="flex items-center gap-3 lb-row" style={{padding:'12px 16px',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
               {i===0?<span className="rank-crown" style={{fontSize:16,width:20,textAlign:'center'}}>👑</span>:
               <span style={{fontSize:14,fontWeight:800,color:i===1?C.silver:'#CD7F32',width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>{p.rank}</span>}
-              <Avatar3D initials={p.avatar} size={32} rankIdx={p.rankIdx}/>
+              <RankBadge rankIdx={p.rankIdx} size={32}/>
               <div className="flex-1"><p style={{fontSize:13,fontWeight:600,color:C.text}}>{p.name}</p></div>
               <span style={{fontSize:12,fontWeight:700,color:C.textSec,fontFamily:"'JetBrains Mono'"}}>{p.xp.toLocaleString()}</span>
             </div>
           ))}
           <div className="flex items-center gap-3 rank-you" style={{padding:'12px 16px',background:C.primaryLight,borderTop:`1px solid rgba(249,115,22,0.15)`,borderLeft:`3px solid ${C.primary}`}}>
             <span style={{fontSize:14,fontWeight:800,color:C.primary,width:20,textAlign:'center',fontFamily:"'JetBrains Mono'"}}>#4</span>
-            <Avatar3D initials="AS" size={32} rankIdx={1}/>
+            <RankBadge rankIdx={1} size={32}/>
             <div className="flex-1"><p style={{fontSize:13,fontWeight:700,color:C.primary}}>Kamu <MI name="star" size={12} fill style={{color:C.gold,verticalAlign:'middle',marginLeft:2}}/></p></div>
             <span style={{fontSize:12,fontWeight:800,color:C.primary,fontFamily:"'JetBrains Mono'"}}>#4 · 4,820</span>
           </div>
@@ -1035,13 +1060,13 @@ export default function App(){
         </div>
       </Card>
 
-      {/* ─── Avatar & Seragam (connected to rank) ─── */}
+      {/* ─── Rank Progression ─── */}
       <Card className="stagger-2b" style={{padding:0,overflow:'hidden'}}>
         <div style={{padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
-          <Avatar3D initials="AS" size={64} rankIdx={1} editable/>
+          <RankBadge rankIdx={1} size={64}/>
           <div className="flex-1" style={{minWidth:0}}>
-            <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:4}}>Avatar & Seragam</h3>
-            <p style={{fontSize:11,color:C.textMuted,lineHeight:1.4}}>Seragam & atribut berubah sesuai pangkat. Naik pangkat untuk membuka gaya baru!</p>
+            <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:4}}>Pangkat & Insignia</h3>
+            <p style={{fontSize:11,color:C.textMuted,lineHeight:1.4}}>Insignia berubah sesuai pangkat. Naik pangkat untuk membuka lencana baru!</p>
           </div>
         </div>
         {/* Rank uniform progression preview */}
@@ -1050,7 +1075,7 @@ export default function App(){
             const cur=i===1,unlocked=i<=1;
             return(
               <div key={i} style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:4,opacity:unlocked?1:0.35,position:'relative'}}>
-                <Avatar3D initials={cur?'AS':'??'} size={40} rankIdx={i}/>
+                <RankBadge rankIdx={i} size={40}/>
                 <span style={{fontSize:8,fontWeight:700,color:cur?C.primary:unlocked?C.textSec:C.textMuted,textAlign:'center',maxWidth:56,lineHeight:1.2}}>{r.name}</span>
                 {cur&&<div style={{position:'absolute',top:-3,right:-3,width:10,height:10,borderRadius:'50%',background:C.primary,border:`1.5px solid ${C.bg}`}}/>}
                 {!unlocked&&<MI name="lock" size={10} style={{color:C.textMuted,position:'absolute',top:14,left:'50%',transform:'translateX(-50%)'}}/>}
@@ -1166,7 +1191,7 @@ export default function App(){
       <Card className="stagger-1" style={{textAlign:'center',padding:24,position:'relative',overflow:'hidden'}}>
         <div className="orb orb-2" style={{width:120,height:120,background:'radial-gradient(circle,rgba(249,115,22,0.12),transparent 70%)',top:-20,left:-30}}/>
         <div style={{margin:'0 auto 12px',position:'relative',zIndex:1,display:'flex',justifyContent:'center'}}>
-          <Avatar3D initials="AS" size={72} rankIdx={1} editable/>
+          <RankBadge rankIdx={1} size={72}/>
         </div>
         <h2 style={{fontSize:18,fontWeight:800,color:C.text,position:'relative',zIndex:1}}>Mayor Arif Santoso</h2>
         <p style={{fontSize:11,color:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
