@@ -85,8 +85,8 @@ function GerakMark({size=28}){return(
   <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
     <defs>
       <linearGradient id="gmark" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#F97316"/>
-        <stop offset="100%" stopColor="#FB923C"/>
+        <stop offset="0%" stopColor="#1B5E20"/>
+        <stop offset="100%" stopColor="#2E7D32"/>
       </linearGradient>
     </defs>
     <polygon points="10,6 30,20 10,34 16,20" fill="url(#gmark)"/>
@@ -94,225 +94,7 @@ function GerakMark({size=28}){return(
   </svg>
 )}
 
-/* ─── 3D-STYLE ANIMAL ILLUSTRATIONS (Rank Emblems) ───────────────── */
-/* Stylized 3D vector: soft rounded forms, gradient depth, glossy highlights */
-
-function Animal3D({type='garuda',size=80}){
-  const s=size;const id=`a3d_${type}_${Math.random().toString(36).slice(2,6)}`;
-  return(
-    <div style={{width:s,height:s,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>
-      <svg viewBox="0 0 80 80" width={s} height={s} fill="none">
-        <defs>
-          {/* Shadow filter */}
-          <filter id={`${id}sh`}><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(0,0,0,0.35)"/></filter>
-          <filter id={`${id}gl`}><feGaussianBlur stdDeviation="1.5"/></filter>
-          {type==='macan'&&<>
-            <linearGradient id={`${id}body`} x1="20" y1="10" x2="60" y2="70" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FB923C"/><stop offset="50%" stopColor="#F97316"/><stop offset="100%" stopColor="#C2410C"/>
-            </linearGradient>
-            <radialGradient id={`${id}hi`} cx="35" cy="25" r="20" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
-            </radialGradient>
-          </>}
-          {type==='cendrawasih'&&<>
-            <linearGradient id={`${id}body`} x1="20" y1="10" x2="60" y2="70" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#38BDF8"/><stop offset="50%" stopColor="#0EA5E9"/><stop offset="100%" stopColor="#0369A1"/>
-            </linearGradient>
-            <linearGradient id={`${id}plume`} x1="20" y1="40" x2="60" y2="75" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#F472B6"/><stop offset="50%" stopColor="#EC4899"/><stop offset="100%" stopColor="#BE185D"/>
-            </linearGradient>
-            <radialGradient id={`${id}hi`} cx="35" cy="25" r="18" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="white" stopOpacity="0.35"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
-            </radialGradient>
-          </>}
-          {type==='komodo'&&<>
-            <linearGradient id={`${id}body`} x1="10" y1="20" x2="70" y2="65" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#34D399"/><stop offset="50%" stopColor="#10B981"/><stop offset="100%" stopColor="#047857"/>
-            </linearGradient>
-            <radialGradient id={`${id}hi`} cx="35" cy="30" r="22" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="white" stopOpacity="0.3"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
-            </radialGradient>
-          </>}
-          {type==='garuda'&&<>
-            <linearGradient id={`${id}body`} x1="20" y1="5" x2="60" y2="75" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FDBA74"/><stop offset="30%" stopColor="#F97316"/><stop offset="100%" stopColor="#9A3412"/>
-            </linearGradient>
-            <linearGradient id={`${id}wing`} x1="10" y1="20" x2="70" y2="50" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FB923C"/><stop offset="100%" stopColor="#C2410C"/>
-            </linearGradient>
-            <radialGradient id={`${id}hi`} cx="40" cy="22" r="20" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
-            </radialGradient>
-          </>}
-        </defs>
-
-        {type==='macan'&&<g filter={`url(#${id}sh)`}>
-          {/* Ambient glow */}
-          <ellipse cx="40" cy="68" rx="22" ry="4" fill="#F97316" opacity="0.15" filter={`url(#${id}gl)`}/>
-          {/* Ears — 3D rounded triangles */}
-          <path d="M22 22 Q18 10 26 14 L30 22 Z" fill={`url(#${id}body)`}/>
-          <path d="M58 22 Q62 10 54 14 L50 22 Z" fill={`url(#${id}body)`}/>
-          <path d="M24 20 Q22 14 28 16 L30 22 Z" fill="#FED7AA" opacity="0.5"/>
-          <path d="M56 20 Q58 14 52 16 L50 22 Z" fill="#FED7AA" opacity="0.5"/>
-          {/* Head — rounded 3D shape */}
-          <ellipse cx="40" cy="34" rx="20" ry="18" fill={`url(#${id}body)`}/>
-          {/* Highlight sheen */}
-          <ellipse cx="40" cy="34" rx="20" ry="18" fill={`url(#${id}hi)`}/>
-          {/* White muzzle area — 3D volume */}
-          <ellipse cx="40" cy="40" rx="11" ry="9" fill="#FFF7ED" opacity="0.85"/>
-          <ellipse cx="40" cy="38" rx="8" ry="5" fill="white" opacity="0.15"/>
-          {/* Eyes — glossy 3D */}
-          <ellipse cx="32" cy="30" rx="4" ry="4.5" fill="white"/>
-          <ellipse cx="48" cy="30" rx="4" ry="4.5" fill="white"/>
-          <ellipse cx="33" cy="31" rx="2.5" ry="3" fill="#1E293B"/>
-          <ellipse cx="49" cy="31" rx="2.5" ry="3" fill="#1E293B"/>
-          <circle cx="34" cy="29.5" r="1.2" fill="white" opacity="0.9"/>
-          <circle cx="50" cy="29.5" r="1.2" fill="white" opacity="0.9"/>
-          {/* Nose — glossy */}
-          <ellipse cx="40" cy="37" rx="3.5" ry="2.5" fill="#1E293B" opacity="0.8"/>
-          <ellipse cx="39.5" cy="36.5" rx="1.5" ry="1" fill="white" opacity="0.25"/>
-          {/* Mouth */}
-          <path d="M37 40 Q40 44 43 40" stroke="#9A3412" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-          {/* Stripes — soft 3D */}
-          <path d="M24 24 Q26 28 24 34" stroke="#9A3412" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.5"/>
-          <path d="M56 24 Q54 28 56 34" stroke="#9A3412" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.5"/>
-          <path d="M40 18 L40 23" stroke="#9A3412" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
-          {/* Whiskers */}
-          <line x1="28" y1="40" x2="16" y2="38" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
-          <line x1="28" y1="42" x2="16" y2="43" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
-          <line x1="52" y1="40" x2="64" y2="38" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
-          <line x1="52" y1="42" x2="64" y2="43" stroke="#9A3412" strokeWidth="0.8" opacity="0.3"/>
-          {/* Body */}
-          <ellipse cx="40" cy="58" rx="16" ry="12" fill={`url(#${id}body)`}/>
-          <ellipse cx="40" cy="56" rx="12" ry="6" fill="white" opacity="0.06"/>
-          {/* Chest patch */}
-          <ellipse cx="40" cy="58" rx="9" ry="7" fill="#FED7AA" opacity="0.45"/>
-          {/* Body stripes */}
-          <path d="M30 52 Q32 56 30 60" stroke="#9A3412" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.35"/>
-          <path d="M50 52 Q48 56 50 60" stroke="#9A3412" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.35"/>
-          {/* Feet — rounded 3D */}
-          <ellipse cx="30" cy="68" rx="5" ry="3" fill="#C2410C"/>
-          <ellipse cx="50" cy="68" rx="5" ry="3" fill="#C2410C"/>
-          <ellipse cx="29" cy="67.5" rx="2" ry="1" fill="white" opacity="0.12"/>
-          <ellipse cx="49" cy="67.5" rx="2" ry="1" fill="white" opacity="0.12"/>
-        </g>}
-
-        {type==='cendrawasih'&&<g filter={`url(#${id}sh)`}>
-          <ellipse cx="40" cy="72" rx="18" ry="3" fill="#0EA5E9" opacity="0.12" filter={`url(#${id}gl)`}/>
-          {/* Crest feathers — 3D tubes */}
-          <path d="M38 14 Q36 4 34 2" stroke="#0EA5E9" strokeWidth="3" strokeLinecap="round" opacity="0.7"/>
-          <path d="M40 14 Q40 2 40 0" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round" opacity="0.6"/>
-          <path d="M42 14 Q44 4 46 2" stroke="#0EA5E9" strokeWidth="3" strokeLinecap="round" opacity="0.7"/>
-          {/* Head — glossy sphere */}
-          <circle cx="40" cy="22" r="10" fill={`url(#${id}body)`}/>
-          <circle cx="40" cy="22" r="10" fill={`url(#${id}hi)`}/>
-          {/* Eye */}
-          <ellipse cx="44" cy="20" rx="3" ry="3.5" fill="white"/>
-          <circle cx="45" cy="20.5" r="2" fill="#1E293B"/>
-          <circle cx="45.5" cy="19.5" r="0.9" fill="white" opacity="0.9"/>
-          {/* Beak — glossy */}
-          <path d="M48 24 L56 26 L48 28 Z" fill="#FBBF24"/>
-          <path d="M48 24 L54 25.5 L48 26 Z" fill="#FDE68A" opacity="0.5"/>
-          {/* Body — rounded 3D */}
-          <ellipse cx="38" cy="42" rx="12" ry="14" fill={`url(#${id}body)`}/>
-          <ellipse cx="36" cy="38" rx="6" ry="6" fill="white" opacity="0.08"/>
-          {/* Chest */}
-          <ellipse cx="38" cy="44" rx="7" ry="8" fill="#BAE6FD" opacity="0.4"/>
-          {/* Wing — 3D layered */}
-          <path d="M28 34 Q18 38 16 48 Q18 50 26 46 L32 40 Z" fill={`url(#${id}body)`} opacity="0.8"/>
-          <path d="M28 36 Q22 38 20 44 L26 42 Z" fill="white" opacity="0.08"/>
-          {/* Tail plumes — glossy 3D ribbons */}
-          <path d="M32 52 Q18 58 10 72" stroke={`url(#${id}plume)`} strokeWidth="4" strokeLinecap="round" fill="none"/>
-          <path d="M34 54 Q22 62 16 74" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.7"/>
-          <path d="M36 54 Q28 64 24 76" stroke="#F472B6" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5"/>
-          <path d="M44 52 Q58 58 66 72" stroke={`url(#${id}plume)`} strokeWidth="4" strokeLinecap="round" fill="none"/>
-          <path d="M42 54 Q54 62 60 74" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.7"/>
-          {/* Highlight on plumes */}
-          <path d="M30 54 Q20 58 14 68" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.2"/>
-          <path d="M46 54 Q56 58 62 68" stroke="white" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.2"/>
-          {/* Feet */}
-          <path d="M34 54 L32 60 L30 58 M34 54 L36 60 L38 58" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
-        </g>}
-
-        {type==='komodo'&&<g filter={`url(#${id}sh)`}>
-          <ellipse cx="40" cy="66" rx="28" ry="3" fill="#10B981" opacity="0.12" filter={`url(#${id}gl)`}/>
-          {/* Body — long, low, 3D volume */}
-          <ellipse cx="38" cy="48" rx="22" ry="12" fill={`url(#${id}body)`}/>
-          <ellipse cx="36" cy="44" rx="14" ry="5" fill="white" opacity="0.06"/>
-          {/* Belly — lighter underside */}
-          <ellipse cx="38" cy="52" rx="16" ry="6" fill="#6EE7B7" opacity="0.3"/>
-          {/* Head — elongated 3D */}
-          <path d="M56 42 Q64 34 70 36 Q72 40 70 44 Q64 48 56 46 Z" fill={`url(#${id}body)`}/>
-          <path d="M58 40 Q64 36 68 38 Q66 38 62 40 Z" fill="white" opacity="0.1"/>
-          {/* Eye — reptilian, glossy */}
-          <ellipse cx="64" cy="38" rx="3" ry="2.5" fill="#FDE68A" opacity="0.9"/>
-          <ellipse cx="64.5" cy="38" rx="1.2" ry="2.2" fill="#1E293B"/>
-          <circle cx="64" cy="37" r="0.7" fill="white" opacity="0.6"/>
-          {/* Nostril */}
-          <circle cx="69" cy="39" r="1" fill="#047857" opacity="0.6"/>
-          {/* Tongue — forked */}
-          <path d="M70 40 Q74 39 76 37 M74 39 Q76 41 78 40" stroke="#EF4444" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.7"/>
-          {/* Back ridges — 3D bumps */}
-          <path d="M24 40 Q26 36 28 40 Q30 36 32 40 Q34 36 36 40 Q38 36 40 40 Q42 36 44 40 Q46 36 48 40 Q50 36 52 40" stroke="#047857" strokeWidth="1.5" fill="none" opacity="0.35"/>
-          {/* Front legs — 3D volume */}
-          <path d="M26 52 Q22 58 18 62 Q20 62 22 60 Q24 58 28 54" fill={`url(#${id}body)`}/>
-          <path d="M50 52 Q54 58 58 62 Q56 62 54 60 Q52 58 48 54" fill={`url(#${id}body)`}/>
-          {/* Claws */}
-          <circle cx="18" cy="62" r="1.5" fill="#047857"/>
-          <circle cx="58" cy="62" r="1.5" fill="#047857"/>
-          {/* Tail — thick, 3D taper */}
-          <path d="M16 46 Q8 44 4 48 Q6 46 10 46 L16 48 Z" fill={`url(#${id}body)`} opacity="0.8"/>
-          {/* Scales texture — subtle */}
-          <ellipse cx="32" cy="46" rx="2" ry="1.5" fill="white" opacity="0.05"/>
-          <ellipse cx="38" cy="44" rx="2" ry="1.5" fill="white" opacity="0.05"/>
-          <ellipse cx="44" cy="46" rx="2" ry="1.5" fill="white" opacity="0.05"/>
-        </g>}
-
-        {type==='garuda'&&<g filter={`url(#${id}sh)`}>
-          <ellipse cx="40" cy="74" rx="20" ry="3" fill="#F97316" opacity="0.15" filter={`url(#${id}gl)`}/>
-          {/* Crown — golden 3D */}
-          <path d="M32 16 L34 8 L37 14 L40 4 L43 14 L46 8 L48 16 L46 18 L34 18 Z" fill="#FBBF24"/>
-          <path d="M34 10 L37 14 L40 6 L43 14 L46 10 L46 16 L34 16 Z" fill="#FDE68A" opacity="0.4"/>
-          {/* Head — glossy sphere */}
-          <circle cx="40" cy="24" r="8" fill={`url(#${id}body)`}/>
-          <circle cx="40" cy="24" r="8" fill={`url(#${id}hi)`}/>
-          {/* Eyes */}
-          <ellipse cx="37" cy="23" rx="2.5" ry="3" fill="white"/>
-          <ellipse cx="43" cy="23" rx="2.5" ry="3" fill="white"/>
-          <circle cx="37.5" cy="23.5" r="1.5" fill="#1E293B"/>
-          <circle cx="43.5" cy="23.5" r="1.5" fill="#1E293B"/>
-          <circle cx="38" cy="22.5" r="0.7" fill="white" opacity="0.9"/>
-          <circle cx="44" cy="22.5" r="0.7" fill="white" opacity="0.9"/>
-          {/* Beak — glossy golden */}
-          <path d="M38 28 L40 34 L42 28 Z" fill="#FBBF24"/>
-          <path d="M39 28 L40 32 L41 28 Z" fill="#FDE68A" opacity="0.4"/>
-          {/* Body — 3D rounded */}
-          <ellipse cx="40" cy="46" rx="12" ry="14" fill={`url(#${id}body)`}/>
-          <ellipse cx="38" cy="42" rx="6" ry="6" fill="white" opacity="0.08"/>
-          {/* Chest */}
-          <ellipse cx="40" cy="48" rx="7" ry="8" fill="#FDBA74" opacity="0.35"/>
-          {/* Wings — spread, 3D layered */}
-          <path d="M28 36 L22 32 L14 28 L18 36 L8 34 L16 40 L10 44 L20 42 L16 50 L24 44 L28 48 Z" fill={`url(#${id}wing)`}/>
-          <path d="M52 36 L58 32 L66 28 L62 36 L72 34 L64 40 L70 44 L60 42 L64 50 L56 44 L52 48 Z" fill={`url(#${id}wing)`}/>
-          {/* Wing highlights */}
-          <path d="M26 36 L20 32 L16 30 L18 36 Z" fill="white" opacity="0.1"/>
-          <path d="M54 36 L60 32 L64 30 L62 36 Z" fill="white" opacity="0.1"/>
-          {/* Wing feather detail */}
-          <path d="M14 30 L18 36 M10 36 L16 40 M12 42 L20 42" stroke="white" strokeWidth="0.5" opacity="0.15"/>
-          <path d="M66 30 L62 36 M70 36 L64 40 M68 42 L60 42" stroke="white" strokeWidth="0.5" opacity="0.15"/>
-          {/* Tail feathers — 3D */}
-          <path d="M34 58 L40 70 L46 58" fill={`url(#${id}body)`} opacity="0.7"/>
-          <path d="M36 60 L40 68 L44 60" fill="#FDBA74" opacity="0.2"/>
-          {/* Feet */}
-          <ellipse cx="34" cy="62" rx="4" ry="2.5" fill="#C2410C"/>
-          <ellipse cx="46" cy="62" rx="4" ry="2.5" fill="#C2410C"/>
-          <ellipse cx="33.5" cy="61.5" rx="1.5" ry="0.8" fill="white" opacity="0.12"/>
-          <ellipse cx="45.5" cy="61.5" rx="1.5" ry="0.8" fill="white" opacity="0.12"/>
-        </g>}
-      </svg>
-    </div>
-  );
-}
+/* ─── Animal3D removed — using RankInsignia instead ─── */
 
 /* ─── SOCIAL SVG ICONS ───────────────────────────────────────────── */
 function IgIcon({size=18,color='#191919'}){return<svg width={size} height={size} viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke={color} strokeWidth="2"/><circle cx="12" cy="12" r="5" stroke={color} strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill={color}/></svg>}
@@ -327,32 +109,32 @@ const SocialIcon = ({platform,size=18,color='#191919'}) => {
 
 /* ─── DESIGN TOKENS ──────────────────────────────────────────────── */
 const C={
-  bg:'#0A0E27', bgCard:'#111638', white:'#FFFFFF', black:'#060920',
-  primary:'#F97316', primaryLight:'rgba(249,115,22,0.12)', primaryMid:'rgba(249,115,22,0.2)', primaryDark:'#C2410C',
-  primaryGlow:'rgba(249,115,22,0.3)', primaryFaint:'rgba(249,115,22,0.06)', primaryHover:'rgba(249,115,22,0.08)',
-  primaryAccent:'#FB923C',
-  secondary:'#0EA5E9', secondaryLight:'rgba(14,165,233,0.12)', secondaryGlow:'rgba(14,165,233,0.3)',
-  accent:'#EC4899', accentLight:'rgba(236,72,153,0.12)', accentGlow:'rgba(236,72,153,0.3)',
-  text:'#F8FAFC', textLight:'#E2E8F0', textSec:'#94A3B8', textMuted:'#64748B', textDark:'#475569',
-  border:'#1E293B', borderLight:'rgba(255,255,255,0.06)',
-  overlay06:'rgba(255,255,255,0.06)', overlay08:'rgba(255,255,255,0.08)', overlay10:'rgba(255,255,255,0.1)', overlay15:'rgba(255,255,255,0.15)',
-  shadow:'rgba(0,0,0,0.3)', shadowLight:'rgba(0,0,0,0.2)', backdrop:'rgba(0,0,0,0.7)',
-  green:'#10B981', greenLight:'rgba(16,185,129,0.12)',
-  red:'#EF4444', redLight:'rgba(239,68,68,0.12)',
-  orange:'#F97316', orangeLight:'rgba(249,115,22,0.12)',
-  purple:'#8B5CF6', purpleLight:'rgba(139,92,246,0.12)',
-  pink:'#EC4899', pinkLight:'rgba(236,72,153,0.12)',
-  teal:'#14B8A6', tealLight:'rgba(20,184,166,0.12)',
-  gold:'#F97316', goldLight:'rgba(249,115,22,0.15)',
-  silver:'#C0C0C0', bronze:'#CD7F32',
-  glass:'rgba(255,255,255,0.04)', glassBorder:'#1E293B',
-  surface:'#111638', surfaceLight:'#1E293B', surfaceDark:'#0A0E27',
-  surfaceGlass:'rgba(17,22,56,0.92)', surfaceGlass2:'rgba(17,22,56,0.95)',
+  bg:'#F5F0E8', bgCard:'#FFFFFF', white:'#FFFFFF', black:'#1A1A1A',
+  primary:'#1B5E20', primaryLight:'rgba(27,94,32,0.08)', primaryMid:'rgba(27,94,32,0.15)', primaryDark:'#0D3B0F',
+  primaryGlow:'rgba(27,94,32,0.15)', primaryFaint:'rgba(27,94,32,0.04)', primaryHover:'rgba(27,94,32,0.06)',
+  primaryAccent:'#2E7D32',
+  secondary:'#37474F', secondaryLight:'rgba(55,71,79,0.08)', secondaryGlow:'rgba(55,71,79,0.15)',
+  accent:'#B71C1C', accentLight:'rgba(183,28,28,0.08)', accentGlow:'rgba(183,28,28,0.15)',
+  text:'#1E293B', textLight:'#334155', textSec:'#64748B', textMuted:'#94A3B8', textDark:'#CBD5E1',
+  border:'#E2DDD4', borderLight:'rgba(0,0,0,0.06)',
+  overlay06:'rgba(0,0,0,0.03)', overlay08:'rgba(0,0,0,0.04)', overlay10:'rgba(0,0,0,0.06)', overlay15:'rgba(0,0,0,0.08)',
+  shadow:'rgba(0,0,0,0.08)', shadowLight:'rgba(0,0,0,0.05)', backdrop:'rgba(0,0,0,0.4)',
+  green:'#2E7D32', greenLight:'rgba(46,125,50,0.08)',
+  red:'#C62828', redLight:'rgba(198,40,40,0.08)',
+  orange:'#E65100', orangeLight:'rgba(230,81,0,0.08)',
+  purple:'#37474F', purpleLight:'rgba(55,71,79,0.08)',
+  pink:'#B71C1C', pinkLight:'rgba(183,28,28,0.08)',
+  teal:'#2E7D32', tealLight:'rgba(46,125,50,0.08)',
+  gold:'#8D6E37', goldLight:'rgba(141,110,55,0.1)',
+  silver:'#78909C', bronze:'#795548',
+  glass:'rgba(255,255,255,0.7)', glassBorder:'#E2DDD4',
+  surface:'#FFFFFF', surfaceLight:'#F5F0E8', surfaceDark:'#EDE8DF',
+  surfaceGlass:'rgba(255,255,255,0.92)', surfaceGlass2:'rgba(255,255,255,0.95)',
 };
 
 const typeColor=t=>({EDUKASI:C.secondary,AMPLIFIKASI:C.accent,KRISIS:C.red,KOMUNITAS:C.green,VISIT:C.purple,SOCIAL:C.primary}[t]||C.primary);
 const typeBg=t=>({EDUKASI:C.secondaryLight,AMPLIFIKASI:C.accentLight,KRISIS:C.redLight,KOMUNITAS:C.greenLight,VISIT:C.purpleLight,SOCIAL:C.primaryLight}[t]||C.primaryLight);
-const typeGradient=t=>({EDUKASI:`linear-gradient(135deg,${C.secondary},#38BDF8)`,AMPLIFIKASI:`linear-gradient(135deg,${C.accent},#F472B6)`,KRISIS:`linear-gradient(135deg,${C.red},#F87171)`,KOMUNITAS:`linear-gradient(135deg,${C.green},#34D399)`,VISIT:`linear-gradient(135deg,${C.purple},#A78BFA)`,SOCIAL:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
+const typeGradient=t=>({EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AMPLIFIKASI:`linear-gradient(135deg,${C.accent},#D32F2F)`,KRISIS:`linear-gradient(135deg,${C.red},#EF5350)`,KOMUNITAS:`linear-gradient(135deg,${C.green},#43A047)`,VISIT:`linear-gradient(135deg,${C.purple},#546E7A)`,SOCIAL:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
 const typeIcon=t=>({EDUKASI:'school',AMPLIFIKASI:'campaign',KRISIS:'warning',KOMUNITAS:'groups',VISIT:'location_on',SOCIAL:'share'}[t]||'star');
 const pName=p=>({whatsapp:'WhatsApp',telegram:'Telegram',instagram:'Instagram',tiktok:'TikTok',x:'X',facebook:'Facebook'}[p]||p);
 const pColor=p=>({whatsapp:'#25D366',telegram:'#0088cc',instagram:'#E1306C',tiktok:'#E8E8E8',x:'#1DA1F2',facebook:'#1877F2'}[p]||C.text);
@@ -457,26 +239,26 @@ const MISSIONS=[
 ];
 
 const RANKS=[
-  {name:'Rekrut',xp:0,icon:'person',animal:null,subtitle:'Langkah Pertama'},
-  {name:'Ksatria Macan',xp:1000,icon:'military_tech',animal:'macan',subtitle:'Keberanian & Ketangkasan'},
-  {name:'Sayap Cendrawasih',xp:5000,icon:'shield',animal:'cendrawasih',subtitle:'Keindahan & Strategi'},
-  {name:'Naga Komodo',xp:15000,icon:'stars',animal:'komodo',subtitle:'Ketahanan & Dominasi'},
-  {name:'Garuda Emas',xp:50000,icon:'workspace_premium',animal:'garuda',subtitle:'Pemimpin Tertinggi'},
+  {name:'Prajurit',xp:0,icon:'person',subtitle:'Langkah Pertama'},
+  {name:'Kopral',xp:1000,icon:'military_tech',subtitle:'Keandalan & Disiplin'},
+  {name:'Sersan',xp:5000,icon:'shield',subtitle:'Kepemimpinan Lapangan'},
+  {name:'Letnan',xp:15000,icon:'stars',subtitle:'Komando & Strategi'},
+  {name:'Kapten',xp:50000,icon:'workspace_premium',subtitle:'Pemimpin Tertinggi'},
 ];
 
 /* ─── RANK INSIGNIA ILLUSTRATIONS ─────────────────────────────────── */
 function RankInsignia({rank=0,size=120,showLabel=true}){
   const s=size;
   const colors=[
-    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.3)',accent:'#CBD5E1',dark:'#334155'},
-    {primary:'#F97316',secondary:'#FB923C',glow:'rgba(249,115,22,0.4)',accent:'#FDBA74',dark:'#C2410C'},
-    {primary:'#0EA5E9',secondary:'#38BDF8',glow:'rgba(14,165,233,0.4)',accent:'#7DD3FC',dark:'#0369A1'},
-    {primary:'#8B5CF6',secondary:'#A78BFA',glow:'rgba(139,92,246,0.4)',accent:'#C4B5FD',dark:'#6D28D9'},
-    {primary:'#EC4899',secondary:'#F472B6',glow:'rgba(236,72,153,0.5)',accent:'#FBCFE8',dark:'#BE185D'},
+    {primary:'#64748B',secondary:'#94A3B8',glow:'rgba(100,116,139,0.2)',accent:'#CBD5E1',dark:'#334155'},
+    {primary:'#1B5E20',secondary:'#2E7D32',glow:'rgba(27,94,32,0.25)',accent:'#4CAF50',dark:'#0D3B0F'},
+    {primary:'#37474F',secondary:'#546E7A',glow:'rgba(55,71,79,0.25)',accent:'#78909C',dark:'#263238'},
+    {primary:'#4E342E',secondary:'#6D4C41',glow:'rgba(78,52,46,0.25)',accent:'#8D6E63',dark:'#3E2723'},
+    {primary:'#8D6E37',secondary:'#A68B5B',glow:'rgba(141,110,55,0.3)',accent:'#C9A96E',dark:'#5D4E37'},
   ];
   const c=colors[rank]||colors[0];
   const id=`rank${rank}_${Math.random().toString(36).slice(2,6)}`;
-  const labels=['REKRUT','KSATRIA MACAN','SAYAP CENDRAWASIH','NAGA KOMODO','GARUDA EMAS'];
+  const labels=['PRAJURIT','KOPRAL','SERSAN','LETNAN','KAPTEN'];
 
   // Hexagonal badge shape path for all ranks
   const hexPath=(cx,cy,r)=>{
@@ -512,81 +294,37 @@ function RankInsignia({rank=0,size=120,showLabel=true}){
       {/* Inner hex border */}
       <path d={hexPath(60,52,34)} fill="none" stroke={c.accent} strokeWidth="0.5" opacity="0.3"/>
 
-      {/* Rank-specific center emblem — animal silhouettes */}
+      {/* Rank-specific center emblem — military insignia */}
       {rank===0&&<g filter={`url(#${id}fi)`}>
-        {/* Rekrut: simple chevron */}
-        <path d="M60 38 L72 50 L60 46 L48 50 Z" fill="white" opacity="0.85"/>
-        <path d="M60 52 L72 64 L60 60 L48 64 Z" fill="white" opacity="0.45"/>
+        {/* Prajurit: single chevron */}
+        <path d="M60 42 L72 54 L60 50 L48 54 Z" fill="white" opacity="0.85"/>
       </g>}
 
       {rank===1&&<g filter={`url(#${id}fi)`}>
-        {/* Macan (tiger) — angular head silhouette */}
-        <path d="M48 32 L44 24 L52 30 Z" fill="white" opacity="0.7"/>
-        <path d="M72 32 L76 24 L68 30 Z" fill="white" opacity="0.7"/>
-        <path d="M48 34 Q48 28 60 26 Q72 28 72 34 L72 50 Q72 60 60 64 Q48 60 48 50 Z" fill="white" opacity="0.85"/>
-        {/* Eyes */}
-        <path d="M52 40 L56 38 L56 42 Z" fill={c.dark} opacity="0.6"/>
-        <path d="M68 40 L64 38 L64 42 Z" fill={c.dark} opacity="0.6"/>
-        {/* Nose */}
-        <polygon points="58,48 60,46 62,48 60,50" fill={c.dark} opacity="0.4"/>
-        {/* Stripes */}
-        <line x1="50" y1="32" x2="52" y2="38" stroke={c.dark} strokeWidth="1.2" opacity="0.3"/>
-        <line x1="70" y1="32" x2="68" y2="38" stroke={c.dark} strokeWidth="1.2" opacity="0.3"/>
-        <line x1="60" y1="26" x2="60" y2="30" stroke={c.dark} strokeWidth="1.2" opacity="0.3"/>
+        {/* Kopral: double chevron */}
+        <path d="M60 36 L72 46 L60 42 L48 46 Z" fill="white" opacity="0.85"/>
+        <path d="M60 48 L72 58 L60 54 L48 58 Z" fill="white" opacity="0.65"/>
       </g>}
 
       {rank===2&&<g filter={`url(#${id}fi)`}>
-        {/* Cendrawasih (bird of paradise) — elegant profile */}
-        <circle cx="60" cy="36" r="6" fill="white" opacity="0.85"/>
-        <circle cx="61" cy="35" r="1.2" fill={c.dark} opacity="0.5"/>
-        {/* Beak */}
-        <polygon points="65,37 72,39 65,40" fill="white" opacity="0.7"/>
-        {/* Crest feathers */}
-        <path d="M58 31 L56 22 M60 30 L60 20 M62 31 L64 22" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-        {/* Body */}
-        <ellipse cx="58" cy="48" rx="8" ry="10" fill="white" opacity="0.75"/>
-        {/* Tail plumes — flowing */}
-        <path d="M52 54 Q38 58 32 70" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5"/>
-        <path d="M54 56 Q42 62 38 72" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.35"/>
-        <path d="M64 54 Q78 58 84 70" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5"/>
-        {/* Wing */}
-        <path d="M50 44 Q42 48 44 56 L52 52 Z" fill="white" opacity="0.45"/>
+        {/* Sersan: triple chevron */}
+        <path d="M60 30 L72 40 L60 36 L48 40 Z" fill="white" opacity="0.85"/>
+        <path d="M60 42 L72 52 L60 48 L48 52 Z" fill="white" opacity="0.7"/>
+        <path d="M60 54 L72 64 L60 60 L48 64 Z" fill="white" opacity="0.55"/>
       </g>}
 
       {rank===3&&<g filter={`url(#${id}fi)`}>
-        {/* Komodo dragon — low angular profile */}
-        {/* Laurel frame */}
-        <path d="M36 68 Q30 52 34 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.25"/>
-        <path d="M84 68 Q90 52 86 38" fill="none" stroke="white" strokeWidth="1.5" opacity="0.25"/>
-        {/* Body */}
-        <path d="M32 50 Q32 42 46 38 L74 38 Q84 42 84 50 L80 58 Q72 64 60 64 Q48 64 40 58 Z" fill="white" opacity="0.8"/>
-        {/* Head */}
-        <path d="M74 40 L90 32 L92 38 L86 44 L78 44 Z" fill="white" opacity="0.85"/>
-        {/* Eye */}
-        <circle cx="86" cy="36" r="1.5" fill={c.dark} opacity="0.5"/>
-        {/* Back ridges */}
-        <path d="M46 38 L48 32 L50 38 L52 32 L54 38 L56 32 L58 38 L60 32 L62 38 L64 32 L66 38 L68 32 L70 38" stroke="white" strokeWidth="1" fill="none" opacity="0.35"/>
-        {/* Legs */}
-        <path d="M44 58 L38 66 L42 64" fill="white" opacity="0.5"/>
-        <path d="M76 58 L82 66 L78 64" fill="white" opacity="0.5"/>
-        {/* Tail */}
-        <path d="M32 50 Q24 48 20 52 Q24 50 30 50" fill="white" opacity="0.45"/>
+        {/* Letnan: star + bar */}
+        <polygon points="60,28 63,38 74,38 66,44 69,54 60,48 51,54 54,44 46,38 57,38" fill="white" opacity="0.85"/>
+        <rect x="46" y="60" width="28" height="3" rx="1.5" fill="white" opacity="0.6"/>
       </g>}
 
       {rank===4&&<g filter={`url(#${id}fi)`}>
-        {/* Garuda — spread wings, crown */}
-        <path d="M48 26 L52 18 L56 24 L60 14 L64 24 L68 18 L72 26 L70 30 L50 30 Z" fill="white" opacity="0.9"/>
-        {/* Spread wings */}
-        <path d="M60 36 L56 42 L38 34 L46 46 L28 42 L42 50 L34 56 L48 52 L50 62 L54 52 L60 54" fill="white" opacity="0.8"/>
-        <path d="M60 36 L64 42 L82 34 L74 46 L92 42 L78 50 L86 56 L72 52 L70 62 L66 52 L60 54" fill="white" opacity="0.8"/>
-        {/* Head */}
-        <circle cx="60" cy="38" r="4" fill="white" opacity="0.9"/>
-        <circle cx="60" cy="37" r="1.2" fill={c.dark} opacity="0.5"/>
-        {/* Beak */}
-        <polygon points="59,42 60,46 61,42" fill="white" opacity="0.7"/>
-        {/* Tail */}
-        <path d="M52 62 L60 74 L68 62" fill="white" opacity="0.5"/>
-        <path d="M54 64 L60 72 L66 64" fill="white" opacity="0.3"/>
+        {/* Kapten: two stars + bar */}
+        <polygon points="50,28 52.5,36 61,36 54.5,41 57,49 50,44 43,49 45.5,41 39,36 47.5,36" fill="white" opacity="0.85"/>
+        <polygon points="70,28 72.5,36 81,36 74.5,41 77,49 70,44 63,49 65.5,41 59,36 67.5,36" fill="white" opacity="0.85"/>
+        <rect x="42" y="56" width="36" height="3" rx="1.5" fill="white" opacity="0.6"/>
+        <rect x="42" y="62" width="36" height="3" rx="1.5" fill="white" opacity="0.4"/>
       </g>}
 
       {/* Rank label */}
@@ -654,7 +392,7 @@ const BADGES=[
   {name:'Top 10',desc:'Masuk 10 besar ranking',icon:'leaderboard',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'rare',cat:'Pangkat'},
   {name:'Patriot',desc:'Agen paling berdedikasi',icon:'flag',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
 ];
-const RARITY_COLORS={common:{label:'Common',gradient:'linear-gradient(135deg,#475569,#64748B)',border:'#64748B',glow:'rgba(100,116,139,0.3)'},rare:{label:'Rare',gradient:'linear-gradient(135deg,#0EA5E9,#38BDF8)',border:'#0EA5E9',glow:'rgba(14,165,233,0.3)'},epic:{label:'Epic',gradient:'linear-gradient(135deg,#8B5CF6,#A78BFA)',border:'#8B5CF6',glow:'rgba(139,92,246,0.3)'},legendary:{label:'Legendary',gradient:'linear-gradient(135deg,#F97316,#FB923C,#FBBF24)',border:'#F97316',glow:'rgba(249,115,22,0.4)'}};
+const RARITY_COLORS={common:{label:'Standar',gradient:'linear-gradient(135deg,#475569,#64748B)',border:'#64748B',glow:'rgba(100,116,139,0.2)'},rare:{label:'Lanjutan',gradient:'linear-gradient(135deg,#37474F,#546E7A)',border:'#546E7A',glow:'rgba(55,71,79,0.2)'},epic:{label:'Elite',gradient:'linear-gradient(135deg,#4E342E,#6D4C41)',border:'#6D4C41',glow:'rgba(78,52,46,0.2)'},legendary:{label:'Kehormatan',gradient:'linear-gradient(135deg,#8D6E37,#A68B5B)',border:'#8D6E37',glow:'rgba(141,110,55,0.25)'}};
 
 const ACTIVITY=[
   {mission:'Literasi Digital',type:'EDUKASI',date:'8 Mar',xp:250,status:'SELESAI'},
@@ -665,11 +403,11 @@ const ACTIVITY=[
 ];
 
 const LEADERBOARD=[
-  {name:'Cpt. Rina Dewi',xp:6200,rank:1,avatar:'RD',rankIdx:3},
-  {name:'Lt. Budi Hartono',xp:5800,rank:2,avatar:'BH',rankIdx:2},
-  {name:'Sgt. Fajar Nugroho',xp:5400,rank:3,avatar:'FN',rankIdx:2},
+  {name:'Kpt. Rina Dewi',xp:6200,rank:1,avatar:'RD',rankIdx:3},
+  {name:'Ltn. Budi Hartono',xp:5800,rank:2,avatar:'BH',rankIdx:2},
+  {name:'Srs. Fajar Nugroho',xp:5400,rank:3,avatar:'FN',rankIdx:2},
   {name:'Arif Santoso',xp:4820,rank:4,avatar:'AS',isYou:true,rankIdx:1},
-  {name:'Pvt. Sari Utami',xp:4600,rank:5,avatar:'SU',rankIdx:1},
+  {name:'Kpl. Sari Utami',xp:4600,rank:5,avatar:'SU',rankIdx:1},
 ];
 
 /* ─── ADMIN / AI DATA ────────────────────────────────────────────── */
@@ -727,10 +465,10 @@ function ProgressBar({progress=0,color=C.primary,height=6,bg=C.overlay08,gold=fa
 
 /* ─── SENTIMENT CHART ────────────────────────────────────────────── */
 const SENTIMENT_EMOTIONS=[
-  {key:'angry',emoji:'😠',label:'Marah',color:'#EF4444'},
-  {key:'sad',emoji:'😢',label:'Sedih',color:'#F59E0B'},
-  {key:'neutral',emoji:'😐',label:'Netral',color:'#94A3B8'},
-  {key:'happy',emoji:'😊',label:'Positif',color:'#22C55E'},
+  {key:'angry',emoji:'',label:'Marah',color:'#C62828'},
+  {key:'sad',emoji:'',label:'Sedih',color:'#F9A825'},
+  {key:'neutral',emoji:'',label:'Netral',color:'#78909C'},
+  {key:'happy',emoji:'',label:'Positif',color:'#43A047'},
 ];
 
 function SentimentChart({breakdown,compact=false}){
@@ -748,7 +486,7 @@ function SentimentChart({breakdown,compact=false}){
       <div style={{display:'flex',gap:compact?8:14,flexWrap:'wrap'}}>
         {SENTIMENT_EMOTIONS.map(e=>(
           <div key={e.key} style={{display:'flex',alignItems:'center',gap:3}}>
-            <span style={{fontSize:compact?12:14}}>{e.emoji}</span>
+            <span style={{width:8,height:8,borderRadius:'50%',background:e.color,display:'inline-block'}}></span>
             <span style={{fontSize:compact?9:10,fontWeight:600,color:C.textSec}}>{breakdown[e.key]}%</span>
           </div>
         ))}
@@ -763,7 +501,7 @@ function PositiveMeter({percent,size='sm'}){
   return(
     <div style={{display:'flex',alignItems:'center',gap:s?6:8}}>
       <div style={{width:s?32:44,height:s?32:44,borderRadius:'50%',background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${color}`,position:'relative'}}>
-        <span style={{fontSize:s?10:13,fontWeight:800,color,fontFamily:"'JetBrains Mono'"}}>{percent}%</span>
+        <span style={{fontSize:s?10:13,fontWeight:800,color,fontFamily:"'Inter'"}}>{percent}%</span>
       </div>
       <span style={{fontSize:s?10:11,color:C.textMuted,fontWeight:500}}>Positif</span>
     </div>
@@ -895,138 +633,23 @@ export default function App(){
     }}>{label}</button>;
   }
 
-  /* ─── AVATAR CONFIG (rank-based military person) ─── */
-  const AVATAR_HATS={
-    none:{label:'Tanpa Topi'},
-    beret:{label:'Baret'},
-    peaked:{label:'Topi Perwira'},
-    helmet:{label:'Helm Tempur'},
-    boonie:{label:'Topi Rimba'},
-  };
-  const AVATAR_SKINS=['#D4A574','#C68642','#8D5524','#F1C27D','#E0AC69'];
-  const AVATAR_UNIFORMS={
-    green:{label:'Hijau TNI',fill:'#2D5016',accent:'#3A6B1E'},
-    olive:{label:'Olive Drab',fill:'#556B2F',accent:'#6B8E23'},
-    navy:{label:'Biru Navy',fill:'#1B2838',accent:'#2C3E50'},
-    desert:{label:'Desert Tan',fill:'#C2A86C',accent:'#D4BA7A'},
-    black:{label:'Hitam Ops',fill:'#1A1A2E',accent:'#2D2D44'},
-  };
+  /* ─── AVATAR (simple initials circle) ─── */
 
-  /* Rank → default avatar config */
-  const RANK_AVATAR_DEFAULTS=[
-    {hat:'none',uniform:'green',insigniaCount:0},    // Rekrut
-    {hat:'beret',uniform:'olive',insigniaCount:1},    // Ksatria Macan
-    {hat:'peaked',uniform:'navy',insigniaCount:2},    // Sayap Cendrawasih
-    {hat:'helmet',uniform:'black',insigniaCount:3},   // Naga Komodo
-    {hat:'peaked',uniform:'navy',insigniaCount:4},    // Garuda Emas
-  ];
-
-  /* ─── 3D AVATAR ───────────────────────────────────────────────────── */
   function Avatar3D({initials='AS',color=C.primary,size=48,rankIdx=1,editable=false,onEdit}){
     const s=size;
-    const id=`av_${Math.random().toString(36).slice(2,6)}`;
-    const cfg=RANK_AVATAR_DEFAULTS[rankIdx]||RANK_AVATAR_DEFAULTS[0];
-    const uni=AVATAR_UNIFORMS[cfg.uniform]||AVATAR_UNIFORMS.green;
-    const skin=AVATAR_SKINS[0];
-    const hatType=cfg.hat;
-    const showDetail=s>=28;
-    const showFine=s>=40;
     const rankColors=[C.textMuted,C.primary,C.secondary,C.purple,C.accent];
     const rc=rankColors[rankIdx]||C.primary;
-
     return(
-      <div style={{width:s,height:s,position:'relative',cursor:editable?'pointer':'default'}} onClick={editable?(onEdit||(() => showToast('Kustomisasi avatar segera hadir'))):undefined}>
-        <svg viewBox="0 0 48 48" width={s} height={s}>
-          <defs>
-            <linearGradient id={`${id}bg`} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={rc}/><stop offset="100%" stopColor={rc+'CC'}/>
-            </linearGradient>
-            <linearGradient id={`${id}uni`} x1="16" y1="30" x2="32" y2="48" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={uni.accent}/><stop offset="100%" stopColor={uni.fill}/>
-            </linearGradient>
-            <linearGradient id={`${id}skin`} x1="20" y1="12" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor={skin}/><stop offset="100%" stopColor={`${skin}DD`}/>
-            </linearGradient>
-            <radialGradient id={`${id}hi`} cx="18" cy="14" r="20" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="white" stopOpacity="0.25"/><stop offset="100%" stopColor="white" stopOpacity="0"/>
-            </radialGradient>
-            <filter id={`${id}sh`}><feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor={`${rc}40`}/></filter>
-          </defs>
-          {/* BG circle */}
-          <g filter={`url(#${id}sh)`}>
-            <circle cx="24" cy="24" r="22" fill={`url(#${id}bg)`}/>
-            <circle cx="24" cy="24" r="22" fill={`url(#${id}hi)`}/>
-            <circle cx="24" cy="24" r="21" fill="none" stroke="white" strokeWidth="0.5" opacity="0.15"/>
-          </g>
-          {/* Body/Uniform — shoulders & torso */}
-          <path d="M12 44 C12 36 16 32 24 30 C32 32 36 36 36 44 Z" fill={`url(#${id}uni)`}/>
-          {/* Collar */}
-          {showDetail&&<>
-            <path d="M20 30 L24 33 L28 30" fill="none" stroke={uni.accent} strokeWidth="1" opacity="0.6"/>
-            {/* Shoulder epaulettes */}
-            <rect x="12" y="34" width="5" height="2" rx="1" fill={rc} opacity="0.7"/>
-            <rect x="31" y="34" width="5" height="2" rx="1" fill={rc} opacity="0.7"/>
-          </>}
-          {/* Rank insignia stripes on chest */}
-          {showFine&&cfg.insigniaCount>0&&<g opacity="0.8">
-            {Array.from({length:Math.min(cfg.insigniaCount,4)}).map((_,i)=>(
-              <rect key={i} x="22" y={35+i*2.5} width="4" height="1.2" rx="0.5" fill={rc}/>
-            ))}
-          </g>}
-          {/* Neck */}
-          <rect x="21" y="26" width="6" height="5" rx="2" fill={`url(#${id}skin)`}/>
-          {/* Head */}
-          <ellipse cx="24" cy="20" rx="8" ry="9" fill={`url(#${id}skin)`}/>
-          {/* Face highlights */}
-          <ellipse cx="22" cy="18.5" rx="1" ry="0.6" fill="white" opacity="0.15"/>
-          {/* Eyes */}
-          {showDetail&&<>
-            <ellipse cx="20.5" cy="20" rx="1.2" ry="1.4" fill="white" opacity="0.9"/>
-            <ellipse cx="27.5" cy="20" rx="1.2" ry="1.4" fill="white" opacity="0.9"/>
-            <circle cx="20.8" cy="20.2" r="0.8" fill="#1A1A2E"/>
-            <circle cx="27.8" cy="20.2" r="0.8" fill="#1A1A2E"/>
-            {/* Eyebrows — stern military look */}
-            <line x1="19" y1="17.8" x2="22.5" y2="18" stroke="#4A3728" strokeWidth="0.8" strokeLinecap="round"/>
-            <line x1="25.5" y1="18" x2="29" y2="17.8" stroke="#4A3728" strokeWidth="0.8" strokeLinecap="round"/>
-            {/* Mouth */}
-            <line x1="22" y1="23.5" x2="26" y2="23.5" stroke="#8B6F5E" strokeWidth="0.7" strokeLinecap="round"/>
-          </>}
-          {/* Hat */}
-          {hatType==='beret'&&<>
-            <ellipse cx="24" cy="12.5" rx="9" ry="4" fill={rc}/>
-            <path d="M16 13 Q15 8 20 9 Q24 7 28 9 Q33 8 32 13" fill={rc}/>
-            <ellipse cx="24" cy="13" rx="8.5" ry="1.5" fill={rc} opacity="0.6"/>
-            {showFine&&<circle cx="28" cy="9.5" r="1" fill="white" opacity="0.3"/>}
-          </>}
-          {hatType==='peaked'&&<>
-            {/* Peaked officer cap */}
-            <rect x="15" y="11" width="18" height="5" rx="2" fill={uni.fill}/>
-            <ellipse cx="24" cy="11.5" rx="10" ry="3" fill={uni.accent}/>
-            <rect x="15" y="13.5" width="18" height="1.5" fill={rc}/>
-            {/* Visor */}
-            <ellipse cx="24" cy="15" rx="10" ry="2.5" fill={uni.fill}/>
-            {showFine&&<>
-              <ellipse cx="24" cy="14.5" rx="9" ry="1.5" fill="none" stroke="white" strokeWidth="0.3" opacity="0.2"/>
-              {/* Cap badge */}
-              <circle cx="24" cy="11" r="1.5" fill={rc} opacity="0.8"/>
-            </>}
-          </>}
-          {hatType==='helmet'&&<>
-            <path d="M14 18 Q14 7 24 6 Q34 7 34 18" fill={uni.fill}/>
-            <path d="M14 18 Q14 7 24 6 Q34 7 34 18" fill="white" opacity="0.08"/>
-            {showFine&&<>
-              <line x1="16" y1="16" x2="32" y2="16" stroke={rc} strokeWidth="1" opacity="0.5"/>
-              <ellipse cx="24" cy="18" rx="10" ry="1" fill="black" opacity="0.1"/>
-            </>}
-          </>}
-          {hatType==='boonie'&&<>
-            <ellipse cx="24" cy="13" rx="12" ry="3" fill={uni.accent}/>
-            <path d="M16 13 Q16 8 24 7 Q32 8 32 13" fill={uni.fill}/>
-            {showFine&&<ellipse cx="24" cy="13" rx="11" ry="2" fill="none" stroke="white" strokeWidth="0.3" opacity="0.2"/>}
-          </>}
-          {/* Initials fallback for very small sizes */}
-          {s<28&&<text x="24" y="40" textAnchor="middle" dominantBaseline="middle" style={{fontSize:8,fontWeight:800,fill:'white',fontFamily:"'Inter'"}}>{initials}</text>}
-        </svg>
+      <div style={{width:s,height:s,position:'relative',cursor:editable?'pointer':'default'}} onClick={editable?(onEdit||(() => showToast('Kustomisasi profil segera hadir'))):undefined}>
+        <div style={{
+          width:s,height:s,borderRadius:'50%',
+          background:`linear-gradient(135deg,${rc},${rc}CC)`,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          border:`2px solid ${rc}40`,
+          boxShadow:`0 2px 8px ${rc}20`,
+        }}>
+          <span style={{fontSize:s*0.36,fontWeight:700,color:'white',fontFamily:"'Inter'",letterSpacing:0.5,lineHeight:1}}>{initials}</span>
+        </div>
         {editable&&<div style={{position:'absolute',bottom:-1,right:-1,width:s>40?18:14,height:s>40?18:14,borderRadius:'50%',background:C.primary,border:`2px solid ${C.bg}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <MI name="edit" size={s>40?9:7} style={{color:'white'}}/>
         </div>}
@@ -1042,7 +665,7 @@ export default function App(){
       {/* ═══════ ORANGE HEADER (compact) ═══════ */}
       <div className="stagger-1" style={{
         margin:'-16px -16px 0',padding:'0 16px',position:'relative',overflow:'hidden',
-        background:`linear-gradient(180deg, #7C2D12 0%, #9A3412 50%, ${C.primary} 100%)`,
+        background:`linear-gradient(180deg, #0D3B0F 0%, #1B5E20 50%, #2E7D32 100%)`,
         borderRadius:'0 0 24px 24px',
       }}>
         {/* Decorative circles */}
@@ -1062,7 +685,7 @@ export default function App(){
             <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.2)'}}>
               <MI name="notifications" size={18} style={{color:'white'}}/>
             </div>
-            <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:'2px solid #7C2D12'}} className="urgency-pulse"/>
+            <div style={{position:'absolute',top:5,right:5,width:8,height:8,borderRadius:'50%',background:C.red,border:'2px solid #0D3B0F'}} className="urgency-pulse"/>
           </div>
         </div>
 
@@ -1075,7 +698,7 @@ export default function App(){
           </div>
           <div style={{textAlign:'right'}}>
             <div className="flex items-center gap-1" style={{background:'rgba(0,0,0,0.2)',borderRadius:8,padding:'4px 10px',border:'1px solid rgba(255,255,255,0.12)'}}>
-              <Animal3D type={RANKS[curRank].animal||'garuda'} size={20}/>
+              <MI name="military_tech" size={16} fill style={{color:'white'}}/>
               <span style={{fontSize:10,fontWeight:700,color:'white',letterSpacing:0.5}}>{RANKS[curRank].name}</span>
             </div>
           </div>
@@ -1087,8 +710,8 @@ export default function App(){
             <span style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.9)'}}>Kemajuan Pangkat</span>
             <span style={{fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono'",color:'white'}}>4.820 / 5.000 XP</span>
           </div>
-          <div style={{height:6,borderRadius:9999,background:'rgba(0,0,0,0.25)',overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>
-            <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:'linear-gradient(90deg,#FDE68A,#FBBF24,#FDE68A)',backgroundSize:'200% 100%'}}/>
+          <div style={{height:6,borderRadius:9999,background:'rgba(255,255,255,0.25)',overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>
+            <div className="xp-bar-gold" style={{height:'100%',borderRadius:9999,width:'96%',background:'linear-gradient(90deg,#43A047,#66BB6A,#43A047)',backgroundSize:'200% 100%'}}/>
           </div>
           <div className="flex items-center justify-between mt-1.5">
             <span style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>{RANKS[curRank].name}</span>
@@ -1137,12 +760,12 @@ export default function App(){
               {/* Crown */}
               <div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',zIndex:1}}>
                 <svg width="24" height="14" viewBox="0 0 24 14" fill="none">
-                  <path d="M2 12 L5 4 L8 8 L12 1 L16 8 L19 4 L22 12 Z" fill="#FDE68A" stroke="#FBBF24" strokeWidth="0.5"/>
+                  <path d="M2 12 L5 4 L8 8 L12 1 L16 8 L19 4 L22 12 Z" fill="#C9A96E" stroke="#8D6E37" strokeWidth="0.5"/>
                 </svg>
               </div>
               <Avatar3D initials={LEADERBOARD[0].avatar} size={52} rankIdx={LEADERBOARD[0].rankIdx}/>
-              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:20,height:20,borderRadius:'50%',background:'linear-gradient(135deg,#FBBF24,#FDE68A)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 8px rgba(251,191,36,0.4)'}}>
-                <span style={{fontSize:10,fontWeight:800,color:'#92400E'}}>1</span>
+              <div style={{position:'absolute',bottom:-4,left:'50%',transform:'translateX(-50%)',width:20,height:20,borderRadius:'50%',background:'linear-gradient(135deg,#8D6E37,#C9A96E)',display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,boxShadow:'0 2px 8px rgba(141,110,55,0.3)'}}>
+                <span style={{fontSize:10,fontWeight:800,color:'#3E2723'}}>1</span>
               </div>
             </div>
             <p style={{fontSize:11,fontWeight:700,color:C.text,marginTop:8,lineHeight:1.2}} className="truncate">{LEADERBOARD[0].name.split(' ').slice(-1)[0]}</p>
@@ -1441,15 +1064,15 @@ export default function App(){
         <div style={{position:'absolute',inset:0,background:`linear-gradient(135deg,${C.primaryLight},${C.primaryFaint},transparent)`,pointerEvents:'none'}}/>
         <div style={{position:'absolute',top:-40,right:-40,width:140,height:140,borderRadius:'50%',background:`radial-gradient(circle,${C.primaryGlow}40,transparent 70%)`,pointerEvents:'none'}}/>
         <div style={{padding:'24px 20px',display:'flex',alignItems:'center',gap:16,position:'relative'}}>
-          {/* Rank animal + insignia */}
+          {/* Rank insignia */}
           <div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-            <Animal3D type="macan" size={72}/>
+            <RankInsignia rank={1} size={72} showLabel={false}/>
             <RankInsignia rank={1} size={48} showLabel={false}/>
           </div>
           {/* Info */}
           <div className="flex-1" style={{minWidth:0}}>
             <span style={{fontSize:9,fontWeight:700,color:C.textMuted,letterSpacing:2,textTransform:'uppercase'}}>Pangkat Saat Ini</span>
-            <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Ksatria Macan</h2>
+            <h2 style={{fontSize:22,fontWeight:800,color:C.text,lineHeight:1.1,marginTop:4}}>Kopral</h2>
             <div className="flex items-center gap-2 mt-2">
               <span style={{background:`linear-gradient(135deg,${C.primaryMid},${C.primaryFaint})`,borderRadius:9999,padding:'3px 10px',border:`1px solid ${C.primary}40`,fontSize:11,fontWeight:700,color:C.primary,fontFamily:"'JetBrains Mono'"}}>4,820 XP</span>
               <span style={{fontSize:10,color:C.textMuted}}>/ 5,000</span>
@@ -1460,7 +1083,7 @@ export default function App(){
               <div className="flex items-center justify-between mt-1.5">
                 <span style={{fontSize:9,fontWeight:600,color:C.primary}}>96%</span>
                 <span style={{fontSize:9,color:C.textMuted,display:'flex',alignItems:'center',gap:2}}>
-                  180 XP ke <span style={{color:C.primary,fontWeight:600,marginLeft:2}}>Sayap Cendrawasih</span>
+                  180 XP ke <span style={{color:C.primary,fontWeight:600,marginLeft:2}}>Sersan</span>
                 </span>
               </div>
             </div>
@@ -1540,8 +1163,8 @@ export default function App(){
                 opacity:!cur&&!done?0.5:1,
               }}>
                 {cur&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${rankColors.accent},transparent)`,opacity:0.6}}/>}
-                {/* 3D Animal illustration or basic insignia for Rekrut */}
-                {r.animal?<Animal3D type={r.animal} size={68}/>:<RankInsignia rank={0} size={56} showLabel={false}/>}
+                {/* Rank insignia */}
+                <RankInsignia rank={i} size={56} showLabel={false}/>
                 <p style={{fontSize:11,fontWeight:700,color:cur?rankColors.accent:done?C.green:C.textMuted,marginTop:6,lineHeight:1.2}}>{r.name}</p>
                 {r.subtitle&&<p style={{fontSize:8,fontWeight:600,color:cur?rankColors.accent:C.textMuted,marginTop:1,letterSpacing:0.3,lineHeight:1.2,opacity:cur?0.7:1}}>{r.subtitle}</p>}
                 <p style={{fontSize:9,fontWeight:600,color:cur?rankColors.accent:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:3,opacity:cur?0.8:1}}>{r.xp.toLocaleString()} XP</p>
@@ -1603,7 +1226,7 @@ export default function App(){
         </div>
         <h2 style={{fontSize:18,fontWeight:800,color:C.text,position:'relative',zIndex:1}}>Mayor Arif Santoso</h2>
         <p style={{fontSize:11,color:C.textMuted,fontFamily:"'JetBrains Mono'",marginTop:2,position:'relative',zIndex:1}}>NRP-20240812</p>
-        <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>Ksatria Macan</span>
+        <span style={{display:'inline-block',background:C.goldLight,borderRadius:8,padding:'4px 12px',fontSize:11,fontWeight:700,color:C.gold,marginTop:8,border:'1px solid rgba(249,115,22,0.2)',position:'relative',zIndex:1}}>Kopral</span>
         <div className="grid grid-cols-3 gap-3 mt-4">
           {[{l:'Misi',v:'24'},{l:'XP',v:'4,820'},{l:'Rank',v:'#12'}].map((s,i)=>(
             <div key={i} style={{background:C.surfaceLight,borderRadius:12,padding:'8px 0',textAlign:'center',border:`1px solid ${C.border}`,position:'relative',zIndex:1}}>
@@ -1681,7 +1304,7 @@ export default function App(){
           <div key={i} className="flex items-center justify-between" style={{padding:'10px 0',borderBottom:`1px solid ${C.borderLight}`}}>
             <div><p style={{fontSize:13,fontWeight:600,color:C.text}}>{s.label}</p><p style={{fontSize:11,color:C.textMuted}}>{s.desc}</p></div>
             <button onClick={s.toggle} style={{width:44,height:24,borderRadius:12,position:'relative',border:'none',cursor:'pointer',background:s.on?C.primary:C.border,transition:'background 200ms ease'}}>
-              <span className="toggle-knob" style={{width:18,height:18,borderRadius:'50%',background:C.white,position:'absolute',top:3,left:s.on?23:3,boxShadow:s.on?`0 0 8px rgba(249,115,22,0.4), 0 1px 3px rgba(0,0,0,0.15)`:'0 1px 3px rgba(0,0,0,0.15)'}}/>
+              <span className="toggle-knob" style={{width:18,height:18,borderRadius:'50%',background:C.white,position:'absolute',top:3,left:s.on?23:3,boxShadow:s.on?`0 0 8px rgba(27,94,32,0.3), 0 1px 3px rgba(0,0,0,0.1)`:'0 1px 3px rgba(0,0,0,0.1)'}}/>
             </button>
           </div>
         ))}
@@ -2432,7 +2055,7 @@ export default function App(){
                 <div style={{position:'absolute',top:'35%',left:0,right:0,height:2,background:C.border,transform:'rotate(-5deg)',opacity:0.5}}/>
                 <div style={{position:'absolute',top:0,bottom:0,left:'50%',width:2,background:C.border,transform:'rotate(3deg)',opacity:0.5}}/>
                 <div style={{position:'absolute',top:'45%',left:'50%',transform:'translate(-50%,-100%)'}}>
-                  <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:C.pink,transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(0,0,0,0.2)'}}>
+                  <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:C.pink,transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(0,0,0,0.1)'}}>
                     <MI name="location_on" size={14} fill style={{color:C.white,transform:'rotate(45deg)'}}/>
                   </div>
                 </div>
@@ -3061,7 +2684,7 @@ export default function App(){
     ];
 
     const DCard=({children,style={},title,subtitle,action,accent,noPad})=>(
-      <div className="card-interactive" style={{background:`linear-gradient(135deg,${C.surface},rgba(15,26,46,0.95))`,borderRadius:16,border:`1px solid ${accent?`${accent}33`:C.border}`,overflow:'hidden',boxShadow:`0 4px 24px rgba(0,0,0,0.25)${accent?`, 0 0 0 1px ${accent}11`:''}`,position:'relative',...style}}>
+      <div className="card-interactive" style={{background:C.surface,borderRadius:16,border:`1px solid ${accent?`${accent}33`:C.border}`,overflow:'hidden',boxShadow:`0 4px 24px rgba(0,0,0,0.25)${accent?`, 0 0 0 1px ${accent}11`:''}`,position:'relative',...style}}>
         {accent&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${accent},transparent)`,opacity:0.6}}/>}
         {(title||action)&&<div className="flex items-center justify-between" style={{padding:'16px 20px',borderBottom:`1px solid ${C.borderLight}`}}>
           <div>
@@ -4730,7 +4353,7 @@ export default function App(){
               if(captions.length>0&&captionApproved<captions.length) warnings.push(`${captions.length-captionApproved} caption belum di-approve`);
               if(!missionForm.format) warnings.push('Format konten belum dipilih');
               return <div style={{position:'fixed',inset:0,background:C.backdrop,backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',zIndex:100,display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
-                <div style={{background:C.surface,borderRadius:16,border:`1px solid ${C.border}`,maxWidth:720,width:'100%',maxHeight:'85vh',overflow:'auto',boxShadow:'0 24px 80px rgba(0,0,0,0.5)'}} className="hide-scrollbar">
+                <div style={{background:C.surface,borderRadius:16,border:`1px solid ${C.border}`,maxWidth:720,width:'100%',maxHeight:'85vh',overflow:'auto',boxShadow:'0 24px 80px rgba(0,0,0,0.15)'}} className="hide-scrollbar">
                   {/* Header */}
                   <div style={{padding:'20px 24px',borderBottom:`1px solid ${C.borderLight}`,background:C.primaryLight,borderRadius:'20px 20px 0 0',position:'sticky',top:0,zIndex:2}}>
                     <div className="flex items-center justify-between">
@@ -5141,18 +4764,18 @@ export default function App(){
                         nodeColor="color"
                         nodeOpacity={0.95}
                         nodeResolution={16}
-                        nodeLabel={node=>`<div style="background:#111638;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 16px;font-family:Inter,sans-serif;min-width:220px;box-shadow:0 12px 40px rgba(0,0,0,0.6)">
+                        nodeLabel={node=>`<div style="background:#FFFFFF;border:1px solid #E2DDD4;border-radius:10px;padding:12px 16px;font-family:Inter,sans-serif;min-width:220px;box-shadow:0 12px 40px rgba(0,0,0,0.15)">
                           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
                             <div style="width:32px;height:32px;border-radius:8px;background:${node.color}25;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${node.color};border:1px solid ${node.color}40">${node.avatar}</div>
                             <div>
-                              <div style="font-size:14px;font-weight:700;color:#F1F5F9">${node.id}</div>
+                              <div style="font-size:14px;font-weight:700;color:#1E293B">${node.id}</div>
                               <div style="font-size:10px;color:#64748B">${node.city} · ${node.platform}</div>
                             </div>
                           </div>
-                          <div style="font-size:12px;color:#F97316;font-weight:600;margin-bottom:6px">${node.title}</div>
-                          <div style="display:flex;gap:16px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
-                            <span style="font-size:11px;color:#94A3B8">Views <b style="color:#F1F5F9">${node.views}</b></span>
-                            <span style="font-size:11px;color:#94A3B8">Rate <b style="color:${node.rate>15?'#10B981':node.rate>10?'#F97316':'#94A3B8'}">${node.rate}%</b></span>
+                          <div style="font-size:12px;color:#1B5E20;font-weight:600;margin-bottom:6px">${node.title}</div>
+                          <div style="display:flex;gap:16px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06)">
+                            <span style="font-size:11px;color:#64748B">Views <b style="color:#1E293B">${node.views}</b></span>
+                            <span style="font-size:11px;color:#64748B">Rate <b style="color:${node.rate>15?'#10B981':node.rate>10?'#E65100':'#64748B'}">${node.rate}%</b></span>
                             <span style="font-size:11px;color:${node.status==='SELESAI'?'#22C55E':node.status==='REVIEW'?'#F59E0B':'#EF4444'};font-weight:600">${node.status}</span>
                           </div>
                         </div>`}
@@ -5161,9 +4784,9 @@ export default function App(){
                         linkOpacity={0.6}
                         linkDirectionalParticles={3}
                         linkDirectionalParticleWidth={link=>link.type==='share'?2.5:1.5}
-                        linkDirectionalParticleColor={link=>link.type==='like'?'#EC4899':'#2DD4BF'}
+                        linkDirectionalParticleColor={link=>link.type==='like'?'#B71C1C':'#2E7D32'}
                         linkDirectionalParticleSpeed={0.005}
-                        linkLabel={link=>`<div style="background:#111638;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#94A3B8;box-shadow:0 4px 16px rgba(0,0,0,0.4)"><span style="color:${link.type==='like'?'#EC4899':'#0EA5E9'}">${link.type==='like'?'Liked':'Shared'}</span> ${link.source.id||link.source} → ${link.target.id||link.target}</div>`}
+                        linkLabel={link=>`<div style="background:#FFFFFF;border:1px solid #E2DDD4;border-radius:6px;padding:6px 10px;font-family:Inter;font-size:10px;color:#64748B;box-shadow:0 4px 16px rgba(0,0,0,0.08)"><span style="color:${link.type==='like'?'#B71C1C':'#37474F'}">${link.type==='like'?'Liked':'Shared'}</span> ${link.source.id||link.source} → ${link.target.id||link.target}</div>`}
                         enableNodeDrag={true}
                         enableNavigationControls={true}
                         showNavInfo={false}
@@ -5181,7 +4804,7 @@ export default function App(){
                         </div>
                         <div style={{background:C.surfaceGlass,backdropFilter:'blur(12px)',borderRadius:8,padding:'10px 14px',border:`1px solid ${C.overlay08}`}}>
                           <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:1,marginBottom:6}}>Particle Flows</p>
-                          {[{l:'Like',c:'#EC4899'},{l:'Share',c:'#2DD4BF'}].map(x=>(
+                          {[{l:'Like',c:'#B71C1C'},{l:'Share',c:'#2E7D32'}].map(x=>(
                             <div key={x.l} className="flex items-center gap-2" style={{marginBottom:3}}>
                               <div style={{width:14,height:3,borderRadius:2,background:x.c}}/>
                               <span style={{fontSize:10,color:C.textSec}}>{x.l}</span>
@@ -5230,10 +4853,10 @@ export default function App(){
                           const pc=d.platform==='instagram'?'#E1306C':d.platform==='tiktok'?'#E8E8E8':'#1DA1F2';
                           const isSel=globeSelPost===d.agent;
                           el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transform:translate(-50%,-50%)">
-                            <div style="width:${isSel?40:32}px;height:${isSel?40:32}px;border-radius:50%;background:#0A0E27;border:2.5px solid ${isSel?'#F97316':pc};display:flex;align-items:center;justify-content:center;font-size:${isSel?13:11}px;font-weight:700;color:${isSel?'#F97316':pc};box-shadow:0 0 ${isSel?16:8}px ${isSel?'rgba(249,115,22,0.5)':pc+'40'};transition:all 200ms">
+                            <div style="width:${isSel?40:32}px;height:${isSel?40:32}px;border-radius:50%;background:#FFFFFF;border:2.5px solid ${isSel?'#1B5E20':pc};display:flex;align-items:center;justify-content:center;font-size:${isSel?13:11}px;font-weight:700;color:${isSel?'#1B5E20':pc};box-shadow:0 0 ${isSel?16:8}px ${isSel?'rgba(27,94,32,0.3)':pc+'30'};transition:all 200ms">
                               ${d.avatar}
                             </div>
-                            <div style="margin-top:3px;background:rgba(11,17,32,0.9);border-radius:4px;padding:1px 6px;font-size:8px;font-weight:700;color:${pc};font-family:Inter,sans-serif;white-space:nowrap;border:1px solid ${pc}30">${d.agent.split(' ')[0]}</div>
+                            <div style="margin-top:3px;background:rgba(255,255,255,0.92);border-radius:4px;padding:1px 6px;font-size:8px;font-weight:700;color:${pc};font-family:Inter,sans-serif;white-space:nowrap;border:1px solid ${pc}30">${d.agent.split(' ')[0]}</div>
                           </div>`;
                           el.style.cursor='pointer';
                           el.onclick=(e)=>{e.stopPropagation();setGlobeSelPost(prev=>prev===d.agent?null:d.agent);};
@@ -5263,9 +4886,9 @@ export default function App(){
                       )}
                       {/* ── SELECTED POST DETAIL CARD ── */}
                       {selP&&(
-                        <div style={{position:'absolute',top:16,right:16,width:320,background:`${C.bg}f2`,backdropFilter:'blur(20px)',borderRadius:12,border:'1px solid rgba(249,115,22,0.2)',boxShadow:'0 20px 60px rgba(0,0,0,0.7)',overflow:'hidden',animation:'fadeInUp 250ms ease'}}>
+                        <div style={{position:'absolute',top:16,right:16,width:320,background:`${C.bg}f2`,backdropFilter:'blur(20px)',borderRadius:12,border:`1px solid ${C.border}`,boxShadow:'0 20px 60px rgba(0,0,0,0.12)',overflow:'hidden',animation:'fadeInUp 250ms ease'}}>
                           {/* Header */}
-                          <div style={{background:'linear-gradient(135deg,rgba(249,115,22,0.1),transparent)',padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:12}}>
+                          <div style={{background:`linear-gradient(135deg,${C.primaryFaint},transparent)`,padding:'14px 16px',borderBottom:`1px solid ${C.border}`,display:'flex',alignItems:'center',gap:12}}>
                             <div style={{width:44,height:44,borderRadius:12,background:`${pColor(selP.platform)}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,color:pColor(selP.platform),border:`2px solid ${pColor(selP.platform)}50`,flexShrink:0}}>
                               {selP.avatar}
                             </div>
@@ -5310,7 +4933,7 @@ export default function App(){
                             </div>
                             {/* Liked by */}
                             {selP.likedBy&&selP.likedBy.length>0&&(
-                              <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+                              <div style={{marginTop:12,paddingTop:10,borderTop:`1px solid ${C.border}`}}>
                                 <p style={{fontSize:9,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>Interaksi dari anggota lain</p>
                                 <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
                                   {selP.likedBy.map(name=>{
@@ -5639,20 +5262,20 @@ export default function App(){
 
       {/* Admin Toggle — top-right corner */}
       <div style={{position:'fixed',top:12,right:12,zIndex:200,display:'flex',alignItems:'center',gap:8}}>
-        <button onClick={()=>setMode('admin')} className="btn-admin tap-bounce" style={{padding:'7px 14px',borderRadius:12,border:`1px solid ${C.border}`,background:C.surfaceGlass,backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 12px rgba(0,0,0,0.3)'}}>
+        <button onClick={()=>setMode('admin')} className="btn-admin tap-bounce" style={{padding:'7px 14px',borderRadius:12,border:`1px solid ${C.border}`,background:C.surfaceGlass,backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)',color:C.textSec,fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 12px rgba(0,0,0,0.08)'}}>
           <MI name="dashboard" size={14} style={{color:C.primary}}/> Admin
         </button>
       </div>
 
-      <div style={{width:390,maxWidth:'100vw',height:844,maxHeight:'calc(100vh - 40px)',background:C.bg,borderRadius:44,overflow:'hidden',position:'relative',border:'2px solid rgba(255,255,255,0.08)',boxShadow:'0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset',display:'flex',flexDirection:'column'}}>
+      <div style={{width:390,maxWidth:'100vw',height:844,maxHeight:'calc(100vh - 40px)',background:C.bg,borderRadius:44,overflow:'hidden',position:'relative',border:'1px solid #E2DDD4',boxShadow:'0 20px 60px rgba(0,0,0,0.12)',display:'flex',flexDirection:'column'}}>
         {/* Status Bar */}
         <div className="flex justify-between items-center" style={{padding:'14px 28px 6px',fontSize:12,color:C.text,fontWeight:600,flexShrink:0}}>
-          <span style={{fontFamily:"'JetBrains Mono'",fontSize:13,fontWeight:600,color:C.white}}>09:41</span>
-          <div style={{width:120,height:30,background:C.surfaceDark,borderRadius:16,border:`1px solid ${C.overlay06}`}}/>
+          <span style={{fontFamily:"'JetBrains Mono'",fontSize:13,fontWeight:600,color:C.text}}>09:41</span>
+          <div style={{width:120,height:30,background:C.text,borderRadius:16,border:`1px solid ${C.overlay06}`}}/>
           <div className="flex gap-1 items-center">
-            <MI name="signal_cellular_alt" size={14} style={{color:C.white}}/>
-            <MI name="wifi" size={14} style={{color:C.white}}/>
-            <MI name="battery_full" size={14} style={{color:C.white}}/>
+            <MI name="signal_cellular_alt" size={14} style={{color:C.text}}/>
+            <MI name="wifi" size={14} style={{color:C.text}}/>
+            <MI name="battery_full" size={14} style={{color:C.text}}/>
           </div>
         </div>
 
