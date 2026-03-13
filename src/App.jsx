@@ -164,90 +164,97 @@ function PositiveMeter(){return null}
 /* ─── DATA ───────────────────────────────────────────────────────── */
 
 const MISSIONS=[
-  /* ─── EVENT — Kehadiran fisik ─── */
-  {id:1,type:'EVENT',title:'Town Hall Meeting Kecamatan Menteng',
-    desc:'Hadir di town hall meeting bersama warga. Dokumentasikan dan bagikan momen penting diskusi.',
-    xp:350,bonus:50,participants:52,status:'TERBUKA',deadline:'22 Mar 2026',
-    analytics:{completion:28,avgTime:'3.8 jam',topCity:'Jakarta'},
-    eventSpec:{location:'Balai Kecamatan Menteng, Jakarta Pusat',date:'22 Mar 2026, 09:00',capacity:200,checkin:'QR Code',lat:-6.1944,lng:106.8529,note:'Jl. Cut Mutia No.18, Menteng'},
-    contentSpec:{format:'Foto + Video',minPhotos:5,videoDuration:'60-120 detik',note:'Foto: suasana, pembicara, peserta.'},
-    templates:[]},
-  {id:2,type:'EVENT',title:'Posko Bantuan Bencana Cianjur',
-    desc:'Datang ke lokasi posko bantuan, ambil foto/video situasi terkini, dan upload sebagai laporan lapangan.',
-    xp:500,bonus:100,participants:34,status:'TERBUKA',deadline:'18 Mar 2026',
-    analytics:{completion:42,avgTime:'5.5 jam',topCity:'Cianjur'},
-    eventSpec:{location:'Posko Bantuan, Jl. Raya Cianjur No.12',date:'18 Mar 2026, 08:00',capacity:50,checkin:'GPS + Selfie',lat:-6.8204,lng:107.1414,note:'Dekat Alun-alun Cianjur, parkir tersedia'},
-    contentSpec:{format:'Foto + Video',minPhotos:3,videoDuration:'30-60 detik',note:'Foto: posko, tim relawan, kondisi.'},
-    templates:[]},
-  {id:3,type:'EVENT',title:'Gotong Royong Lingkungan RT',
-    desc:'Ikuti gotong royong di lingkungan RT. Dokumentasikan before-after kondisi lingkungan.',
-    xp:200,participants:28,status:'SIAGA',deadline:'15 Mar 2026',
-    analytics:{completion:18,avgTime:'4.0 jam',topCity:'Semarang'},
-    eventSpec:{location:'Lokasi RT setempat',date:'15 Mar 2026, 07:00',capacity:100,checkin:'GPS + Selfie',lat:-6.2088,lng:106.8456,note:'Koordinasi ketua RT'},
-    contentSpec:{format:'Foto before-after',minPhotos:4,note:'Foto before (2) dan after (2) dari sudut yang sama.'},
-    templates:[]},
+  /* ─── EVENT — Kehadiran fisik TNI AD ─── */
+  {id:1,type:'EVENT',title:'Upacara HUT TNI AD ke-81 di Mabes AD',
+    desc:'Hadir dan dokumentasikan upacara peringatan HUT TNI AD. Abadikan momen kebanggaan prajurit dan showcase alutsista.',
+    xp:400,bonus:100,participants:89,status:'TERBUKA',deadline:'22 Apr 2026',
+    analytics:{completion:32,avgTime:'4.5 jam',topCity:'Jakarta'},
+    eventSpec:{location:'Markas Besar TNI AD, Jl. Veteran III, Jakarta Pusat',date:'22 Apr 2026, 07:00',capacity:500,checkin:'QR Code + ID',lat:-6.1753,lng:106.8290,note:'Seragam rapih, bawa ID resmi. Parkir di area yang ditentukan.'},
+    contentSpec:{format:'Foto + Video',minPhotos:10,videoDuration:'60-180 detik',note:'Foto: barisan prajurit, alutsista, pejabat, suasana khidmat.'},
+    templates:['Dirgahayu TNI AD ke-81! Prajurit tangguh, rakyat terlindungi.']},
+  {id:2,type:'EVENT',title:'Bakti Sosial TNI AD — Operasi Pembangunan Desa',
+    desc:'Dokumentasikan kegiatan bakti sosial prajurit TNI AD di desa tertinggal. Tunjukkan sisi kemanusiaan TNI AD.',
+    xp:500,bonus:100,participants:45,status:'TERBUKA',deadline:'28 Mar 2026',
+    analytics:{completion:40,avgTime:'6.0 jam',topCity:'Cianjur'},
+    eventSpec:{location:'Desa Sukamanah, Kab. Cianjur',date:'28 Mar 2026, 06:00',capacity:80,checkin:'GPS + Selfie',lat:-6.8204,lng:107.1414,note:'Koordinasi dengan Kodim 0608. Bawa perlengkapan lapangan.'},
+    contentSpec:{format:'Foto + Video',minPhotos:8,videoDuration:'60-120 detik',note:'Foto: prajurit membantu warga, pembangunan, interaksi hangat TNI-rakyat.'},
+    templates:['TNI AD hadir untuk rakyat. Bersama kita membangun desa!']},
+  {id:3,type:'EVENT',title:'Pameran Alutsista & Open Base Kodam Jaya',
+    desc:'Liput pameran alutsista TNI AD yang terbuka untuk publik. Dokumentasikan antusiasme masyarakat dan kecanggihan peralatan militer Indonesia.',
+    xp:350,bonus:50,participants:72,status:'SIAGA',deadline:'15 Apr 2026',
+    analytics:{completion:18,avgTime:'3.5 jam',topCity:'Jakarta'},
+    eventSpec:{location:'Lapangan Kodam Jaya, Kramat Jati',date:'15 Apr 2026, 08:00',capacity:300,checkin:'QR Code',lat:-6.2756,lng:106.8696,note:'Terbuka untuk umum. Bawa keluarga!'},
+    contentSpec:{format:'Foto + Video',minPhotos:6,note:'Foto: alutsista, pengunjung antusias, prajurit menjelaskan alat.'},
+    templates:['Keren banget! Pameran alutsista TNI AD buat publik. Bangga jadi Indonesia!']},
 
-  /* ─── KONTEN — Content creation ─── */
-  {id:4,type:'KONTEN',title:'Video Reels: Tips Keamanan Digital',
-    desc:'Buat video singkat tentang tips keamanan digital yang engaging dan informatif. Upload ke platform pilihan.',
-    xp:300,bonus:75,participants:89,status:'TERBUKA',deadline:'20 Mar 2026',
-    analytics:{completion:65,avgTime:'2.1 jam',topCity:'Bandung'},
-    kontenSpec:{format:'Video (portrait 9:16)',duration:'30-60 detik',platform:['Instagram','TikTok'],hashtags:['#GerakDigital','#CyberSafety','#AmanOnline'],guidelines:['Min 30 detik durasi','Tambahkan text overlay untuk poin utama','Sertakan sumber fakta']},
-    templates:['3 Tips Keamanan Digital yang WAJIB kamu tau!'],
-    exampleMedia:[{type:'video',label:'Contoh video (referensi gaya)',desc:'Video 45 dtk dengan text overlay, transisi cepat'}]},
-  {id:5,type:'KONTEN',title:'Infografis Fakta Pembangunan Infrastruktur',
-    desc:'Buat infografis informatif tentang progres pembangunan infrastruktur dengan data valid.',
-    xp:250,participants:45,status:'TERBUKA',deadline:'28 Mar 2026',
-    analytics:{completion:38,avgTime:'3.5 jam',topCity:'Yogyakarta'},
-    kontenSpec:{format:'Gambar / Carousel',duration:null,platform:['Instagram','X','Facebook'],hashtags:['#InfrastrukturIndonesia','#FaktaPembangunan'],guidelines:['Min 3 slide untuk carousel','Sertakan data/sumber resmi','Design harus jelas & mudah dibaca']},
-    templates:['Pembangunan infrastruktur Indonesia makin merata. Fakta-faktanya:'],
-    exampleMedia:[{type:'image',label:'Infografis Data Pembangunan',desc:'Gunakan sebagai visual referensi'}]},
-  {id:6,type:'KONTEN',title:'Challenge Video #GerakUntukNegeri',
-    desc:'Buat video kreatif dengan pesan positif tentang perubahan Indonesia. Tantang 3 teman untuk ikut.',
-    xp:250,participants:167,status:'TERBUKA',deadline:'25 Mar 2026',
-    analytics:{completion:78,avgTime:'1.5 jam',topCity:'Jakarta'},
-    kontenSpec:{format:'Video (portrait 9:16)',duration:'15-60 detik',platform:['TikTok','Instagram'],hashtags:['#GerakUntukNegeri','#ChallengeGERAK'],guidelines:['Min 15 detik konten original','Tantang 3 teman','Tambahkan pesan positif']},
-    templates:['Aku ikut #GerakUntukNegeri karena perubahan dimulai dari kita!']},
+  /* ─── KONTEN — Content creation TNI AD ─── */
+  {id:4,type:'KONTEN',title:'Video Reels: Hari-Hari Prajurit TNI AD',
+    desc:'Buat video menarik tentang keseharian prajurit TNI AD — latihan, kehidupan barak, kedisiplinan, dan momen humanis. Tunjukkan sisi inspiratif tentara kita.',
+    xp:350,bonus:75,participants:134,status:'TERBUKA',deadline:'25 Mar 2026',
+    analytics:{completion:62,avgTime:'2.5 jam',topCity:'Bandung'},
+    kontenSpec:{format:'Video (portrait 9:16)',duration:'30-90 detik',platform:['Instagram','TikTok','YouTube Shorts'],hashtags:['#TNIAD','#PrajuritHebat','#TNIADUntukRakyat','#DISPENAD'],guidelines:['Min 30 detik durasi','Musik patriotik atau trending audio','Text overlay fakta/caption','Tone positif & inspiratif, bukan propaganda']},
+    templates:['Tahukah kamu? Prajurit TNI AD bukan cuma latihan perang, tapi juga bantu masyarakat setiap hari!'],
+    exampleMedia:[{type:'video',label:'Contoh konten TNI AD viral',desc:'Video behind-the-scenes kehidupan prajurit'}]},
+  {id:5,type:'KONTEN',title:'Infografis: Peran TNI AD dalam Bencana Alam',
+    desc:'Buat infografis dengan data resmi tentang kontribusi TNI AD dalam penanggulangan bencana alam di Indonesia. Sertakan data jumlah misi, korban tertolong, dan wilayah terjangkau.',
+    xp:300,participants:56,status:'TERBUKA',deadline:'5 Apr 2026',
+    analytics:{completion:35,avgTime:'3.0 jam',topCity:'Yogyakarta'},
+    kontenSpec:{format:'Gambar / Carousel',duration:null,platform:['Instagram','X','Facebook'],hashtags:['#TNIAD','#SiagaBencana','#TNIADPeduli','#DISPENAD'],guidelines:['Min 3 slide untuk carousel','Data dari sumber resmi TNI AD/BNPB','Design profesional & mudah dibaca','Sertakan logo TNI AD']},
+    templates:['Fakta: TNI AD sudah menyelamatkan ribuan korban bencana di 2025. Ini datanya:'],
+    exampleMedia:[{type:'image',label:'Template infografis TNI AD',desc:'Referensi layout dan warna resmi'}]},
+  {id:6,type:'KONTEN',title:'Challenge #BanggaTNIAD — Video Apresiasi Prajurit',
+    desc:'Buat video kreatif untuk mengapresiasi perjuangan prajurit TNI AD. Ceritakan pengalaman positifmu dengan TNI AD atau tunjukkan rasa bangga terhadap tentara kita.',
+    xp:300,bonus:50,participants:215,status:'TERBUKA',deadline:'30 Mar 2026',
+    analytics:{completion:75,avgTime:'1.5 jam',topCity:'Jakarta'},
+    kontenSpec:{format:'Video (portrait 9:16)',duration:'15-60 detik',platform:['TikTok','Instagram'],hashtags:['#BanggaTNIAD','#TNIAD','#PrajuritKebanggaan','#DISPENAD'],guidelines:['Min 15 detik konten original','Ceritakan kisah personal','Tantang 3 teman untuk ikutan','Gunakan audio patriotik']},
+    templates:['Aku bangga sama TNI AD karena... #BanggaTNIAD']},
 
-  /* ─── ENGAGEMENT — Like, share, comment ─── */
-  {id:7,type:'ENGAGEMENT',title:'Dukung Pesan Pembangunan Infrastruktur Desa',
-    desc:'Like, comment, dan share postingan resmi tentang program pembangunan infrastruktur desa.',
-    xp:200,participants:89,status:'TERBUKA',deadline:'15 Mar 2026',
-    analytics:{completion:58,avgTime:'1.8 jam',topCity:'Surabaya'},
-    engagementSpec:{actions:['Like post','Tulis komentar positif (min 10 kata)','Share/repost ke akun kamu'],targetPosts:2,note:'Komentar relevan & positif, bukan spam'},
+  /* ─── ENGAGEMENT — Like, share, comment konten TNI AD ─── */
+  {id:7,type:'ENGAGEMENT',title:'Dukung Konten Resmi DISPENAD di Medsos',
+    desc:'Like, comment positif, dan share postingan resmi akun DISPENAD TNI AD. Bantu viralkan pesan positif tentang TNI AD.',
+    xp:200,participants:178,status:'TERBUKA',deadline:'20 Mar 2026',
+    analytics:{completion:65,avgTime:'1.5 jam',topCity:'Surabaya'},
+    engagementSpec:{actions:['Like post resmi','Tulis komentar positif & relevan (min 10 kata)','Share/repost ke akun pribadi'],targetPosts:3,note:'Komentar harus natural, relevan, dan positif. Hindari komentar generik/spam.'},
     refPosts:[
-      {platform:'Instagram',author:'@kaborinfrastruktur',content:'Progres pembangunan Tol Trans-Sulawesi Tahap 3 sudah mencapai 78%!',likes:'12.4K',shares:'3.2K',actions:['like','comment','share']},
-      {platform:'X',author:'@pusloginfokom',content:'Thread: 5 Fakta Pembangunan Infrastruktur 2026 yang Jarang Diketahui Publik',likes:'2.1K',shares:'1.8K',actions:['like','repost','reply']},
-    ],templates:['Program pembangunan infrastruktur desa tahap 2 telah dimulai. Kita dukung bersama!']},
-  {id:8,type:'ENGAGEMENT',title:'Viralkan Kampanye #HijaukanIndonesia',
-    desc:'Like dan share konten kampanye kesadaran lingkungan hidup dari akun resmi GERAK.',
-    xp:180,participants:156,status:'SELESAI',deadline:'5 Mar 2026',
-    analytics:{completion:100,avgTime:'1.9 jam',topCity:'Bali'},
-    engagementSpec:{actions:['Like post','Share ke story/feed'],targetPosts:3,note:'Share dengan caption personal'},
-    templates:[]},
+      {platform:'Instagram',author:'@taborpenad',content:'Prajurit Kodam IV/Diponegoro bantu warga terdampak banjir di Demak. TNI AD selalu hadir untuk rakyat!',likes:'18.7K',shares:'5.4K',actions:['like','comment','share']},
+      {platform:'X',author:'@peaborpenad',content:'Thread: 7 Fakta Tentang Modernisasi Alutsista TNI AD 2026 yang Bikin Bangga',likes:'8.3K',shares:'4.1K',actions:['like','repost','reply']},
+      {platform:'TikTok',author:'@tniad_official',content:'POV: Kamu lihat prajurit TNI AD nolong nenek di jalan 🫡',likes:'245K',shares:'32K',actions:['like','comment','share']},
+    ],templates:['TNI AD selalu hadir untuk rakyat. Terima kasih prajurit! 🫡']},
+  {id:8,type:'ENGAGEMENT',title:'Viralkan Video Latihan Gabungan TNI AD',
+    desc:'Like dan share video latihan gabungan TNI AD yang menunjukkan profesionalisme dan kesiapan tempur prajurit Indonesia.',
+    xp:180,bonus:30,participants:203,status:'TERBUKA',deadline:'18 Mar 2026',
+    analytics:{completion:82,avgTime:'1.2 jam',topCity:'Jakarta'},
+    engagementSpec:{actions:['Like video','Share ke story/feed dengan caption personal','Tag 3 teman'],targetPosts:2,note:'Tunjukkan rasa bangga dalam caption personal'},
+    templates:['Keren abis! Latihan gabungan TNI AD bikin bangga. Indonesia kuat! 💪🇮🇩']},
 
-  /* ─── EDUKASI — Distribusi materi ─── */
-  {id:9,type:'EDUKASI',title:'Distribusi Materi Literasi Digital ke 5 Grup',
-    desc:'Sebarkan materi edukasi tentang keamanan digital kepada minimal 5 grup komunitas.',
-    xp:250,bonus:50,participants:128,status:'TERBUKA',deadline:'12 Mar 2026',
-    analytics:{completion:72,avgTime:'2.4 jam',topCity:'Jakarta'},
-    edukasiSpec:{material:'Infografis + Panduan PDF',channels:['WhatsApp','Telegram'],minGroups:5,minGroupSize:20,note:'Kirim ke grup dengan min 20 anggota'},
-    templates:['Halo semua, mari tingkatkan kewaspadaan terhadap penipuan online. Berikut panduan dari GERAK!','Hati-hati penipuan lewat WA. Baca panduan literasi digital GERAK ini. Share ke keluarga ya!'],
-    exampleMedia:[{type:'image',label:'Infografis Literasi Digital',desc:'Gunakan infografis ini sebagai lampiran pesan'}]},
+  /* ─── EDUKASI — Distribusi materi TNI AD ─── */
+  {id:9,type:'EDUKASI',title:'Sebarkan Materi Wawasan Kebangsaan TNI AD',
+    desc:'Distribusikan materi edukasi tentang peran TNI AD dalam menjaga kedaulatan NKRI ke grup komunitas. Termasuk infografis sejarah TNI AD dan program TMMD.',
+    xp:250,bonus:50,participants:145,status:'TERBUKA',deadline:'22 Mar 2026',
+    analytics:{completion:68,avgTime:'2.0 jam',topCity:'Jakarta'},
+    edukasiSpec:{material:'Infografis + Video Singkat DISPENAD',channels:['WhatsApp','Telegram'],minGroups:5,minGroupSize:20,note:'Kirim ke grup komunitas, alumni, atau keluarga dengan min 20 anggota'},
+    templates:['Tahukah kamu peran penting TNI AD dalam menjaga NKRI? Simak faktanya di sini! Sumber: DISPENAD TNI AD','TNI AD bukan hanya menjaga perbatasan, tapi juga aktif membantu masyarakat melalui program TMMD. Ini buktinya!'],
+    exampleMedia:[{type:'image',label:'Infografis Peran TNI AD',desc:'Materi resmi DISPENAD untuk distribusi'}]},
+  {id:12,type:'EDUKASI',title:'Sosialisasi Rekrutmen Prajurit TNI AD 2026',
+    desc:'Bantu sebarkan informasi rekrutmen prajurit TNI AD ke kalangan anak muda. Distribusikan poster dan persyaratan resmi ke grup-grup komunitas.',
+    xp:200,participants:98,status:'TERBUKA',deadline:'15 Apr 2026',
+    analytics:{completion:42,avgTime:'1.8 jam',topCity:'Semarang'},
+    edukasiSpec:{material:'Poster Rekrutmen + FAQ PDF',channels:['WhatsApp','Telegram','Instagram'],minGroups:3,minGroupSize:15,note:'Target: grup pemuda, alumni SMA/SMK, komunitas olahraga'},
+    templates:['Mau jadi prajurit TNI AD? Ini persyaratan dan jadwal pendaftaran 2026. Info resmi dari DISPENAD!']},
 
-  /* ─── AKSI — Aksi langsung komunitas ─── */
-  {id:10,type:'AKSI',title:'Rekrutmen Relawan Bencana Wilayah Timur',
-    desc:'Bantu koordinasi rekrutmen relawan untuk respons bencana di wilayah timur Indonesia.',
-    xp:300,participants:67,status:'SIAGA',deadline:'20 Mar 2026',
-    analytics:{completion:34,avgTime:'4.2 jam',topCity:'Makassar'},
-    aksiSpec:{actionType:'Rekrutmen Relawan',target:50,unit:'relawan',method:'Door-to-door + Online form',area:'Indonesia Timur',note:'Sertakan poster dan link pendaftaran resmi'},
-    templates:['Dibutuhkan relawan bencana wilayah timur. Daftar via link resmi berikut. Mari bantu saudara kita!']},
-  {id:11,type:'AKSI',title:'Petisi Perlindungan Hutan Kalimantan',
-    desc:'Kumpulkan tanda tangan petisi digital untuk mendukung perlindungan hutan adat di Kalimantan.',
-    xp:200,bonus:50,participants:312,status:'TERBUKA',deadline:'30 Mar 2026',
-    analytics:{completion:45,avgTime:'1.2 jam',topCity:'Pontianak'},
-    aksiSpec:{actionType:'Petisi Digital',target:10000,unit:'tanda tangan',method:'Share link petisi',area:'Nasional',note:'Share ke minimal 10 kontak dan 3 grup'},
-    templates:['Dukung perlindungan hutan adat Kalimantan. Tanda tangani petisi resmi di link berikut!']},
+  /* ─── AKSI — Aksi langsung untuk TNI AD ─── */
+  {id:10,type:'AKSI',title:'Rekrutmen Relawan Pendukung Baksos TNI AD',
+    desc:'Bantu koordinasi relawan sipil untuk mendukung kegiatan bakti sosial TNI AD di wilayah terdampak bencana.',
+    xp:350,participants:67,status:'SIAGA',deadline:'25 Mar 2026',
+    analytics:{completion:30,avgTime:'4.5 jam',topCity:'Makassar'},
+    aksiSpec:{actionType:'Rekrutmen Relawan Sipil',target:100,unit:'relawan',method:'Online form + koordinasi Kodim',area:'Indonesia Timur',note:'Relawan akan berkoordinasi dengan satuan TNI AD setempat'},
+    templates:['Mari bergabung sebagai relawan pendukung baksos TNI AD! Daftar sekarang melalui link resmi berikut.']},
+  {id:11,type:'AKSI',title:'Kampanye Dukung Modernisasi Alutsista TNI AD',
+    desc:'Galang dukungan publik untuk modernisasi alutsista TNI AD melalui petisi digital dan penyebaran informasi tentang pentingnya pertahanan negara.',
+    xp:250,bonus:50,participants:412,status:'TERBUKA',deadline:'10 Apr 2026',
+    analytics:{completion:52,avgTime:'1.5 jam',topCity:'Jakarta'},
+    aksiSpec:{actionType:'Petisi Digital & Kampanye',target:25000,unit:'dukungan',method:'Share link + posting konten',area:'Nasional',note:'Sertakan data resmi tentang kebutuhan modernisasi dari Kemhan/TNI AD'},
+    templates:['TNI AD yang kuat = Indonesia yang aman. Dukung modernisasi alutsista untuk masa depan pertahanan negara! 🇮🇩']},
 ];
 
 const RANKS=[
@@ -412,39 +419,39 @@ function BadgeShape({color,size=64,icon,unlocked=true,rarity='common'}){
 }
 
 const BADGES=[
-  {name:'Misi Pertama',desc:'Selesaikan misi pertamamu',icon:'rocket_launch',color:C.teal,bg:C.tealLight,unlocked:true,rarity:'common',cat:'Misi'},
-  {name:'10 Misi',desc:'Selesaikan 10 misi',icon:'military_tech',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Misi'},
-  {name:'50 Misi',desc:'Selesaikan 50 misi',icon:'emoji_events',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Misi'},
+  {name:'Misi Pertama',desc:'Selesaikan misi pertama untuk TNI AD',icon:'rocket_launch',color:C.teal,bg:C.tealLight,unlocked:true,rarity:'common',cat:'Misi'},
+  {name:'10 Misi',desc:'Selesaikan 10 misi DISPENAD',icon:'military_tech',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Misi'},
+  {name:'50 Misi',desc:'Selesaikan 50 misi DISPENAD',icon:'emoji_events',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Misi'},
   {name:'Misi Kilat',desc:'Selesaikan misi dalam 1 jam',icon:'bolt',color:C.pink,bg:C.pinkLight,unlocked:true,rarity:'rare',cat:'Misi'},
-  {name:'Krisis Hero',desc:'Selesaikan 5 misi krisis',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true,rarity:'epic',cat:'Misi'},
+  {name:'Siaga Bencana',desc:'Ikut 5 misi baksos TNI AD',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true,rarity:'epic',cat:'Misi'},
   {name:'Streak 7',desc:'7 hari berturut-turut aktif',icon:'whatshot',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'common',cat:'Streak'},
-  {name:'Streak 30',desc:'30 hari berturut-turut aktif',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true,rarity:'epic',cat:'Streak'},
-  {name:'Streak 100',desc:'100 hari tak terputus!',icon:'volcano',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Streak'},
+  {name:'Streak 30',desc:'30 hari tanpa putus dukung TNI AD',icon:'local_fire_department',color:C.red,bg:C.redLight,unlocked:true,rarity:'epic',cat:'Streak'},
+  {name:'Streak 100',desc:'100 hari kontribusi tak terputus!',icon:'volcano',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Streak'},
   {name:'Naik Pangkat',desc:'Naik pangkat pertama kali',icon:'trending_up',color:C.purple,bg:C.purpleLight,unlocked:true,rarity:'common',cat:'Pangkat'},
-  {name:'Amplifier',desc:'Amplifikasi 10 konten',icon:'campaign',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Sosial'},
-  {name:'First Join',desc:'Bergabung dengan GERAK',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
-  {name:'Viral King',desc:'Kontenmu viral 100K+',icon:'share',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Sosial'},
-  {name:'IG Star',desc:'10 post Instagram selesai',icon:'photo_camera',color:'#E1306C',bg:'rgba(225,48,108,0.12)',unlocked:true,rarity:'rare',cat:'Sosial'},
-  {name:'TikToker',desc:'10 post TikTok selesai',icon:'music_note',color:'#1A1A1A',bg:'rgba(232,232,232,0.12)',unlocked:false,rarity:'rare',cat:'Sosial'},
-  {name:'X Thread',desc:'Buat 5 thread di X',icon:'edit_note',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'rare',cat:'Sosial'},
-  {name:'Field Agent',desc:'Ikut 3 misi lapangan',icon:'location_on',color:C.pink,bg:C.pinkLight,unlocked:true,rarity:'epic',cat:'Misi'},
-  {name:'Guardian',desc:'Jadi pelindung narasi',icon:'security',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
-  {name:'Mentor',desc:'Bantu 5 anggota baru',icon:'psychology',color:C.green,bg:C.greenLight,unlocked:false,rarity:'epic',cat:'Pangkat'},
-  {name:'Elite',desc:'Masuk top 5 leaderboard',icon:'diamond',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
-  {name:'Night Owl',desc:'Selesaikan misi pukul 00-05',icon:'dark_mode',color:C.purple,bg:C.purpleLight,unlocked:false,rarity:'rare',cat:'Misi'},
+  {name:'Amplifier',desc:'Viralkan 10 konten TNI AD',icon:'campaign',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Sosial'},
+  {name:'Bergabung',desc:'Resmi bergabung dengan GERAK DISPENAD',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
+  {name:'Viral King',desc:'Konten TNI AD viral 100K+ views',icon:'share',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Sosial'},
+  {name:'IG Star',desc:'10 post konten TNI AD di Instagram',icon:'photo_camera',color:'#E1306C',bg:'rgba(225,48,108,0.12)',unlocked:true,rarity:'rare',cat:'Sosial'},
+  {name:'TikToker',desc:'10 video TNI AD viral di TikTok',icon:'music_note',color:'#1A1A1A',bg:'rgba(232,232,232,0.12)',unlocked:false,rarity:'rare',cat:'Sosial'},
+  {name:'X Thread',desc:'Buat 5 thread tentang TNI AD di X',icon:'edit_note',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'rare',cat:'Sosial'},
+  {name:'Field Agent',desc:'Hadir di 3 event TNI AD',icon:'location_on',color:C.pink,bg:C.pinkLight,unlocked:true,rarity:'epic',cat:'Misi'},
+  {name:'Benteng NKRI',desc:'Jadi garda terdepan citra TNI AD',icon:'security',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
+  {name:'Mentor',desc:'Bantu 5 anggota baru bergabung',icon:'psychology',color:C.green,bg:C.greenLight,unlocked:false,rarity:'epic',cat:'Pangkat'},
+  {name:'Elite',desc:'Masuk top 5 leaderboard DISPENAD',icon:'diamond',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
+  {name:'Night Owl',desc:'Submit konten pukul 00-05',icon:'dark_mode',color:C.purple,bg:C.purpleLight,unlocked:false,rarity:'rare',cat:'Misi'},
   {name:'Speed Run',desc:'3 misi dalam sehari',icon:'speed',color:C.red,bg:C.redLight,unlocked:false,rarity:'epic',cat:'Misi'},
-  {name:'Konsisten',desc:'Aktif selama 3 bulan',icon:'calendar_month',color:C.teal,bg:C.tealLight,unlocked:false,rarity:'epic',cat:'Streak'},
-  {name:'Top 10',desc:'Masuk 10 besar ranking',icon:'leaderboard',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'rare',cat:'Pangkat'},
-  {name:'Patriot',desc:'Agen paling berdedikasi',icon:'flag',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
+  {name:'Konsisten',desc:'Aktif 3 bulan dukung TNI AD',icon:'calendar_month',color:C.teal,bg:C.tealLight,unlocked:false,rarity:'epic',cat:'Streak'},
+  {name:'Top 10',desc:'Masuk 10 besar ranking DISPENAD',icon:'leaderboard',color:C.orange,bg:C.orangeLight,unlocked:false,rarity:'rare',cat:'Pangkat'},
+  {name:'Patriot',desc:'Kontributor paling berdedikasi TNI AD',icon:'flag',color:C.primary,bg:C.primaryLight,unlocked:false,rarity:'legendary',cat:'Pangkat'},
 ];
 const RARITY_COLORS={common:{label:'Standar',gradient:'linear-gradient(135deg,#64748B,#94A3B8)',border:'#64748B',glow:'rgba(100,116,139,0.25)'},rare:{label:'Lanjutan',gradient:'linear-gradient(135deg,#1565C0,#42A5F5)',border:'#1565C0',glow:'rgba(21,101,192,0.3)'},epic:{label:'Elite',gradient:'linear-gradient(135deg,#6D28D9,#A78BFA)',border:'#6D28D9',glow:'rgba(109,40,217,0.3)'},legendary:{label:'Kehormatan',gradient:'linear-gradient(135deg,#92400E,#D97706)',border:'#92400E',glow:'rgba(146,64,14,0.35)'}};
 
 const ACTIVITY=[
-  {mission:'Literasi Digital',type:'EDUKASI',date:'8 Mar',xp:250,status:'SELESAI'},
-  {mission:'Infrastruktur Desa',type:'AMPLIFIKASI',date:'7 Mar',xp:200,status:'PROSES'},
-  {mission:'Counter Hoaks',type:'KRISIS',date:'6 Mar',xp:400,status:'PROSES'},
-  {mission:'IG Reels #GerakDigital',type:'SOCIAL',date:'5 Mar',xp:300,status:'SELESAI'},
-  {mission:'Posko Cianjur',type:'VISIT',date:'4 Mar',xp:500,status:'SELESAI'},
+  {mission:'Wawasan Kebangsaan TNI AD',type:'EDUKASI',date:'8 Mar',xp:250,status:'SELESAI'},
+  {mission:'Dukung Konten DISPENAD',type:'ENGAGEMENT',date:'7 Mar',xp:200,status:'PROSES'},
+  {mission:'Reels Prajurit TNI AD',type:'KONTEN',date:'6 Mar',xp:350,status:'PROSES'},
+  {mission:'#BanggaTNIAD Challenge',type:'KONTEN',date:'5 Mar',xp:300,status:'SELESAI'},
+  {mission:'Baksos TNI AD Cianjur',type:'EVENT',date:'4 Mar',xp:500,status:'SELESAI'},
 ];
 
 const LEADERBOARD=[
@@ -665,7 +672,7 @@ export default function App(){
             </div>
             <div>
               <h2 style={{fontSize:14,fontWeight:900,color:'#FFFFFF',letterSpacing:2,lineHeight:1}}>GERAK</h2>
-              <p style={{fontSize:10,fontWeight:500,color:'rgba(255,255,255,0.6)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:2}}>Gerakan Komunikasi</p>
+              <p style={{fontSize:10,fontWeight:500,color:'rgba(255,255,255,0.6)',letterSpacing:1,textTransform:'uppercase',lineHeight:1,marginTop:2}}>DISPENAD TNI AD</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1001,7 +1008,7 @@ export default function App(){
             {icon:'add_task',label:'Buat Misi',color:C.primary,bg:C.primaryLight,action:()=>showToast('Segera hadir!')},
             {icon:'qr_code_scanner',label:'Scan QR',color:C.teal,bg:C.tealLight,action:()=>showToast('Scan QR misi')},
             {icon:'share',label:'Undang',color:C.purple,bg:C.purpleLight,action:()=>showToast('Link undangan disalin!')},
-            {icon:'help',label:'Panduan',color:C.orange,bg:C.orangeLight,action:()=>showToast('Panduan GERAK')},
+            {icon:'help',label:'Panduan',color:C.orange,bg:C.orangeLight,action:()=>showToast('Panduan DISPENAD')},
           ].map((a,i)=>(
             <div key={i} className="tap-bounce flex-1 glass-card" onClick={a.action} style={{background:'rgba(255,255,255,0.45)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',borderRadius:14,padding:'12px 4px',textAlign:'center',border:'1px solid rgba(255,255,255,0.4)',boxShadow:'0 2px 16px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.5)',cursor:'pointer'}}>
               <div style={{width:36,height:36,borderRadius:10,background:a.bg,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 6px'}}>
@@ -1460,21 +1467,21 @@ export default function App(){
   function KontenSaya(){
     const [kontenTab,setKontenTab]=useState('semua');
     const myPosts=[
-      {id:1,platform:'tiktok',type:'video',title:'Tips Aman Pakai WiFi Publik',date:'6 Mar 2026',thumb:'video',
-        views:'128.4K',likes:'12.3K',comments:'1.2K',shares:'4.5K',saves:'2.1K',rate:14.2,trending:true,
-        missionId:1,missionTitle:'Distribusi Materi Literasi Digital',status:'SELESAI',xpEarned:250},
-      {id:2,platform:'instagram',type:'reels',title:'Cara Cek Fakta Berita Online',date:'4 Mar 2026',thumb:'image',
-        views:'45.8K',likes:'5.6K',comments:'342',shares:'1.8K',saves:'890',rate:11.8,trending:false,
-        missionId:3,missionTitle:'Counter-Narasi Hoaks Vaksinasi',status:'REVIEW',xpEarned:0},
-      {id:3,platform:'x',type:'thread',title:'Thread: 5 Tanda Penipuan Online',date:'2 Mar 2026',thumb:'article',
-        views:'18.2K',likes:'2.1K',comments:'187',shares:'956',saves:'412',rate:9.4,trending:false,
-        missionId:1,missionTitle:'Distribusi Materi Literasi Digital',status:'SELESAI',xpEarned:250},
-      {id:4,platform:'tiktok',type:'video',title:'POV: Kamu Kena Phishing',date:'28 Feb 2026',thumb:'video',
-        views:'256.1K',likes:'28.9K',comments:'3.4K',shares:'8.7K',saves:'5.2K',rate:18.1,trending:true,
-        missionId:5,missionTitle:'Buat Video Edukasi Literasi Digital',status:'SELESAI',xpEarned:350},
-      {id:5,platform:'instagram',type:'carousel',title:'Infografis Keamanan Digital',date:'25 Feb 2026',thumb:'image',
-        views:'22.3K',likes:'3.2K',comments:'156',shares:'890',saves:'1.4K',rate:8.6,trending:false,
-        missionId:1,missionTitle:'Distribusi Materi Literasi Digital',status:'REVIEW',xpEarned:0},
+      {id:1,platform:'tiktok',type:'video',title:'POV: Prajurit TNI AD Nolong Nenek di Jalan',date:'6 Mar 2026',thumb:'video',
+        views:'328.4K',likes:'42.3K',comments:'5.2K',shares:'14.5K',saves:'8.1K',rate:21.2,trending:true,
+        missionId:4,missionTitle:'Video Reels: Hari-Hari Prajurit TNI AD',status:'SELESAI',xpEarned:350},
+      {id:2,platform:'instagram',type:'reels',title:'Behind The Scenes Latihan Prajurit TNI AD',date:'4 Mar 2026',thumb:'image',
+        views:'85.8K',likes:'11.6K',comments:'842',shares:'3.8K',saves:'2.9K',rate:14.8,trending:true,
+        missionId:4,missionTitle:'Video Reels: Hari-Hari Prajurit TNI AD',status:'SELESAI',xpEarned:350},
+      {id:3,platform:'x',type:'thread',title:'Thread: 7 Fakta Modernisasi Alutsista TNI AD',date:'2 Mar 2026',thumb:'article',
+        views:'45.2K',likes:'6.1K',comments:'387',shares:'2.9K',saves:'1.4K',rate:12.4,trending:false,
+        missionId:7,missionTitle:'Dukung Konten Resmi DISPENAD',status:'SELESAI',xpEarned:200},
+      {id:4,platform:'tiktok',type:'video',title:'Saat TNI AD Bantu Korban Banjir Demak',date:'28 Feb 2026',thumb:'video',
+        views:'456.1K',likes:'58.9K',comments:'7.4K',shares:'18.7K',saves:'9.2K',rate:22.1,trending:true,
+        missionId:2,missionTitle:'Bakti Sosial TNI AD — Operasi Pembangunan Desa',status:'SELESAI',xpEarned:500},
+      {id:5,platform:'instagram',type:'carousel',title:'Infografis Peran TNI AD dalam Bencana Alam',date:'25 Feb 2026',thumb:'image',
+        views:'62.3K',likes:'8.2K',comments:'456',shares:'3.9K',saves:'2.4K',rate:11.6,trending:false,
+        missionId:5,missionTitle:'Infografis: Peran TNI AD dalam Bencana Alam',status:'REVIEW',xpEarned:0},
     ];
     const filtered=kontenTab==='semua'?myPosts:myPosts.filter(p=>p.platform===kontenTab);
     const totalViews='470.8K';const totalLikes='52.1K';const totalShares='16.8K';const avgRate='12.4%';
@@ -1640,17 +1647,17 @@ export default function App(){
     const [shopTab,setShopTab]=useState('semua');
     const userPoints=4820;
     const rewardItems=[
-      /* ── Merchandise GERAK ── */
-      {id:1,cat:'apparel',name:'Kaos GERAK Tactical',desc:'Kaos cotton combed 30s, desain military patch',cost:1500,icon:'checkroom',color:C.primary,stock:25,popular:true},
-      {id:2,cat:'apparel',name:'Jaket Parka GERAK',desc:'Jaket parka waterproof, patch emblem di lengan',cost:4500,icon:'checkroom',color:'#2D5016',stock:8,popular:true},
-      {id:3,cat:'apparel',name:'Topi Tactical GERAK',desc:'Topi tactical velcro patch, adjustable strap',cost:800,icon:'styler',color:C.primary,stock:30},
-      {id:4,cat:'apparel',name:'Lanyard ID Card GERAK',desc:'Lanyard military-style dengan badge holder',cost:300,icon:'badge',color:C.teal,stock:50},
+      /* ── Merchandise TNI AD ── */
+      {id:1,cat:'apparel',name:'Kaos TNI AD Tactical',desc:'Kaos cotton combed 30s, desain patch TNI AD resmi',cost:1500,icon:'checkroom',color:C.primary,stock:25,popular:true},
+      {id:2,cat:'apparel',name:'Jaket Parka TNI AD',desc:'Jaket parka waterproof, patch emblem TNI AD di lengan',cost:4500,icon:'checkroom',color:'#2D5016',stock:8,popular:true},
+      {id:3,cat:'apparel',name:'Topi Tactical TNI AD',desc:'Topi tactical velcro patch, logo TNI AD',cost:800,icon:'styler',color:C.primary,stock:30},
+      {id:4,cat:'apparel',name:'Lanyard ID Card DISPENAD',desc:'Lanyard military-style TNI AD dengan badge holder',cost:300,icon:'badge',color:C.teal,stock:50},
       /* ── Aksesoris & Koleksi ── */
-      {id:5,cat:'koleksi',name:'Mug Keramik GERAK',desc:'Mug keramik 350ml, desain insignia pangkat',cost:600,icon:'coffee',color:C.gold,stock:40,popular:true},
-      {id:6,cat:'koleksi',name:'Tumbler Stainless GERAK',desc:'Tumbler 500ml vacuum insulated, logo engraved',cost:1200,icon:'water_drop',color:'#2D5016',stock:15},
-      {id:7,cat:'koleksi',name:'Kalender Meja GERAK 2026',desc:'Kalender premium dengan foto kegiatan & quotes',cost:500,icon:'calendar_month',color:C.primary,stock:35},
-      {id:8,cat:'koleksi',name:'Sticker Pack Emblem',desc:'20 stiker vinyl tahan air, desain pangkat & lencana',cost:200,icon:'auto_awesome',color:C.purple,stock:100},
-      {id:9,cat:'koleksi',name:'Pin Enamel Lencana',desc:'Pin enamel premium koleksi lencana GERAK',cost:400,icon:'military_tech',color:C.gold,stock:20},
+      {id:5,cat:'koleksi',name:'Mug Keramik TNI AD',desc:'Mug keramik 350ml, desain insignia pangkat TNI AD',cost:600,icon:'coffee',color:C.gold,stock:40,popular:true},
+      {id:6,cat:'koleksi',name:'Tumbler Stainless TNI AD',desc:'Tumbler 500ml vacuum insulated, logo TNI AD engraved',cost:1200,icon:'water_drop',color:'#2D5016',stock:15},
+      {id:7,cat:'koleksi',name:'Kalender Meja TNI AD 2026',desc:'Kalender premium foto kegiatan TNI AD & quotes prajurit',cost:500,icon:'calendar_month',color:C.primary,stock:35},
+      {id:8,cat:'koleksi',name:'Sticker Pack Emblem TNI AD',desc:'20 stiker vinyl tahan air, desain pangkat & lencana TNI AD',cost:200,icon:'auto_awesome',color:C.purple,stock:100},
+      {id:9,cat:'koleksi',name:'Pin Enamel Insignia TNI AD',desc:'Pin enamel premium koleksi insignia TNI AD',cost:400,icon:'military_tech',color:C.gold,stock:20},
       /* ── Sponsor & Voucher ── */
       {id:10,cat:'sponsor',name:'Voucher BRI Rp50K',desc:'Voucher belanja dari Bank BRI untuk anggota aktif',cost:1000,icon:'account_balance',color:'#003399',stock:20,popular:true,sponsor:'Bank BRI'},
       {id:11,cat:'sponsor',name:'Voucher Mandiri Rp100K',desc:'e-Voucher Bank Mandiri, berlaku di merchant pilihan',cost:1800,icon:'account_balance',color:'#003366',stock:10,sponsor:'Bank Mandiri'},
@@ -1658,8 +1665,8 @@ export default function App(){
       {id:13,cat:'sponsor',name:'GoPay Rp50K',desc:'Saldo GoPay dari sponsor GoTo Group',cost:1000,icon:'account_balance_wallet',color:C.green,stock:25,sponsor:'GoTo'},
       /* ── Eksklusif ── */
       {id:14,cat:'eksklusif',name:'Sertifikat Anggota Aktif',desc:'Sertifikat digital + cetak dengan QR verifikasi',cost:3000,icon:'workspace_premium',color:C.gold,stock:5},
-      {id:15,cat:'eksklusif',name:'Undangan Gala Dinner GERAK',desc:'Akses VIP ke acara tahunan GERAK Awards',cost:8000,icon:'celebration',color:C.purple,stock:3},
-      {id:16,cat:'eksklusif',name:'Mentorship 1-on-1',desc:'Sesi mentoring 1 jam dengan leader GERAK',cost:5000,icon:'school',color:C.primary,stock:5},
+      {id:15,cat:'eksklusif',name:'Undangan HUT TNI AD Gala',desc:'Akses VIP ke acara peringatan HUT TNI AD',cost:8000,icon:'celebration',color:C.purple,stock:3},
+      {id:16,cat:'eksklusif',name:'Mentorship Perwira TNI AD',desc:'Sesi mentoring 1 jam dengan perwira TNI AD',cost:5000,icon:'school',color:C.primary,stock:5},
     ];
     const cats=[{id:'semua',label:'Semua'},{id:'apparel',label:'Apparel'},{id:'koleksi',label:'Koleksi'},{id:'sponsor',label:'Sponsor'},{id:'eksklusif',label:'Eksklusif'}];
     const filtered=shopTab==='semua'?rewardItems:rewardItems.filter(r=>r.cat===shopTab);
@@ -1734,7 +1741,7 @@ export default function App(){
       <Card className="stagger-6">
         <h3 style={{fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Riwayat Penukaran</h3>
         {[
-          {name:'Mug Keramik GERAK',date:'1 Mar 2026',cost:600,status:'Berhasil'},
+          {name:'Mug Keramik TNI AD',date:'1 Mar 2026',cost:600,status:'Berhasil'},
           {name:'Voucher BRI Rp50K',date:'22 Feb 2026',cost:1000,status:'Berhasil'},
           {name:'Sticker Pack Emblem',date:'10 Feb 2026',cost:200,status:'Berhasil'},
         ].map((h,i)=>(
@@ -2167,14 +2174,14 @@ export default function App(){
           </div>
           <div style={{background:C.surfaceLight,borderRadius:12,padding:14,border:`1px solid ${C.border}`,marginBottom:8}}>
             <p style={{fontSize:13,color:C.text,lineHeight:1.6,fontStyle:'italic'}}>
-              {m.type==='EVENT'?`"Hadir di ${m.title}! Acara ini penting untuk komunitas kita.\n\nYuk ramaikan dan jadikan momen bersejarah!\n\n#GERAK #AksiNyata"`:
-               m.type==='AKSI'?`"Mari bergabung dalam ${m.title}! Setiap aksi kecil punya dampak besar.\n\nIkut kontribusi sekarang!\n\n#GERAK #GerakanKomunitas"`:
-               m.type==='EDUKASI'?`"Tau nggak sih? ${m.title} itu ternyata lebih penting dari yang kita kira!\n\nIni dia fakta penting yang perlu kamu tau...\n\nShare ke teman biar makin banyak yang paham!\n\n#GERAK #Edukasi"`:
-               `"Yuk ikutan ${m.title}!\n\nIni cara gue berpartisipasi... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu!\n\n#GERAK #GerakDigital"`}
+              {m.type==='EVENT'?`"Hadir di ${m.title}! Bangga bisa menyaksikan langsung dedikasi prajurit TNI AD.\n\nYuk ramaikan dan tunjukkan dukungan!\n\n#TNIAD #DISPENAD #TNIADUntukRakyat"`:
+               m.type==='AKSI'?`"Mari bergabung dalam ${m.title}! Setiap aksi kecil mendukung TNI AD kita.\n\nIkut kontribusi sekarang!\n\n#TNIAD #DukungTNIAD #DISPENAD"`:
+               m.type==='EDUKASI'?`"Tau nggak sih? ${m.title} — ini ternyata lebih penting dari yang kita kira!\n\nFakta penting yang perlu kamu tau...\n\nShare ke teman biar makin banyak yang paham!\n\n#TNIAD #DISPENAD #WawasanKebangsaan"`:
+               `"Yuk ikutan ${m.title}!\n\nIni cara gue dukung TNI AD... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu!\n\n#TNIAD #BanggaTNIAD #DISPENAD"`}
             </p>
           </div>
           <div className="flex gap-2">
-            <button onClick={()=>{const cap=m.type==='EVENT'?`Hadir di ${m.title}! Yuk ramaikan!\n\n#GERAK #AksiNyata`:m.type==='AKSI'?`Mari bergabung dalam ${m.title}! Aksi kecil, dampak besar.\n\n#GERAK #GerakanKomunitas`:m.type==='EDUKASI'?`${m.title} — informasi penting yang perlu kamu tau!\n\n#GERAK #Edukasi`:`Yuk ikutan ${m.title}! Tag 3 temanmu!\n\n#GERAK #GerakDigital`;copyText(cap)}} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:C.white,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+            <button onClick={()=>{const cap=m.type==='EVENT'?`Hadir di ${m.title}! Bangga dukung TNI AD!\n\n#TNIAD #DISPENAD #TNIADUntukRakyat`:m.type==='AKSI'?`Mari bergabung dalam ${m.title}! Dukung TNI AD kita.\n\n#TNIAD #DukungTNIAD #DISPENAD`:m.type==='EDUKASI'?`${m.title} — informasi penting yang perlu kamu tau!\n\n#TNIAD #DISPENAD #WawasanKebangsaan`:`Yuk ikutan ${m.title}! Tag 3 temanmu!\n\n#TNIAD #BanggaTNIAD #DISPENAD`;copyText(cap)}} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:C.white,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
               <MI name="content_copy" size={14} style={{color:C.white}}/> Salin Caption
             </button>
             <button onClick={()=>showToast('Kamu boleh edit caption sesuai gayamu')} style={{flex:1,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
@@ -2689,10 +2696,10 @@ export default function App(){
     ];
 
     const submissionQueue=[
-      {agent:'Arif Santoso',mission:'Post Reels IG: Tips Keamanan',platform:'instagram',time:'10 min lalu',aiScore:87,aiPass:true,briefMatch:92,briefChecks:[{l:'Format sesuai',ok:true},{l:'Durasi OK',ok:true},{l:'Hashtag ada',ok:true},{l:'CTA',ok:false}]},
-      {agent:'Rina Dewi',mission:'Counter-Narasi Hoaks Vaksinasi',platform:'x',time:'25 min lalu',aiScore:92,aiPass:true,briefMatch:96,briefChecks:[{l:'Format sesuai',ok:true},{l:'Sumber resmi',ok:true},{l:'Multi-platform',ok:true},{l:'Tone sesuai',ok:true}]},
-      {agent:'Fajar Nugroho',mission:'Duet TikTok #GerakUntukNegeri',platform:'tiktok',time:'1 jam lalu',aiScore:64,aiPass:false,briefMatch:58,briefChecks:[{l:'Format sesuai',ok:true},{l:'Durasi OK',ok:false},{l:'Hashtag ada',ok:false},{l:'Original',ok:true}]},
-      {agent:'Sari Utami',mission:'Literasi Digital ke 5 Grup',platform:'whatsapp',time:'2 jam lalu',aiScore:95,aiPass:true,briefMatch:98,briefChecks:[{l:'Min 5 grup',ok:true},{l:'Min 20 anggota',ok:true},{l:'Pesan sesuai',ok:true},{l:'Lampiran ada',ok:true}]},
+      {agent:'Arif Santoso',mission:'Reels: Hari-Hari Prajurit TNI AD',platform:'instagram',time:'10 min lalu',aiScore:87,aiPass:true,briefMatch:92,briefChecks:[{l:'Format sesuai',ok:true},{l:'Durasi OK',ok:true},{l:'Hashtag ada',ok:true},{l:'CTA',ok:false}]},
+      {agent:'Rina Dewi',mission:'Dukung Konten Resmi DISPENAD',platform:'x',time:'25 min lalu',aiScore:92,aiPass:true,briefMatch:96,briefChecks:[{l:'Format sesuai',ok:true},{l:'Sumber resmi',ok:true},{l:'Multi-platform',ok:true},{l:'Tone sesuai',ok:true}]},
+      {agent:'Fajar Nugroho',mission:'Challenge #BanggaTNIAD',platform:'tiktok',time:'1 jam lalu',aiScore:64,aiPass:false,briefMatch:58,briefChecks:[{l:'Format sesuai',ok:true},{l:'Durasi OK',ok:false},{l:'Hashtag ada',ok:false},{l:'Original',ok:true}]},
+      {agent:'Sari Utami',mission:'Wawasan Kebangsaan ke 5 Grup',platform:'whatsapp',time:'2 jam lalu',aiScore:95,aiPass:true,briefMatch:98,briefChecks:[{l:'Min 5 grup',ok:true},{l:'Min 20 anggota',ok:true},{l:'Pesan sesuai',ok:true},{l:'Lampiran ada',ok:true}]},
     ];
 
     const DCard=({children,style={},title,subtitle,action,accent,noPad})=>(
