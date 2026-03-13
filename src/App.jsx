@@ -473,15 +473,16 @@ export default function App(){
   const [verified,setVerified]=useState({});
   const [uploaded,setUploaded]=useState(false);
   const [adminTab,setAdminTab]=useState('overview');
-  const [expandedNarrative,setExpandedNarrative]=useState(null);
   const [adSideTab,setAdSideTab]=useState('dashboard');
   const [adSubTab,setAdSubTab]=useState('ringkasan');
   const [missionForm,setMissionForm]=useState({type:'EVENT',title:'',desc:'',xp:200,format:'',duration:'',platforms:[],targetGender:'all',targetAge:'all',targetTier:'all'});
-  const [narrativeActions,setNarrativeActions]=useState({});
-  const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null);
   const [selectedAdMission,setSelectedAdMission]=useState(null);
-  const [monitorView,setMonitorView]=useState('network');
-  const [globeSelPost,setGlobeSelPost]=useState(null);
+  // Stubs for removed narrative features (admin panel references)
+  const expandedNarrative=null,setExpandedNarrative=()=>{};
+  const narrativeActions={},setNarrativeActions=()=>{};
+  const narrativeMissionFlow=null,setNarrativeMissionFlow=()=>{};
+  const monitorView='network',setMonitorView=()=>{};
+  const globeSelPost=null,setGlobeSelPost=()=>{};
   const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
   const [logoutConfirm,setLogoutConfirm]=useState(false);
   const [publishing,setPublishing]=useState(false);
@@ -1389,232 +1390,62 @@ export default function App(){
           </Card>
         </div>
 
-        {/* Alert Summary with Sentiment */}
-        <Card className="stagger-5" style={{borderLeft:`3px solid ${C.red}`}}>
-          <div className="flex items-center justify-between mb-2">
-            <h3 style={{fontSize:14,fontWeight:700,color:C.text}}>Alert Narasi</h3>
-            <span style={{background:C.redLight,color:C.red,borderRadius:12,padding:'2px 8px',fontSize:11,fontWeight:700}}>{ADMIN_STATS.alertsToday} baru</span>
-          </div>
-          {NARRATIVES.filter(n=>n.urgency==='TINGGI').slice(0,2).map((n,i)=>{
-            const ua=narrativeActions[n.id];
+        {/* Mission Type Breakdown */}
+        <Card className="stagger-5">
+          <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:12}}>Misi per Tipe</h3>
+          {['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI'].map((t,i)=>{
+            const count=MISSIONS.filter(m=>m.type===t).length;
             return(
-            <div key={i} style={{padding:'8px 0',borderBottom:i===0?`1px solid ${C.borderLight}`:'none',cursor:'pointer'}} onClick={()=>{setAdminTab('narratives');setExpandedNarrative(n.id)}}>
-              <div className="flex items-center gap-3 mb-1">
-                <div style={{width:8,height:8,borderRadius:'50%',background:C.red,flexShrink:0}}/>
-                <div className="flex-1">
-                  <p style={{fontSize:12,fontWeight:600,color:C.text}}>{n.topic}</p>
-                  <p style={{fontSize:10,color:C.textMuted}}>Vol: {n.volume} · {n.trend} · Positif: {n.positivePercent}%</p>
-                </div>
-                {ua?<span style={{fontSize:10,fontWeight:700,padding:'2px 6px',borderRadius:4,background:ua==='DUKUNG'?C.green:ua==='TOLAK'?C.red:C.orange,color:C.white}}>{ua}</span>
-                :<span style={{fontSize:10,fontWeight:700,color:C.red,background:C.redLight,padding:'2px 6px',borderRadius:4}}>Perlu Aksi</span>}
-              </div>
-              <div style={{paddingLeft:20}}><SentimentChart breakdown={n.sentimentBreakdown} compact/></div>
-            </div>
-          );})}
-          <button onClick={()=>setAdminTab('narratives')} className="btn-admin" style={{width:'100%',marginTop:8,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.primary,fontWeight:600,fontSize:12,cursor:'pointer'}}>Lihat Semua Narasi</button>
-        </Card>
-
-        {/* Quick Platform Stats */}
-        <Card className="stagger-6">
-          <h3 style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:12}}>Platform Overview</h3>
-          {PLATFORM_STATS.map((p,i)=>(
-            <div key={i} className="flex items-center gap-3" style={{padding:'8px 0',borderBottom:i<PLATFORM_STATS.length-1?`1px solid ${C.borderLight}`:'none'}}>
-              <div style={{width:32,height:32,borderRadius:8,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
-                <SocialIcon platform={p.platform} size={16} color={p.color}/>
+            <div key={t} className="flex items-center gap-3" style={{padding:'8px 0',borderBottom:i<4?`1px solid ${C.borderLight}`:'none'}}>
+              <div style={{width:32,height:32,borderRadius:8,background:typeBg(t),display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <MI name={typeIcon(t)} size={16} fill style={{color:typeColor(t)}}/>
               </div>
               <div className="flex-1">
-                <p style={{fontSize:12,fontWeight:600,color:C.text}}>{p.platform==='x'?'X (Twitter)':p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</p>
-                <p style={{fontSize:10,color:C.textMuted}}>Reach: {p.reach}</p>
+                <p style={{fontSize:12,fontWeight:600,color:C.text}}>{t.charAt(0)+t.slice(1).toLowerCase()}</p>
+                <p style={{fontSize:10,color:C.textMuted}}>{typeDesc(t)}</p>
               </div>
-              <div className="flex flex-col items-end">
-                <span style={{fontSize:12,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>{p.engagement}</span>
-                <span style={{fontSize:10,fontWeight:600,color:p.trend.startsWith('+')?C.green:p.trend.startsWith('-')?C.red:C.textMuted}}>{p.trend}</span>
-              </div>
-            </div>
-          ))}
+              <span style={{fontSize:16,fontWeight:800,color:typeColor(t),fontFamily:"'Space Mono'"}}>{count}</span>
+            </div>);
+          })}
         </Card>
       </>)}
 
-      {/* === NARRATIVE AI === */}
-      {adminTab==='narratives'&&(<>
-        <Card className="stagger-3" style={{background:C.primaryLight,border:`1px solid ${C.primary}20`,padding:14}}>
-          <div className="flex items-center gap-2 mb-1">
-            <MI name="smart_toy" size={18} style={{color:C.primary}}/>
-            <span style={{fontSize:12,fontWeight:700,color:C.primary}}>AI Monitoring Aktif</span>
-          </div>
-          <p style={{fontSize:11,color:C.textSec}}>{ADMIN_STATS.narrativesMonitored} narasi dipantau secara real-time di {PLATFORM_STATS.length} platform</p>
-        </Card>
+      {/* === KELOLA MISI === */}
+      {adminTab==='missions'&&(<>
 
-        {NARRATIVES.map((n,i)=>{
-          const expanded=expandedNarrative===n.id;
-          const verdictColor=n.aiVerdict==='TOLAK'?C.red:n.aiVerdict==='DUKUNG'?C.green:C.orange;
-          const verdictBg=n.aiVerdict==='TOLAK'?C.redLight:n.aiVerdict==='DUKUNG'?C.greenLight:C.orangeLight;
-          const userAction=narrativeActions[n.id];
+        {/* Mission list for admin */}
+        {MISSIONS.map((m,i)=>{
+          const tc=typeColor(m.type);
           return(
-          <Card key={n.id} className={`stagger-${Math.min(i+4,7)}`} style={{padding:0,overflow:'hidden'}}>
-            <div style={{padding:16,cursor:'pointer'}} onClick={()=>setExpandedNarrative(expanded?null:n.id)}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div style={{width:8,height:8,borderRadius:'50%',background:n.urgency==='TINGGI'?C.red:n.urgency==='SEDANG'?C.orange:C.green}}/>
-                  <span style={{fontSize:10,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>{n.urgency}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span style={{fontSize:10,fontWeight:700,color:verdictColor,background:verdictBg,padding:'2px 8px',borderRadius:4}}>AI: {n.aiVerdict}</span>
-                  <PositiveMeter percent={n.positivePercent} size="sm"/>
-                </div>
+          <Card key={m.id} className={`stagger-${Math.min(i+3,7)}`} onClick={()=>setSelectedAdMission(m.id)} style={{padding:12,cursor:'pointer'}}>
+            <div className="flex items-center gap-3">
+              <div style={{width:36,height:36,borderRadius:10,background:typeBg(m.type),display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <MI name={typeIcon(m.type)} size={18} fill style={{color:tc}}/>
               </div>
-              <h3 style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:6}}>{n.topic}</h3>
-              {/* Compact sentiment bar */}
-              <SentimentChart breakdown={n.sentimentBreakdown} compact/>
-              <div className="flex items-center gap-3 mt-2">
-                <span style={{fontSize:11,color:C.textMuted}}>Volume: <b style={{color:C.text}}>{n.volume}</b></span>
-                <span style={{fontSize:11,fontWeight:600,color:n.trend.startsWith('+')?C.red:C.green}}>{n.trend}</span>
-                {userAction&&<span style={{marginLeft:'auto',fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,
-                  background:userAction==='DUKUNG'?C.greenLight:userAction==='TOLAK'?C.redLight:C.orangeLight,
-                  color:userAction==='DUKUNG'?C.green:userAction==='TOLAK'?C.red:C.orange,
-                }}>Aksi: {userAction}</span>}
+              <div className="flex-1" style={{minWidth:0}}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{fontSize:10,fontWeight:700,color:tc,textTransform:'uppercase',letterSpacing:0.5}}>{m.type}</span>
+                  <span style={{fontSize:10,color:C.textMuted}}>{m.deadline}</span>
+                </div>
+                <h3 style={{fontSize:13,fontWeight:600,color:C.text,lineHeight:1.3}} className="truncate">{m.title}</h3>
               </div>
-              <MI name={expanded?'expand_less':'expand_more'} size={20} style={{color:C.textMuted,display:'block',margin:'4px auto 0'}}/>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <span style={{fontSize:12,fontWeight:700,color:C.gold,fontFamily:"'Space Mono'"}}>{m.xp} XP</span>
+                <p style={{fontSize:10,color:C.textMuted,marginTop:1}}>{m.participants} peserta</p>
+              </div>
             </div>
-
-            {expanded&&(
-              <div style={{borderTop:`1px solid ${C.borderLight}`,padding:16}}>
-                {/* Sentiment Breakdown */}
-                <div style={{background:C.surfaceLight,borderRadius:12,padding:14,marginBottom:14,border:`1px solid ${C.borderLight}`}}>
-                  <p style={{fontSize:11,fontWeight:700,color:C.textMuted,marginBottom:8,textTransform:'uppercase',letterSpacing:0.5}}>Analisis Sentimen</p>
-                  <SentimentChart breakdown={n.sentimentBreakdown}/>
-                  <div className="flex items-center gap-2 mt-3" style={{borderTop:`1px solid ${C.border}`,paddingTop:8}}>
-                    <span style={{fontSize:11,fontWeight:600,color:C.textSec}}>Sentimen positif keseluruhan:</span>
-                    <span style={{fontSize:14,fontWeight:800,color:n.positivePercent>=50?C.green:n.positivePercent>=25?C.orange:C.red,fontFamily:"'Space Mono'"}}>{n.positivePercent}%</span>
-                  </div>
-                </div>
-
-                {/* AI Analysis */}
-                <div style={{background:C.primaryLight,borderRadius:12,padding:14,marginBottom:14,border:`1px solid ${C.primary}15`}}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <MI name="smart_toy" size={16} style={{color:C.primary}}/>
-                    <span style={{fontSize:12,fontWeight:700,color:C.primary}}>Rekomendasi AI</span>
-                    <span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:C.primary,background:C.surfaceLight,padding:'2px 6px',borderRadius:4,border:`1px solid ${C.border}`}}>Confidence: {n.aiConfidence}%</span>
-                  </div>
-                  <p style={{fontSize:12,color:C.textSec,lineHeight:1.5,marginBottom:8}}>{n.aiReason}</p>
-                  <div style={{background:C.surface,borderRadius:8,padding:10,border:`1px solid ${C.border}`}}>
-                    <p style={{fontSize:10,fontWeight:700,color:C.primary,marginBottom:4,textTransform:'uppercase',letterSpacing:0.5}}>Saran Aksi</p>
-                    <p style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>{n.aiSuggestion}</p>
-                  </div>
-                </div>
-
-                {/* USER ACTION BUTTONS — Dukung / Tolak / Monitor */}
-                <div style={{marginBottom:14}}>
-                  <p style={{fontSize:11,fontWeight:700,color:C.textMuted,marginBottom:8,textTransform:'uppercase',letterSpacing:0.5}}>Pilih Aksi</p>
-                  <div className="flex gap-2">
-                    {[{action:'DUKUNG',icon:'thumb_up',label:'Dukung',color:C.green,bg:C.greenLight},
-                      {action:'TOLAK',icon:'block',label:'Tolak',color:C.red,bg:C.redLight},
-                      {action:'MONITOR',icon:'visibility',label:'Monitor',color:C.orange,bg:C.orangeLight},
-                    ].map(a=>{
-                      const isActive=userAction===a.action;
-                      return <button key={a.action} onClick={(e)=>{e.stopPropagation();setNarrativeActions(prev=>({...prev,[n.id]:isActive?undefined:a.action}));showToast(isActive?'Aksi dibatalkan':`Narasi di-${a.label.toLowerCase()}`)}} style={{
-                        flex:1,padding:'10px 0',borderRadius:12,border:isActive?'none':`1.5px solid ${a.color}40`,cursor:'pointer',
-                        background:isActive?a.color:a.bg,color:isActive?'white':a.color,
-                        fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'all 200ms',
-                      }}>
-                        <MI name={a.icon} size={16} fill={isActive} style={{color:isActive?'white':a.color}}/>{a.label}
-                      </button>;
-                    })}
-                  </div>
-                </div>
-
-                {/* Sources */}
-                <p style={{fontSize:11,fontWeight:700,color:C.textMuted,marginBottom:8,textTransform:'uppercase',letterSpacing:0.5}}>Sumber</p>
-                {n.sources.map((s,j)=>(
-                  <div key={j} className="flex items-start gap-3" style={{marginBottom:8,padding:10,background:C.surfaceLight,borderRadius:8,border:`1px solid ${C.border}`}}>
-                    <div style={{width:28,height:28,borderRadius:6,background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`,flexShrink:0}}>
-                      {s.platform==='whatsapp'?<MI name="chat" size={14} style={{color:'#25D366'}}/>:
-                       s.platform==='facebook'?<MI name="thumb_up" size={14} style={{color:'#1877F2'}}/>:
-                       <SocialIcon platform={s.platform} size={14} color={PLATFORM_STATS.find(p=>p.platform===s.platform)?.color||C.text}/>}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span style={{fontSize:11,fontWeight:700,color:C.text}}>{s.platform.charAt(0).toUpperCase()+s.platform.slice(1)}</span>
-                        <span style={{fontSize:10,color:C.textMuted,fontFamily:"'Space Mono'"}}>{s.count}</span>
-                      </div>
-                      <p style={{fontSize:11,color:C.textSec,fontStyle:'italic'}}>"{s.sample}"</p>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Keywords */}
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {n.keywords.map((kw,j)=>(
-                    <span key={j} style={{fontSize:10,fontWeight:600,color:C.textSec,background:C.surfaceLight,border:`1px solid ${C.border}`,borderRadius:4,padding:'2px 8px'}}>{kw}</span>
-                  ))}
-                </div>
-
-                {/* Counter Narratives */}
-                {n.aiCounterNarrative.length>0&&(
-                  <div style={{marginBottom:12}}>
-                    <p style={{fontSize:11,fontWeight:700,color:C.textMuted,marginBottom:6,textTransform:'uppercase',letterSpacing:0.5}}>Counter-Narasi Siap Deploy</p>
-                    {n.aiCounterNarrative.map((cn,j)=>(
-                      <div key={j} className="flex items-start gap-2" style={{marginBottom:6,padding:10,background:C.greenLight,borderRadius:8,border:`1px solid ${C.green}15`}}>
-                        <MI name="format_quote" size={16} style={{color:C.green,flexShrink:0,marginTop:2}}/>
-                        <p style={{fontSize:12,color:C.text,lineHeight:1.4,flex:1}}>{cn}</p>
-                        <button onClick={(e)=>{e.stopPropagation();copyText(cn)}} style={{background:C.green,border:'none',borderRadius:6,padding:'4px 8px',fontSize:10,fontWeight:700,color:C.white,cursor:'pointer',flexShrink:0}}>Salin</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Deploy based on user action */}
-                {userAction&&userAction!=='MONITOR'&&(
-                  <button onClick={(e)=>{e.stopPropagation();showToast(userAction==='TOLAK'?'Counter-narasi deployed!':'Amplifikasi deployed!')}} style={{
-                    width:'100%',padding:'12px 0',borderRadius:12,border:'none',cursor:'pointer',
-                    background:userAction==='TOLAK'?C.red:C.green,color:C.white,fontSize:13,fontWeight:700,
-                    display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-                  }}>
-                    <MI name={userAction==='TOLAK'?'campaign':'trending_up'} size={18} style={{color:C.white}}/>
-                    {userAction==='TOLAK'?'Deploy Counter-Narasi':'Deploy Amplifikasi'}
-                  </button>
-                )}
+            {/* Completion bar */}
+            <div style={{marginTop:8}}>
+              <div className="flex items-center justify-between mb-1">
+                <span style={{fontSize:10,color:C.textMuted}}>Completion</span>
+                <span style={{fontSize:10,fontWeight:700,color:tc}}>{m.analytics?.completion||0}%</span>
               </div>
-            )}
+              <div style={{height:3,borderRadius:99,background:C.borderLight,overflow:'hidden'}}>
+                <div style={{width:`${m.analytics?.completion||0}%`,height:'100%',borderRadius:99,background:tc}}/>
+              </div>
+            </div>
           </Card>);
         })}
-      </>)}
-
-      {/* === PLATFORMS === */}
-      {adminTab==='platforms'&&(<>
-        {PLATFORM_STATS.map((p,i)=>(
-          <Card key={i} className={`stagger-${Math.min(i+3,7)}`}>
-            <div className="flex items-center gap-3 mb-3">
-              <div style={{width:40,height:40,borderRadius:12,background:C.surfaceLight,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
-                {p.platform==='facebook'?<MI name="thumb_up" size={20} style={{color:p.color}}/>:
-                 <SocialIcon platform={p.platform} size={20} color={p.color}/>}
-              </div>
-              <div className="flex-1">
-                <p style={{fontSize:14,fontWeight:700,color:C.text}}>{p.platform==='x'?'X (Twitter)':p.platform==='facebook'?'Facebook':p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</p>
-                <p style={{fontSize:11,color:C.textMuted}}>Trend: <span style={{fontWeight:600,color:p.trend.startsWith('+')?C.green:p.trend.startsWith('-')?C.red:C.textMuted}}>{p.trend}</span></p>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[{l:'Posts',v:p.posts},{l:'Reach',v:p.reach},{l:'Engage',v:p.engagement}].map((s,j)=>(
-                <div key={j} style={{background:C.surfaceLight,borderRadius:8,padding:'8px 4px',textAlign:'center'}}>
-                  <p style={{fontSize:14,fontWeight:800,color:C.text,fontFamily:"'Space Mono'"}}>{s.v}</p>
-                  <p style={{fontSize:10,color:C.textMuted,fontWeight:600}}>{s.l}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        ))}
-
-        {/* Monitoring Summary */}
-        <Card className="stagger-7" style={{borderLeft:`3px solid ${C.primary}`}}>
-          <div className="flex items-center gap-2 mb-2">
-            <MI name="smart_toy" size={18} style={{color:C.primary}}/>
-            <h3 style={{fontSize:14,fontWeight:700,color:C.text}}>AI Insight</h3>
-          </div>
-          <p style={{fontSize:12,color:C.textSec,lineHeight:1.5}}>
-            TikTok menunjukkan pertumbuhan engagement tertinggi (+28%). Rekomendasi: alokasikan lebih banyak misi SOCIAL untuk TikTok. Facebook mengalami penurunan — pertimbangkan pivot ke format video pendek.
-          </p>
-        </Card>
       </>)}
     </div>);}
 
