@@ -131,110 +131,116 @@ const C={
   surfaceGlass:'rgba(255,255,255,0.45)', surfaceGlass2:'rgba(255,255,255,0.55)',
 };
 
-const typeColor=t=>({EDUKASI:C.secondary,AMPLIFIKASI:C.accent,KRISIS:C.red,KOMUNITAS:C.green,VISIT:C.purple,SOCIAL:C.primary}[t]||C.primary);
-const typeBg=t=>({EDUKASI:C.secondaryLight,AMPLIFIKASI:C.accentLight,KRISIS:C.redLight,KOMUNITAS:C.greenLight,VISIT:C.purpleLight,SOCIAL:C.primaryLight}[t]||C.primaryLight);
-const typeGradient=t=>({EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AMPLIFIKASI:`linear-gradient(135deg,${C.accent},#D32F2F)`,KRISIS:`linear-gradient(135deg,${C.red},#EF5350)`,KOMUNITAS:`linear-gradient(135deg,${C.green},#43A047)`,VISIT:`linear-gradient(135deg,${C.purple},#546E7A)`,SOCIAL:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
-const typeIcon=t=>({EDUKASI:'school',AMPLIFIKASI:'campaign',KRISIS:'warning',KOMUNITAS:'groups',VISIT:'location_on',SOCIAL:'share'}[t]||'star');
+/* ─── MISSION TYPES ──────────────────────────────────────────── */
+// EVENT      = Kehadiran fisik: rally, town hall, gotong royong, posko
+// KONTEN     = Content creation: video, foto, artikel, infografis
+// ENGAGEMENT = Like, share, comment, repost konten yang sudah ada
+// EDUKASI    = Distribusi materi edukasi ke grup/komunitas
+// AKSI       = Aksi langsung: petisi, door-to-door, rekrutmen relawan
+const typeColor=t=>({EVENT:C.purple,KONTEN:C.primary,ENGAGEMENT:C.orange,EDUKASI:C.secondary,AKSI:C.accent}[t]||C.primary);
+const typeBg=t=>({EVENT:C.purpleLight,KONTEN:C.primaryLight,ENGAGEMENT:C.orangeLight,EDUKASI:C.secondaryLight,AKSI:C.accentLight}[t]||C.primaryLight);
+const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONTEN:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,ENGAGEMENT:`linear-gradient(135deg,${C.orange},#EA580C)`,EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AKSI:`linear-gradient(135deg,${C.accent},#D32F2F)`}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
+const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand'}[t]||'star');
+const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan'}[t]||'');
 const pName=p=>({whatsapp:'WhatsApp',telegram:'Telegram',instagram:'Instagram',tiktok:'TikTok',x:'X',facebook:'Facebook'}[p]||p);
 const pColor=p=>({whatsapp:'#25D366',telegram:'#0088cc',instagram:'#E1306C',tiktok:'#1A1A1A',x:'#1DA1F2',facebook:'#1877F2'}[p]||C.text);
 const pIcon=p=>({whatsapp:'chat',telegram:'send',facebook:'thumb_up'}[p]);
 
+/* Stub removed features so admin panel doesn't crash */
+const NARRATIVES=[];
+const PLATFORM_STATS=[];
+const SENTIMENT_EMOTIONS=[];
+const SOCIALS=[];
+function SentimentChart(){return null}
+function PositiveMeter(){return null}
+
 /* ─── DATA ───────────────────────────────────────────────────────── */
-const SOCIALS=[
-  {key:'ig',platform:'instagram',label:'Instagram',handle:'@arif.santoso',followers:'2.4K',color:'#E1306C'},
-  {key:'tt',platform:'tiktok',label:'TikTok',handle:'@arifsantoso_',followers:'5.1K',color:'#1A1A1A'},
-  {key:'x',platform:'x',label:'X (Twitter)',handle:'@arif_sto',followers:'1.8K',color:'#191919'},
-];
 
 const MISSIONS=[
-  {id:1,type:'EDUKASI',title:'Distribusi Materi Literasi Digital ke 5 Grup',
-    desc:'Sebarkan materi edukasi tentang keamanan digital kepada minimal 5 grup komunitas WhatsApp atau Telegram.',
-    xp:250,bonus:50,participants:128,status:'TERBUKA',deadline:'12 Mar 2026',hashtags:'#GERAK #LiterasiDigital #AmanDigital',
-    analytics:{reach:'45.2K',engagement:'12.8%',completion:72,avgTime:'2.4 jam',topCity:'Jakarta',sentiment:78,conversionRate:'8.2%'},
-    targetPlatforms:['whatsapp','telegram'],
-    contentSpec:{format:'Teks + Gambar',type:'Forward pesan',minGroups:5,note:'Kirim ke grup dengan min 20 anggota'},
-    templates:['Halo semua, mari tingkatkan kewaspadaan terhadap penipuan online. Berikut panduan dari GERAK!','Hati-hati penipuan lewat WA. Baca panduan literasi digital GERAK ini. Share ke keluarga ya!'],
-    exampleMedia:[{type:'image',label:'Infografis Literasi Digital',desc:'Gunakan infografis ini sebagai lampiran pesan'}],
-  },
-  {id:2,type:'AMPLIFIKASI',title:'Amplifikasi Pesan Pembangunan Infrastruktur Desa',
-    desc:'Like, comment, dan share postingan resmi tentang program pembangunan infrastruktur desa di semua platform kamu.',
-    xp:200,participants:89,status:'TERBUKA',deadline:'15 Mar 2026',hashtags:'#GERAK #InfrastrukturDesa #BangunIndonesia',
-    analytics:{reach:'120.5K',engagement:'15.3%',completion:58,avgTime:'1.8 jam',topCity:'Surabaya',sentiment:84,conversionRate:'11.4%'},
-    targetPlatforms:['instagram','tiktok','x','facebook'],
-    contentSpec:{format:'Like & Share',type:'Engagement post resmi',actions:['Like post','Tulis komentar positif','Share/repost ke akun kamu'],note:'Komentar min 10 kata, relevan & positif'},
-    templates:['Program pembangunan infrastruktur desa tahap 2 telah dimulai. Kita dukung bersama!'],
-    refPosts:[
-      {platform:'instagram',author:'@kaborinfrastruktur',handle:'Kementerian PUPR',avatar:'KP',content:'Progres pembangunan Tol Trans-Sulawesi Tahap 3 sudah mencapai 78%! Konektivitas antar provinsi semakin kuat 🚧🇮🇩 #InfrastrukturIndonesia',image:true,likes:'12.4K',comments:'890',shares:'3.2K',time:'2 jam lalu',actions:['like','comment','share']},
-      {platform:'x',author:'@pusloginfokom',handle:'Puskominfo RI',avatar:'PI',content:'Thread: 5 Fakta Pembangunan Infrastruktur 2026 yang Jarang Diketahui Publik 🧵👇\n\n1/ Anggaran infrastruktur naik 23% YoY...',likes:'2.1K',comments:'456',shares:'1.8K',time:'5 jam lalu',actions:['like','repost','reply']},
-    ]},
-  {id:3,type:'KRISIS',title:'Counter-Narasi Hoaks Vaksinasi',
-    desc:'Lawan disinformasi tentang vaksinasi nasional dengan membagikan fakta terverifikasi ke platform sosial media.',
-    xp:400,bonus:100,participants:245,status:'PRIORITAS',deadline:'9 Mar 2026',hashtags:'#GERAK #FaktaVaksin #LawanHoaks #SehatIndonesia',
-    analytics:{reach:'890K',engagement:'22.1%',completion:91,avgTime:'3.1 jam',topCity:'Jakarta',sentiment:45,conversionRate:'18.7%'},
-    targetPlatforms:['whatsapp','x','facebook','tiktok'],
-    contentSpec:{format:'Teks + Infografis',type:'Post original & share',minPosts:3,note:'Posting di min 3 platform berbeda. Sertakan sumber resmi.'},
-    templates:['FAKTA: Vaksin telah melalui uji klinis ketat dan disetujui BPOM. Data selengkapnya 👇','Data Kemenkes: vaksinasi menurunkan risiko rawat inap hingga 80%. Jangan percaya hoaks!'],
-    exampleMedia:[{type:'image',label:'Infografis Data Vaksinasi',desc:'Sertakan infografis ini di setiap postingan'},{type:'video',label:'Video Penjelasan Dokter (45 dtk)',desc:'Bisa di-repost atau jadikan referensi'}],
-    refPosts:[
-      {platform:'x',author:'@KemenkesRI',handle:'Kemenkes RI',avatar:'KR',content:'FAKTA: Vaksin booster telah melalui uji klinis ketat dan mendapat persetujuan BPOM. Sudah 52 juta dosis diberikan dengan profil keamanan baik. #FaktaVaksin',likes:'8.9K',comments:'1.2K',shares:'5.6K',time:'1 jam lalu',actions:['like','repost','reply']},
-    ]},
-  {id:4,type:'KOMUNITAS',title:'Rekrutmen Relawan Bencana Wilayah Timur',
-    desc:'Bantu koordinasi rekrutmen relawan untuk respons bencana di wilayah timur Indonesia.',
-    xp:300,participants:67,status:'SIAGA',deadline:'20 Mar 2026',hashtags:'#GERAK #RelawanBencana #IndonesiaTimur #PeduliBencana',
-    analytics:{reach:'28.3K',engagement:'9.4%',completion:34,avgTime:'4.2 jam',topCity:'Makassar',sentiment:62,conversionRate:'5.8%'},
-    targetPlatforms:['whatsapp','telegram'],
-    contentSpec:{format:'Teks + Poster',type:'Forward pesan',minGroups:3,note:'Sertakan poster dan link pendaftaran resmi'},
-    templates:['Dibutuhkan relawan bencana wilayah timur. Daftar via link resmi berikut. Mari bantu saudara kita!']},
-  {id:5,type:'VISIT',title:'Kunjungi Posko Bantuan Bencana Cianjur',
-    desc:'Datang ke lokasi posko bantuan, ambil foto/video situasi terkini, dan upload sebagai laporan lapangan.',
-    xp:500,bonus:100,participants:34,status:'TERBUKA',deadline:'18 Mar 2026',hashtags:'#GERAK #BantuanBencana #CianjurBangkit',
-    analytics:{reach:'15.6K',engagement:'18.2%',completion:42,avgTime:'5.5 jam',topCity:'Cianjur',sentiment:88,conversionRate:'14.1%'},
-    contentSpec:{format:'Foto + Video',type:'Dokumentasi lapangan',minPhotos:3,videoDuration:'30-60 detik',note:'Foto: min 3 (posko, tim relawan, kondisi). Video: rekam suasana posko 30-60 detik.'},
-    templates:[],visitLocation:'Posko Bantuan, Jl. Raya Cianjur No.12',visitCheckin:true,lat:-6.8204,lng:107.1414,locationNote:'Dekat Alun-alun Cianjur, parkir tersedia'},
-  {id:6,type:'VISIT',title:'Hadiri Town Hall Meeting Kecamatan Menteng',
+  /* ─── EVENT — Kehadiran fisik ─── */
+  {id:1,type:'EVENT',title:'Town Hall Meeting Kecamatan Menteng',
     desc:'Hadir di town hall meeting bersama warga. Dokumentasikan dan bagikan momen penting diskusi.',
-    xp:350,participants:52,status:'TERBUKA',deadline:'22 Mar 2026',hashtags:'#GERAK #TownHall #PartisipasiWarga #Menteng',
-    analytics:{reach:'8.9K',engagement:'11.5%',completion:28,avgTime:'3.8 jam',topCity:'Jakarta',sentiment:75,conversionRate:'6.3%'},
-    contentSpec:{format:'Foto + Video',type:'Dokumentasi acara',minPhotos:5,videoDuration:'60-120 detik',note:'Foto: suasana, pembicara, peserta. Video: ringkasan pembahasan penting.'},
-    templates:[],visitLocation:'Balai Kecamatan Menteng, Jakarta Pusat',visitCheckin:true,lat:-6.1944,lng:106.8529,locationNote:'Jl. Cut Mutia No.18, Menteng'},
-  {id:7,type:'SOCIAL',title:'Post Reels IG: Tips Keamanan Digital',
-    desc:'Buat dan posting Instagram Reels tentang tips keamanan digital yang engaging dan informatif.',
-    xp:300,bonus:75,participants:89,status:'TERBUKA',deadline:'20 Mar 2026',hashtags:'#GERAK #GerakDigital #CyberSafety #AmanOnline',
-    analytics:{reach:'234K',engagement:'19.8%',completion:65,avgTime:'2.1 jam',topCity:'Bandung',sentiment:91,conversionRate:'15.6%'},
-    socialPlatform:'instagram',socialAction:'Post Reels',
-    contentSpec:{format:'Video Reels',type:'Original content',videoDuration:'30-60 detik',aspectRatio:'9:16 (portrait)',note:'Gunakan musik trending. Tambahkan text overlay untuk poin utama.'},
-    socialRequirements:['Min 30 detik durasi','Hashtag #GerakDigital','Tag @gerak.official','Akun harus publik saat posting'],
-    templates:['🔒 3 Tips Keamanan Digital yang WAJIB kamu tau! #GerakDigital #CyberSafety'],
-    exampleMedia:[{type:'video',label:'Contoh Reels (referensi gaya)',desc:'Reels 45 dtk dengan text overlay, transisi cepat'},{type:'image',label:'Template Thumbnail',desc:'Gunakan sebagai cover Reels'}],
-  },
-  {id:8,type:'SOCIAL',title:'Duet TikTok: Challenge #GerakUntukNegeri',
-    desc:'Duet atau stitch video official GERAK di TikTok. Tambahkan pesan positif dan kreatif kamu.',
-    xp:250,participants:167,status:'TERBUKA',deadline:'25 Mar 2026',hashtags:'#GERAK #GerakUntukNegeri #TikTokChallenge',
-    analytics:{reach:'1.2M',engagement:'24.5%',completion:78,avgTime:'1.5 jam',topCity:'Jakarta',sentiment:93,conversionRate:'21.2%'},
-    socialPlatform:'tiktok',socialAction:'Duet / Stitch',
-    contentSpec:{format:'Video TikTok',type:'Duet / Stitch',videoDuration:'15-60 detik',aspectRatio:'9:16 (portrait)',note:'Duet video official lalu tambahkan reaksi/pesan. Boleh tambah musik & effect.'},
-    socialRequirements:['Duet atau stitch video official','Tambahkan pesan positif','Gunakan #GerakUntukNegeri','Min 15 detik konten original'],
-    templates:['Aku ikut #GerakUntukNegeri karena perubahan dimulai dari kita! 🇮🇩'],
-    exampleMedia:[{type:'video',label:'Video Official GERAK (duet ini)',desc:'Video yang harus di-duet/stitch, 30 detik'}],
-  },
-  {id:9,type:'SOCIAL',title:'Thread X: Fakta Pembangunan Infrastruktur',
-    desc:'Buat thread informatif min 5 tweet tentang progres pembangunan infrastruktur dengan data valid.',
-    xp:200,participants:45,status:'TERBUKA',deadline:'28 Mar 2026',hashtags:'#GERAK #InfrastrukturIndonesia #FaktaPembangunan',
-    analytics:{reach:'56.7K',engagement:'8.9%',completion:38,avgTime:'3.5 jam',topCity:'Yogyakarta',sentiment:82,conversionRate:'7.1%'},
-    socialPlatform:'x',socialAction:'Thread',
-    contentSpec:{format:'Thread (teks + gambar)',type:'Original thread',minTweets:5,note:'Setiap tweet max 280 karakter. Sertakan 1 gambar/infografis per 2 tweet.'},
-    socialRequirements:['Min 5 tweet dalam thread','Sertakan data/sumber resmi','Gunakan #InfrastrukturIndonesia','Min 1 gambar/infografis'],
-    templates:['🧵 THREAD: Pembangunan infrastruktur Indonesia makin merata. Fakta-faktanya 👇'],
-    exampleMedia:[{type:'image',label:'Infografis Data Pembangunan',desc:'Gunakan sebagai visual pendukung thread'}],
-  },
-  {id:10,type:'AMPLIFIKASI',title:'Kampanye #HijaukanIndonesia',desc:'Kampanye digital kesadaran lingkungan hidup.',xp:180,participants:156,status:'SELESAI',deadline:'5 Mar 2026',hashtags:'#GERAK #HijaukanIndonesia #LingkunganHidup',targetPlatforms:['instagram','tiktok'],templates:[],contentSpec:{format:'Post gambar',type:'Share campaign'},
-    analytics:{reach:'340K',engagement:'16.7%',completion:100,avgTime:'1.9 jam',topCity:'Bali',sentiment:95,conversionRate:'13.8%'}},
-  {id:11,type:'VISIT',title:'Inspeksi Gotong Royong Lingkungan RT',
+    xp:350,bonus:50,participants:52,status:'TERBUKA',deadline:'22 Mar 2026',
+    analytics:{completion:28,avgTime:'3.8 jam',topCity:'Jakarta'},
+    eventSpec:{location:'Balai Kecamatan Menteng, Jakarta Pusat',date:'22 Mar 2026, 09:00',capacity:200,checkin:'QR Code',lat:-6.1944,lng:106.8529,note:'Jl. Cut Mutia No.18, Menteng'},
+    contentSpec:{format:'Foto + Video',minPhotos:5,videoDuration:'60-120 detik',note:'Foto: suasana, pembicara, peserta.'},
+    templates:[]},
+  {id:2,type:'EVENT',title:'Posko Bantuan Bencana Cianjur',
+    desc:'Datang ke lokasi posko bantuan, ambil foto/video situasi terkini, dan upload sebagai laporan lapangan.',
+    xp:500,bonus:100,participants:34,status:'TERBUKA',deadline:'18 Mar 2026',
+    analytics:{completion:42,avgTime:'5.5 jam',topCity:'Cianjur'},
+    eventSpec:{location:'Posko Bantuan, Jl. Raya Cianjur No.12',date:'18 Mar 2026, 08:00',capacity:50,checkin:'GPS + Selfie',lat:-6.8204,lng:107.1414,note:'Dekat Alun-alun Cianjur, parkir tersedia'},
+    contentSpec:{format:'Foto + Video',minPhotos:3,videoDuration:'30-60 detik',note:'Foto: posko, tim relawan, kondisi.'},
+    templates:[]},
+  {id:3,type:'EVENT',title:'Gotong Royong Lingkungan RT',
     desc:'Ikuti gotong royong di lingkungan RT. Dokumentasikan before-after kondisi lingkungan.',
-    xp:200,participants:28,status:'SIAGA',deadline:'15 Mar 2026',hashtags:'#GERAK #GotongRoyong #LingkunganBersih',
-    analytics:{reach:'5.2K',engagement:'7.3%',completion:18,avgTime:'4.0 jam',topCity:'Semarang',sentiment:71,conversionRate:'4.5%'},
-    contentSpec:{format:'Foto before-after',type:'Dokumentasi',minPhotos:4,note:'Foto before (2) dan after (2) dari sudut yang sama.'},
-    templates:[],visitLocation:'Lokasi RT setempat',visitCheckin:true,lat:-6.2088,lng:106.8456,locationNote:'Koordinasi ketua RT'},
+    xp:200,participants:28,status:'SIAGA',deadline:'15 Mar 2026',
+    analytics:{completion:18,avgTime:'4.0 jam',topCity:'Semarang'},
+    eventSpec:{location:'Lokasi RT setempat',date:'15 Mar 2026, 07:00',capacity:100,checkin:'GPS + Selfie',lat:-6.2088,lng:106.8456,note:'Koordinasi ketua RT'},
+    contentSpec:{format:'Foto before-after',minPhotos:4,note:'Foto before (2) dan after (2) dari sudut yang sama.'},
+    templates:[]},
+
+  /* ─── KONTEN — Content creation ─── */
+  {id:4,type:'KONTEN',title:'Video Reels: Tips Keamanan Digital',
+    desc:'Buat video singkat tentang tips keamanan digital yang engaging dan informatif. Upload ke platform pilihan.',
+    xp:300,bonus:75,participants:89,status:'TERBUKA',deadline:'20 Mar 2026',
+    analytics:{completion:65,avgTime:'2.1 jam',topCity:'Bandung'},
+    kontenSpec:{format:'Video (portrait 9:16)',duration:'30-60 detik',platform:['Instagram','TikTok'],hashtags:['#GerakDigital','#CyberSafety','#AmanOnline'],guidelines:['Min 30 detik durasi','Tambahkan text overlay untuk poin utama','Sertakan sumber fakta']},
+    templates:['3 Tips Keamanan Digital yang WAJIB kamu tau!'],
+    exampleMedia:[{type:'video',label:'Contoh video (referensi gaya)',desc:'Video 45 dtk dengan text overlay, transisi cepat'}]},
+  {id:5,type:'KONTEN',title:'Infografis Fakta Pembangunan Infrastruktur',
+    desc:'Buat infografis informatif tentang progres pembangunan infrastruktur dengan data valid.',
+    xp:250,participants:45,status:'TERBUKA',deadline:'28 Mar 2026',
+    analytics:{completion:38,avgTime:'3.5 jam',topCity:'Yogyakarta'},
+    kontenSpec:{format:'Gambar / Carousel',duration:null,platform:['Instagram','X','Facebook'],hashtags:['#InfrastrukturIndonesia','#FaktaPembangunan'],guidelines:['Min 3 slide untuk carousel','Sertakan data/sumber resmi','Design harus jelas & mudah dibaca']},
+    templates:['Pembangunan infrastruktur Indonesia makin merata. Fakta-faktanya:'],
+    exampleMedia:[{type:'image',label:'Infografis Data Pembangunan',desc:'Gunakan sebagai visual referensi'}]},
+  {id:6,type:'KONTEN',title:'Challenge Video #GerakUntukNegeri',
+    desc:'Buat video kreatif dengan pesan positif tentang perubahan Indonesia. Tantang 3 teman untuk ikut.',
+    xp:250,participants:167,status:'TERBUKA',deadline:'25 Mar 2026',
+    analytics:{completion:78,avgTime:'1.5 jam',topCity:'Jakarta'},
+    kontenSpec:{format:'Video (portrait 9:16)',duration:'15-60 detik',platform:['TikTok','Instagram'],hashtags:['#GerakUntukNegeri','#ChallengeGERAK'],guidelines:['Min 15 detik konten original','Tantang 3 teman','Tambahkan pesan positif']},
+    templates:['Aku ikut #GerakUntukNegeri karena perubahan dimulai dari kita!']},
+
+  /* ─── ENGAGEMENT — Like, share, comment ─── */
+  {id:7,type:'ENGAGEMENT',title:'Dukung Pesan Pembangunan Infrastruktur Desa',
+    desc:'Like, comment, dan share postingan resmi tentang program pembangunan infrastruktur desa.',
+    xp:200,participants:89,status:'TERBUKA',deadline:'15 Mar 2026',
+    analytics:{completion:58,avgTime:'1.8 jam',topCity:'Surabaya'},
+    engagementSpec:{actions:['Like post','Tulis komentar positif (min 10 kata)','Share/repost ke akun kamu'],targetPosts:2,note:'Komentar relevan & positif, bukan spam'},
+    refPosts:[
+      {platform:'Instagram',author:'@kaborinfrastruktur',content:'Progres pembangunan Tol Trans-Sulawesi Tahap 3 sudah mencapai 78%!',likes:'12.4K',shares:'3.2K',actions:['like','comment','share']},
+      {platform:'X',author:'@pusloginfokom',content:'Thread: 5 Fakta Pembangunan Infrastruktur 2026 yang Jarang Diketahui Publik',likes:'2.1K',shares:'1.8K',actions:['like','repost','reply']},
+    ],templates:['Program pembangunan infrastruktur desa tahap 2 telah dimulai. Kita dukung bersama!']},
+  {id:8,type:'ENGAGEMENT',title:'Viralkan Kampanye #HijaukanIndonesia',
+    desc:'Like dan share konten kampanye kesadaran lingkungan hidup dari akun resmi GERAK.',
+    xp:180,participants:156,status:'SELESAI',deadline:'5 Mar 2026',
+    analytics:{completion:100,avgTime:'1.9 jam',topCity:'Bali'},
+    engagementSpec:{actions:['Like post','Share ke story/feed'],targetPosts:3,note:'Share dengan caption personal'},
+    templates:[]},
+
+  /* ─── EDUKASI — Distribusi materi ─── */
+  {id:9,type:'EDUKASI',title:'Distribusi Materi Literasi Digital ke 5 Grup',
+    desc:'Sebarkan materi edukasi tentang keamanan digital kepada minimal 5 grup komunitas.',
+    xp:250,bonus:50,participants:128,status:'TERBUKA',deadline:'12 Mar 2026',
+    analytics:{completion:72,avgTime:'2.4 jam',topCity:'Jakarta'},
+    edukasiSpec:{material:'Infografis + Panduan PDF',channels:['WhatsApp','Telegram'],minGroups:5,minGroupSize:20,note:'Kirim ke grup dengan min 20 anggota'},
+    templates:['Halo semua, mari tingkatkan kewaspadaan terhadap penipuan online. Berikut panduan dari GERAK!','Hati-hati penipuan lewat WA. Baca panduan literasi digital GERAK ini. Share ke keluarga ya!'],
+    exampleMedia:[{type:'image',label:'Infografis Literasi Digital',desc:'Gunakan infografis ini sebagai lampiran pesan'}]},
+
+  /* ─── AKSI — Aksi langsung komunitas ─── */
+  {id:10,type:'AKSI',title:'Rekrutmen Relawan Bencana Wilayah Timur',
+    desc:'Bantu koordinasi rekrutmen relawan untuk respons bencana di wilayah timur Indonesia.',
+    xp:300,participants:67,status:'SIAGA',deadline:'20 Mar 2026',
+    analytics:{completion:34,avgTime:'4.2 jam',topCity:'Makassar'},
+    aksiSpec:{actionType:'Rekrutmen Relawan',target:50,unit:'relawan',method:'Door-to-door + Online form',area:'Indonesia Timur',note:'Sertakan poster dan link pendaftaran resmi'},
+    templates:['Dibutuhkan relawan bencana wilayah timur. Daftar via link resmi berikut. Mari bantu saudara kita!']},
+  {id:11,type:'AKSI',title:'Petisi Perlindungan Hutan Kalimantan',
+    desc:'Kumpulkan tanda tangan petisi digital untuk mendukung perlindungan hutan adat di Kalimantan.',
+    xp:200,bonus:50,participants:312,status:'TERBUKA',deadline:'30 Mar 2026',
+    analytics:{completion:45,avgTime:'1.2 jam',topCity:'Pontianak'},
+    aksiSpec:{actionType:'Petisi Digital',target:10000,unit:'tanda tangan',method:'Share link petisi',area:'Nasional',note:'Share ke minimal 10 kontak dan 3 grup'},
+    templates:['Dukung perlindungan hutan adat Kalimantan. Tanda tangani petisi resmi di link berikut!']},
 ];
 
 const RANKS=[
@@ -443,49 +449,7 @@ const LEADERBOARD=[
 ];
 
 /* ─── ADMIN / AI DATA ────────────────────────────────────────────── */
-const NARRATIVES=[
-  {id:1,topic:'Vaksinasi Booster 2026',sentiment:'negative',volume:'24.5K',trend:'+340%',urgency:'TINGGI',
-    sentimentBreakdown:{angry:42,sad:18,neutral:28,happy:12},positivePercent:12,
-    sources:[{platform:'x',count:'12.3K',sample:'Vaksin booster berbahaya, mengandung chip 5G!'},{platform:'tiktok',count:'8.1K',sample:'Video viral "dokter" tolak vaksin'},{platform:'facebook',count:'4.1K',sample:'Share massal hoaks efek samping'}],
-    aiVerdict:'TOLAK',aiConfidence:94,aiReason:'Klaim anti-sains yang dibantah WHO & BPOM. Koordinasi lintas platform — kampanye disinformasi terorganisir.',
-    aiSuggestion:'Deploy counter-narasi dengan data Kemenkes. Prioritas TikTok. Aktifkan misi KRISIS.',
-    keywords:['#TolakVaksin','#BoosterBerbahaya','anti-vaksin'],
-    aiCounterNarrative:['Data BPOM: Vaksin booster aman, 50jt+ dosis tanpa efek serius.','WHO: Booster kurangi risiko rawat inap 85%.']},
-  {id:2,topic:'Pembangunan Jalan Tol Trans-Sulawesi',sentiment:'positive',volume:'8.2K',trend:'+45%',urgency:'RENDAH',
-    sentimentBreakdown:{angry:5,sad:8,neutral:32,happy:55},positivePercent:55,
-    sources:[{platform:'x',count:'4.2K',sample:'Progress tol Trans-Sulawesi tahap 3 lancar'},{platform:'instagram',count:'2.5K',sample:'Warga komplain ganti rugi lahan'}],
-    aiVerdict:'DUKUNG',aiConfidence:78,aiReason:'Narasi dominan positif tentang progress pembangunan.',
-    aiSuggestion:'Amplifikasi progress dengan data Kementerian PUPR. Buat infografis milestone.',
-    keywords:['#TransSulawesi','#Infrastruktur'],aiCounterNarrative:[]},
-  {id:3,topic:'Program Makan Bergizi Gratis',sentiment:'positive',volume:'52.1K',trend:'+120%',urgency:'RENDAH',
-    sentimentBreakdown:{angry:3,sad:4,neutral:21,happy:72},positivePercent:72,
-    sources:[{platform:'tiktok',count:'28.5K',sample:'Video sekolah terima makan gratis!'},{platform:'instagram',count:'15.2K',sample:'Foto gizi anak daerah terpencil'}],
-    aiVerdict:'DUKUNG',aiConfidence:92,aiReason:'Narasi organik positif. Dampak nyata terlihat dari konten user-generated.',
-    aiSuggestion:'Amplifikasi konten organik terbaik. Kompilasi video dampak.',
-    keywords:['#MakanBergiziGratis','#GiziAnak'],aiCounterNarrative:[]},
-  {id:4,topic:'Penipuan Online Modus Undangan Digital',sentiment:'negative',volume:'15.8K',trend:'+210%',urgency:'TINGGI',
-    sentimentBreakdown:{angry:52,sad:25,neutral:18,happy:5},positivePercent:5,
-    sources:[{platform:'whatsapp',count:'tinggi',sample:'APK undangan digital beredar masif'},{platform:'x',count:'5.2K',sample:'Korban kehilangan tabungan'}],
-    aiVerdict:'TOLAK',aiConfidence:98,aiReason:'Ancaman keamanan siber aktif. APK malware menyamar undangan pernikahan.',
-    aiSuggestion:'URGENT: Deploy misi KRISIS edukasi keamanan digital. Koordinasi Kominfo.',
-    keywords:['#WaspadaPenipuan','APK malware','phishing'],
-    aiCounterNarrative:['AWAS! Jangan instal APK dari chat. Undangan asli TIDAK perlu download file.']},
-  {id:5,topic:'Pemilu 2029 — Kampanye Dini',sentiment:'mixed',volume:'31.4K',trend:'+88%',urgency:'SEDANG',
-    sentimentBreakdown:{angry:15,sad:10,neutral:40,happy:35},positivePercent:35,
-    sources:[{platform:'x',count:'15.1K',sample:'Diskusi capres mulai ramai'},{platform:'tiktok',count:'10.2K',sample:'Konten edukasi pemilu viral'}],
-    aiVerdict:'MONITOR',aiConfidence:65,aiReason:'Belum masa kampanye resmi. Campuran edukasi positif & kampanye terselubung.',
-    aiSuggestion:'Fokus edukasi pemilu netral. Monitor akun kampanye dini.',
-    keywords:['#Pemilu2029','capres','kampanye'],aiCounterNarrative:[]},
-];
-
-const ADMIN_STATS={totalAgents:1247,activeToday:834,missionsActive:8,missionsCompleted:156,totalReach:'2.4M',avgEngagement:'12.3%',narrativesMonitored:23,alertsToday:5};
-
-const PLATFORM_STATS=[
-  {platform:'instagram',posts:'3.2K',reach:'890K',engagement:'14.2%',color:'#E1306C',trend:'+12%'},
-  {platform:'tiktok',posts:'2.8K',reach:'1.2M',engagement:'18.5%',color:'#1A1A1A',trend:'+28%'},
-  {platform:'x',posts:'5.1K',reach:'340K',engagement:'6.8%',color:'#1DA1F2',trend:'+5%'},
-  {platform:'facebook',posts:'1.4K',reach:'210K',engagement:'4.2%',color:'#1877F2',trend:'-3%'},
-];
+const ADMIN_STATS={totalAgents:1247,activeToday:834,missionsActive:8,missionsCompleted:156,totalParticipation:'18.4K',avgCompletion:'72%',totalReach:'2.4M',avgEngagement:'12.3%',narrativesMonitored:0,alertsToday:0};
 
 /* ─── PROGRESS BAR (react-spring animated) ───────────────────────── */
 function ProgressBar({progress=0,color=C.primary,height=6,bg=C.overlay08,gold=false}){
@@ -493,51 +457,6 @@ function ProgressBar({progress=0,color=C.primary,height=6,bg=C.overlay08,gold=fa
   return <div style={{height,borderRadius:height,background:bg,overflow:'hidden',width:'100%'}}>
     <animated.div className={gold?'xp-bar-gold':'xp-bar-fill'} style={{height:'100%',borderRadius:height,background:color,...spring}}/>
   </div>;
-}
-
-/* ─── SENTIMENT CHART ────────────────────────────────────────────── */
-const SENTIMENT_EMOTIONS=[
-  {key:'angry',emoji:'',label:'Marah',color:'#C62828'},
-  {key:'sad',emoji:'',label:'Sedih',color:'#F9A825'},
-  {key:'neutral',emoji:'',label:'Netral',color:'#78909C'},
-  {key:'happy',emoji:'',label:'Positif',color:'#43A047'},
-];
-
-function SentimentChart({breakdown,compact=false}){
-  if(!breakdown) return null;
-  const total=Object.values(breakdown).reduce((a,b)=>a+b,0);
-  return(
-    <div>
-      {/* Stacked bar */}
-      <div style={{display:'flex',height:compact?8:12,borderRadius:6,overflow:'hidden',marginBottom:compact?4:8}}>
-        {SENTIMENT_EMOTIONS.map(e=>(
-          <div key={e.key} style={{width:`${(breakdown[e.key]/total)*100}%`,background:e.color,transition:'width 0.5s ease'}}/>
-        ))}
-      </div>
-      {/* Legend */}
-      <div style={{display:'flex',gap:compact?8:14,flexWrap:'wrap'}}>
-        {SENTIMENT_EMOTIONS.map(e=>(
-          <div key={e.key} style={{display:'flex',alignItems:'center',gap:3}}>
-            <span style={{width:8,height:8,borderRadius:'50%',background:e.color,display:'inline-block'}}></span>
-            <span style={{fontSize:compact?9:10,fontWeight:600,color:C.textSec}}>{breakdown[e.key]}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PositiveMeter({percent,size='sm'}){
-  const s=size==='sm';
-  const color=percent>=60?C.green:percent>=30?C.orange:C.red;
-  return(
-    <div style={{display:'flex',alignItems:'center',gap:s?6:8}}>
-      <div style={{width:s?32:44,height:s?32:44,borderRadius:'50%',background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${color}`,position:'relative'}}>
-        <span style={{fontSize:s?10:13,fontWeight:800,color,fontFamily:"'Plus Jakarta Sans'"}}>{percent}%</span>
-      </div>
-      <span style={{fontSize:s?10:11,color:C.textMuted,fontWeight:500}}>Positif</span>
-    </div>
-  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
@@ -557,22 +476,22 @@ export default function App(){
   const [expandedNarrative,setExpandedNarrative]=useState(null);
   const [adSideTab,setAdSideTab]=useState('dashboard');
   const [adSubTab,setAdSubTab]=useState('ringkasan');
-  const [missionForm,setMissionForm]=useState({type:'EDUKASI',title:'',desc:'',xp:200,format:'',duration:'',platforms:[],targetGender:'all',targetAge:'all',targetTier:'all'});
-  const [narrativeActions,setNarrativeActions]=useState({}); // {id: 'DUKUNG'|'TOLAK'|'MONITOR'}
-  const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null); // {narrativeId, step, prompt, platform, impactLevel, ...}
-  const [selectedAdMission,setSelectedAdMission]=useState(null); // mission id for admin detail view
-  const [monitorView,setMonitorView]=useState('network'); // 'network' | 'globe' | 'timeline'
-  const [globeSelPost,setGlobeSelPost]=useState(null); // selected post on globe click
+  const [missionForm,setMissionForm]=useState({type:'EVENT',title:'',desc:'',xp:200,format:'',duration:'',platforms:[],targetGender:'all',targetAge:'all',targetTier:'all'});
+  const [narrativeActions,setNarrativeActions]=useState({});
+  const [narrativeMissionFlow,setNarrativeMissionFlow]=useState(null);
+  const [selectedAdMission,setSelectedAdMission]=useState(null);
+  const [monitorView,setMonitorView]=useState('network');
+  const [globeSelPost,setGlobeSelPost]=useState(null);
   const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
   const [logoutConfirm,setLogoutConfirm]=useState(false);
   const [publishing,setPublishing]=useState(false);
   // joinedMissions: {missionId: {status:'TERDAFTAR'|'SUBMITTED'|'REVIEW'|'SELESAI', joinedAt, submittedAt?}}
   const [joinedMissions,setJoinedMissions]=useState({
-    1:{status:'SELESAI',joinedAt:'2 Mar 2026',submittedAt:'4 Mar 2026'},
-    3:{status:'REVIEW',joinedAt:'3 Mar 2026',submittedAt:'5 Mar 2026'},
-    5:{status:'TERDAFTAR',joinedAt:'7 Mar 2026'},
-    7:{status:'TERDAFTAR',joinedAt:'8 Mar 2026'},
-    8:{status:'SUBMITTED',joinedAt:'6 Mar 2026',submittedAt:'7 Mar 2026'},
+    9:{status:'SELESAI',joinedAt:'2 Mar 2026',submittedAt:'4 Mar 2026'},
+    2:{status:'REVIEW',joinedAt:'3 Mar 2026',submittedAt:'5 Mar 2026'},
+    1:{status:'TERDAFTAR',joinedAt:'7 Mar 2026'},
+    4:{status:'TERDAFTAR',joinedAt:'8 Mar 2026'},
+    6:{status:'SUBMITTED',joinedAt:'6 Mar 2026',submittedAt:'7 Mar 2026'},
   });
   const [k,setK]=useState(0);
   const scrollRef=useRef(null);
@@ -944,7 +863,7 @@ export default function App(){
             </span>
             <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:10,fontWeight:700,color:'#FFFFFF',backdropFilter:'blur(4px)',border:'1px solid rgba(255,255,255,0.1)'}}>BRIEFING</span>
           </div>
-          <h3 style={{fontSize:16,fontWeight:700,color:'#FFFFFF',lineHeight:1.3,marginBottom:10}}>Distribusi Materi Literasi Digital ke 5 Grup</h3>
+          <h3 style={{fontSize:16,fontWeight:700,color:'#FFFFFF',lineHeight:1.3,marginBottom:10}}>{MISSIONS[0]?.title||'Misi Hari Ini'}</h3>
           <div className="flex items-center gap-3" style={{marginBottom:14}}>
             <span style={{background:'rgba(255,255,255,0.15)',borderRadius:6,padding:'3px 8px',fontSize:11,fontWeight:700,fontFamily:"'Space Mono'",color:'#FFFFFF'}}>+250 XP</span>
             <span style={{color:'rgba(255,255,255,0.6)',fontSize:11,fontWeight:500}}>Deadline: 12 Mar</span>
@@ -1090,7 +1009,7 @@ export default function App(){
 
   /* ─── PAPAN MISI ────────────────────────────────────────────────── */
   function PapanMisi(){
-    const filters=['Semua','Edukasi','Amplifikasi','Krisis','Komunitas','Visit','Social','Selesai'];
+    const filters=['Semua','Event','Konten','Engagement','Edukasi','Aksi','Selesai'];
     return(<div key={k} className="flex flex-col gap-4 pb-4">
       <h1 className="stagger-1" style={{fontSize:22,fontWeight:800,color:C.text,paddingTop:4}}>Papan Misi</h1>
       <div className="stagger-2 flex gap-2 overflow-x-auto hide-scrollbar pb-1">
@@ -1423,7 +1342,7 @@ export default function App(){
 
   /* ─── ADMIN DASHBOARD ───────────────────────────────────────────── */
   function AdminDashboard(){
-    const tabs2=[{id:'overview',label:'Overview'},{id:'narratives',label:'Narasi AI'},{id:'platforms',label:'Platform'}];
+    const tabs2=[{id:'overview',label:'Overview'},{id:'missions',label:'Kelola Misi'}];
     return(<div key={k} className="flex flex-col gap-4 pb-4">
       <div className="stagger-1 flex items-center justify-between pt-1">
         <h1 style={{fontSize:22,fontWeight:800,color:C.text}}>Admin Dashboard</h1>
@@ -2143,30 +2062,144 @@ export default function App(){
           </Card>
         )}
 
-        {/* VISIT Location */}
-        {m.visitLocation&&(
-          <Card className="stagger-4" style={{borderLeft:`3px solid ${C.pink}`}}>
+        {/* EVENT Location & Details */}
+        {m.eventSpec&&(
+          <Card className="stagger-4" style={{borderLeft:`3px solid ${C.purple}`}}>
             <div className="flex items-center gap-2 mb-2">
-              <MI name="location_on" size={18} fill style={{color:C.pink}}/>
-              <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Lokasi</h3>
+              <MI name="event" size={18} fill style={{color:C.purple}}/>
+              <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Detail Event</h3>
             </div>
-            <p style={{fontSize:13,color:C.textSec}}>{m.visitLocation}</p>
-            {m.locationNote&&<p style={{fontSize:11,color:C.textMuted,marginTop:2}}>{m.locationNote}</p>}
-            {m.lat&&m.lng&&(
-              <div style={{width:'100%',height:120,borderRadius:8,overflow:'hidden',marginTop:10,position:'relative',border:`1px solid ${C.border}`,background:C.bg}}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <MI name="location_on" size={14} style={{color:C.purple,marginTop:1,flexShrink:0}}/>
+                <div><p style={{fontSize:12,fontWeight:600,color:C.text}}>{m.eventSpec.location}</p>
+                {m.eventSpec.note&&<p style={{fontSize:10,color:C.textMuted}}>{m.eventSpec.note}</p>}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <MI name="schedule" size={14} style={{color:C.purple,flexShrink:0}}/>
+                <p style={{fontSize:12,color:C.textSec}}>{m.eventSpec.date}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <MI name="groups" size={14} style={{color:C.purple}}/>
+                  <span style={{fontSize:11,color:C.textSec}}>Kapasitas: {m.eventSpec.capacity}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <MI name="qr_code" size={14} style={{color:C.purple}}/>
+                  <span style={{fontSize:11,color:C.textSec}}>Check-in: {m.eventSpec.checkin}</span>
+                </div>
+              </div>
+            </div>
+            {m.eventSpec.lat&&(
+              <div style={{width:'100%',height:100,borderRadius:8,overflow:'hidden',marginTop:10,position:'relative',border:`1px solid ${C.border}`,background:C.bg}}>
                 <div style={{position:'absolute',inset:0,opacity:0.08,backgroundImage:`linear-gradient(${C.border} 1px, transparent 1px), linear-gradient(90deg, ${C.border} 1px, transparent 1px)`,backgroundSize:'28px 28px'}}/>
-                <div style={{position:'absolute',top:'35%',left:0,right:0,height:2,background:C.border,transform:'rotate(-5deg)',opacity:0.5}}/>
-                <div style={{position:'absolute',top:0,bottom:0,left:'50%',width:2,background:C.border,transform:'rotate(3deg)',opacity:0.5}}/>
                 <div style={{position:'absolute',top:'45%',left:'50%',transform:'translate(-50%,-100%)'}}>
-                  <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:C.pink,transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(0,0,0,0.1)'}}>
+                  <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:C.purple,transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(0,0,0,0.1)'}}>
                     <MI name="location_on" size={14} fill style={{color:C.white,transform:'rotate(45deg)'}}/>
                   </div>
                 </div>
                 <div style={{position:'absolute',bottom:4,left:4,background:C.surface,borderRadius:4,padding:'2px 6px',fontSize:10,color:C.textSec,fontFamily:"'Space Mono'",border:`1px solid ${C.border}`}}>
-                  {m.lat.toFixed(4)}, {m.lng.toFixed(4)}
+                  {m.eventSpec.lat.toFixed(4)}, {m.eventSpec.lng.toFixed(4)}
                 </div>
               </div>
             )}
+          </Card>
+        )}
+
+        {/* KONTEN Specs */}
+        {m.kontenSpec&&(
+          <Card className="stagger-4" style={{borderLeft:`3px solid ${C.primary}`}}>
+            <div className="flex items-center gap-2 mb-2">
+              <MI name="videocam" size={18} fill style={{color:C.primary}}/>
+              <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Panduan Konten</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span style={{fontSize:11,fontWeight:600,color:C.primary,background:C.primaryLight,borderRadius:6,padding:'3px 8px'}}>{m.kontenSpec.format}</span>
+              {m.kontenSpec.duration&&<span style={{fontSize:11,color:C.textSec,background:C.surfaceLight,borderRadius:6,padding:'3px 8px'}}>{m.kontenSpec.duration}</span>}
+            </div>
+            {m.kontenSpec.guidelines&&m.kontenSpec.guidelines.map((g,gi)=>(
+              <div key={gi} className="flex items-start gap-1.5" style={{marginBottom:2}}>
+                <MI name="check_circle" size={12} style={{color:C.primary,marginTop:1,flexShrink:0}}/>
+                <span style={{fontSize:11,color:C.textSec,lineHeight:1.3}}>{g}</span>
+              </div>
+            ))}
+            {m.kontenSpec.hashtags&&(
+              <div className="flex flex-wrap gap-1 mt-2">
+                {m.kontenSpec.hashtags.map((h,hi)=>(
+                  <span key={hi} style={{fontSize:10,fontWeight:700,color:C.primary,fontFamily:"'Space Mono'"}}>{h}</span>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* ENGAGEMENT Specs */}
+        {m.engagementSpec&&(
+          <Card className="stagger-4" style={{borderLeft:`3px solid ${C.orange}`}}>
+            <div className="flex items-center gap-2 mb-2">
+              <MI name="thumb_up" size={18} fill style={{color:C.orange}}/>
+              <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Aksi yang Dibutuhkan</h3>
+            </div>
+            {m.engagementSpec.actions.map((a,ai)=>(
+              <div key={ai} className="flex items-center gap-2" style={{padding:'6px 0',borderBottom:ai<m.engagementSpec.actions.length-1?`1px solid ${C.borderLight}`:'none'}}>
+                <div style={{width:24,height:24,borderRadius:6,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:C.orange}}>{ai+1}</div>
+                <span style={{fontSize:12,color:C.text}}>{a}</span>
+              </div>
+            ))}
+            {m.engagementSpec.note&&<p style={{fontSize:10,color:C.textMuted,marginTop:6}}>{m.engagementSpec.note}</p>}
+          </Card>
+        )}
+
+        {/* EDUKASI Specs */}
+        {m.edukasiSpec&&(
+          <Card className="stagger-4" style={{borderLeft:`3px solid ${C.secondary}`}}>
+            <div className="flex items-center gap-2 mb-2">
+              <MI name="school" size={18} fill style={{color:C.secondary}}/>
+              <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Panduan Distribusi</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span style={{fontSize:11,fontWeight:600,color:C.secondary,background:C.secondaryLight,borderRadius:6,padding:'3px 8px'}}>{m.edukasiSpec.material}</span>
+            </div>
+            <div className="flex items-center gap-4 mb-2">
+              <div className="flex items-center gap-1.5">
+                <MI name="groups" size={14} style={{color:C.secondary}}/>
+                <span style={{fontSize:11,color:C.textSec}}>Min {m.edukasiSpec.minGroups} grup</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MI name="person" size={14} style={{color:C.secondary}}/>
+                <span style={{fontSize:11,color:C.textSec}}>Min {m.edukasiSpec.minGroupSize} anggota/grup</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {m.edukasiSpec.channels.map((ch,ci)=>(
+                <span key={ci} style={{fontSize:10,fontWeight:600,color:C.text,background:C.surfaceLight,borderRadius:4,padding:'2px 8px',border:`1px solid ${C.border}`}}>{ch}</span>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* AKSI Specs */}
+        {m.aksiSpec&&(
+          <Card className="stagger-4" style={{borderLeft:`3px solid ${C.accent}`}}>
+            <div className="flex items-center gap-2 mb-2">
+              <MI name="front_hand" size={18} fill style={{color:C.accent}}/>
+              <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Detail Aksi</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span style={{fontSize:11,fontWeight:600,color:C.accent,background:C.accentLight,borderRadius:6,padding:'3px 8px'}}>{m.aksiSpec.actionType}</span>
+              <span style={{fontSize:11,color:C.textSec,background:C.surfaceLight,borderRadius:6,padding:'3px 8px'}}>{m.aksiSpec.method}</span>
+            </div>
+            <div className="flex items-center gap-4 mb-2">
+              <div className="flex items-center gap-1.5">
+                <MI name="flag" size={14} style={{color:C.accent}}/>
+                <span style={{fontSize:11,fontWeight:700,color:C.text,fontFamily:"'Space Mono'"}}>Target: {m.aksiSpec.target.toLocaleString()} {m.aksiSpec.unit}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MI name="map" size={14} style={{color:C.accent}}/>
+                <span style={{fontSize:11,color:C.textSec}}>{m.aksiSpec.area}</span>
+              </div>
+            </div>
+            {m.aksiSpec.note&&<p style={{fontSize:10,color:C.textMuted}}>{m.aksiSpec.note}</p>}
           </Card>
         )}
 
@@ -2184,12 +2217,12 @@ export default function App(){
             <div style={{flex:1,background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`,textAlign:'center'}}>
               <MI name="mood" size={18} fill style={{color:C.orange}}/>
               <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:2}}>Mood</p>
-              <p style={{fontSize:11,fontWeight:600,color:C.orange}}>{m.type==='KRISIS'?'Bold & Urgent':m.type==='EDUKASI'?'Clean & Professional':'Warm & Engaging'}</p>
+              <p style={{fontSize:11,fontWeight:600,color:C.orange}}>{m.type==='AKSI'?'Bold & Urgent':m.type==='EDUKASI'?'Clean & Professional':m.type==='EVENT'?'Energik & Inklusif':'Warm & Engaging'}</p>
             </div>
             <div style={{flex:1,background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`,textAlign:'center'}}>
               <MI name="record_voice_over" size={18} fill style={{color:C.primary}}/>
               <p style={{fontSize:10,fontWeight:700,color:C.text,marginTop:2}}>Gaya Bahasa</p>
-              <p style={{fontSize:11,fontWeight:600,color:C.primary}}>{m.type==='KRISIS'?'Data-driven':m.type==='EDUKASI'?'Storytelling':'Kasual'}</p>
+              <p style={{fontSize:11,fontWeight:600,color:C.primary}}>{m.type==='AKSI'?'Persuasif':m.type==='EDUKASI'?'Storytelling':m.type==='EVENT'?'Ajakan Hangat':'Kasual'}</p>
             </div>
           </div>
 
@@ -2208,7 +2241,7 @@ export default function App(){
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
             <div style={{background:`${C.green}08`,borderRadius:8,padding:10,border:`1px solid ${C.green}15`}}>
               <p style={{fontSize:10,fontWeight:700,color:C.green,marginBottom:4}}>LAKUKAN</p>
-              {(m.type==='KRISIS'?['Sertakan sumber resmi','Gunakan data & fakta','Tone tegas tapi sopan']:m.type==='EDUKASI'?['Pakai infografis','Bahasa mudah dipahami','Sertakan contoh nyata']:['Konten original','Visual menarik','Ajak interaksi']).map((d,di)=>(
+              {(m.type==='AKSI'?['Sertakan link/form resmi','Jelaskan dampak nyata','Ajak partisipasi aktif']:m.type==='EVENT'?['Datang tepat waktu','Dokumentasi lengkap','Patuhi aturan lokasi']:m.type==='EDUKASI'?['Pakai infografis','Bahasa mudah dipahami','Sertakan contoh nyata']:m.type==='ENGAGEMENT'?['Komentar relevan & positif','Share ke audiens yang tepat','Ikuti panduan engagement']:['Konten original','Visual menarik','Ajak interaksi']).map((d,di)=>(
                 <div key={di} className="flex items-start gap-1.5" style={{marginBottom:2}}>
                   <MI name="check" size={10} style={{color:C.green,marginTop:2,flexShrink:0}}/>
                   <span style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{d}</span>
@@ -2217,7 +2250,7 @@ export default function App(){
             </div>
             <div style={{background:`${C.red}08`,borderRadius:8,padding:10,border:`1px solid ${C.red}15`}}>
               <p style={{fontSize:10,fontWeight:700,color:C.red,marginBottom:4}}>HINDARI</p>
-              {(m.type==='KRISIS'?['Info belum terverifikasi','Attack personal','Bahasa provokatif']:m.type==='EDUKASI'?['Clickbait / misleading','Teks terlalu panjang','Info tanpa sumber']:['Repost tanpa credit','Konten sensitif','Spam / repetitif']).map((d,di)=>(
+              {(m.type==='AKSI'?['Info belum terverifikasi','Spam link berlebihan','Bahasa provokatif']:m.type==='EVENT'?['Datang terlambat','Buat konten tanpa izin','Ganggu acara']:m.type==='EDUKASI'?['Clickbait / misleading','Teks terlalu panjang','Info tanpa sumber']:m.type==='ENGAGEMENT'?['Komentar spam/copy-paste','Bot-like behavior','Engagement palsu']:['Repost tanpa credit','Konten sensitif','Spam / repetitif']).map((d,di)=>(
                 <div key={di} className="flex items-start gap-1.5" style={{marginBottom:2}}>
                   <MI name="close" size={10} style={{color:C.red,marginTop:2,flexShrink:0}}/>
                   <span style={{fontSize:10,color:C.textSec,lineHeight:1.3}}>{d}</span>
@@ -2233,11 +2266,13 @@ export default function App(){
               <span style={{fontSize:10,fontWeight:700,color:C.teal,textTransform:'uppercase',letterSpacing:0.5}}>Contoh Opening</span>
             </div>
             <div className="flex flex-col gap-1.5">
-              {(m.type==='KRISIS'?
-                ['⚠️ KLARIFIKASI: Ini fakta sebenarnya...','Sebelum kamu share, baca ini dulu 👇','Banyak yang salah paham. Thread 🧵']:
+              {(m.type==='EVENT'?
+                ['Yuk ramaikan acara ini bareng!','Datang dan jadi bagian dari perubahan','Jangan lewatkan momen bersejarah ini']:
+                m.type==='AKSI'?
+                ['Suara kamu penting! Dukung gerakan ini','Satu langkah kecil, dampak besar','Mari bertindak sekarang']:
                 m.type==='EDUKASI'?
-                ['Tau nggak sih? Ternyata...','5 hal yang jarang orang tau 📚','Thread penting! Yuk bahas... 🧵']:
-                ['Hai guys! Yuk ikutan 🔥','Challenge baru nih! Siapa berani?','Konten seru yang wajib kamu coba ✨']
+                ['Tau nggak sih? Ternyata...','5 hal yang jarang orang tau','Informasi penting yang harus kamu tau']:
+                ['Hai guys! Yuk ikutan','Challenge baru nih! Siapa berani?','Konten seru yang wajib kamu coba']
               ).map((hook,hi)=>(
                 <div key={hi} style={{padding:'6px 10px',background:C.bg,borderRadius:6,border:`1px solid ${C.borderLight}`,fontSize:11,color:C.textSec,fontStyle:'italic',lineHeight:1.3}}>{hook}</div>
               ))}
@@ -2252,7 +2287,7 @@ export default function App(){
               <span style={{fontSize:10,fontWeight:700,color:C.orange,textTransform:'uppercase',letterSpacing:0.5}}>Call to Action</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {(m.type==='KRISIS'?['Share ke teman','Comment fakta yang kamu tau','Simpan untuk referensi']:['Like & share','Tag 3 temanmu','Follow untuk update','Comment pendapatmu']).map((cta,ci)=>(
+              {(m.type==='EVENT'?['Hadir & dokumentasi','Ajak teman ikut','Share momen di grup']:m.type==='AKSI'?['Tanda tangani petisi','Share ke 10 kontak','Rekrut 3 relawan']:['Like & share','Tag 3 temanmu','Comment pendapatmu']).map((cta,ci)=>(
                 <span key={ci} style={{fontSize:10,fontWeight:600,color:C.text,background:C.surfaceLight,borderRadius:4,padding:'3px 8px',border:`1px solid ${C.borderLight}`}}>{cta}</span>
               ))}
             </div>
@@ -2285,13 +2320,14 @@ export default function App(){
           </div>
           <div style={{background:C.surfaceLight,borderRadius:12,padding:14,border:`1px solid ${C.border}`,marginBottom:8}}>
             <p style={{fontSize:13,color:C.text,lineHeight:1.6,fontStyle:'italic'}}>
-              {m.type==='KRISIS'?`"⚠️ KLARIFIKASI: Berita soal ${m.title.split(':')[1]||m.title} yang viral itu TIDAK BENAR. Ini faktanya 👇\n\nBerdasarkan data resmi... [isi dengan fakta]. Jangan mudah percaya info yang belum terverifikasi!\n\n${m.hashtags||'#GERAK #Klarifikasi'}"`:
-               m.type==='EDUKASI'?`"Tau nggak sih? ${m.title} itu ternyata lebih penting dari yang kita kira! 📚\n\nIni dia 3 fakta penting yang perlu kamu tau... [isi dengan fakta edukatif]\n\nShare ke teman biar makin banyak yang paham! 💡\n\n${m.hashtags||'#GERAK #Edukasi'}"`:
-               `"Hai guys! Yuk ikutan campaign ${m.title}! 🔥\n\nIni cara gue berpartisipasi... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu! ✨\n\n${m.hashtags||'#GERAK #GerakDigital'}"`}
+              {m.type==='EVENT'?`"Hadir di ${m.title}! Acara ini penting untuk komunitas kita.\n\nYuk ramaikan dan jadikan momen bersejarah!\n\n#GERAK #AksiNyata"`:
+               m.type==='AKSI'?`"Mari bergabung dalam ${m.title}! Setiap aksi kecil punya dampak besar.\n\nIkut kontribusi sekarang!\n\n#GERAK #GerakanKomunitas"`:
+               m.type==='EDUKASI'?`"Tau nggak sih? ${m.title} itu ternyata lebih penting dari yang kita kira!\n\nIni dia fakta penting yang perlu kamu tau...\n\nShare ke teman biar makin banyak yang paham!\n\n#GERAK #Edukasi"`:
+               `"Yuk ikutan ${m.title}!\n\nIni cara gue berpartisipasi... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu!\n\n#GERAK #GerakDigital"`}
             </p>
           </div>
           <div className="flex gap-2">
-            <button onClick={()=>{const cap=m.type==='KRISIS'?`⚠️ KLARIFIKASI: Berita soal ${m.title.split(':')[1]||m.title} yang viral itu TIDAK BENAR. Ini faktanya 👇\n\nBerdasarkan data resmi... [isi dengan fakta]. Jangan mudah percaya info yang belum terverifikasi!\n\n${m.hashtags||'#GERAK #Klarifikasi'}`:m.type==='EDUKASI'?`Tau nggak sih? ${m.title} itu ternyata lebih penting dari yang kita kira! 📚\n\nIni dia 3 fakta penting yang perlu kamu tau... [isi dengan fakta edukatif]\n\nShare ke teman biar makin banyak yang paham! 💡\n\n${m.hashtags||'#GERAK #Edukasi'}`:`Hai guys! Yuk ikutan campaign ${m.title}! 🔥\n\nIni cara gue berpartisipasi... [ceritakan pengalamanmu]\n\nSiapa yang udah ikutan? Tag 3 temanmu! ✨\n\n${m.hashtags||'#GERAK #GerakDigital'}`;copyText(cap)}} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:C.white,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+            <button onClick={()=>{const cap=m.type==='EVENT'?`Hadir di ${m.title}! Yuk ramaikan!\n\n#GERAK #AksiNyata`:m.type==='AKSI'?`Mari bergabung dalam ${m.title}! Aksi kecil, dampak besar.\n\n#GERAK #GerakanKomunitas`:m.type==='EDUKASI'?`${m.title} — informasi penting yang perlu kamu tau!\n\n#GERAK #Edukasi`:`Yuk ikutan ${m.title}! Tag 3 temanmu!\n\n#GERAK #GerakDigital`;copyText(cap)}} className="btn-primary" style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:C.teal,color:C.white,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
               <MI name="content_copy" size={14} style={{color:C.white}}/> Salin Caption
             </button>
             <button onClick={()=>showToast('Kamu boleh edit caption sesuai gayamu')} style={{flex:1,padding:'8px 0',borderRadius:8,border:`1px solid ${C.border}`,background:'transparent',color:C.textSec,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
@@ -2519,9 +2555,9 @@ export default function App(){
                   <p style={{fontSize:10,color:C.textSec}}>konten_misi_{m.id}.mp4</p>
                 </div>
               </div>
-              {m.visitLocation&&m.lat&&(
+              {m.eventSpec?.location&&m.eventSpec?.lat&&(
                 <div style={{position:'absolute',bottom:6,left:6,background:C.surface,borderRadius:4,padding:'2px 8px',fontSize:10,color:C.textSec,fontFamily:"'Space Mono'",display:'flex',alignItems:'center',gap:3,border:`1px solid ${C.border}`}}>
-                  <MI name="location_on" size={10} fill style={{color:C.pink}}/>{m.lat.toFixed(4)}, {m.lng.toFixed(4)}
+                  <MI name="location_on" size={10} fill style={{color:C.pink}}/>{m.eventSpec?.lat.toFixed(4)}, {m.eventSpec?.lng.toFixed(4)}
                 </div>
               )}
             </div>
@@ -2550,7 +2586,7 @@ export default function App(){
         )}
 
         {/* Geolocation Proof */}
-        {m.visitLocation&&(
+        {m.eventSpec?.location&&(
           <Card className="stagger-5" style={{borderLeft:`3px solid ${C.pink}`}}>
             <div className="flex items-center gap-2 mb-2">
               <MI name="my_location" size={18} style={{color:C.pink}}/>
@@ -2563,9 +2599,9 @@ export default function App(){
               <div style={{background:C.surfaceLight,borderRadius:8,padding:10,border:`1px solid ${C.border}`}}>
                 <div className="flex items-center gap-2 mb-1">
                   <MI name="location_on" size={14} fill style={{color:C.pink}}/>
-                  <span style={{fontSize:12,fontWeight:600,color:C.text}}>{m.visitLocation}</span>
+                  <span style={{fontSize:12,fontWeight:600,color:C.text}}>{m.eventSpec?.location}</span>
                 </div>
-                <p style={{fontSize:10,color:C.textMuted,fontFamily:"'Space Mono'"}}>Geo: {m.lat?.toFixed(6)}, {m.lng?.toFixed(6)}</p>
+                <p style={{fontSize:10,color:C.textMuted,fontFamily:"'Space Mono'"}}>Geo: {m.eventSpec?.lat?.toFixed(6)}, {m.eventSpec?.lng?.toFixed(6)}</p>
                 <p style={{fontSize:10,color:C.textMuted}}>Timestamp: 8 Mar 2026, 10:32 WIB</p>
                 <div className="flex items-center gap-1 mt-2">
                   <MI name="check_circle" size={12} fill style={{color:C.green}}/>
@@ -3748,8 +3784,8 @@ export default function App(){
               <div className="flex flex-col gap-5">
                 {/* Type selector */}
                 <L label="Tipe Misi" icon="category">
-                  <div className="grid grid-cols-6 gap-2">
-                    {[{t:'EDUKASI',desc:'Edukasi'},{t:'AMPLIFIKASI',desc:'Boost'},{t:'KRISIS',desc:'Counter'},{t:'KOMUNITAS',desc:'Sosial'},{t:'VISIT',desc:'Kunjungan'},{t:'SOCIAL',desc:'Sosmed'}].map(({t,desc})=>(
+                  <div className="grid grid-cols-5 gap-2">
+                    {[{t:'EVENT',desc:'Event'},{t:'KONTEN',desc:'Konten'},{t:'ENGAGEMENT',desc:'Engage'},{t:'EDUKASI',desc:'Edukasi'},{t:'AKSI',desc:'Aksi'}].map(({t,desc})=>(
                       <button key={t} onClick={()=>setMissionForm(f=>({...f,type:t}))} style={{
                         padding:'10px 4px',borderRadius:12,border:`1.5px solid ${missionForm.type===t?typeColor(t):C.border}`,
                         background:missionForm.type===t?typeBg(t):C.glass,color:missionForm.type===t?typeColor(t):C.textSec,
@@ -3764,12 +3800,11 @@ export default function App(){
                   <div style={{background:`${tc}10`,borderRadius:8,padding:'8px 10px',border:`1px solid ${tc}20`,display:'flex',alignItems:'center',gap:8,marginTop:8}}>
                     <MI name={ti} size={14} fill style={{color:tc,flexShrink:0}}/>
                     <p style={{fontSize:11,color:C.textSec,lineHeight:1.3}}>
-                      {missionForm.type==='EDUKASI'?'Agent membagikan materi edukasi. Sertakan infografis & template pesan.':
-                       missionForm.type==='AMPLIFIKASI'?'Agent like, comment, share konten yang sudah ada.':
-                       missionForm.type==='KRISIS'?'Misi darurat counter-narasi. Sertakan fakta & sumber resmi.':
-                       missionForm.type==='KOMUNITAS'?'Koordinasi kegiatan komunitas. Sertakan poster & link.':
-                       missionForm.type==='VISIT'?'Kunjungan lokasi fisik. Sertakan alamat & panduan.':
-                       'Konten original di sosmed. Sertakan contoh & hashtag.'}
+                      {missionForm.type==='EVENT'?'Kehadiran fisik: rally, town hall, gotong royong. Sertakan lokasi, tanggal & metode check-in.':
+                       missionForm.type==='KONTEN'?'Buat konten original: video, foto, infografis. Sertakan format, durasi & guidelines.':
+                       missionForm.type==='ENGAGEMENT'?'Like, share, comment konten yang sudah ada. Sertakan target post & aksi.':
+                       missionForm.type==='EDUKASI'?'Distribusi materi edukasi ke grup komunitas. Sertakan materi & channel distribusi.':
+                       'Aksi langsung: petisi, rekrutmen relawan, door-to-door. Sertakan target & area.'}
                     </p>
                   </div>
                 </L>
@@ -3778,7 +3813,7 @@ export default function App(){
                   <div className="flex flex-col gap-4">
                     <L label="Judul Misi" icon="title">
                       <input value={missionForm.title} onChange={e=>setMissionForm(f=>({...f,title:e.target.value}))} placeholder="e.g., Distribusi Materi Literasi Digital..." style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:14,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
-                      {!missionForm.title&&<AISuggest text={missionForm.type==='KRISIS'?'"Flash Counter: Klarifikasi Fakta Terbaru"':missionForm.type==='EDUKASI'?'"Kampanye Literasi Digital untuk Semua"':missionForm.type==='SOCIAL'?'"Challenge Konten Positif #GerakDigital"':'"Misi Komunitas: Aksi Nyata Bersama"'} onApply={()=>setMissionForm(f=>({...f,title:f.type==='KRISIS'?'Flash Counter: Klarifikasi Fakta Terbaru':f.type==='EDUKASI'?'Kampanye Literasi Digital untuk Semua':f.type==='SOCIAL'?'Challenge Konten Positif #GerakDigital':'Misi Komunitas: Aksi Nyata Bersama'}))}/>}
+                      {!missionForm.title&&<AISuggest text={missionForm.type==='AKSI'?'"Flash Counter: Klarifikasi Fakta Terbaru"':missionForm.type==='EDUKASI'?'"Kampanye Literasi Digital untuk Semua"':missionForm.type==='SOCIAL'?'"Challenge Konten Positif #GerakDigital"':'"Misi Komunitas: Aksi Nyata Bersama"'} onApply={()=>setMissionForm(f=>({...f,title:f.type==='KRISIS'?'Flash Counter: Klarifikasi Fakta Terbaru':f.type==='EDUKASI'?'Kampanye Literasi Digital untuk Semua':f.type==='SOCIAL'?'Challenge Konten Positif #GerakDigital':'Misi Komunitas: Aksi Nyata Bersama'}))}/>}
                     </L>
                     <L label="Hashtag Wajib" icon="tag">
                       <input value={missionForm.hashtags||''} onChange={e=>setMissionForm(f=>({...f,hashtags:e.target.value}))} placeholder="#GerakDigital #LiterasiDigital" style={{width:'100%',padding:'10px 14px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,outline:'none',fontFamily:'inherit',background:C.surfaceLight}}/>
@@ -3901,7 +3936,7 @@ export default function App(){
                       </div>
                     </L>
                     {/* VISIT location */}
-                    {missionForm.type==='VISIT'&&(<>
+                    {missionForm.type==='EVENT'&&(<>
                       <L label="Nama Lokasi" icon="location_on">
                         <input value={missionForm.location||''} onChange={e=>setMissionForm(f=>({...f,location:e.target.value}))} placeholder="e.g., Posko Bantuan, Jl. Raya..." style={{width:'100%',padding:'10px 12px',borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,color:C.text,fontFamily:'inherit',background:C.surfaceLight}}/>
                       </L>
@@ -3960,7 +3995,7 @@ export default function App(){
                       <option>Like & Share</option><option>Forward pesan</option><option>Foto before-after</option>
                       <option>Dokumentasi acara</option>
                     </select>
-                    {!missionForm.format&&<AISuggest text={missionForm.type==='KRISIS'?'AI: "Thread" paling efektif untuk counter-narasi':missionForm.type==='SOCIAL'||missionForm.type==='AMPLIFIKASI'?'AI: "Video Reels" punya engagement tertinggi':missionForm.type==='VISIT'?'AI: "Foto before-after" cocok untuk dokumentasi':'AI: "Teks + Infografis" ideal untuk edukasi'} onApply={()=>setMissionForm(f=>({...f,format:f.type==='KRISIS'?'Thread':f.type==='SOCIAL'||f.type==='AMPLIFIKASI'?'Video Reels':f.type==='VISIT'?'Foto before-after':'Teks + Infografis'}))}/>}
+                    {!missionForm.format&&<AISuggest text={missionForm.type==='AKSI'?'AI: "Thread" paling efektif untuk counter-narasi':missionForm.type==='SOCIAL'||missionForm.type==='AMPLIFIKASI'?'AI: "Video Reels" punya engagement tertinggi':missionForm.type==='EVENT'?'AI: "Foto before-after" cocok untuk dokumentasi':'AI: "Teks + Infografis" ideal untuk edukasi'} onApply={()=>setMissionForm(f=>({...f,format:f.type==='KRISIS'?'Thread':f.type==='SOCIAL'||f.type==='AMPLIFIKASI'?'Video Reels':f.type==='VISIT'?'Foto before-after':'Teks + Infografis'}))}/>}
                   </L>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                     <L label="Durasi Video" icon="timer">
@@ -3988,7 +4023,7 @@ export default function App(){
                         }}>{v}</button>
                       ))}
                     </div>
-                    {(()=>{const rec=missionForm.type==='KRISIS'?400:missionForm.type==='VISIT'?350:missionForm.type==='EDUKASI'?250:200;return missionForm.xp!==rec?<AISuggest text={`AI rekomendasikan ${rec} XP (effort ${rec>=350?'tinggi':'sedang'})`} onApply={()=>setMissionForm(f=>({...f,xp:rec}))}/>:null;})()}
+                    {(()=>{const rec=missionForm.type==='AKSI'?400:missionForm.type==='EVENT'?350:missionForm.type==='EDUKASI'?250:200;return missionForm.xp!==rec?<AISuggest text={`AI rekomendasikan ${rec} XP (effort ${rec>=350?'tinggi':'sedang'})`} onApply={()=>setMissionForm(f=>({...f,xp:rec}))}/>:null;})()}
                   </L>
                   <L label="Deadline" icon="schedule">
                     <div className="flex gap-3">
@@ -4217,7 +4252,7 @@ export default function App(){
                   <div className="flex flex-col gap-3">
                     <L label="Contoh Opening Hook" icon="format_quote">
                       <div className="flex flex-col gap-2">
-                        {(missionForm.type==='KRISIS'?
+                        {(missionForm.type==='AKSI'?
                           ['Klarifikasi: Ini fakta sebenarnya...','Banyak yang salah paham. Thread...','Sebelum kamu share, baca ini dulu']:
                           missionForm.type==='EDUKASI'?
                           ['Tau nggak sih? Ternyata...','5 hal yang jarang orang tau tentang...','Thread penting! Yuk bahas...']:
