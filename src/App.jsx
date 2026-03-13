@@ -142,6 +142,13 @@ const typeBg=t=>({EVENT:C.purpleLight,KONTEN:C.primaryLight,ENGAGEMENT:C.orangeL
 const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONTEN:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,ENGAGEMENT:`linear-gradient(135deg,${C.orange},#EA580C)`,EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AKSI:`linear-gradient(135deg,${C.accent},#D32F2F)`}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
 const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand'}[t]||'star');
 const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan'}[t]||'');
+const typeBonuses=t=>({
+  EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:200,color:C.purple}],
+  KONTEN:[{label:'Konten Terbaik',icon:'emoji_events',xp:250,color:C.gold},{label:'Paling Engaging',icon:'trending_up',xp:200,color:C.green},{label:'Paling Cepat Submit',icon:'speed',xp:100,color:C.teal},{label:'Paling Kreatif',icon:'auto_awesome',xp:150,color:C.purple}],
+  ENGAGEMENT:[{label:'Top Engager',icon:'favorite',xp:150,color:C.red},{label:'Komentar Terbaik',icon:'chat_bubble',xp:100,color:C.primary},{label:'Paling Konsisten',icon:'repeat',xp:100,color:C.teal}],
+  EDUKASI:[{label:'Jangkauan Terluas',icon:'public',xp:200,color:C.purple},{label:'Distribusi Tercepat',icon:'speed',xp:100,color:C.teal},{label:'Feedback Terbaik',icon:'thumb_up',xp:150,color:C.green}],
+  AKSI:[{label:'Target Tercapai Duluan',icon:'flag',xp:200,color:C.gold},{label:'Relawan Terbanyak',icon:'group_add',xp:150,color:C.primary},{label:'Area Terluas',icon:'map',xp:100,color:C.teal}],
+}[t]||[]);
 const pName=p=>({whatsapp:'WhatsApp',telegram:'Telegram',instagram:'Instagram',tiktok:'TikTok',x:'X',facebook:'Facebook'}[p]||p);
 const pColor=p=>({whatsapp:'#25D366',telegram:'#0088cc',instagram:'#E1306C',tiktok:'#1A1A1A',x:'#1DA1F2',facebook:'#1877F2'}[p]||C.text);
 const pIcon=p=>({whatsapp:'chat',telegram:'send',facebook:'thumb_up'}[p]);
@@ -1633,20 +1640,28 @@ export default function App(){
     const [shopTab,setShopTab]=useState('semua');
     const userPoints=4820;
     const rewardItems=[
-      {id:1,cat:'pulsa',name:'Pulsa 25K',desc:'Pulsa All Operator Rp25.000',cost:500,icon:'phone_android',color:C.green,stock:50,popular:true},
-      {id:2,cat:'pulsa',name:'Pulsa 50K',desc:'Pulsa All Operator Rp50.000',cost:900,icon:'phone_android',color:C.green,stock:30,popular:true},
-      {id:3,cat:'pulsa',name:'Pulsa 100K',desc:'Pulsa All Operator Rp100.000',cost:1600,icon:'phone_android',color:C.green,stock:15},
-      {id:4,cat:'data',name:'Paket Data 5GB',desc:'Kuota Internet 5GB 30 Hari',cost:750,icon:'wifi',color:C.teal,stock:40},
-      {id:5,cat:'data',name:'Paket Data 15GB',desc:'Kuota Internet 15GB 30 Hari',cost:1800,icon:'wifi',color:C.teal,stock:20},
-      {id:6,cat:'ewallet',name:'GoPay 50K',desc:'Saldo GoPay Rp50.000',cost:1000,icon:'account_balance_wallet',color:C.primary,stock:25,popular:true},
-      {id:7,cat:'ewallet',name:'OVO 50K',desc:'Saldo OVO Rp50.000',cost:1000,icon:'account_balance_wallet',color:C.purple,stock:25},
-      {id:8,cat:'ewallet',name:'DANA 100K',desc:'Saldo DANA Rp100.000',cost:1800,icon:'account_balance_wallet',color:C.teal,stock:10},
-      {id:9,cat:'voucher',name:'Voucher Tokped 50K',desc:'Voucher Belanja Tokopedia',cost:1100,icon:'shopping_bag',color:C.green,stock:15},
-      {id:10,cat:'voucher',name:'Voucher Shopee 50K',desc:'Voucher Belanja Shopee',cost:1100,icon:'shopping_bag',color:C.orange,stock:15},
-      {id:11,cat:'merch',name:'Kaos GERAK',desc:'Kaos eksklusif edisi terbatas',cost:2500,icon:'checkroom',color:C.primary,stock:5},
-      {id:12,cat:'merch',name:'Topi GERAK',desc:'Topi trucker limited edition',cost:1500,icon:'styler',color:C.primary,stock:8},
+      /* ── Merchandise GERAK ── */
+      {id:1,cat:'apparel',name:'Kaos GERAK Tactical',desc:'Kaos cotton combed 30s, desain military patch',cost:1500,icon:'checkroom',color:C.primary,stock:25,popular:true},
+      {id:2,cat:'apparel',name:'Jaket Parka GERAK',desc:'Jaket parka waterproof, patch emblem di lengan',cost:4500,icon:'checkroom',color:'#2D5016',stock:8,popular:true},
+      {id:3,cat:'apparel',name:'Topi Tactical GERAK',desc:'Topi tactical velcro patch, adjustable strap',cost:800,icon:'styler',color:C.primary,stock:30},
+      {id:4,cat:'apparel',name:'Lanyard ID Card GERAK',desc:'Lanyard military-style dengan badge holder',cost:300,icon:'badge',color:C.teal,stock:50},
+      /* ── Aksesoris & Koleksi ── */
+      {id:5,cat:'koleksi',name:'Mug Keramik GERAK',desc:'Mug keramik 350ml, desain insignia pangkat',cost:600,icon:'coffee',color:C.gold,stock:40,popular:true},
+      {id:6,cat:'koleksi',name:'Tumbler Stainless GERAK',desc:'Tumbler 500ml vacuum insulated, logo engraved',cost:1200,icon:'water_drop',color:'#2D5016',stock:15},
+      {id:7,cat:'koleksi',name:'Kalender Meja GERAK 2026',desc:'Kalender premium dengan foto kegiatan & quotes',cost:500,icon:'calendar_month',color:C.primary,stock:35},
+      {id:8,cat:'koleksi',name:'Sticker Pack Emblem',desc:'20 stiker vinyl tahan air, desain pangkat & lencana',cost:200,icon:'auto_awesome',color:C.purple,stock:100},
+      {id:9,cat:'koleksi',name:'Pin Enamel Lencana',desc:'Pin enamel premium koleksi lencana GERAK',cost:400,icon:'military_tech',color:C.gold,stock:20},
+      /* ── Sponsor & Voucher ── */
+      {id:10,cat:'sponsor',name:'Voucher BRI Rp50K',desc:'Voucher belanja dari Bank BRI untuk anggota aktif',cost:1000,icon:'account_balance',color:'#003399',stock:20,popular:true,sponsor:'Bank BRI'},
+      {id:11,cat:'sponsor',name:'Voucher Mandiri Rp100K',desc:'e-Voucher Bank Mandiri, berlaku di merchant pilihan',cost:1800,icon:'account_balance',color:'#003366',stock:10,sponsor:'Bank Mandiri'},
+      {id:12,cat:'sponsor',name:'Paket Data Telkomsel 10GB',desc:'Kuota internet 10GB 30 hari, sponsor Telkomsel',cost:800,icon:'wifi',color:C.red,stock:30,sponsor:'Telkomsel'},
+      {id:13,cat:'sponsor',name:'GoPay Rp50K',desc:'Saldo GoPay dari sponsor GoTo Group',cost:1000,icon:'account_balance_wallet',color:C.green,stock:25,sponsor:'GoTo'},
+      /* ── Eksklusif ── */
+      {id:14,cat:'eksklusif',name:'Sertifikat Anggota Aktif',desc:'Sertifikat digital + cetak dengan QR verifikasi',cost:3000,icon:'workspace_premium',color:C.gold,stock:5},
+      {id:15,cat:'eksklusif',name:'Undangan Gala Dinner GERAK',desc:'Akses VIP ke acara tahunan GERAK Awards',cost:8000,icon:'celebration',color:C.purple,stock:3},
+      {id:16,cat:'eksklusif',name:'Mentorship 1-on-1',desc:'Sesi mentoring 1 jam dengan leader GERAK',cost:5000,icon:'school',color:C.primary,stock:5},
     ];
-    const cats=[{id:'semua',label:'Semua'},{id:'pulsa',label:'Pulsa'},{id:'data',label:'Data'},{id:'ewallet',label:'E-Wallet'},{id:'voucher',label:'Voucher'},{id:'merch',label:'Merch'}];
+    const cats=[{id:'semua',label:'Semua'},{id:'apparel',label:'Apparel'},{id:'koleksi',label:'Koleksi'},{id:'sponsor',label:'Sponsor'},{id:'eksklusif',label:'Eksklusif'}];
     const filtered=shopTab==='semua'?rewardItems:rewardItems.filter(r=>r.cat===shopTab);
 
     return(<div key={k} className="flex flex-col gap-4 pb-4">
@@ -1685,7 +1700,8 @@ export default function App(){
           return(
           <Card key={item.id} className={`stagger-${Math.min(i+3,7)}`} style={{padding:0,overflow:'hidden'}}>
             <div style={{padding:'14px 12px 10px',textAlign:'center',position:'relative'}}>
-              {item.popular&&<span style={{position:'absolute',top:8,right:8,fontSize:10,fontWeight:700,color:C.orange,background:C.orangeLight,padding:'2px 6px',borderRadius:4}}>Populer</span>}
+              {item.popular&&!item.sponsor&&<span style={{position:'absolute',top:8,right:8,fontSize:10,fontWeight:700,color:C.orange,background:C.orangeLight,padding:'2px 6px',borderRadius:4}}>Populer</span>}
+              {item.sponsor&&<span style={{position:'absolute',top:8,right:8,fontSize:9,fontWeight:700,color:C.white,background:'linear-gradient(135deg,#003399,#0055AA)',padding:'2px 7px',borderRadius:4,letterSpacing:0.3}}>{item.sponsor}</span>}
               <div style={{width:44,height:44,borderRadius:12,background:`${item.color}15`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',border:`1px solid ${item.color}20`}}>
                 <MI name={item.icon} size={22} style={{color:item.color}}/>
               </div>
@@ -1718,9 +1734,9 @@ export default function App(){
       <Card className="stagger-6">
         <h3 style={{fontSize:12,fontWeight:700,color:C.textMuted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Riwayat Penukaran</h3>
         {[
-          {name:'Pulsa 50K',date:'1 Mar 2026',cost:900,status:'Berhasil'},
-          {name:'GoPay 50K',date:'22 Feb 2026',cost:1000,status:'Berhasil'},
-          {name:'Paket Data 5GB',date:'10 Feb 2026',cost:750,status:'Berhasil'},
+          {name:'Mug Keramik GERAK',date:'1 Mar 2026',cost:600,status:'Berhasil'},
+          {name:'Voucher BRI Rp50K',date:'22 Feb 2026',cost:1000,status:'Berhasil'},
+          {name:'Sticker Pack Emblem',date:'10 Feb 2026',cost:200,status:'Berhasil'},
         ].map((h,i)=>(
           <div key={i} className="flex items-center gap-3" style={{padding:'8px 0',borderBottom:i<2?`1px solid ${C.border}`:'none'}}>
             <div style={{width:28,height:28,borderRadius:8,background:C.greenLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -2243,6 +2259,21 @@ export default function App(){
               <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>3 misi berturut-turut</p>
             </div>
           </div>
+
+          {/* Bonus Kategori per Tipe Misi */}
+          <p style={{fontSize:10,fontWeight:700,color:C.gold,letterSpacing:1,textTransform:'uppercase',marginTop:12,marginBottom:8}}>Bonus Kategori — {m.type}</p>
+          <div className="flex flex-col gap-2">
+            {typeBonuses(m.type).map((b,bi)=>(
+              <div key={bi} className="flex items-center gap-3" style={{padding:'8px 10px',borderRadius:10,background:`${b.color}10`,border:`1px solid ${b.color}18`}}>
+                <div style={{width:30,height:30,borderRadius:8,background:`${b.color}18`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <MI name={b.icon} size={16} fill style={{color:b.color}}/>
+                </div>
+                <span style={{fontSize:12,fontWeight:600,color:C.text,flex:1}}>{b.label}</span>
+                <span style={{fontSize:12,fontWeight:800,color:b.color,fontFamily:"'Space Mono'"}}>+{b.xp} XP</span>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:10,color:C.textMuted,marginTop:6,textAlign:'center'}}>Bonus diberikan otomatis setelah review admin</p>
         </Card>
 
         {/* Consent + Next */}
