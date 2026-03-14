@@ -6709,15 +6709,9 @@ export default function App(){
                 {connections.map(([ai,bi],i)=>{
                   const ka=kodams[ai],kb=kodams[bi];
                   const mx=(ka.x+kb.x)/2+((i%3)-1)*3,my=(ka.y+kb.y)/2+((i%2)?2:-2);
-                  return <path key={i} d={`M${ka.x},${ka.y} Q${mx},${my} ${kb.x},${kb.y}`} fill="none" stroke="#D4A843" strokeWidth="0.2" className="pres-network-line" style={{animationDelay:`${i*0.15}s`,animationDuration:`${2+i%3}s`}}/>;
+                  return <path key={i} d={`M${ka.x},${ka.y} Q${mx},${my} ${kb.x},${kb.y}`} fill="none" stroke="#D4A843" strokeWidth="0.15" opacity="0.4" className="pres-network-line" style={{animationDelay:`${i*0.15}s`,animationDuration:`${2+i%3}s`}}/>;
                 })}
-                {/* Extra organic ambient lines */}
-                {kodams.filter(k=>k.s>=10).map((k,i)=>{
-                  return [30,150,270].map((deg,j)=>{
-                    const rad=deg*Math.PI/180;const r=4;
-                    return <line key={`r${i}-${j}`} x1={k.x} y1={k.y} x2={k.x+Math.cos(rad)*r} y2={k.y+Math.sin(rad)*r} stroke="#4ADE80" strokeWidth="0.1" className="pres-network-line" style={{animationDelay:`${1+i*0.2+j*0.3}s`}}/>;
-                  });
-                })}
+                {/* Removed ambient lines for cleaner look */}
               </svg>
 
               {/* Kodam nodes with organic glow */}
@@ -6740,8 +6734,8 @@ export default function App(){
               ))}
 
               {/* Bottom formula */}
-              <animated.div style={{...statsAnim,position:'absolute',bottom:'2%',left:'50%',transform:'translateX(-50%)',zIndex:10}}>
-                <div style={{display:'flex',alignItems:'center',gap:14,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(16px)',borderRadius:18,padding:'14px 28px',border:'1px solid rgba(184,134,11,0.2)',boxShadow:'0 8px 32px rgba(0,0,0,0.4)'}}>
+              <animated.div style={{...statsAnim,position:'absolute',bottom:'3%',left:'50%',transform:'translateX(-50%)',zIndex:10}}>
+                <div style={{display:'flex',alignItems:'center',gap:20,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(20px)',borderRadius:20,padding:'18px 36px',border:'1px solid rgba(184,134,11,0.25)',boxShadow:'0 12px 40px rgba(0,0,0,0.5)'}}>
                   {[
                     {v:'400K',l:'Prajurit',c:'#D4A843',icon:'military_tech'},
                     {v:'×4',l:'Keluarga',c:'#4ADE80',icon:'favorite'},
@@ -6749,20 +6743,20 @@ export default function App(){
                     {v:'×37',l:'Kodam',c:'#FB923C',icon:'map'},
                   ].map((s,i)=>(
                     <React.Fragment key={i}>
-                      {i>0&&<MI name="arrow_forward" size={18} style={{color:'rgba(255,255,255,0.15)'}}/>}
-                      <div style={{display:'flex',alignItems:'center',gap:6}}>
-                        <MI name={s.icon} size={20} style={{color:s.c}}/>
+                      {i>0&&<MI name="arrow_forward" size={22} style={{color:'rgba(255,255,255,0.2)'}}/>}
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <MI name={s.icon} size={26} style={{color:s.c}}/>
                         <div>
-                          <p style={{fontSize:20,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.v}</p>
-                          <p style={{fontSize:10,color:'rgba(255,255,255,0.4)',fontWeight:600}}>{s.l}</p>
+                          <p style={{fontSize:26,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.v}</p>
+                          <p style={{fontSize:13,color:'rgba(255,255,255,0.5)',fontWeight:600}}>{s.l}</p>
                         </div>
                       </div>
                     </React.Fragment>
                   ))}
-                  <div style={{width:1,height:36,background:'rgba(255,255,255,0.1)',margin:'0 6px'}}/>
+                  <div style={{width:1,height:44,background:'rgba(255,255,255,0.12)',margin:'0 8px'}}/>
                   <div style={{textAlign:'center'}}>
-                    <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',fontWeight:600}}>Potensi Jangkauan</p>
-                    <p style={{fontSize:28,fontWeight:900,color:'#fff',fontFamily:"'JetBrains Mono'",textShadow:'0 0 20px rgba(184,134,11,0.3)'}}>16M+</p>
+                    <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',fontWeight:600}}>Potensi Jangkauan</p>
+                    <p style={{fontSize:36,fontWeight:900,color:'#fff',fontFamily:"'JetBrains Mono'",textShadow:'0 0 24px rgba(184,134,11,0.4)'}}>16M+</p>
                   </div>
                 </div>
               </animated.div>
