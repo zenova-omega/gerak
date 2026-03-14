@@ -1698,6 +1698,22 @@ export default function App(){
         </div>
       </Card>
 
+      {/* ─── Quick Actions ─── */}
+      <Card className="stagger-2">
+        <div className="flex gap-3">
+          <button onClick={()=>nav('konten')} style={{flex:1,padding:'12px 14px',borderRadius:12,border:`1px solid ${C.border}`,background:C.glass,display:'flex',alignItems:'center',gap:8,cursor:'pointer',textAlign:'left'}}>
+            <MI name="analytics" size={18} style={{color:C.primary}}/>
+            <div><p style={{fontSize:13,fontWeight:600,color:C.text}}>Konten Saya</p><p style={{fontSize:11,color:C.textMuted}}>Postingan & performa</p></div>
+            <MI name="chevron_right" size={16} style={{color:C.textMuted,marginLeft:'auto'}}/>
+          </button>
+          <button onClick={()=>nav('toko')} style={{flex:1,padding:'12px 14px',borderRadius:12,border:`1px solid ${C.border}`,background:C.glass,display:'flex',alignItems:'center',gap:8,cursor:'pointer',textAlign:'left'}}>
+            <MI name="storefront" size={18} style={{color:C.gold}}/>
+            <div><p style={{fontSize:13,fontWeight:600,color:C.text}}>Toko Poin</p><p style={{fontSize:11,color:C.textMuted}}>Tukar XP → reward</p></div>
+            <MI name="chevron_right" size={16} style={{color:C.textMuted,marginLeft:'auto'}}/>
+          </button>
+        </div>
+      </Card>
+
       {/* ─── Keluarga Saya (Family) ─── */}
       {accountType==='prajurit'&&<Card className="stagger-2">
         <div className="flex items-center justify-between mb-3" style={{paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
@@ -2752,16 +2768,16 @@ export default function App(){
     const userPoints=4820;
     const rewardItems=[
       /* ── Merchandise TNI AD ── */
-      {id:1,cat:'apparel',name:'Kaos TNI AD Tactical',desc:'Kaos cotton combed 30s, desain patch TNI AD resmi',cost:1500,icon:'checkroom',color:C.primary,stock:25,popular:true,img:'/images/shop-kaos-tactical.png'},
-      {id:2,cat:'apparel',name:'Jaket Parka TNI AD',desc:'Jaket parka waterproof, patch emblem TNI AD di lengan',cost:4500,icon:'checkroom',color:'#2D5016',stock:8,popular:true,img:'/images/shop-jaket-parka.png'},
+      {id:1,cat:'apparel',name:'Kaos TNI AD Tactical',desc:'Kaos cotton combed 30s, desain patch TNI AD resmi',cost:1500,icon:'checkroom',color:C.primary,stock:25,popular:true,img:'/images/shop-kaos-tactical-v2.png'},
+      {id:2,cat:'apparel',name:'Jaket Parka TNI AD',desc:'Jaket parka waterproof, patch emblem TNI AD di lengan',cost:4500,icon:'checkroom',color:'#2D5016',stock:8,popular:true,img:'/images/shop-jaket-parka-v2.png'},
       {id:3,cat:'apparel',name:'Topi Tactical TNI AD',desc:'Topi tactical velcro patch, logo TNI AD',cost:800,icon:'styler',color:C.primary,stock:30,img:'/images/shop-topi-tactical.png'},
       {id:4,cat:'apparel',name:'Lanyard ID Card DISPENAD',desc:'Lanyard military-style TNI AD dengan badge holder',cost:300,icon:'badge',color:C.teal,stock:50,img:'/images/shop-lanyard.png'},
       /* ── Aksesoris & Koleksi ── */
-      {id:5,cat:'koleksi',name:'Mug Keramik TNI AD',desc:'Mug keramik 350ml, desain insignia pangkat TNI AD',cost:600,icon:'coffee',color:C.gold,stock:40,popular:true,img:'/images/shop-mug-keramik.png'},
+      {id:5,cat:'koleksi',name:'Mug Keramik TNI AD',desc:'Mug keramik 350ml, desain insignia pangkat TNI AD',cost:600,icon:'coffee',color:C.gold,stock:40,popular:true,img:'/images/shop-mug-keramik-v2.png'},
       {id:6,cat:'koleksi',name:'Tumbler Stainless TNI AD',desc:'Tumbler 500ml vacuum insulated, logo TNI AD engraved',cost:1200,icon:'water_drop',color:'#2D5016',stock:15,img:'/images/shop-tumbler.png'},
       {id:7,cat:'koleksi',name:'Kalender Meja TNI AD 2026',desc:'Kalender premium foto kegiatan TNI AD & quotes prajurit',cost:500,icon:'calendar_month',color:C.primary,stock:35,img:'/images/shop-kalender.png'},
       {id:8,cat:'koleksi',name:'Sticker Pack Emblem TNI AD',desc:'20 stiker vinyl tahan air, desain pangkat & lencana TNI AD',cost:200,icon:'auto_awesome',color:C.purple,stock:100,img:'/images/shop-sticker-pack.png'},
-      {id:9,cat:'koleksi',name:'Pin Enamel Insignia TNI AD',desc:'Pin enamel premium koleksi insignia TNI AD',cost:400,icon:'military_tech',color:C.gold,stock:20,img:'/images/shop-pin-enamel.png'},
+      {id:9,cat:'koleksi',name:'Pin Enamel Insignia TNI AD',desc:'Pin enamel premium koleksi insignia TNI AD',cost:400,icon:'military_tech',color:C.gold,stock:20,img:'/images/shop-pin-enamel-v2.png'},
       /* ── Sponsor & Voucher ── */
       {id:10,cat:'sponsor',name:'Voucher BRI Rp50K',desc:'Voucher belanja dari Bank BRI untuk anggota aktif',cost:1000,icon:'account_balance',color:'#003399',stock:20,popular:true,sponsor:'Bank BRI',img:'/images/shop-voucher-bri.png'},
       {id:11,cat:'sponsor',name:'Voucher Mandiri Rp100K',desc:'e-Voucher Bank Mandiri, berlaku di merchant pilihan',cost:1800,icon:'account_balance',color:'#003366',stock:10,sponsor:'Bank Mandiri',img:'/images/shop-voucher-mandiri.png'},
@@ -4869,14 +4885,14 @@ export default function App(){
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:12,background:C.surfaceLight,border:`1px solid ${C.border}`}}>
                 <MI name="search" size={16} style={{color:C.textMuted}}/>
-                <input placeholder="Cari anggota..." style={{background:'transparent',border:'none',outline:'none',color:C.text,fontSize:12,width:160,fontFamily:'Inter'}}/>
+                <input placeholder="Cari nama, NRP, atau satuan..." style={{background:'transparent',border:'none',outline:'none',color:C.text,fontSize:12,width:160,fontFamily:'Inter'}}/>
               </div>
             </div>
             <DCard title="Daftar Anggota" subtitle={`${(adminAgentFilter==='Semua'?agentsList:agentsList.filter(a=>a.acctType===adminAgentFilter.toLowerCase())).length} anggota ${adminAgentFilter!=='Semua'?'('+adminAgentFilter+')':'terdaftar'}`} noPad accent={C.primary}>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse'}}>
                   <thead>
-                    <tr style={{background:C.glass}}>{['#','Anggota','Tipe','NRP','Satuan','Tier','Misi','XP','Engage','Status'].map(h=>(
+                    <tr style={{background:C.glass}}>{['#','Anggota','Tipe','Tier','Misi','XP','Engage','Status'].map(h=>(
                       <th key={h} style={{padding:'14px 16px',fontSize:12,fontWeight:700,color:C.textMuted,textAlign:'left',borderBottom:`1px solid ${C.border}`,textTransform:'uppercase',letterSpacing:0.8}}>{h}</th>
                     ))}</tr>
                   </thead>
@@ -4900,8 +4916,7 @@ export default function App(){
                             {ACCOUNT_TYPES[a.acctType]?.label}
                           </span>
                         </td>
-                        <td style={{padding:'14px 16px',fontSize:13,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>{a.nrp}</td>
-                        <td style={{padding:'14px 16px',fontSize:13,color:C.textSec}}>{a.satuan}</td>
+
                         <td style={{padding:'12px 16px'}}>
                           <span style={{fontSize:10,fontWeight:700,padding:'4px 10px',borderRadius:6,display:'inline-flex',alignItems:'center',gap:3,
                             background:a.tier==='Gold'?C.accentLight:a.tier==='Silver'?C.primaryHover:C.surfaceLight,
@@ -5417,7 +5432,6 @@ export default function App(){
     {id:'misi',label:'Misi',icon:'target'},
     {id:'pangkat',label:'Pangkat',icon:'military_tech'},
     {id:'profil',label:'Profil',icon:'person'},
-    {id:'konten',label:'Konten',icon:'analytics'},
     {id:'toko',label:'Toko',icon:'storefront'},
   ];
 
@@ -6597,7 +6611,7 @@ export default function App(){
                       <h3 style={{fontSize:10,fontWeight:700,color:C.text,display:'flex',alignItems:'center',gap:3}}><MI name="storefront" size={10} style={{color:C.gold}}/>Toko Poin</h3>
                     </div>
                     <div style={{padding:'4px 6px',display:'flex',gap:4}}>
-                      {[{img:'/images/shop-kaos-tactical.png',c:'1,500'},{img:'/images/shop-jaket-parka.png',c:'4,500'},{img:'/images/shop-mug-keramik.png',c:'600'}].map((p,i)=>(
+                      {[{img:'/images/shop-kaos-tactical-v2.png',c:'1,500'},{img:'/images/shop-jaket-parka-v2.png',c:'4,500'},{img:'/images/shop-mug-keramik-v2.png',c:'600'}].map((p,i)=>(
                         <div key={i} style={{flex:1,borderRadius:6,overflow:'hidden',border:`1px solid ${C.border}`}}>
                           <img src={p.img} alt="" style={{width:'100%',height:44,objectFit:'cover'}}/>
                           <div style={{padding:'3px',textAlign:'center'}}><p style={{fontSize:7,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>{p.c} XP</p></div>
@@ -6774,10 +6788,10 @@ export default function App(){
           <SlideText>Prajurit dan keluarga menukar XP dengan merchandise eksklusif, voucher, dan pengalaman spesial.</SlideText>
           <div style={{display:'flex',gap:16,marginTop:28,justifyContent:'center',flexWrap:'wrap'}}>
             {[
-              {img:'/images/shop-kaos-tactical.png',name:'Kaos Tactical',cost:'1,500 XP'},
-              {img:'/images/shop-jaket-parka.png',name:'Jaket Parka',cost:'4,500 XP'},
-              {img:'/images/shop-mug-keramik.png',name:'Mug Keramik',cost:'600 XP'},
-              {img:'/images/shop-pin-enamel.png',name:'Pin Enamel',cost:'400 XP'},
+              {img:'/images/shop-kaos-tactical-v2.png',name:'Kaos Tactical',cost:'1,500 XP'},
+              {img:'/images/shop-jaket-parka-v2.png',name:'Jaket Parka',cost:'4,500 XP'},
+              {img:'/images/shop-mug-keramik-v2.png',name:'Mug Keramik',cost:'600 XP'},
+              {img:'/images/shop-pin-enamel-v2.png',name:'Pin Enamel',cost:'400 XP'},
             ].map((p,i)=>(
               <div key={i} style={{width:130,borderRadius:12,overflow:'hidden',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)'}}>
                 <img src={p.img} alt="" style={{width:'100%',height:90,objectFit:'cover'}}/>
