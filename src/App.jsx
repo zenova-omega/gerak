@@ -779,7 +779,12 @@ function ProgressBar({progress=0,color=C.primary,height=6,bg=C.overlay08,gold=fa
 /* ═══════════════════════════════════════════════════════════════════ */
 export default function App(){
   const [mode,setMode]=useState(()=>{
-    if(typeof window!=='undefined'&&(window.location.search.includes('mode=presentation')||window.location.pathname.includes('presentation')))return 'presentation';
+    if(typeof window==='undefined') return 'member';
+    const p=window.location.pathname.toLowerCase();
+    if(p.startsWith('/presentation')) return 'presentation';
+    if(p.startsWith('/admin')) return 'admin';
+    if(window.location.search.includes('mode=presentation')) return 'presentation';
+    if(window.location.search.includes('mode=admin')) return 'admin';
     return 'member';
   }); // 'member' | 'admin' | 'presentation'
   const [presSlide,setPresSlide]=useState(-1); // -1 = splash
