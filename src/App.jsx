@@ -5449,7 +5449,7 @@ export default function App(){
       return()=>timers.forEach(clearTimeout);
     },[]);
 
-    const TOTAL_SLIDES=20; // slides 0-19 (added prologue)
+    const TOTAL_SLIDES=15; // slides 0-14
     const nextSlide=useCallback(()=>{setSlide(s=>Math.min(s+1,TOTAL_SLIDES-1));setDemoPhase(0);setAdminPage(0);},[]);
     const prevSlide=useCallback(()=>{setSlide(s=>Math.max(s-1,0));setDemoPhase(0);setAdminPage(0);},[]);
     const goFullscreen=useCallback(()=>{const d=document.documentElement;if(d.requestFullscreen)d.requestFullscreen();else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen();},[]);
@@ -5939,39 +5939,9 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 4: SINAR BERAKSI — Icon+Label Cards ── */
-      ()=>(
-        <CineSlide img="/images/pres-social-explosion.png">
-          <SectionLabel>LANGKAH 3 — SINAR BERAKSI</SectionLabel>
-          <SlideTitle size={36}>TNI AD Kirim Misi,<br/><span style={{color:'#D4A843'}}>400.000 Prajurit Bergerak</span></SlideTitle>
-          <GoldLine/>
-          <p style={{fontSize:16,color:'rgba(255,255,255,0.6)',lineHeight:1.7,textAlign:'center',maxWidth:600,marginTop:12}}>
-            Dalam hitungan jam, ratusan ribu prajurit dan keluarga bergerak serentak — semua terkoordinasi melalui SINAR.
-          </p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14,marginTop:28,maxWidth:640,width:'100%'}}>
-            {[
-              {icon:'thumb_up',title:'Like & Share Serentak',desc:'400K prajurit like bersamaan → algoritma boost',color:'#4ADE80'},
-              {icon:'play_circle',title:'Buat Konten Turunan',desc:'Video reels, infografis, challenge dari prajurit',color:'#60A5FA'},
-              {icon:'group',title:'Tag Jaringan Sosial',desc:'Setiap prajurit tag 10+ akun → efek snowball',color:'#A78BFA'},
-              {icon:'send',title:'Sebarkan ke 50K+ Grup',desc:'WhatsApp, Telegram keluarga & komunitas',color:'#FB923C'},
-            ].map((a,i)=>(
-              <div key={i} style={{padding:'16px 18px',borderRadius:14,background:'rgba(255,255,255,0.05)',border:`1px solid ${a.color}25`,display:'flex',alignItems:'flex-start',gap:12,backdropFilter:'blur(8px)'}}>
-                <div style={{width:44,height:44,borderRadius:12,background:`${a.color}15`,border:`1px solid ${a.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <MI name={a.icon} size={22} style={{color:a.color}}/>
-                </div>
-                <div>
-                  <p style={{fontSize:15,fontWeight:700,color:'#FFFFFF'}}>{a.title}</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:3,lineHeight:1.4}}>{a.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CineSlide>
-      ),
-
-      /* ── 5: Solusi SINAR ── */
+      /* ── 4: Solusi SINAR ── */
       ()=>{
-        const a=slide===5;
+        const a=slide===4;
         const pillars=[
           {icon:'assignment',title:'Misi Terstruktur',desc:'5 kategori misi dari DISPENAD langsung ke 400K prajurit',color:'#14532D',img:'/images/pres-event-community.png'},
           {icon:'military_tech',title:'Gamifikasi',desc:'XP, pangkat, lencana — buat partisipasi jadi kebiasaan',color:'#D4A843',img:'/images/splash-hero-portrait.png'},
@@ -6009,6 +5979,36 @@ export default function App(){
           </div>
         </SlideBase>);
       },
+
+      /* ── 5: SINAR BERAKSI — Icon+Label Cards ── */
+      ()=>(
+        <CineSlide img="/images/pres-social-explosion.png">
+          <SectionLabel>LANGKAH 3 — SINAR BERAKSI</SectionLabel>
+          <SlideTitle size={36}>TNI AD Kirim Misi,<br/><span style={{color:'#D4A843'}}>400.000 Prajurit Bergerak</span></SlideTitle>
+          <GoldLine/>
+          <p style={{fontSize:16,color:'rgba(255,255,255,0.6)',lineHeight:1.7,textAlign:'center',maxWidth:600,marginTop:12}}>
+            Dalam hitungan jam, ratusan ribu prajurit dan keluarga bergerak serentak — semua terkoordinasi melalui SINAR.
+          </p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14,marginTop:28,maxWidth:640,width:'100%'}}>
+            {[
+              {icon:'thumb_up',title:'Like & Share Serentak',desc:'400K prajurit like bersamaan → algoritma boost',color:'#4ADE80'},
+              {icon:'play_circle',title:'Buat Konten Turunan',desc:'Video reels, infografis, challenge dari prajurit',color:'#60A5FA'},
+              {icon:'group',title:'Tag Jaringan Sosial',desc:'Setiap prajurit tag 10+ akun → efek snowball',color:'#A78BFA'},
+              {icon:'send',title:'Sebarkan ke 50K+ Grup',desc:'WhatsApp, Telegram keluarga & komunitas',color:'#FB923C'},
+            ].map((a,i)=>(
+              <div key={i} style={{padding:'16px 18px',borderRadius:14,background:'rgba(255,255,255,0.05)',border:`1px solid ${a.color}25`,display:'flex',alignItems:'flex-start',gap:12,backdropFilter:'blur(8px)'}}>
+                <div style={{width:44,height:44,borderRadius:12,background:`${a.color}15`,border:`1px solid ${a.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <MI name={a.icon} size={22} style={{color:a.color}}/>
+                </div>
+                <div>
+                  <p style={{fontSize:15,fontWeight:700,color:'#FFFFFF'}}>{a.title}</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:3,lineHeight:1.4}}>{a.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CineSlide>
+      ),
 
       /* ── 6: Interactive Phone Demo — cinematic organic spread ── */
       ()=>{
@@ -6063,7 +6063,7 @@ export default function App(){
           return()=>clearInterval(iv);
         },[demoPhase]);
 
-        const PW=260,PH=560;
+        const PW=240,PH=520;
         return(
         <SlideBase>
           {/* Cinematic background */}
@@ -6077,7 +6077,7 @@ export default function App(){
 
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%'}}>
             {/* Phase 0-1 title */}
-            <animated.div style={{...titleAnim,position:'absolute',top:'4%',left:0,right:0,textAlign:'center',zIndex:15}}>
+            <animated.div style={{...titleAnim,position:'absolute',top:'2%',left:0,right:0,textAlign:'center',zIndex:15}}>
               <SectionLabel>{demoPhase===0?'KLIK HAPE UNTUK DEMO':'PRAJURIT MENGAMBIL MISI...'}</SectionLabel>
               <SlideTitle size={40}>{demoPhase===0?<>Lihat <span style={{color:'#D4A843'}}>SINAR</span> Beraksi</>:<><span style={{color:'#4ADE80'}}>Misi Diambil!</span> Konten Menyebar...</>}</SlideTitle>
             </animated.div>
@@ -6404,141 +6404,144 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 8: Misi EVENT ── */
+      /* ── 8: Tipe Misi — EVENT, KONTEN, ENGAGEMENT ── */
       ()=>(
-        <CineSlide img="/images/pres-event-community.png" overlay="rgba(5,14,9,0.55)" kb="kb-right">
-          <div style={{display:'flex',alignItems:'center',gap:40,width:'100%',maxWidth:1050,padding:'0 2%'}}>
-            <div style={{flex:'1 1 400px',textAlign:'left'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-                <div style={{width:48,height:48,borderRadius:14,background:'rgba(109,40,217,0.2)',border:'1px solid rgba(109,40,217,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <MI name="event" size={24} fill style={{color:'#A78BFA'}}/>
-                </div>
-                <div><span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.4)',letterSpacing:2}}>TIPE MISI</span><br/><span style={{fontSize:20,fontWeight:800,color:'#A78BFA'}}>EVENT</span></div>
-              </div>
-              <SlideTitle size={32}>Kehadiran Fisik<br/>di Acara TNI AD</SlideTitle>
-              <SlideText>Prajurit hadir, dokumentasikan, dan bagikan momen.</SlideText>
-              {/* Larger action cards */}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:20,maxWidth:400}}>
-                {[{icon:'photo_camera',title:'Dokumentasi',desc:'Foto & video acara'},{icon:'cloud_upload',title:'Upload Bukti',desc:'Submit ke SINAR'},{icon:'qr_code',title:'Check-in QR',desc:'Absensi digital'},{icon:'star',title:'+400 XP',desc:'Reward kehadiran'}].map((c,i)=>(
-                  <div key={i} style={{padding:'12px',borderRadius:12,background:'rgba(109,40,217,0.08)',border:'1px solid rgba(109,40,217,0.15)',display:'flex',alignItems:'center',gap:8}}>
-                    <MI name={c.icon} size={20} style={{color:'#A78BFA',flexShrink:0}}/>
-                    <div><p style={{fontSize:13,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:10,color:'rgba(255,255,255,0.4)'}}>{c.desc}</p></div>
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#0A1510,#030806)'}}/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 4%',maxWidth:1200,width:'100%'}}>
+            <SectionLabel>5 TIPE MISI SINAR</SectionLabel>
+            <SlideTitle size={36}>Dari Event Fisik<br/>hingga <span style={{color:'#D4A843'}}>Viral Digital</span></SlideTitle>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginTop:32}}>
+              {/* EVENT */}
+              <div style={{borderRadius:16,overflow:'hidden',background:'rgba(109,40,217,0.06)',border:'1px solid rgba(109,40,217,0.15)'}}>
+                <div style={{height:120,overflow:'hidden',position:'relative'}}>
+                  <img src="/images/pres-event-community.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.6)'}}/>
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(0,0,0,0.7) 0%,transparent 60%)'}}/>
+                  <div style={{position:'absolute',bottom:10,left:14,display:'flex',alignItems:'center',gap:8}}>
+                    <MI name="event" size={22} fill style={{color:'#A78BFA'}}/>
+                    <span style={{fontSize:18,fontWeight:800,color:'#A78BFA'}}>EVENT</span>
                   </div>
-                ))}
+                </div>
+                <div style={{padding:'14px 16px'}}>
+                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Kehadiran Fisik di Acara TNI AD</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Dokumentasi, check-in QR, upload bukti kehadiran</p>
+                  <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
+                    {['Foto & Video','Check-in QR','+400 XP'].map((t,i)=>(
+                      <span key={i} style={{fontSize:10,fontWeight:600,color:'#A78BFA',background:'rgba(109,40,217,0.12)',padding:'3px 8px',borderRadius:6}}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* KONTEN */}
+              <div style={{borderRadius:16,overflow:'hidden',background:'rgba(20,83,45,0.06)',border:'1px solid rgba(20,83,45,0.15)'}}>
+                <div style={{height:120,overflow:'hidden',position:'relative'}}>
+                  <img src="/images/pres-konten-creator.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.6)'}}/>
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(0,0,0,0.7) 0%,transparent 60%)'}}/>
+                  <div style={{position:'absolute',bottom:10,left:14,display:'flex',alignItems:'center',gap:8}}>
+                    <MI name="play_circle" size={22} fill style={{color:'#4ADE80'}}/>
+                    <span style={{fontSize:18,fontWeight:800,color:'#4ADE80'}}>KONTEN</span>
+                  </div>
+                </div>
+                <div style={{padding:'14px 16px'}}>
+                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Kreasi Konten Positif TNI AD</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Video reels, infografis, challenge viral dari prajurit</p>
+                  <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
+                    {['Video Reels','Infografis','#BanggaTNIAD'].map((t,i)=>(
+                      <span key={i} style={{fontSize:10,fontWeight:600,color:'#4ADE80',background:'rgba(20,83,45,0.15)',padding:'3px 8px',borderRadius:6}}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* ENGAGEMENT */}
+              <div style={{borderRadius:16,overflow:'hidden',background:'rgba(194,65,12,0.06)',border:'1px solid rgba(194,65,12,0.15)'}}>
+                <div style={{height:120,overflow:'hidden',position:'relative'}}>
+                  <img src="/images/pres-engagement-action-v2.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.6)'}}/>
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(0,0,0,0.7) 0%,transparent 60%)'}}/>
+                  <div style={{position:'absolute',bottom:10,left:14,display:'flex',alignItems:'center',gap:8}}>
+                    <MI name="thumb_up" size={22} fill style={{color:'#FB923C'}}/>
+                    <span style={{fontSize:18,fontWeight:800,color:'#FB923C'}}>ENGAGEMENT</span>
+                  </div>
+                </div>
+                <div style={{padding:'14px 16px'}}>
+                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Like, Share, Comment Serentak</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>400K like serentak = algoritma boost = jutaan viewers</p>
+                  <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
+                    {['400K Likes','200K Shares','150K Comments'].map((t,i)=>(
+                      <span key={i} style={{fontSize:10,fontWeight:600,color:'#FB923C',background:'rgba(194,65,12,0.12)',padding:'3px 8px',borderRadius:6}}>{t}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </CineSlide>
+        </SlideBase>
       ),
 
-      /* ── 9: Misi KONTEN ── */
+      /* ── 9: Tipe Misi — EDUKASI & AKSI ── */
       ()=>(
-        <CineSlide img="/images/pres-konten-creator.png" overlay="rgba(5,14,9,0.55)">
-          <div style={{display:'flex',alignItems:'center',gap:40,width:'100%',maxWidth:1050,padding:'0 2%'}}>
-            <div style={{flex:'1 1 400px',textAlign:'left'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-                <div style={{width:48,height:48,borderRadius:14,background:'rgba(20,83,45,0.2)',border:'1px solid rgba(20,83,45,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <MI name="play_circle" size={24} fill style={{color:'#4ADE80'}}/>
-                </div>
-                <div><span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.4)',letterSpacing:2}}>TIPE MISI</span><br/><span style={{fontSize:20,fontWeight:800,color:'#4ADE80'}}>KONTEN</span></div>
-              </div>
-              <SlideTitle size={32}>Kreasi Konten<br/><span style={{color:'#D4A843'}}>Positif TNI AD</span></SlideTitle>
-              <SlideText>Prajurit dan keluarga membuat konten asli yang relatable dan viral.</SlideText>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginTop:20,maxWidth:480}}>
-                {[{icon:'videocam',title:'Video Reels',desc:'30-60 detik',c:'#4ADE80'},{icon:'image',title:'Infografis',desc:'Poster digital',c:'#60A5FA'},{icon:'celebration',title:'Challenge',desc:'#BanggaTNIAD',c:'#FB923C'}].map((c,i)=>(
-                  <div key={i} style={{padding:'14px 10px',borderRadius:12,background:`${c.c}10`,border:`1px solid ${c.c}25`,textAlign:'center'}}>
-                    <MI name={c.icon} size={28} style={{color:c.c,marginBottom:6}}/>
-                    <p style={{fontSize:13,fontWeight:700,color:'#fff'}}>{c.title}</p>
-                    <p style={{fontSize:10,color:'rgba(255,255,255,0.4)',marginTop:2}}>{c.desc}</p>
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#0A1510,#030806)'}}/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 4%',maxWidth:1200,width:'100%'}}>
+            <SectionLabel>MISI KOMUNITAS & AKSI NYATA</SectionLabel>
+            <SlideTitle size={36}>Jangkauan Melampaui<br/><span style={{color:'#D4A843'}}>Media Sosial</span></SlideTitle>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginTop:32,maxWidth:900,margin:'32px auto 0'}}>
+              {/* EDUKASI */}
+              <div style={{borderRadius:16,overflow:'hidden',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)'}}>
+                <div style={{height:140,overflow:'hidden',position:'relative'}}>
+                  <img src="/images/pres-edukasi-family.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.55)'}}/>
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(0,0,0,0.8) 0%,transparent 50%)'}}/>
+                  <div style={{position:'absolute',bottom:12,left:16}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                      <MI name="school" size={22} fill style={{color:'#E2E8F0'}}/>
+                      <span style={{fontSize:20,fontWeight:800,color:'#E2E8F0'}}>EDUKASI</span>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>Sebarkan wawasan ke komunitas</p>
                   </div>
-                ))}
+                </div>
+                <div style={{padding:'16px 18px'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                    {[{icon:'chat',title:'WhatsApp Groups',desc:'50K+ grup',c:'#25D366'},{icon:'send',title:'Telegram',desc:'Channel komunitas',c:'#0088CC'},{icon:'school',title:'Alumni Network',desc:'SMA/SMK nasional',c:'#A78BFA'},{icon:'group',title:'RT/RW',desc:'Komunitas lokal',c:'#FB923C'}].map((c,i)=>(
+                      <div key={i} style={{padding:'10px',borderRadius:10,background:`${c.c}08`,border:`1px solid ${c.c}15`,display:'flex',alignItems:'center',gap:6}}>
+                        <MI name={c.icon} size={18} style={{color:c.c,flexShrink:0}}/>
+                        <div><p style={{fontSize:11,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:9,color:'rgba(255,255,255,0.35)'}}>{c.desc}</p></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* AKSI */}
+              <div style={{borderRadius:16,overflow:'hidden',background:'rgba(184,134,11,0.04)',border:'1px solid rgba(184,134,11,0.12)'}}>
+                <div style={{height:140,overflow:'hidden',position:'relative'}}>
+                  <img src="/images/pres-aksi-community-v2.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.55)'}}/>
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(0,0,0,0.8) 0%,transparent 50%)'}}/>
+                  <div style={{position:'absolute',bottom:12,left:16}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                      <MI name="campaign" size={22} fill style={{color:'#D4A843'}}/>
+                      <span style={{fontSize:20,fontWeight:800,color:'#D4A843'}}>AKSI</span>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>Aksi langsung untuk TNI AD</p>
+                  </div>
+                </div>
+                <div style={{padding:'16px 18px'}}>
+                  <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                    {[{icon:'group_add',title:'Rekrutmen Relawan',v:'5K target',c:'#4ADE80'},{icon:'rocket_launch',title:'Kampanye Modernisasi',v:'25K dukungan',c:'#D4A843'},{icon:'how_to_reg',title:'Petisi Publik',v:'10K tanda tangan',c:'#60A5FA'}].map((c,i)=>(
+                      <div key={i} style={{padding:'10px 12px',borderRadius:10,background:`${c.c}08`,border:`1px solid ${c.c}15`,display:'flex',alignItems:'center',gap:8}}>
+                        <MI name={c.icon} size={20} style={{color:c.c,flexShrink:0}}/>
+                        <p style={{fontSize:12,fontWeight:700,color:'#fff',flex:1}}>{c.title}</p>
+                        <span style={{fontSize:12,fontWeight:800,color:c.c,fontFamily:"'JetBrains Mono'"}}>{c.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </CineSlide>
-      ),
-
-      /* ── 10: Misi ENGAGEMENT ── */
-      ()=>(
-        <CineSlide img="/images/pres-engagement-action.png" overlay="rgba(5,14,9,0.55)" kb="kb-right">
-          <div style={{display:'flex',alignItems:'center',gap:40,width:'100%',maxWidth:1050,padding:'0 2%'}}>
-            <div style={{flex:'1 1 400px',textAlign:'left'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-                <div style={{width:48,height:48,borderRadius:14,background:'rgba(194,65,12,0.2)',border:'1px solid rgba(194,65,12,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <MI name="thumb_up" size={24} fill style={{color:'#FB923C'}}/>
-                </div>
-                <div><span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.4)',letterSpacing:2}}>TIPE MISI</span><br/><span style={{fontSize:20,fontWeight:800,color:'#FB923C'}}>ENGAGEMENT</span></div>
-              </div>
-              <SlideTitle size={32}>Like, Share, Comment<br/><span style={{color:'#D4A843'}}>Konten Resmi</span></SlideTitle>
-              <SlideText>400K prajurit like serentak = algoritma boost = jutaan orang melihat konten positif.</SlideText>
-              <div style={{display:'flex',gap:10,marginTop:20,flexWrap:'wrap'}}>
-                {[{icon:'thumb_up',title:'Like Serentak',v:'400K',c:'#FB923C'},{icon:'share',title:'Share & Repost',v:'200K',c:'#60A5FA'},{icon:'chat_bubble',title:'Komentar Positif',v:'150K',c:'#4ADE80'}].map((c,i)=>(
-                  <div key={i} style={{padding:'14px 18px',borderRadius:12,background:`${c.c}10`,border:`1px solid ${c.c}25`,display:'flex',alignItems:'center',gap:10,flex:'1 1 140px'}}>
-                    <MI name={c.icon} size={24} fill style={{color:c.c}}/>
-                    <div><p style={{fontSize:13,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:16,fontWeight:900,color:c.c,fontFamily:"'JetBrains Mono'"}}>{c.v}</p></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CineSlide>
-      ),
-
-      /* ── 11: Misi EDUKASI ── */
-      ()=>(
-        <CineSlide img="/images/pres-edukasi-family.png" overlay="rgba(5,14,9,0.55)">
-          <div style={{display:'flex',alignItems:'center',gap:40,width:'100%',maxWidth:1050,padding:'0 2%'}}>
-            <div style={{flex:'1 1 400px',textAlign:'left'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-                <div style={{width:48,height:48,borderRadius:14,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <MI name="school" size={24} fill style={{color:'#E2E8F0'}}/>
-                </div>
-                <div><span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.4)',letterSpacing:2}}>TIPE MISI</span><br/><span style={{fontSize:20,fontWeight:800,color:'#E2E8F0'}}>EDUKASI</span></div>
-              </div>
-              <SlideTitle size={32}>Sebarkan Materi<br/><span style={{color:'#D4A843'}}>ke Komunitas</span></SlideTitle>
-              <SlideText>Keluarga prajurit menyebarkan wawasan kebangsaan dan fakta positif TNI AD.</SlideText>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:20,maxWidth:400}}>
-                {[{icon:'chat',title:'WhatsApp Groups',desc:'50K+ grup keluarga',c:'#25D366'},{icon:'send',title:'Telegram',desc:'Channel komunitas',c:'#0088CC'},{icon:'school',title:'Alumni Network',desc:'SMA/SMK se-Indonesia',c:'#A78BFA'},{icon:'group',title:'RT/RW',desc:'Komunitas lingkungan',c:'#FB923C'}].map((c,i)=>(
-                  <div key={i} style={{padding:'12px',borderRadius:12,background:`${c.c}10`,border:`1px solid ${c.c}20`,display:'flex',alignItems:'center',gap:8}}>
-                    <MI name={c.icon} size={22} style={{color:c.c,flexShrink:0}}/>
-                    <div><p style={{fontSize:13,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:10,color:'rgba(255,255,255,0.4)'}}>{c.desc}</p></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CineSlide>
-      ),
-
-      /* ── 12: Misi AKSI ── */
-      ()=>(
-        <CineSlide img="/images/pres-aksi-rally.png" overlay="rgba(5,14,9,0.5)" kb="kb-right">
-          <div style={{display:'flex',alignItems:'center',gap:40,width:'100%',maxWidth:1050,padding:'0 2%'}}>
-            <div style={{flex:'1 1 400px',textAlign:'left'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-                <div style={{width:48,height:48,borderRadius:14,background:'rgba(184,134,11,0.2)',border:'1px solid rgba(184,134,11,0.3)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <MI name="campaign" size={24} fill style={{color:'#D4A843'}}/>
-                </div>
-                <div><span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.4)',letterSpacing:2}}>TIPE MISI</span><br/><span style={{fontSize:20,fontWeight:800,color:'#D4A843'}}>AKSI</span></div>
-              </div>
-              <SlideTitle size={32}>Aksi Langsung<br/><span style={{color:'#D4A843'}}>untuk TNI AD</span></SlideTitle>
-              <SlideText>Aksi nyata yang menggerakkan masyarakat mendukung TNI AD.</SlideText>
-              <div style={{display:'flex',gap:10,marginTop:20,flexWrap:'wrap'}}>
-                {[{icon:'group_add',title:'Rekrutmen Relawan',v:'5K target',c:'#4ADE80'},{icon:'rocket_launch',title:'Kampanye Modernisasi',v:'25K dukungan',c:'#D4A843'},{icon:'how_to_reg',title:'Petisi Publik',v:'10K tanda tangan',c:'#60A5FA'}].map((c,i)=>(
-                  <div key={i} style={{padding:'14px 18px',borderRadius:12,background:`${c.c}10`,border:`1px solid ${c.c}25`,display:'flex',alignItems:'center',gap:10,flex:'1 1 160px'}}>
-                    <MI name={c.icon} size={24} style={{color:c.c,flexShrink:0}}/>
-                    <div><p style={{fontSize:13,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:12,fontWeight:700,color:c.c}}>{c.v}</p></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CineSlide>
+        </SlideBase>
       ),
 
       /* ── 13: Gamifikasi — Centered mockup + callouts ── */
       ()=>{
-        const a=slide===13;
+        const a=slide===10;
         const fP=useSpring({opacity:a?1:0,transform:a?'translateY(0) scale(1)':'translateY(40px) scale(0.95)',delay:200,config:{tension:80,friction:20}});
         const fL1=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(-30px)',delay:600,config:{tension:70,friction:18}});
         const fL2=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(-30px)',delay:900,config:{tension:70,friction:18}});
@@ -6666,7 +6669,7 @@ export default function App(){
 
       /* ── 14: Multiplier — Indonesia map with organic network ── */
       ()=>{
-        const a=slide===14;
+        const a=slide===11;
         const mapAnim=useSpring({opacity:a?1:0,config:{duration:800}});
         const titleAnim=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(20px)',delay:200,config:{tension:70,friction:18}});
         const statsAnim=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(20px)',delay:1800,config:{tension:70,friction:18}});
@@ -6768,32 +6771,6 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 15: Peta Satelit + Metrik — realistic numbers ── */
-      ()=>{
-        const a=slide===15;
-        return(
-        <CineSlide img="/images/map-indonesia-satellite.png" overlay="linear-gradient(180deg,rgba(5,14,9,0.6) 0%,rgba(5,14,9,0.4) 40%,rgba(5,14,9,0.7) 100%)">
-          <SectionLabel>POTENSI JANGKAUAN NASIONAL</SectionLabel>
-          <SlideTitle size={40}>37 Kodam<br/><span style={{color:'#D4A843'}}>Seluruh Indonesia</span></SlideTitle>
-          <GoldLine/>
-          <div style={{display:'flex',justifyContent:'center',gap:24,marginTop:32,flexWrap:'wrap'}}>
-            {[
-              {v:400000,l:'Potensi Prajurit',s:'+',c:'#86EFAC'},
-              {v:37,l:'Kodam Target',s:'',c:'#D4A843'},
-              {v:1600000,l:'Potensi Jaringan Keluarga',s:'+',c:'#99F6E4'},
-              {v:5,l:'Tipe Misi Tersedia',s:'',c:'#FCA5A5'},
-            ].map((m,i)=>(
-              <div key={i} style={{padding:'20px 28px',borderRadius:14,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',textAlign:'center',minWidth:140,backdropFilter:'blur(8px)'}}>
-                <p style={{fontSize:36,fontWeight:900,color:m.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>
-                  <AnimCount to={m.v} active={a} suffix={m.s} dur={2500}/>
-                </p>
-                <p style={{fontSize:12,color:'rgba(255,255,255,0.5)',letterSpacing:1,marginTop:8,textTransform:'uppercase',fontWeight:600}}>{m.l}</p>
-              </div>
-            ))}
-          </div>
-        </CineSlide>);
-      },
-
       /* ── 13: Toko & Reward ── */
       ()=>(
         <CineSlide img="/images/shop-merchandise-collection.png" overlay="linear-gradient(180deg,rgba(5,14,9,0.5) 0%,rgba(5,14,9,0.8) 100%)">
@@ -6822,7 +6799,7 @@ export default function App(){
 
       /* ── 17: Admin Command Center — Auto-cycling pages ── */
       ()=>{
-        const a=slide===17;
+        const a=slide===13;
         const fD=useSpring({opacity:a?1:0,transform:a?'translateY(0) scale(1)':'translateY(30px) scale(0.96)',delay:200,config:{tension:80,friction:20}});
         const fCards=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(30px)',delay:600,config:{tension:70,friction:18}});
         return(
@@ -6955,47 +6932,29 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 16: Live Demo — Klik untuk Coba ── */
-      ()=>{
-        const [demoMode,setDemoMode]=useState('member');
-        return(
-        <SlideBase>
-          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#050E09,#0A1510,#050E09)'}}/>
-          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px'}}>
-            <SectionLabel>LIVE DEMO</SectionLabel>
-            <SlideTitle size={42}>Coba <span style={{color:'#D4A843'}}>Langsung</span></SlideTitle>
-            <p style={{fontSize:20,color:'rgba(255,255,255,0.5)',marginTop:12}}>Klik untuk beralih antara tampilan prajurit dan admin</p>
-            <div style={{display:'flex',gap:12,justifyContent:'center',marginTop:20}}>
-              {[{id:'member',label:'Mobile App',icon:'phone_iphone'},{id:'admin',label:'Admin Dashboard',icon:'dashboard'}].map(m=>(
-                <button key={m.id} onClick={()=>setDemoMode(m.id)} style={{padding:'10px 24px',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer',transition:'all 300ms',display:'flex',alignItems:'center',gap:8,border:'none',
-                  background:demoMode===m.id?'rgba(184,134,11,0.2)':'rgba(255,255,255,0.05)',
-                  color:demoMode===m.id?'#D4A843':'rgba(255,255,255,0.4)',
-                  outline:demoMode===m.id?'1px solid rgba(184,134,11,0.3)':'1px solid rgba(255,255,255,0.08)',
-                }}>
-                  <MI name={m.icon} size={18} style={{color:demoMode===m.id?'#D4A843':'rgba(255,255,255,0.4)'}}/>{m.label}
-                </button>
-              ))}
-            </div>
-            <p style={{fontSize:13,color:'rgba(255,255,255,0.25)',marginTop:12}}>Tekan ESC dari slide ini untuk masuk ke mode demo penuh</p>
-          </div>
-        </SlideBase>);
-      },
-
-      /* ── 17: CTA ── */
+      /* ── CTA & Live Demo ── */
       ()=>(
-        <CineSlide img="/images/pres-massa-penggerak.png" overlay="radial-gradient(ellipse 60% 50% at 50% 50%,rgba(5,14,9,0.4),rgba(5,14,9,0.9) 80%)">
+        <CineSlide img="/images/pres-massa-penggerak-v2.png" overlay="radial-gradient(ellipse 60% 50% at 50% 50%,rgba(5,14,9,0.35),rgba(5,14,9,0.92) 80%)">
           <div style={{position:'absolute',inset:20,border:'1px solid rgba(184,134,11,0.12)',borderRadius:4,pointerEvents:'none'}}/>
-          <SinarMark size={90}/>
+          <SinarMark size={80}/>
           <GoldLine w={100}/>
-          <h1 style={{fontSize:56,fontWeight:900,color:'#FFFFFF',letterSpacing:6,lineHeight:1.2,textAlign:'center',textShadow:'0 4px 40px rgba(184,134,11,0.2)'}}>
+          <h1 style={{fontSize:52,fontWeight:900,color:'#FFFFFF',letterSpacing:6,lineHeight:1.2,textAlign:'center',textShadow:'0 4px 40px rgba(184,134,11,0.2)'}}>
             Deploy SINAR<br/><span style={{color:'#D4A843'}}>Nasional</span>
           </h1>
-          <p style={{fontSize:22,color:'rgba(255,255,255,0.55)',marginTop:24,lineHeight:1.6,textAlign:'center',maxWidth:600}}>
+          <p style={{fontSize:20,color:'rgba(255,255,255,0.55)',marginTop:20,lineHeight:1.6,textAlign:'center',maxWidth:600}}>
             Mobilisasi <strong style={{color:'#FFFFFF'}}>400.000+ prajurit</strong> dan <strong style={{color:'#D4A843'}}>1.6 juta keluarga</strong><br/>
             untuk citra positif TNI AD di era digital.
           </p>
+          <div style={{display:'flex',gap:12,marginTop:28,justifyContent:'center'}}>
+            <a href="/app" target="_blank" rel="noopener" style={{padding:'12px 28px',borderRadius:12,fontSize:15,fontWeight:700,textDecoration:'none',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#14532D,#1B4332)',color:'#86EFAC',border:'1px solid rgba(134,239,172,0.2)',cursor:'pointer'}}>
+              <MI name="phone_iphone" size={18} style={{color:'#86EFAC'}}/>Coba Mobile App
+            </a>
+            <a href="/admin" target="_blank" rel="noopener" style={{padding:'12px 28px',borderRadius:12,fontSize:15,fontWeight:700,textDecoration:'none',display:'flex',alignItems:'center',gap:8,background:'rgba(184,134,11,0.15)',color:'#D4A843',border:'1px solid rgba(184,134,11,0.25)',cursor:'pointer'}}>
+              <MI name="dashboard" size={18} style={{color:'#D4A843'}}/>Admin Dashboard
+            </a>
+          </div>
           <GoldLine w={60}/>
-          <p style={{fontSize:16,color:'rgba(255,255,255,0.35)',letterSpacing:4,fontWeight:600}}>TNI AD &nbsp;·&nbsp; SIAP GERAK</p>
+          <p style={{fontSize:14,color:'rgba(255,255,255,0.3)',letterSpacing:4,fontWeight:600}}>TNI AD &nbsp;·&nbsp; SIAP GERAK</p>
         </CineSlide>
       ),
     ];
