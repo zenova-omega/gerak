@@ -835,6 +835,8 @@ export default function App(){
   const [selectedAdMission,setSelectedAdMission]=useState(null);
   const [adminMissionFilter,setAdminMissionFilter]=useState('Semua');
   const [adminAgentFilter,setAdminAgentFilter]=useState('Semua');
+  const [adminAgentSearch,setAdminAgentSearch]=useState('');
+  const [selectedAgent,setSelectedAgent]=useState(null);
   // Stubs for removed narrative features (admin panel references)
   const expandedNarrative=null,setExpandedNarrative=()=>{};
   const narrativeActions={},setNarrativeActions=()=>{};
@@ -844,6 +846,9 @@ export default function App(){
   const [confirmRedeem,setConfirmRedeem]=useState(null); // item id for shop confirm
   const [logoutConfirm,setLogoutConfirm]=useState(false);
   const [publishing,setPublishing]=useState(false);
+  const [settingsXP,setSettingsXP]=useState({EVENT:{base:400,bonus:100},KONTEN:{base:300,bonus:75},ENGAGEMENT:{base:200,bonus:50},EDUKASI:{base:250,bonus:60},AKSI:{base:350,bonus:80}});
+  const [settingsPlatforms,setSettingsPlatforms]=useState({Instagram:true,TikTok:true,YouTube:true,'X (Twitter)':true,Facebook:true,WhatsApp:true,Telegram:true});
+  const [settingsNotif,setSettingsNotif]=useState({newMission:true,deadline:true,submission:true,weeklyReport:false});
   // joinedMissions: {missionId: {status:'TERDAFTAR'|'SUBMITTED'|'REVIEW'|'SELESAI', joinedAt, submittedAt?}}
   const [joinedMissions,setJoinedMissions]=useState({
     9:{status:'SELESAI',joinedAt:'2 Mar 2026',submittedAt:'4 Mar 2026'},
@@ -3902,6 +3907,8 @@ export default function App(){
       {id:'dashboard',label:'Dashboard',icon:'dashboard',badge:4},
       {id:'misi',label:'Manajemen Misi',icon:'assignment',badge:MISSIONS.filter(m=>m.status!=='SELESAI').length},
       {id:'agents',label:'Anggota',icon:'group'},
+      {id:'broadcast',label:'Broadcast',icon:'campaign'},
+      {id:'settings',label:'Pengaturan',icon:'settings'},
     ];
 
     const agentsList=[
@@ -4885,10 +4892,51 @@ export default function App(){
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:12,background:C.surfaceLight,border:`1px solid ${C.border}`}}>
                 <MI name="search" size={16} style={{color:C.textMuted}}/>
-                <input placeholder="Cari nama, NRP, atau satuan..." style={{background:'transparent',border:'none',outline:'none',color:C.text,fontSize:12,width:160,fontFamily:'Inter'}}/>
+                <input value={adminAgentSearch} onChange={e=>setAdminAgentSearch(e.target.value)} placeholder="Cari nama, NRP, atau satuan..." style={{background:'transparent',border:'none',outline:'none',color:C.text,fontSize:12,width:160,fontFamily:'Inter'}}/>
               </div>
             </div>
-            <DCard title="Daftar Anggota" subtitle={`${(adminAgentFilter==='Semua'?agentsList:agentsList.filter(a=>a.acctType===adminAgentFilter.toLowerCase())).length} anggota ${adminAgentFilter!=='Semua'?'('+adminAgentFilter+')':'terdaftar'}`} noPad accent={C.primary}>
+            {/* Agent Detail Modal */}
+            {selectedAgent&&<div style={{position:'fixed',inset:0,zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)'}} onClick={()=>setSelectedAgent(null)}>
+              <div onClick={e=>e.stopPropagation()} style={{width:520,maxHeight:'80vh',overflow:'auto',borderRadius:16,background:C.bg,border:`1px solid ${C.border}`,boxShadow:'0 24px 80px rgba(0,0,0,0.3)'}}>
+                <div style={{padding:'24px 28px',borderBottom:`1px solid ${C.border}`,display:'flex',alignItems:'center',gap:16}}>
+                  <AvatarImg initials={selectedAgent.avatar} size={56} style={{borderRadius:16,border:`3px solid ${selectedAgent.tier==='Gold'?C.gold:selectedAgent.tier==='Silver'?C.silver:C.border}`}}/>
+                  <div style={{flex:1}}>
+                    <h3 style={{fontSize:18,fontWeight:700,color:C.text}}>{selectedAgent.name}</h3>
+                    <p style={{fontSize:13,color:C.textMuted}}>NRP {selectedAgent.nrp} · {selectedAgent.satuan}</p>
+                    <div className="flex gap-2 mt-1">
+                      <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:5,background:ACCOUNT_TYPES[selectedAgent.acctType]?.color+'12',color:ACCOUNT_TYPES[selectedAgent.acctType]?.color}}>{ACCOUNT_TYPES[selectedAgent.acctType]?.label}</span>
+                      <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:5,background:selectedAgent.tier==='Gold'?C.accentLight:C.surfaceLight,color:selectedAgent.tier==='Gold'?C.accent:C.primary}}>{selectedAgent.tier}</span>
+                    </div>
+                  </div>
+                  <button onClick={()=>setSelectedAgent(null)} style={{background:'none',border:'none',cursor:'pointer',padding:8}}><MI name="close" size={20} style={{color:C.textMuted}}/></button>
+                </div>
+                <div style={{padding:'20px 28px'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+                    {[{v:selectedAgent.missions,l:'Misi Selesai',c:C.primary},{v:selectedAgent.xp.toLocaleString(),l:'Total XP',c:C.gold},{v:selectedAgent.engagement,l:'Engagement',c:C.green},{v:selectedAgent.status==='active'?'Aktif':'Idle',l:'Status',c:selectedAgent.status==='active'?C.green:C.textMuted}].map((s,i)=>(
+                      <div key={i} style={{textAlign:'center',padding:'12px 8px',borderRadius:10,background:s.c+'08',border:`1px solid ${s.c}15`}}>
+                        <p style={{fontSize:18,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.v}</p>
+                        <p style={{fontSize:10,color:C.textMuted,marginTop:2}}>{s.l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <h4 style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:8}}>Riwayat Misi Terbaru</h4>
+                  {[{m:'Upacara HUT TNI AD',t:'EVENT',s:'SELESAI',xp:400},{m:'Video Reels #BanggaTNIAD',t:'KONTEN',s:'SELESAI',xp:300},{m:'Like & Share KSAD Speech',t:'ENGAGEMENT',s:'REVIEW',xp:200}].map((h,i)=>(
+                    <div key={i} className="flex items-center gap-3" style={{padding:'8px 0',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
+                      <MI name={h.t==='EVENT'?'event':h.t==='KONTEN'?'play_circle':'thumb_up'} size={16} style={{color:C.primary}}/>
+                      <div style={{flex:1}}><p style={{fontSize:12,fontWeight:600,color:C.text}}>{h.m}</p><span style={{fontSize:10,color:C.textMuted}}>{h.t}</span></div>
+                      <span style={{fontSize:10,fontWeight:700,color:h.s==='SELESAI'?C.green:C.orange}}>{h.s}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:C.gold,fontFamily:"'JetBrains Mono'"}}>+{h.xp}</span>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 mt-4">
+                    <button onClick={()=>{showToast(`Reminder dikirim ke ${selectedAgent.name}`);setSelectedAgent(null);}} style={{flex:1,padding:'10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.text,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}><MI name="notifications" size={14} style={{color:C.primary}}/>Kirim Reminder</button>
+                    <button onClick={()=>{showToast(`Data ${selectedAgent.name} diekspor`);setSelectedAgent(null);}} style={{flex:1,padding:'10px',borderRadius:10,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.text,fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}><MI name="download" size={14} style={{color:C.primary}}/>Export Data</button>
+                  </div>
+                </div>
+              </div>
+            </div>}
+
+            <DCard title="Daftar Anggota" subtitle={`${agentsList.length} anggota terdaftar`} noPad accent={C.primary}>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse'}}>
                   <thead>
@@ -4897,8 +4945,8 @@ export default function App(){
                     ))}</tr>
                   </thead>
                   <tbody>
-                    {(adminAgentFilter==='Semua'?agentsList:agentsList.filter(a=>a.acctType===adminAgentFilter.toLowerCase())).map((a,i)=>(
-                      <tr key={i} onClick={()=>showToast(`${a.name} — ${a.missions} misi, ${a.xp.toLocaleString()} XP, Engagement ${a.engagement}`)} style={{borderBottom:`1px solid ${C.borderLight}`,cursor:'pointer',transition:'background 150ms'}} onMouseEnter={e=>e.currentTarget.style.background=C.glass} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                    {(adminAgentFilter==='Semua'?agentsList:agentsList.filter(a=>a.acctType===adminAgentFilter.toLowerCase())).filter(a=>!adminAgentSearch||a.name.toLowerCase().includes(adminAgentSearch.toLowerCase())||a.nrp.toLowerCase().includes(adminAgentSearch.toLowerCase())||a.satuan.toLowerCase().includes(adminAgentSearch.toLowerCase())).map((a,i)=>(
+                      <tr key={i} onClick={()=>setSelectedAgent(a)} style={{borderBottom:`1px solid ${C.borderLight}`,cursor:'pointer',transition:'background 150ms'}} onMouseEnter={e=>e.currentTarget.style.background=C.glass} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                         <td style={{padding:'14px 16px',fontSize:13,color:C.textMuted,fontFamily:"'JetBrains Mono'",fontWeight:600}}>{i+1}</td>
                         <td style={{padding:'12px 16px'}}>
                           <div className="flex items-center gap-3">
@@ -5421,6 +5469,282 @@ export default function App(){
               })()}
             </div>);
           })()}
+
+          {/* ═══ BROADCAST / NOTIFICATION ═══ */}
+          {adSideTab==='broadcast'&&(<div className="flex flex-col gap-5">
+            {/* ── Compose New Broadcast ── */}
+            <DCard title="Kirim Broadcast Baru" subtitle="Buat dan kirim notifikasi ke personel" accent={C.primary}>
+              {(()=>{
+                const [bcTarget,setBcTarget]=React.useState({semua:true,prajurit:false,suami:false,istri:false,anak:false});
+                const [bcKodam,setBcKodam]=React.useState('Semua Kodam');
+                const [bcSubject,setBcSubject]=React.useState('');
+                const [bcMessage,setBcMessage]=React.useState('');
+                const [bcPriority,setBcPriority]=React.useState('normal');
+                const [bcChannels,setBcChannels]=React.useState({push:true,inapp:true,whatsapp:false});
+                const kodamOptions=['Semua Kodam','Kodam I/BB','Kodam II/SWJ','Kodam III/SLW','Kodam IV/DIP','Kodam V/BRW','Kodam VI/MLW','Kodam IX/UDY','Kodam XII/TPR','Kodam XIV/HSN','Kodam XVI/PTI','Kodam XVII/CEN','Kodam XVIII/KST'];
+                const toggleTarget=(k)=>{
+                  if(k==='semua'){setBcTarget({semua:true,prajurit:false,suami:false,istri:false,anak:false});}
+                  else{setBcTarget(prev=>({...prev,semua:false,[k]:!prev[k]}));}
+                };
+                const toggleChannel=(k)=>setBcChannels(prev=>({...prev,[k]:!prev[k]}));
+                const targetCount=bcTarget.semua?445200:(bcTarget.prajurit?400000:0)+(bcTarget.istri?25000:0)+(bcTarget.suami?12000:0)+(bcTarget.anak?8200:0);
+                const activeChannels=[bcChannels.push&&'Push',bcChannels.inapp&&'In-App',bcChannels.whatsapp&&'WhatsApp'].filter(Boolean);
+                return(
+                <div style={{display:'grid',gridTemplateColumns:'1fr 340px',gap:24}}>
+                  <div className="flex flex-col gap-4">
+                    {/* Target Audience */}
+                    <div>
+                      <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Target Audience</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[{k:'semua',l:'Semua'},{k:'prajurit',l:'Prajurit'},{k:'suami',l:'Suami'},{k:'istri',l:'Istri'},{k:'anak',l:'Anak'}].map(t=>(
+                          <button key={t.k} onClick={()=>toggleTarget(t.k)} style={{padding:'6px 14px',borderRadius:8,fontSize:12,fontWeight:700,border:`1.5px solid ${bcTarget[t.k]?C.primary:C.border}`,background:bcTarget[t.k]?`${C.primary}15`:'transparent',color:bcTarget[t.k]?C.primary:C.textMuted,cursor:'pointer',transition:'all 200ms',display:'flex',alignItems:'center',gap:4}}>
+                            <MI name={bcTarget[t.k]?'check_box':'check_box_outline_blank'} size={14}/>{t.l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Kodam Filter */}
+                    <div>
+                      <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Kodam</label>
+                      <select value={bcKodam} onChange={e=>setBcKodam(e.target.value)} style={{width:'100%',padding:'10px 14px',borderRadius:10,border:`1.5px solid ${C.border}`,background:C.surfaceLight,color:C.text,fontSize:13,fontWeight:600,outline:'none',cursor:'pointer'}}>
+                        {kodamOptions.map(k=><option key={k} value={k}>{k}</option>)}
+                      </select>
+                    </div>
+                    {/* Subject */}
+                    <div>
+                      <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Judul</label>
+                      <input value={bcSubject} onChange={e=>setBcSubject(e.target.value)} placeholder="Masukkan judul broadcast..." style={{width:'100%',padding:'10px 14px',borderRadius:10,border:`1.5px solid ${C.border}`,background:C.surfaceLight,color:C.text,fontSize:13,fontWeight:600,outline:'none',boxSizing:'border-box'}}/>
+                    </div>
+                    {/* Message Body */}
+                    <div>
+                      <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Pesan</label>
+                      <textarea value={bcMessage} onChange={e=>setBcMessage(e.target.value)} placeholder="Tulis pesan broadcast..." rows={5} style={{width:'100%',padding:'10px 14px',borderRadius:10,border:`1.5px solid ${C.border}`,background:C.surfaceLight,color:C.text,fontSize:13,fontWeight:600,outline:'none',resize:'vertical',fontFamily:'inherit',boxSizing:'border-box'}}/>
+                    </div>
+                    {/* Priority */}
+                    <div>
+                      <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Prioritas</label>
+                      <div className="flex gap-2">
+                        {[{k:'normal',l:'Normal',c:C.green},{k:'urgent',l:'Urgent',c:C.red}].map(p=>(
+                          <button key={p.k} onClick={()=>setBcPriority(p.k)} style={{padding:'8px 20px',borderRadius:8,fontSize:12,fontWeight:700,border:`1.5px solid ${bcPriority===p.k?p.c:C.border}`,background:bcPriority===p.k?`${p.c}15`:'transparent',color:bcPriority===p.k?p.c:C.textMuted,cursor:'pointer',transition:'all 200ms'}}>
+                            {p.l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Channel */}
+                    <div>
+                      <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Channel</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[{k:'push',l:'Push Notification',icon:'notifications'},{k:'inapp',l:'In-App',icon:'smartphone'},{k:'whatsapp',l:'WhatsApp',icon:'chat'}].map(ch=>(
+                          <button key={ch.k} onClick={()=>toggleChannel(ch.k)} style={{padding:'6px 14px',borderRadius:8,fontSize:12,fontWeight:700,border:`1.5px solid ${bcChannels[ch.k]?C.primary:C.border}`,background:bcChannels[ch.k]?`${C.primary}15`:'transparent',color:bcChannels[ch.k]?C.primary:C.textMuted,cursor:'pointer',transition:'all 200ms',display:'flex',alignItems:'center',gap:4}}>
+                            <MI name={ch.icon} size={14}/>{ch.l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Send Button */}
+                    <button onClick={()=>{if(!bcSubject.trim()||!bcMessage.trim()){showToast('Judul dan pesan wajib diisi');return;}showToast(`Broadcast berhasil dikirim ke ${targetCount.toLocaleString('id-ID')} personel`);setBcSubject('');setBcMessage('');}} style={{padding:'12px 24px',borderRadius:12,background:`linear-gradient(135deg,${C.primary},${C.primaryDark||C.primary})`,color:'#fff',fontSize:14,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginTop:4,transition:'all 200ms'}}>
+                      <MI name="send" size={18}/>Kirim Broadcast
+                    </button>
+                  </div>
+                  {/* Preview Card */}
+                  <div>
+                    <label style={{fontSize:12,fontWeight:700,color:C.textSec,textTransform:'uppercase',letterSpacing:1,marginBottom:8,display:'block'}}>Preview Notifikasi</label>
+                    <div style={{background:C.surfaceLight,borderRadius:14,border:`1px solid ${C.border}`,padding:16,display:'flex',flexDirection:'column',gap:10}}>
+                      <div style={{background:C.surface,borderRadius:12,padding:14,border:`1px solid ${C.borderLight}`,boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}}>
+                        <div className="flex items-center gap-2" style={{marginBottom:8}}>
+                          <div style={{width:28,height:28,borderRadius:8,background:`${C.primary}20`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <MI name="campaign" size={16} style={{color:C.primary}}/>
+                          </div>
+                          <div style={{flex:1}}>
+                            <p style={{fontSize:11,fontWeight:700,color:C.primary}}>GERAK SINAR</p>
+                            <p style={{fontSize:10,color:C.textMuted}}>Sekarang</p>
+                          </div>
+                          {bcPriority==='urgent'&&<span style={{fontSize:9,fontWeight:800,color:C.red,background:`${C.red}15`,padding:'2px 6px',borderRadius:4}}>URGENT</span>}
+                        </div>
+                        <p style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:4}}>{bcSubject||'Judul Broadcast'}</p>
+                        <p style={{fontSize:12,color:C.textSec,lineHeight:1.4}}>{bcMessage||'Isi pesan broadcast akan ditampilkan di sini...'}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1" style={{marginTop:4}}>
+                        {activeChannels.map(ch=>(
+                          <span key={ch} style={{fontSize:10,fontWeight:700,color:C.primary,background:`${C.primary}10`,padding:'2px 8px',borderRadius:4}}>{ch}</span>
+                        ))}
+                      </div>
+                      <div style={{fontSize:11,color:C.textMuted,display:'flex',alignItems:'center',gap:4,marginTop:2}}>
+                        <MI name="group" size={14}/>{targetCount.toLocaleString('id-ID')} penerima
+                        {bcKodam!=='Semua Kodam'&&<span style={{marginLeft:4}}>• {bcKodam}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                );
+              })()}
+            </DCard>
+
+            {/* ── Riwayat Broadcast ── */}
+            <DCard title="Riwayat Broadcast" subtitle="History pengiriman broadcast & notifikasi">
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                  <thead>
+                    <tr style={{borderBottom:`2px solid ${C.border}`}}>
+                      {['Tanggal','Judul','Target','Channel','Terkirim','Dibaca','Status'].map(h=>(
+                        <th key={h} style={{textAlign:'left',padding:'10px 12px',fontSize:11,fontWeight:700,color:C.textMuted,textTransform:'uppercase',letterSpacing:0.5}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {date:'14 Mar 2026',title:'Misi Baru: HUT TNI AD ke-81',target:'Semua',channel:'Push + In-App',sent:'445K',read:'312K (70%)',status:'Terkirim'},
+                      {date:'12 Mar 2026',title:'Reminder: Deadline Upload Konten',target:'Prajurit',channel:'Push',sent:'400K',read:'280K (70%)',status:'Terkirim'},
+                      {date:'10 Mar 2026',title:'Update Fitur: Toko Poin Baru',target:'Semua',channel:'In-App + WhatsApp',sent:'445K',read:'356K (80%)',status:'Terkirim'},
+                      {date:'7 Mar 2026',title:'Peringatan: Konten Hoax Terdeteksi',target:'Prajurit + Istri',channel:'Push + In-App',sent:'425K',read:'382K (90%)',status:'Terkirim'},
+                      {date:'5 Mar 2026',title:'Promo XP Ganda Akhir Pekan',target:'Semua',channel:'Push + In-App + WA',sent:'445K',read:'267K (60%)',status:'Terkirim'},
+                    ].map((r,i)=>(
+                      <tr key={i} style={{borderBottom:`1px solid ${C.borderLight}`,transition:'background 200ms'}} onMouseEnter={e=>e.currentTarget.style.background=C.surfaceLight} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                        <td style={{padding:'12px',color:C.textMuted,fontSize:12,fontWeight:600}}>{r.date}</td>
+                        <td style={{padding:'12px',color:C.text,fontWeight:700}}>{r.title}</td>
+                        <td style={{padding:'12px'}}><span style={{fontSize:11,fontWeight:700,color:C.primary,background:`${C.primary}10`,padding:'2px 8px',borderRadius:4}}>{r.target}</span></td>
+                        <td style={{padding:'12px',color:C.textSec,fontSize:12,fontWeight:600}}>{r.channel}</td>
+                        <td style={{padding:'12px',color:C.text,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>{r.sent}</td>
+                        <td style={{padding:'12px',color:C.green,fontWeight:700,fontFamily:"'JetBrains Mono'"}}>{r.read}</td>
+                        <td style={{padding:'12px'}}><span style={{fontSize:11,fontWeight:700,color:C.green,background:`${C.green}15`,padding:'3px 10px',borderRadius:6}}>{r.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </DCard>
+          </div>)}
+
+          {/* ═══ SETTINGS PAGE ═══ */}
+          {adSideTab==='settings'&&(<div className="flex flex-col gap-5">
+
+            {/* A. Default XP per Tipe Misi */}
+            <DCard title="Default XP per Tipe Misi" subtitle="Atur XP dasar dan bonus untuk setiap tipe misi" accent={C.primary}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(1,1fr)',gap:12}}>
+                {Object.entries(settingsXP).map(([type,val])=>{
+                  const colors={EVENT:'#E76F51',KONTEN:'#2A9D8F',ENGAGEMENT:'#E9C46A',EDUKASI:'#264653',AKSI:'#F4A261'};
+                  const icons={EVENT:'event',KONTEN:'edit_note',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'flash_on'};
+                  return(
+                    <div key={type} style={{display:'flex',alignItems:'center',gap:16,padding:'14px 16px',borderRadius:12,background:C.surfaceAlt||'rgba(255,255,255,0.02)',border:`1px solid ${C.borderLight}`}}>
+                      <div style={{width:40,height:40,borderRadius:10,background:`${colors[type]}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        <MI name={icons[type]} size={20} fill style={{color:colors[type]}}/>
+                      </div>
+                      <div style={{flex:1}}>
+                        <span style={{fontSize:14,fontWeight:700,color:C.text}}>{type}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end" style={{gap:2}}>
+                          <label style={{fontSize:10,color:C.textMuted,fontWeight:600}}>Base XP</label>
+                          <input type="number" value={val.base} onChange={e=>setSettingsXP(p=>({...p,[type]:{...p[type],base:parseInt(e.target.value)||0}}))}
+                            style={{width:80,padding:'6px 10px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,fontSize:14,fontWeight:700,fontFamily:"'JetBrains Mono'",textAlign:'right'}}/>
+                        </div>
+                        <div className="flex flex-col items-end" style={{gap:2}}>
+                          <label style={{fontSize:10,color:C.textMuted,fontWeight:600}}>Bonus XP</label>
+                          <input type="number" value={val.bonus} onChange={e=>setSettingsXP(p=>({...p,[type]:{...p[type],bonus:parseInt(e.target.value)||0}}))}
+                            style={{width:80,padding:'6px 10px',borderRadius:8,border:`1px solid ${C.border}`,background:C.surface,color:C.text,fontSize:14,fontWeight:700,fontFamily:"'JetBrains Mono'",textAlign:'right'}}/>
+                        </div>
+                        <span style={{fontSize:12,color:colors[type],fontWeight:700,minWidth:70,textAlign:'right'}}>{val.base+val.bonus} Total</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </DCard>
+
+            {/* B. Platform Aktif */}
+            <DCard title="Platform Aktif" subtitle="Aktifkan atau nonaktifkan platform yang tersedia untuk misi" accent="#2A9D8F">
+              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
+                {Object.entries(settingsPlatforms).map(([platform,active])=>{
+                  const pIcons={Instagram:'photo_camera',TikTok:'music_note',YouTube:'play_circle',
+                    'X (Twitter)':'tag',Facebook:'people',WhatsApp:'chat',Telegram:'send'};
+                  const pColors={Instagram:'#E1306C',TikTok:'#00F2EA',YouTube:'#FF0000',
+                    'X (Twitter)':'#1DA1F2',Facebook:'#1877F2',WhatsApp:'#25D366',Telegram:'#0088cc'};
+                  return(
+                    <div key={platform} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:12,background:active?`${pColors[platform]}08`:C.surfaceAlt||'rgba(255,255,255,0.02)',border:`1px solid ${active?`${pColors[platform]}22`:C.borderLight}`,transition:'all 200ms'}}>
+                      <div style={{width:36,height:36,borderRadius:10,background:`${pColors[platform]}18`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <MI name={pIcons[platform]} size={18} style={{color:pColors[platform]}}/>
+                      </div>
+                      <div style={{flex:1}}>
+                        <span style={{fontSize:13,fontWeight:700,color:C.text}}>{platform}</span>
+                        <p style={{fontSize:11,color:active?pColors[platform]:C.textMuted,fontWeight:600,marginTop:2}}>{active?'Aktif':'Nonaktif'}</p>
+                      </div>
+                      <button onClick={()=>setSettingsPlatforms(p=>({...p,[platform]:!p[platform]}))}
+                        style={{width:44,height:24,borderRadius:12,border:'none',cursor:'pointer',position:'relative',transition:'all 200ms',
+                          background:active?pColors[platform]:'rgba(255,255,255,0.1)'}}>
+                        <div style={{width:18,height:18,borderRadius:9,background:'#fff',position:'absolute',top:3,
+                          left:active?23:3,transition:'left 200ms',boxShadow:'0 1px 3px rgba(0,0,0,0.3)'}}/>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </DCard>
+
+            {/* C. Pengaturan Notifikasi */}
+            <DCard title="Pengaturan Notifikasi" subtitle="Kelola notifikasi sistem dan laporan otomatis" accent="#E9C46A">
+              <div className="flex flex-col" style={{gap:12}}>
+                {[
+                  {key:'newMission',label:'Notifikasi misi baru',desc:'Terima notifikasi saat misi baru dibuat',icon:'notifications_active'},
+                  {key:'deadline',label:'Reminder deadline misi',desc:'Pengingat otomatis sebelum deadline misi berakhir',icon:'alarm'},
+                  {key:'submission',label:'Notifikasi submisi masuk',desc:'Terima notifikasi saat ada submisi baru untuk di-review',icon:'mark_email_unread'},
+                  {key:'weeklyReport',label:'Laporan mingguan otomatis',desc:'Kirim ringkasan performa mingguan ke email admin',icon:'summarize'},
+                ].map(n=>(
+                  <div key={n.key} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 16px',borderRadius:12,background:C.surfaceAlt||'rgba(255,255,255,0.02)',border:`1px solid ${C.borderLight}`}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:'rgba(233,196,74,0.12)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <MI name={n.icon} size={20} style={{color:'#E9C46A'}}/>
+                    </div>
+                    <div style={{flex:1}}>
+                      <span style={{fontSize:13,fontWeight:700,color:C.text}}>{n.label}</span>
+                      <p style={{fontSize:11,color:C.textMuted,marginTop:2}}>{n.desc}</p>
+                    </div>
+                    <button onClick={()=>setSettingsNotif(p=>({...p,[n.key]:!p[n.key]}))}
+                      style={{width:44,height:24,borderRadius:12,border:'none',cursor:'pointer',position:'relative',transition:'all 200ms',
+                        background:settingsNotif[n.key]?C.primary:'rgba(255,255,255,0.1)'}}>
+                      <div style={{width:18,height:18,borderRadius:9,background:'#fff',position:'absolute',top:3,
+                        left:settingsNotif[n.key]?23:3,transition:'left 200ms',boxShadow:'0 1px 3px rgba(0,0,0,0.3)'}}/>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </DCard>
+
+            {/* D. Informasi Sistem */}
+            <DCard title="Informasi Sistem" subtitle="Detail versi dan statistik platform SINAR" accent={C.gold||'#B8860B'}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
+                {[
+                  {label:'Versi',value:'SINAR v1.0.0',icon:'verified',color:C.primary},
+                  {label:'Total Kodam',value:'37',icon:'account_balance',color:'#E76F51'},
+                  {label:'Total Personel Terdaftar',value:'445.067',icon:'groups',color:'#2A9D8F'},
+                  {label:'Terakhir Diperbarui',value:'15 Maret 2026',icon:'update',color:'#E9C46A'},
+                ].map((info,i)=>(
+                  <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'16px',borderRadius:12,background:C.surfaceAlt||'rgba(255,255,255,0.02)',border:`1px solid ${C.borderLight}`}}>
+                    <div style={{width:42,height:42,borderRadius:12,background:`${info.color}15`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <MI name={info.icon} size={22} style={{color:info.color}}/>
+                    </div>
+                    <div>
+                      <p style={{fontSize:11,color:C.textMuted,fontWeight:600,marginBottom:4}}>{info.label}</p>
+                      <p style={{fontSize:16,fontWeight:800,color:C.text,fontFamily:i===2||i===1?"'JetBrains Mono'":'inherit'}}>{info.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DCard>
+
+            {/* Save Button */}
+            <div className="flex justify-end" style={{gap:12}}>
+              <button onClick={()=>showToast('Pengaturan berhasil disimpan!')} style={{
+                padding:'12px 32px',borderRadius:12,border:'none',cursor:'pointer',fontSize:14,fontWeight:700,
+                background:`linear-gradient(135deg,${C.primary},#1a5e30)`,color:'#fff',
+                display:'flex',alignItems:'center',gap:8,boxShadow:`0 4px 16px ${C.primary}33`,
+                transition:'all 200ms',
+              }} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-1px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                <MI name="save" size={18}/> Simpan Pengaturan
+              </button>
+            </div>
+
+          </div>)}
+
         </main>
       </div>
     );
