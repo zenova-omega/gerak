@@ -259,7 +259,7 @@ const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONT
 const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand'}[t]||'star');
 const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan'}[t]||'');
 const typeBonuses=t=>({
-  EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:settingsXP?.EVENT?.base||200,color:C.purple}],
+  EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:200,color:C.purple}],
   KONTEN:[{label:'Konten Terbaik',icon:'emoji_events',xp:250,color:C.gold},{label:'Paling Engaging',icon:'trending_up',xp:200,color:C.green},{label:'Paling Cepat Submit',icon:'speed',xp:100,color:C.teal},{label:'Paling Kreatif',icon:'auto_awesome',xp:150,color:C.purple}],
   ENGAGEMENT:[{label:'Top Engager',icon:'favorite',xp:150,color:C.red},{label:'Komentar Terbaik',icon:'chat_bubble',xp:100,color:C.primary},{label:'Paling Konsisten',icon:'repeat',xp:100,color:C.teal}],
   EDUKASI:[{label:'Jangkauan Terluas',icon:'public',xp:200,color:C.purple},{label:'Distribusi Tercepat',icon:'speed',xp:100,color:C.teal},{label:'Feedback Terbaik',icon:'thumb_up',xp:150,color:C.green}],
