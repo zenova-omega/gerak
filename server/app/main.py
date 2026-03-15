@@ -41,11 +41,10 @@ async def health():
     return {"status": "ok", "version": settings.APP_VERSION}
 
 
-# Import routers (will be implemented in Phase 2.2)
-# from .routers import auth, missions, users, admin, broadcast, settings as settings_router
-# app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-# app.include_router(missions.router, prefix="/api/missions", tags=["missions"])
-# app.include_router(users.router, prefix="/api/users", tags=["users"])
-# app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
-# app.include_router(broadcast.router, prefix="/api/broadcast", tags=["broadcast"])
-# app.include_router(settings_router.router, prefix="/api/settings", tags=["settings"])
+# Import and register routers
+from .routers import auth, missions, users, admin
+
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(missions.router, prefix="/api/missions", tags=["missions"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
