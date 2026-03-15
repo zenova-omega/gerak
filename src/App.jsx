@@ -6066,10 +6066,13 @@ export default function App(){
           {icon:'chat_bubble',color:'#FB923C',angle:315,r:190,dur:11},
         ];
 
-        // Live counters effect (uses lifted state)
+        // Live counters effect (uses lifted state) — runs 5 ticks then stops
         useEffect(()=>{
           if(demoPhase<2)return;
+          let ticks=0;
           const iv=setInterval(()=>{
+            ticks++;
+            if(ticks>5){clearInterval(iv);return;}
             setYtLikes(v=>v+Math.floor(Math.random()*500+100));
             setYtComments(v=>v+Math.floor(Math.random()*80+20));
             setPostCount(v=>v+Math.floor(Math.random()*3+1));
