@@ -259,7 +259,7 @@ const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONT
 const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand'}[t]||'star');
 const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan'}[t]||'');
 const typeBonuses=t=>({
-  EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:200,color:C.purple}],
+  EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:settingsXP?.EVENT?.base||200,color:C.purple}],
   KONTEN:[{label:'Konten Terbaik',icon:'emoji_events',xp:250,color:C.gold},{label:'Paling Engaging',icon:'trending_up',xp:200,color:C.green},{label:'Paling Cepat Submit',icon:'speed',xp:100,color:C.teal},{label:'Paling Kreatif',icon:'auto_awesome',xp:150,color:C.purple}],
   ENGAGEMENT:[{label:'Top Engager',icon:'favorite',xp:150,color:C.red},{label:'Komentar Terbaik',icon:'chat_bubble',xp:100,color:C.primary},{label:'Paling Konsisten',icon:'repeat',xp:100,color:C.teal}],
   EDUKASI:[{label:'Jangkauan Terluas',icon:'public',xp:200,color:C.purple},{label:'Distribusi Tercepat',icon:'speed',xp:100,color:C.teal},{label:'Feedback Terbaik',icon:'thumb_up',xp:150,color:C.green}],
@@ -3969,7 +3969,7 @@ export default function App(){
             {sideItems.map(s=>{
               const active=adSideTab===s.id;
               return(
-              <button key={s.id} onClick={()=>{setAdSideTab(s.id);setAdSubTab(s.id==='dashboard'?'ringkasan':s.id==='misi'?'list':'');}} style={{
+              <button key={s.id} onClick={()=>{setAdSideTab(s.id);setAdSubTab(s.id==='dashboard'?'ringkasan':s.id==='misi'?'list':'');setSelectedAdMission(null);}} style={{
                 display:'flex',alignItems:'center',gap:10,padding:'11px 14px',borderRadius:10,border:'none',cursor:'pointer',position:'relative',
                 background:active?'rgba(255,255,255,0.08)':'transparent',
                 color:active?'#FFFFFF':'rgba(255,255,255,0.5)',
@@ -4257,7 +4257,8 @@ export default function App(){
             </div>
 
             {/* Mission Effectiveness Over Time */}
-            <DCard title="Efektivitas Misi — Tren Waktu" subtitle="Reach & engagement 6 bulan terakhir" accent={C.primary}>
+            <DCard title="Efektivitas Misi — Tren Waktu" subtitle="Reach & engagement 6 bulan terakhir"
+                action={<button onClick={()=>showToast('Laporan analitik diekspor ke PDF')} style={{fontSize:11,fontWeight:600,color:C.primary,background:C.primaryLight,border:'none',padding:'6px 12px',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><MI name="picture_as_pdf" size={14}/>Export PDF</button>} accent={C.primary}>
               <div style={{position:'relative',padding:'8px 0'}}>
                 {/* Y-axis labels */}
                 <div style={{position:'absolute',left:0,top:8,bottom:32,display:'flex',flexDirection:'column',justifyContent:'space-between',width:44}}>
@@ -4787,10 +4788,15 @@ export default function App(){
                     ))}
                   </div>
 
-                  {/* Publish Button */}
-                  <button onClick={()=>{showToast('Misi berhasil dipublikasikan!');setMissionForm(f=>({...f,step:0,title:'',desc:''}));setAdSubTab('list')}} className="btn-primary" style={{width:'100%',padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.white,fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 15px rgba(20,83,45,0.2)'}}>
-                    <MI name="rocket_launch" size={18} style={{color:C.white}}/> Publikasikan Misi
-                  </button>
+                  {/* Publish + Draft Buttons */}
+                  <div style={{display:'flex',gap:10}}>
+                    <button onClick={()=>{showToast('Misi disimpan sebagai draft');setAdSubTab('list')}} style={{flex:'0 0 auto',padding:'14px 20px',borderRadius:12,border:`1px solid ${C.border}`,background:C.surfaceLight,color:C.textSec,fontSize:14,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+                      <MI name="save" size={16}/> Simpan Draft
+                    </button>
+                    <button onClick={()=>{showToast('Misi berhasil dipublikasikan!');setMissionForm(f=>({...f,step:0,title:'',desc:''}));setAdSubTab('list')}} className="btn-primary" style={{flex:1,padding:'14px 0',borderRadius:12,border:'none',background:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,color:C.white,fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 15px rgba(20,83,45,0.2)'}}>
+                      <MI name="rocket_launch" size={18} style={{color:C.white}}/> Publikasikan Misi
+                    </button>
+                  </div>
                 </div>
               </DCard>
               )}
@@ -4923,7 +4929,7 @@ export default function App(){
                     ))}
                   </div>
                   <h4 style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:8}}>Riwayat Misi Terbaru</h4>
-                  {[{m:'Upacara HUT TNI AD',t:'EVENT',s:'SELESAI',xp:400},{m:'Video Reels #BanggaTNIAD',t:'KONTEN',s:'SELESAI',xp:300},{m:'Like & Share KSAD Speech',t:'ENGAGEMENT',s:'REVIEW',xp:200}].map((h,i)=>(
+                  {[{m:selectedAgent.missions>20?'Upacara HUT TNI AD':'Bakti Sosial Kodam',t:'EVENT',s:'SELESAI',xp:400},{m:selectedAgent.tier==='Gold'?'Video Viral Challenge':'Video Reels Pendek',t:'KONTEN',s:'SELESAI',xp:300},{m:selectedAgent.xp>5000?'Kampanye Digital Nasional':'Like & Share Konten Resmi',t:selectedAgent.xp>5000?'AKSI':'ENGAGEMENT',s:selectedAgent.status==='active'?'SELESAI':'REVIEW',xp:selectedAgent.xp>5000?350:200}].map((h,i)=>(
                     <div key={i} className="flex items-center gap-3" style={{padding:'8px 0',borderBottom:i<2?`1px solid ${C.borderLight}`:'none'}}>
                       <MI name={h.t==='EVENT'?'event':h.t==='KONTEN'?'play_circle':'thumb_up'} size={16} style={{color:C.primary}}/>
                       <div style={{flex:1}}><p style={{fontSize:12,fontWeight:600,color:C.text}}>{h.m}</p><span style={{fontSize:10,color:C.textMuted}}>{h.t}</span></div>
@@ -4939,7 +4945,8 @@ export default function App(){
               </div>
             </div>}
 
-            <DCard title="Daftar Anggota" subtitle={`${agentsList.length} anggota terdaftar`} noPad accent={C.primary}>
+            <DCard title="Daftar Anggota" subtitle={`${agentsList.length} anggota terdaftar`} noPad accent={C.primary}
+                action={<button onClick={()=>showToast('Data anggota diekspor ke CSV')} style={{fontSize:11,fontWeight:600,color:C.primary,background:C.primaryLight,border:'none',padding:'6px 12px',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><MI name="download" size={14}/>Export CSV</button>}>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse'}}>
                   <thead>
@@ -5023,13 +5030,17 @@ export default function App(){
             const reviewCount=missionPosts.filter(p=>p.status==='REVIEW').length;
             const totalReach=missionPosts.reduce((s,p)=>s+parseFloat(p.views)*1000,0);
             return(<div className="flex flex-col gap-5">
-              {/* Back + Breadcrumb */}
+              {/* Back + Breadcrumb + Actions */}
               <div className="flex items-center gap-2">
                 <button onClick={()=>setAdSideTab('misi')} style={{color:C.textSec,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
                   <MI name="arrow_back" size={18} style={{color:C.textSec}}/> Manajemen Misi
                 </button>
                 <span style={{color:C.textMuted,fontSize:12}}>/</span>
                 <span style={{fontSize:12,fontWeight:600,color:C.primary}}>{(MISSIONS.find(x=>x.id===selectedAdMission)||MISSIONS[0]).title}</span>
+                <div style={{marginLeft:'auto',display:'flex',gap:8}}>
+                  <button onClick={()=>{showToast('Misi diduplikasi — buka Manajemen Misi untuk edit');setAdSideTab('misi');setAdSubTab('list');}} style={{fontSize:11,fontWeight:600,color:C.primary,background:C.primaryLight,border:'none',padding:'6px 14px',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><MI name="content_copy" size={14}/>Duplikasi</button>
+                  <button onClick={()=>showToast('Laporan misi diekspor ke PDF')} style={{fontSize:11,fontWeight:600,color:C.accent,background:C.accentLight,border:'none',padding:'6px 14px',borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><MI name="download" size={14}/>Export</button>
+                </div>
               </div>
 
               <DCard style={{padding:0}}>
