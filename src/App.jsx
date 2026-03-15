@@ -6080,10 +6080,13 @@ export default function App(){
         <CineSlide img="/images/splash-hero-soldiers.png" overlay="rgba(5,14,9,0.55)">
           <SinarMark size={80}/>
           <GoldLine w={80}/>
-          <SlideTitle size={48}>Membangun Citra Positif<br/>TNI AD <span style={{color:'#D4A843'}}>di Era Digital</span><br/><span style={{fontSize:24,fontWeight:500,color:'rgba(255,255,255,0.5)'}}>Melalui Kekuatan 400.000 Prajurit & Keluarga</span></SlideTitle>
-          <div style={{marginTop:24,display:'flex',alignItems:'center',gap:14,justifyContent:'center'}}>
+          <SlideTitle size={44}>Membangun Citra Positif<br/>TNI AD <span style={{color:'#D4A843'}}>di Era Digital</span></SlideTitle>
+          <p style={{fontSize:20,color:'rgba(255,255,255,0.55)',marginTop:16,lineHeight:1.7,textAlign:'center',maxWidth:700}}>
+            Platform digital untuk mengkoordinasikan <strong style={{color:'#fff'}}>400.000 prajurit</strong> dan <strong style={{color:'#D4A843'}}>1,6 juta keluarga</strong><br/>dalam menyebarkan narasi positif TNI AD secara nasional
+          </p>
+          <div style={{marginTop:28,display:'flex',alignItems:'center',gap:14,justifyContent:'center'}}>
             <div style={{width:40,height:1,background:'linear-gradient(90deg,transparent,rgba(139,26,26,0.5))'}}/>
-            <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',letterSpacing:3,fontWeight:600}}>TNI AD &nbsp;·&nbsp; 2026</p>
+            <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',letterSpacing:3,fontWeight:600}}>DISPENAD TNI AD &nbsp;·&nbsp; 2026</p>
             <div style={{width:40,height:1,background:'linear-gradient(90deg,rgba(139,26,26,0.5),transparent)'}}/>
           </div>
         </CineSlide>
@@ -6094,8 +6097,11 @@ export default function App(){
         <SlideBase>
           <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#050E09,#0A1510,#050E09)'}}/>
           <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:900}}>
-            <div style={{fontSize:11,fontWeight:700,color:'rgba(139,26,26,0.7)',letterSpacing:5,marginBottom:20}}>TANTANGAN SAAT INI</div>
+            <div style={{fontSize:11,fontWeight:700,color:'rgba(139,26,26,0.7)',letterSpacing:5,marginBottom:20}}>MENGAPA PLATFORM INI DIBUTUHKAN?</div>
             <SlideTitle size={42}>Di era digital, <span style={{color:'#EF4444'}}>citra positif</span><br/>kalah cepat dari <span style={{color:'#D4A843'}}>sentimen negatif</span></SlideTitle>
+            <p style={{fontSize:16,color:'rgba(255,255,255,0.45)',marginTop:12,lineHeight:1.6,maxWidth:650,margin:'12px auto 0'}}>
+              TNI AD sudah melakukan banyak hal positif — tapi tanpa koordinasi digital, cerita baik ini tenggelam oleh konten negatif.
+            </p>
             <GoldLine w={80}/>
             <div style={{display:'flex',gap:20,marginTop:28,justifyContent:'center',flexWrap:'wrap'}}>
               {[
