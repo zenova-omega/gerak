@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..database import get_db
 from ..models.user import User
+from ..models.audit import AuditLog
+from ..middleware.rate_limit import login_limiter
 from ..schemas import LoginRequest, RegisterRequest, TokenResponse, RefreshRequest, UserResponse
 from ..middleware.auth import (
     hash_password, verify_password, create_access_token,
@@ -13,13 +15,26 @@ router = APIRouter()
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(req: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Rate limiting
+    await login_limiter.check(client_ip)
+
     result = await db.execute(select(User).where(User.nrp == req.nrp))
     user = result.scalar_one_or_none()
     if not user or not verify_password(req.password, user.password_hash):
+        # Audit failed login
+        db.add(AuditLog(action="login_failed", detail=f"NRP: {req.nrp}", ip_address=client_ip))
         raise HTTPException(status_code=401, detail="NRP atau password salah")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Akun tidak aktif")
+
+    # Clear rate limit on success
+    await login_limiter.reset(client_ip)
+
+    # Audit successful login
+    db.add(AuditLog(user_id=user.id, action="login_success", ip_address=client_ip))
 
     access = create_access_token(user.id, user.role.value)
     refresh = create_refresh_token(user.id)
