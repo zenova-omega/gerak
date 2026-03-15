@@ -300,13 +300,14 @@ const mapStatusColor=s=>({hot:C.patriot,warm:C.accent,cool:C.primary}[s]||C.prim
 const mapStatusPulse=s=>s==='hot';
 
 /* ─── INDONESIA MISSION MAP COMPONENT ────────────────────────────── */
-function IndonesiaMissionMap({onSelectZone}){
+function IndonesiaMissionMap({onSelectZone,large}){
   const [hoveredZone,setHoveredZone]=useState(null);
   const [mapFilter,setMapFilter]=useState('all'); // all, hot, warm, cool
   const filtered=mapFilter==='all'?KODAM_ZONES:KODAM_ZONES.filter(z=>z.status===mapFilter);
   const totalMissions=KODAM_ZONES.reduce((a,z)=>a+z.missions,0);
   const totalActive=KODAM_ZONES.reduce((a,z)=>a+z.active,0);
   const totalAgents=KODAM_ZONES.reduce((a,z)=>a+z.agents,0);
+  const mapH=large?380:220;
 
   return(
     <div style={{borderRadius:16,overflow:'hidden',background:C.bgCard,border:`1px solid ${C.border}`,position:'relative'}}>
@@ -331,22 +332,23 @@ function IndonesiaMissionMap({onSelectZone}){
         </div>
       </div>
 
-      {/* Map */}
-      <div style={{position:'relative',height:220,overflow:'hidden'}}>
-        {/* Satellite background */}
-        <img src="/images/map-indonesia-satellite.png" alt="" style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',opacity:0.7}}/>
-        <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 80% 70% at 50% 50%,transparent 40%,rgba(245,243,238,0.8) 100%)',pointerEvents:'none'}}/>
+      {/* Map — scrollable container */}
+      <div style={{position:'relative',height:mapH,overflow:'auto',cursor:'grab'}} onMouseDown={e=>{e.currentTarget.style.cursor='grabbing'}} onMouseUp={e=>{e.currentTarget.style.cursor='grab'}}>
+        {/* Google Maps-style light background */}
+        <div style={{position:'absolute',inset:0,width:large?'130%':'100%',height:'100%',background:'linear-gradient(180deg,#E8F0E8 0%,#D4E4D4 30%,#C8DCD0 60%,#B8D4C8 100%)'}}/>
+        {/* Water/ocean areas */}
+        <div style={{position:'absolute',inset:0,width:large?'130%':'100%',height:'100%',background:'radial-gradient(ellipse 50% 40% at 30% 70%,rgba(147,197,210,0.4),transparent 60%), radial-gradient(ellipse 40% 50% at 75% 30%,rgba(147,197,210,0.3),transparent 50%)',pointerEvents:'none'}}/>
         <ComposableMap
           projection="geoMercator"
-          projectionConfig={{center:[118,-2.5],scale:900}}
-          style={{width:'100%',height:'100%',position:'relative',zIndex:1}}
-          width={400} height={220}
+          projectionConfig={{center:[118,-2.5],scale:large?1200:900}}
+          style={{width:large?'130%':'100%',height:'100%',position:'relative',zIndex:1}}
+          width={large?600:400} height={mapH}
         >
           <Geographies geography={INDONESIA_GEO_URL}>
             {({geographies})=>geographies.filter(g=>g.properties.name==='Indonesia').map(geo=>(
               <Geography key={geo.rsmKey} geography={geo}
-                fill="rgba(20,83,45,0.12)" stroke="rgba(20,83,45,0.3)" strokeWidth={0.5}
-                style={{default:{outline:'none'},hover:{outline:'none'},pressed:{outline:'none'}}}
+                fill="rgba(200,220,200,0.6)" stroke="rgba(20,83,45,0.25)" strokeWidth={0.8}
+                style={{default:{outline:'none'},hover:{outline:'none',fill:'rgba(180,210,180,0.7)'},pressed:{outline:'none'}}}
               />
             ))}
           </Geographies>
@@ -4094,9 +4096,14 @@ export default function App(){
               ))}
             </div>
 
-            {/* Two columns */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-              {/* Submission Queue */}
+            {/* Two columns — Map LEFT (larger), Review RIGHT */}
+            <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:16}}>
+              {/* Indonesia Mission Heat Map — LEFT, larger */}
+              <DCard title="Peta Operasi Nasional" subtitle="Sebaran misi di seluruh Indonesia — scroll untuk geser" accent={C.primary}>
+                <IndonesiaMissionMap onSelectZone={z=>showToast(`${z.name}: ${z.missions} misi, ${z.active} aktif`)} large/>
+              </DCard>
+
+              {/* Submission Queue — RIGHT */}
               <DCard title="Antrian Review" subtitle={`${submissionQueue.length} submisi menunggu review`} accent={C.orange}
                 action={<span style={{fontSize:11,fontWeight:700,color:C.orange,padding:'5px 12px',borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',gap:5}}><MI name="pending" size={14} fill style={{color:C.orange}}/>{submissionQueue.length} Pending</span>}>
                 <div className="flex flex-col gap-3">
@@ -4142,10 +4149,6 @@ export default function App(){
                 </div>
               </DCard>
 
-              {/* Indonesia Mission Heat Map */}
-              <DCard title="Peta Operasi" subtitle="Sebaran misi di seluruh Indonesia" accent={C.primary}>
-                <IndonesiaMissionMap onSelectZone={z=>showToast(`${z.name}: ${z.missions} misi, ${z.active} aktif`)}/>
-              </DCard>
             </div>
 
             {/* Misi per Tipe — full width horizontal layout */}
