@@ -522,7 +522,7 @@ const MISSIONS=[
     edukasiSpec:{material:'Poster Rekrutmen + FAQ PDF',channels:['WhatsApp','Telegram','Instagram'],minGroups:3,minGroupSize:15,note:'Target: grup pemuda, alumni SMA/SMK, komunitas olahraga'},
     templates:['Mau jadi prajurit TNI AD? Ini persyaratan dan jadwal pendaftaran 2026. Info resmi dari DISPENAD!']},
 
-  /* ─── AKSI — Aksi nyata bersama masyarakat ─── */
+  /* ─── AKSI — Aksi langsung bersama masyarakat ─── */
   {id:10,type:'AKSI',title:'Rekrutmen Relawan Pendukung Baksos TNI AD',
     desc:'Bantu koordinasi relawan sipil untuk mendukung kegiatan bakti sosial TNI AD di wilayah terdampak bencana.',
     xp:350,participants:67,status:'SIAGA',deadline:'25 Mar 2026',
@@ -5770,7 +5770,7 @@ export default function App(){
         <SlideBase>
           <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#050E09,#0A1510,#050E09)'}}/>
           <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:900}}>
-            <div style={{fontSize:11,fontWeight:700,color:'rgba(139,26,26,0.7)',letterSpacing:5,marginBottom:20}}>MASALAH YANG KITA HADAPI</div>
+            <div style={{fontSize:11,fontWeight:700,color:'rgba(139,26,26,0.7)',letterSpacing:5,marginBottom:20}}>TANTANGAN SAAT INI</div>
             <SlideTitle size={42}>Di era digital, <span style={{color:'#EF4444'}}>citra positif</span><br/>kalah cepat dari <span style={{color:'#D4A843'}}>sentimen negatif</span></SlideTitle>
             <GoldLine w={80}/>
             <div style={{display:'flex',gap:20,marginTop:28,justifyContent:'center',flexWrap:'wrap'}}>
@@ -5894,7 +5894,7 @@ export default function App(){
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',padding:'0 4%',gap:24,maxWidth:1300,margin:'0 auto',alignItems:'center'}}>
             {/* Left: YouTube + question */}
             <div style={{flex:'1 1 55%',display:'flex',flexDirection:'column',alignItems:'center'}}>
-              <SectionLabel>BAYANGKAN JIKA...</SectionLabel>
+              <SectionLabel>POTENSI YANG BELUM DIMANFAATKAN</SectionLabel>
               <h2 style={{fontSize:28,fontWeight:800,color:'#D4A843',lineHeight:1.4,textAlign:'center',marginBottom:16}}>
                 Bagaimana jika penyebaran ini bisa<br/><span style={{color:'#FFFFFF'}}>diorganisir, dipercepat, dan diperkuat?</span>
               </h2>
@@ -5957,10 +5957,10 @@ export default function App(){
       ()=>{
         const a=slide===4;
         const pillars=[
-          {icon:'assignment',title:'Misi Terstruktur',desc:'Tugas-tugas jelas dari pusat langsung ke HP prajurit',color:'#14532D',img:'/images/pres-event-community.png'},
-          {icon:'military_tech',title:'Sistem Poin & Hadiah',desc:'Kumpulkan poin, naik pangkat, dapat hadiah nyata',color:'#D4A843',img:'/images/splash-hero-portrait.png'},
-          {icon:'group',title:'Keluarga Ikut Serta',desc:'Istri, suami, anak turut membantu — 4× lipat jangkauan',color:'#0F766E',img:'/images/pres-family-network.png'},
-          {icon:'dashboard',title:'Pusat Kendali',desc:'Pantau semua aktivitas secara langsung dari satu layar',color:'#8B1A1A',img:'/images/pres-command-center.png'},
+          {icon:'assignment',title:'Misi Terstruktur',desc:'Instruksi terstruktur dari DISPENAD langsung ke perangkat prajurit',color:'#14532D',img:'/images/pres-event-community.png'},
+          {icon:'military_tech',title:'Sistem Poin & Hadiah',desc:'Sistem poin, jenjang pangkat digital, dan penghargaan nyata',color:'#D4A843',img:'/images/splash-hero-portrait.png'},
+          {icon:'group',title:'Keluarga Ikut Serta',desc:'Istri, suami, anak turut berpartisipasi — 4× lipat jangkauan',color:'#0F766E',img:'/images/pres-family-network.png'},
+          {icon:'dashboard',title:'Pusat Kendali',desc:'Monitoring real-time seluruh aktivitas dari satu dashboard',color:'#8B1A1A',img:'/images/pres-command-center.png'},
         ];
         return(
         <SlideBase>
@@ -5997,18 +5997,18 @@ export default function App(){
       /* ── 5: SINAR BERAKSI — Icon+Label Cards ── */
       ()=>(
         <CineSlide img="/images/pres-social-explosion.png">
-          <SectionLabel>APA YANG TERJADI?</SectionLabel>
-          <SlideTitle size={36}>Satu Perintah, <span style={{color:'#D4A843'}}>400.000 Orang</span><br/>Langsung Bergerak</SlideTitle>
+          <SectionLabel>SINAR DALAM AKSI</SectionLabel>
+          <SlideTitle size={36}>Satu Instruksi, <span style={{color:'#D4A843'}}>400.000 Personel</span><br/>Bergerak Serentak</SlideTitle>
           <GoldLine/>
           <p style={{fontSize:16,color:'rgba(255,255,255,0.6)',lineHeight:1.7,textAlign:'center',maxWidth:600,marginTop:12}}>
-            Cukup satu misi dari pusat — dalam hitungan jam, ratusan ribu prajurit dan keluarga sudah posting, like, dan share secara serentak.
+            Cukup satu instruksi dari komando — dalam hitungan jam, ratusan ribu prajurit dan keluarga menyebarkan konten positif secara terkoordinasi.
           </p>
           <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14,marginTop:28,maxWidth:640,width:'100%'}}>
             {[
-              {icon:'thumb_up',title:'Like & Share Bareng',desc:'400K orang like bersamaan — konten langsung naik ke trending',color:'#4ADE80'},
-              {icon:'play_circle',title:'Buat Konten Sendiri',desc:'Prajurit bikin video, foto, cerita dari sudut pandang mereka',color:'#60A5FA'},
-              {icon:'group',title:'Ajak Teman & Keluarga',desc:'Setiap prajurit ajak 10+ orang — efeknya berlipat ganda',color:'#A78BFA'},
-              {icon:'send',title:'Sebar ke Grup WhatsApp',desc:'Masuk ke 50.000+ grup keluarga & komunitas',color:'#FB923C'},
+              {icon:'thumb_up',title:'Like & Share Serentak',desc:'400.000 personel memberikan dukungan bersamaan — konten naik ke trending nasional',color:'#4ADE80'},
+              {icon:'play_circle',title:'Produksi Konten Orisinal',desc:'Prajurit membuat video, foto, dan narasi dari perspektif lapangan',color:'#60A5FA'},
+              {icon:'group',title:'Aktivasi Jaringan Sosial',desc:'Setiap prajurit menjangkau 10+ kontak — efek multiplikasi nasional',color:'#A78BFA'},
+              {icon:'send',title:'Distribusi ke 50.000+ Grup',desc:'Menjangkau grup WhatsApp & Telegram keluarga serta komunitas',color:'#FB923C'},
             ].map((a,i)=>(
               <div key={i} style={{padding:'16px 18px',borderRadius:14,background:'rgba(255,255,255,0.05)',border:`1px solid ${a.color}25`,display:'flex',alignItems:'flex-start',gap:12,backdropFilter:'blur(8px)'}}>
                 <div style={{width:44,height:44,borderRadius:12,background:`${a.color}15`,border:`1px solid ${a.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
@@ -6299,14 +6299,14 @@ export default function App(){
           <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',width:'100%',height:'100%',padding:'0 4%',gap:24,maxWidth:1200,margin:'0 auto'}}>
             {/* Left: Steps */}
             <div style={{flex:'0 0 280px',textAlign:'left'}}>
-              <SectionLabel>CARA KERJANYA</SectionLabel>
-              <SlideTitle size={36}>Semudah <span style={{color:'#D4A843'}}>1-2-3-4</span></SlideTitle>
+              <SectionLabel>ALUR OPERASIONAL</SectionLabel>
+              <SlideTitle size={36}>4 Langkah<br/><span style={{color:'#D4A843'}}>Sederhana</span></SlideTitle>
               <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:24}}>
                 {[
-                  {n:'1',t:'Terima tugas di HP',desc:'Buka aplikasi, lihat tugas hari ini',c:'#D4A843',icon:'assignment'},
-                  {n:'2',t:'Kerjakan tugasnya',desc:'Hadir di acara, bikin konten, atau like & share',c:'#4ADE80',icon:'rocket_launch'},
-                  {n:'3',t:'Kirim buktinya',desc:'Foto, video, atau screenshot',c:'#60A5FA',icon:'cloud_upload'},
-                  {n:'4',t:'Dapat poin otomatis',desc:'Sistem cek otomatis, poin langsung masuk',c:'#A78BFA',icon:'smart_toy'},
+                  {n:'1',t:'Terima instruksi via aplikasi',desc:'Notifikasi misi, panduan, dan target',c:'#D4A843',icon:'assignment'},
+                  {n:'2',t:'Laksanakan misi',desc:'Hadir, buat konten, atau sebarkan',c:'#4ADE80',icon:'rocket_launch'},
+                  {n:'3',t:'Upload bukti pelaksanaan',desc:'Foto, video, link postingan',c:'#60A5FA',icon:'cloud_upload'},
+                  {n:'4',t:'Verifikasi & reward otomatis',desc:'Sistem AI memverifikasi, poin langsung diterima',c:'#A78BFA',icon:'smart_toy'},
                 ].map((s,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
                     <div style={{width:40,height:40,borderRadius:12,background:`${s.c}15`,border:`1px solid ${s.c}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
@@ -6423,8 +6423,8 @@ export default function App(){
         <SlideBase>
           <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#0A1510,#030806)'}}/>
           <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 4%',maxWidth:1200,width:'100%'}}>
-            <SectionLabel>APA SAJA TUGASNYA?</SectionLabel>
-            <SlideTitle size={36}>3 Jenis Tugas<br/><span style={{color:'#D4A843'}}>yang Bisa Dikerjakan</span></SlideTitle>
+            <SectionLabel>KATEGORI MISI</SectionLabel>
+            <SlideTitle size={36}>3 Kategori Misi<br/><span style={{color:'#D4A843'}}>Utama</span></SlideTitle>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginTop:32}}>
               {/* EVENT */}
               <div style={{borderRadius:16,overflow:'hidden',background:'rgba(109,40,217,0.06)',border:'1px solid rgba(109,40,217,0.15)'}}>
@@ -6437,8 +6437,8 @@ export default function App(){
                   </div>
                 </div>
                 <div style={{padding:'14px 16px'}}>
-                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Hadir di Acara TNI AD</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Datang ke acara, ambil foto, kirim ke aplikasi</p>
+                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Kehadiran di Acara Resmi</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Dokumentasi, check-in digital, upload bukti kehadiran</p>
                   <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
                     {['Foto & Video','Check-in QR','+400 XP'].map((t,i)=>(
                       <span key={i} style={{fontSize:10,fontWeight:600,color:'#A78BFA',background:'rgba(109,40,217,0.12)',padding:'3px 8px',borderRadius:6}}>{t}</span>
@@ -6457,8 +6457,8 @@ export default function App(){
                   </div>
                 </div>
                 <div style={{padding:'14px 16px'}}>
-                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Bikin Konten Positif</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Bikin video pendek, poster, atau ikut challenge</p>
+                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Produksi Konten Positif</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Video reels, infografis, dan challenge terkoordinasi</p>
                   <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
                     {['Video Reels','Infografis','#BanggaTNIAD'].map((t,i)=>(
                       <span key={i} style={{fontSize:10,fontWeight:600,color:'#4ADE80',background:'rgba(20,83,45,0.15)',padding:'3px 8px',borderRadius:6}}>{t}</span>
@@ -6477,8 +6477,8 @@ export default function App(){
                   </div>
                 </div>
                 <div style={{padding:'14px 16px'}}>
-                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Like & Share Bareng-bareng</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>400K orang like bareng = konten jadi trending</p>
+                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Like & Share Serentak-bareng</p>
+                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>400.000 personel bergerak serentak — konten naik ke trending nasional</p>
                   <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
                     {['400K Likes','200K Shares','150K Comments'].map((t,i)=>(
                       <span key={i} style={{fontSize:10,fontWeight:600,color:'#FB923C',background:'rgba(194,65,12,0.12)',padding:'3px 8px',borderRadius:6}}>{t}</span>
@@ -6496,8 +6496,8 @@ export default function App(){
         <SlideBase>
           <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#0A1510,#030806)'}}/>
           <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 4%',maxWidth:1200,width:'100%'}}>
-            <SectionLabel>TUGAS DI LUAR MEDSOS</SectionLabel>
-            <SlideTitle size={36}>Tidak Hanya Online,<br/><span style={{color:'#D4A843'}}>Tapi Juga di Lapangan</span></SlideTitle>
+            <SectionLabel>MISI KOMUNITAS & LAPANGAN</SectionLabel>
+            <SlideTitle size={36}>Jangkauan Melampaui<br/><span style={{color:'#D4A843'}}>Media Sosial</span></SlideTitle>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginTop:32,maxWidth:900,margin:'32px auto 0'}}>
               {/* EDUKASI */}
               <div style={{borderRadius:16,overflow:'hidden',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)'}}>
@@ -6509,7 +6509,7 @@ export default function App(){
                       <MI name="school" size={22} fill style={{color:'#E2E8F0'}}/>
                       <span style={{fontSize:20,fontWeight:800,color:'#E2E8F0'}}>EDUKASI</span>
                     </div>
-                    <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>Sebarkan info ke lingkungan sekitar</p>
+                    <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>Distribusi materi ke komunitas</p>
                   </div>
                 </div>
                 <div style={{padding:'16px 18px'}}>
@@ -6533,7 +6533,7 @@ export default function App(){
                       <MI name="campaign" size={22} fill style={{color:'#D4A843'}}/>
                       <span style={{fontSize:20,fontWeight:800,color:'#D4A843'}}>AKSI</span>
                     </div>
-                    <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>Aksi nyata bersama masyarakat</p>
+                    <p style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>Aksi langsung bersama masyarakat</p>
                   </div>
                 </div>
                 <div style={{padding:'16px 18px'}}>
@@ -6567,8 +6567,8 @@ export default function App(){
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',maxWidth:1200,margin:'0 auto'}}>
             {/* Top title */}
             <div style={{position:'absolute',top:'3%',left:0,right:0,textAlign:'center',zIndex:10}}>
-              <SectionLabel>KENAPA SERU?</SectionLabel>
-              <SlideTitle size={38}>Seperti Main Game — <span style={{color:'#D4A843'}}>Tapi Nyata!</span></SlideTitle>
+              <SectionLabel>SISTEM MOTIVASI</SectionLabel>
+              <SlideTitle size={38}>Mengapa Prajurit <span style={{color:'#D4A843'}}>Termotivasi?</span></SlideTitle>
             </div>
 
             {/* CENTER — Phone */}
@@ -6713,7 +6713,7 @@ export default function App(){
           </animated.div>
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center'}}>
             <animated.div style={{...titleAnim,textAlign:'center',marginTop:'1.5%',zIndex:10}}>
-              <SectionLabel>BAYANGKAN DAMPAKNYA</SectionLabel>
+              <SectionLabel>EFEK MULTIPLIKASI NASIONAL</SectionLabel>
               <SlideTitle size={40}>1 Prajurit × <span style={{color:'#D4A843'}}>400.000</span> × Keluarga<br/><span style={{fontSize:30,color:'rgba(255,255,255,0.5)'}}>× Teman × Komunitas × <span style={{color:'#FB923C'}}>Seluruh Indonesia</span></span></SlideTitle>
             </animated.div>
 
@@ -6782,10 +6782,10 @@ export default function App(){
       /* ── 13: Toko & Reward ── */
       ()=>(
         <CineSlide img="/images/shop-merchandise-collection.png" overlay="linear-gradient(180deg,rgba(5,14,9,0.5) 0%,rgba(5,14,9,0.8) 100%)">
-          <SectionLabel>HADIAH NYATA</SectionLabel>
+          <SectionLabel>SISTEM PENGHARGAAN</SectionLabel>
           <SlideTitle size={38}>Toko Poin<br/><span style={{color:'#D4A843'}}>Merchandise TNI AD</span></SlideTitle>
           <GoldLine/>
-          <SlideText>Kumpulkan poin dari tugas, tukar dengan hadiah asli — kaos, jaket, voucher, dan lainnya.</SlideText>
+          <SlideText>Prajurit dan keluarga menukar poin dengan merchandise eksklusif, voucher, dan penghargaan spesial.</SlideText>
           <div style={{display:'flex',gap:16,marginTop:28,justifyContent:'center',flexWrap:'wrap'}}>
             {[
               {img:'/images/shop-kaos-tactical-v2.png',name:'Kaos Tactical',cost:'1,500 XP'},
@@ -6814,8 +6814,8 @@ export default function App(){
         <SlideBase>
           <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#081510,#030806)'}}/>
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',padding:'2% 3%',maxWidth:1300,margin:'0 auto'}}>
-            <SectionLabel>UNTUK PIMPINAN</SectionLabel>
-            <SlideTitle size={36}>Pantau Semua dari <span style={{color:'#D4A843'}}>Satu Layar</span></SlideTitle>
+            <SectionLabel>PUSAT KOMANDO</SectionLabel>
+            <SlideTitle size={36}>Pusat Kendali <span style={{color:'#D4A843'}}>SINAR</span></SlideTitle>
 
             <div style={{display:'flex',gap:20,marginTop:16,width:'100%',flex:1,minHeight:0}}>
               {/* Left: Desktop dashboard with auto-cycling pages */}
@@ -6947,7 +6947,7 @@ export default function App(){
           <SinarMark size={80}/>
           <GoldLine w={100}/>
           <h1 style={{fontSize:52,fontWeight:900,color:'#FFFFFF',letterSpacing:6,lineHeight:1.2,textAlign:'center',textShadow:'0 4px 40px rgba(184,134,11,0.2)'}}>
-            Siap <span style={{color:'#D4A843'}}>Meluncurkan</span><br/>SINAR Nasional?
+            Siap Meluncurkan<br/><span style={{color:'#D4A843'}}>SINAR Nasional</span>
           </h1>
           <p style={{fontSize:20,color:'rgba(255,255,255,0.55)',marginTop:20,lineHeight:1.6,textAlign:'center',maxWidth:600}}>
             Mobilisasi <strong style={{color:'#FFFFFF'}}>400.000+ prajurit</strong> dan <strong style={{color:'#D4A843'}}>1.6 juta keluarga</strong><br/>

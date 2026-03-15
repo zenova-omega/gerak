@@ -786,7 +786,7 @@ button:focus-visible { border-radius: 8px; }
 .pres-orbit-icon {
   position: absolute;
   pointer-events: none;
-  animation: orbit-icon var(--orbit-dur, 12s) linear infinite;
+  animation: orbit-icon var(--orbit-dur, 12s) linear both;
 }
 
 /* Gold tap-ring pulse */
@@ -795,7 +795,7 @@ button:focus-visible { border-radius: 8px; }
   50% { box-shadow: 0 0 0 10px rgba(212,168,67,0), 0 0 30px rgba(212,168,67,0.25); transform: scale(1.03); }
 }
 .pres-tap-ring {
-  animation: tap-ring-pulse 2s ease-in-out infinite;
+  animation: tap-ring-pulse 2s ease-in-out 3;
 }
 
 /* Posts emerge and drift */
@@ -831,5 +831,5 @@ button:focus-visible { border-radius: 8px; }
   50% { filter: brightness(1.8) drop-shadow(0 0 10px rgba(212,168,67,0.6)); }
 }
 .pres-icon-bright {
-  animation: icon-bright-pulse 1s ease-in-out infinite;
+  animation: icon-bright-pulse 1s ease-in-out both;
 }
