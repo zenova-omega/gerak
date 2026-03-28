@@ -5801,7 +5801,7 @@ export default function App(){
       return()=>timers.forEach(clearTimeout);
     },[]);
 
-    const TOTAL_SLIDES=18; // slides 0-17
+    const TOTAL_SLIDES=19; // slides 0-18
     const [subStep,setSubStep]=useState(0);
     // Slides with progressive reveal: slide index -> number of sub-steps
     const SLIDE_SUBSTEPS=useMemo(()=>({3:5, 7:4, 9:5}),[]);
@@ -7354,7 +7354,82 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── CTA & Live Demo ── */
+      /* ── 17: Video Demo — Real App Recordings ── */
+      ()=>{
+        const [activeVid,setActiveVid]=useState(0);
+        const vids=[
+          {src:'/videos/demo-1.mov',label:'Tampilan Beranda & Misi',desc:'Prajurit melihat daftar misi, mengambil misi, dan melihat detail instruksi'},
+          {src:'/videos/demo-2.mov',label:'Upload Bukti & AI Review',desc:'Proses upload bukti pelaksanaan dan review otomatis oleh sistem AI'},
+          {src:'/videos/demo-3.mov',label:'Gamifikasi & Reward',desc:'Sistem poin, pangkat digital, lencana, dan toko merchandise'},
+        ];
+        return(
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#081510,#030806)'}}/>
+          <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',padding:'2% 4%',maxWidth:1200,margin:'0 auto'}}>
+            <SectionLabel>DEMO APLIKASI</SectionLabel>
+            <SlideTitle size={44}>Lihat <span style={{color:'#D4A843'}}>SINAR</span> Langsung Beraksi</SlideTitle>
+            <GoldLine/>
+
+            <div style={{display:'flex',gap:24,marginTop:16,flex:1,minHeight:0,width:'100%',alignItems:'center'}}>
+              {/* Left: Video in phone frame */}
+              <div style={{flex:'0 0 auto',display:'flex',justifyContent:'center'}}>
+                <div style={{width:280,height:606,borderRadius:28,overflow:'hidden',border:'3px solid rgba(255,255,255,0.15)',boxShadow:'0 20px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)',background:'#000',position:'relative'}}>
+                  {/* Side buttons */}
+                  <div style={{position:'absolute',right:-3,top:110,width:3,height:28,borderRadius:'0 2px 2px 0',background:'rgba(255,255,255,0.12)'}}/>
+                  <div style={{position:'absolute',left:-3,top:90,width:3,height:20,borderRadius:'2px 0 0 2px',background:'rgba(255,255,255,0.1)'}}/>
+                  <div style={{position:'absolute',left:-3,top:140,width:3,height:36,borderRadius:'2px 0 0 2px',background:'rgba(255,255,255,0.1)'}}/>
+                  {/* Status bar */}
+                  <div style={{padding:'10px 16px 4px',display:'flex',justifyContent:'space-between',alignItems:'center',background:'#000',position:'relative',zIndex:2}}>
+                    <span style={{fontSize:12,fontWeight:600,color:'#fff',fontFamily:"'JetBrains Mono'"}}>09:41</span>
+                    <div style={{width:80,height:20,background:'#fff',borderRadius:10}}/>
+                    <div style={{display:'flex',gap:2,alignItems:'center'}}>
+                      <MI name="signal_cellular_alt" size={12} style={{color:'#fff'}}/>
+                      <MI name="wifi" size={12} style={{color:'#fff'}}/>
+                      <MI name="battery_full" size={12} style={{color:'#fff'}}/>
+                    </div>
+                  </div>
+                  {/* Video */}
+                  <video key={activeVid} autoPlay loop muted playsInline style={{width:'100%',height:'calc(100% - 34px)',objectFit:'cover'}}>
+                    <source src={vids[activeVid].src} type="video/quicktime"/>
+                  </video>
+                  {/* Home indicator */}
+                  <div style={{position:'absolute',bottom:6,left:'50%',transform:'translateX(-50%)',width:100,height:4,borderRadius:2,background:'rgba(255,255,255,0.3)'}}/>
+                </div>
+              </div>
+
+              {/* Right: Video selector + description */}
+              <div style={{flex:1,display:'flex',flexDirection:'column',gap:14}}>
+                <p style={{fontSize:18,color:'rgba(255,255,255,0.5)',lineHeight:1.6}}>
+                  Rekaman langsung dari aplikasi SINAR — klik untuk berganti tampilan.
+                </p>
+                {vids.map((v,i)=>(
+                  <div key={i} onClick={()=>setActiveVid(i)} style={{
+                    padding:'18px 20px',borderRadius:14,cursor:'pointer',transition:'all 0.3s ease',
+                    background:activeVid===i?'rgba(184,134,11,0.1)':'rgba(255,255,255,0.03)',
+                    border:`2px solid ${activeVid===i?'rgba(184,134,11,0.4)':'rgba(255,255,255,0.06)'}`,
+                    boxShadow:activeVid===i?'0 4px 20px rgba(184,134,11,0.1)':'none',
+                    display:'flex',alignItems:'center',gap:16,
+                  }}>
+                    <div style={{width:52,height:52,borderRadius:14,background:activeVid===i?'rgba(184,134,11,0.2)':'rgba(255,255,255,0.06)',border:`1px solid ${activeVid===i?'rgba(184,134,11,0.3)':'rgba(255,255,255,0.08)'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all 0.3s ease'}}>
+                      <MI name={activeVid===i?'play_circle':'play_arrow'} size={28} fill={activeVid===i} style={{color:activeVid===i?'#D4A843':'rgba(255,255,255,0.3)',transition:'all 0.3s ease'}}/>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <span style={{fontSize:14,fontWeight:700,color:activeVid===i?'#D4A843':'rgba(255,255,255,0.35)',letterSpacing:1}}>DEMO {i+1}</span>
+                        {activeVid===i&&<span style={{fontSize:14,fontWeight:700,color:'#4ADE80',background:'rgba(34,197,94,0.15)',padding:'2px 8px',borderRadius:4}}>PLAYING</span>}
+                      </div>
+                      <p style={{fontSize:20,fontWeight:700,color:activeVid===i?'#fff':'rgba(255,255,255,0.5)',marginTop:4,transition:'all 0.3s ease'}}>{v.label}</p>
+                      <p style={{fontSize:14,color:'rgba(255,255,255,0.4)',marginTop:4,lineHeight:1.4}}>{v.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </SlideBase>);
+      },
+
+      /* ── CTA ── */
       ()=>(
         <CineSlide img="/images/pres-massa-penggerak-v2.png" overlay="radial-gradient(ellipse 60% 50% at 50% 50%,rgba(5,14,9,0.35),rgba(5,14,9,0.92) 80%)">
           <div style={{position:'absolute',inset:20,border:'1px solid rgba(184,134,11,0.12)',borderRadius:4,pointerEvents:'none'}}/>
