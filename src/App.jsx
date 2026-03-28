@@ -5801,14 +5801,14 @@ export default function App(){
       return()=>timers.forEach(clearTimeout);
     },[]);
 
-    const TOTAL_SLIDES=17; // slides 0-16
+    const TOTAL_SLIDES=18; // slides 0-17
     const nextSlide=useCallback(()=>{setSlide(s=>Math.min(s+1,TOTAL_SLIDES-1));setDemoPhase(0);setAdminPage(0);},[]);
     const prevSlide=useCallback(()=>{setSlide(s=>Math.max(s-1,0));setDemoPhase(0);setAdminPage(0);},[]);
     const goFullscreen=useCallback(()=>{const d=document.documentElement;if(d.requestFullscreen)d.requestFullscreen();else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen();},[]);
 
     // Auto-cycle admin dashboard pages on admin CC slide
     useEffect(()=>{
-      if(slide!==15)return;
+      if(slide!==16)return;
       const iv=setInterval(()=>setAdminPage(p=>(p+1)%4),3500);
       return()=>clearInterval(iv);
     },[slide]);
@@ -6610,9 +6610,73 @@ export default function App(){
           </div>
         </SlideBase>);
       },
-      /* ── 9: Real App — Papan Misi + Upload + AI Review ── */
+      /* ── 9: Bagaimana Ini Menjadi Viral? — Viral Mechanics ── */
+      ()=>(
+        <SlideBase>
+          <div style={{position:'absolute',inset:0}}>
+            <img src="/images/pres-content-viral-spread.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',opacity:0.2,filter:'brightness(0.5)'}}/>
+            <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,rgba(5,14,9,0.92),rgba(5,14,9,0.85),rgba(5,14,9,0.92))'}}/>
+          </div>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:1150}}>
+            <SectionLabel>KEKUATAN PENYEBARAN</SectionLabel>
+            <SlideTitle size={36}>Konten Disebarkan oleh <span style={{color:'#D4A843'}}>1,6 Juta Orang</span></SlideTitle>
+            <GoldLine/>
+            <p style={{fontSize:18,color:'rgba(255,255,255,0.6)',lineHeight:1.7,maxWidth:750,margin:'8px auto 0'}}>
+              Bukan hanya <strong style={{color:'#fff'}}>400.000 prajurit</strong> — tetapi juga <strong style={{color:'#D4A843'}}>istri, suami, anak, dan keluarga besar</strong> mereka.<br/>Setiap orang menyebarkan ke jaringan pribadinya — efeknya berlipat ganda.
+            </p>
+
+            {/* 2-row layout: Top = who spreads, Bottom = viral cascade */}
+            {/* Row 1: Siapa yang menyebarkan */}
+            <div style={{display:'flex',gap:14,marginTop:28,justifyContent:'center'}}>
+              {[
+                {icon:'military_tech',title:'400K Prajurit',desc:'Posting di Instagram, TikTok, YouTube, X secara serentak',color:'#14532D',stat:'400K'},
+                {icon:'favorite',title:'1.2M Keluarga',desc:'Istri, suami, anak membagikan ke grup WhatsApp, Telegram, dan komunitas',color:'#8B1A1A',stat:'1.2M'},
+                {icon:'group',title:'Jaringan Sosial',desc:'Setiap orang menjangkau 10+ kontak — teman, tetangga, alumni, RT/RW',color:'#0F766E',stat:'×10'},
+                {icon:'send',title:'50K+ Grup',desc:'Konten masuk ke grup WhatsApp keluarga, alumni, komunitas di seluruh Indonesia',color:'#6D28D9',stat:'50K+'},
+              ].map((s,i)=>(
+                <div key={i} style={{flex:'1 1 0',maxWidth:240,borderRadius:14,background:`${s.color}10`,border:`1px solid ${s.color}30`,padding:'18px 14px',textAlign:'center'}}>
+                  <div style={{width:48,height:48,borderRadius:'50%',background:`${s.color}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto',boxShadow:`0 0 20px ${s.color}40`}}>
+                    <MI name={s.icon} size={24} style={{color:'#fff'}}/>
+                  </div>
+                  <p style={{fontSize:28,fontWeight:900,color:'#fff',fontFamily:"'JetBrains Mono'",marginTop:10}}>{s.stat}</p>
+                  <p style={{fontSize:16,fontWeight:800,color:'#FFFFFF',marginTop:4}}>{s.title}</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.5)',marginTop:6,lineHeight:1.4}}>{s.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Row 2: Viral cascade — what happens next */}
+            <div style={{marginTop:24,display:'flex',alignItems:'center',justifyContent:'center',gap:12}}>
+              <MI name="arrow_downward" size={20} style={{color:'rgba(184,134,11,0.4)'}}/>
+              <p style={{fontSize:16,fontWeight:700,color:'#D4A843',letterSpacing:2}}>EFEK VIRAL</p>
+              <MI name="arrow_downward" size={20} style={{color:'rgba(184,134,11,0.4)'}}/>
+            </div>
+            <div style={{display:'flex',gap:8,marginTop:12,justifyContent:'center',alignItems:'center'}}>
+              {[
+                {label:'Algoritma Boost',stat:'10×',color:'#60A5FA',icon:'trending_up'},
+                {label:'Trending Nasional',stat:'Top 5',color:'#FB923C',icon:'local_fire_department'},
+                {label:'Media Liputan',stat:'50+ media',color:'#A78BFA',icon:'newspaper'},
+                {label:'Jangkauan Total',stat:'16M+',color:'#D4A843',icon:'public'},
+              ].map((s,i)=>(
+                <React.Fragment key={i}>
+                  {i>0&&<MI name="chevron_right" size={18} style={{color:'rgba(255,255,255,0.15)',flexShrink:0}}/>}
+                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:10,background:'rgba(0,0,0,0.4)',border:`1px solid ${s.color}20`}}>
+                    <MI name={s.icon} size={20} style={{color:s.color}}/>
+                    <div style={{textAlign:'left'}}>
+                      <p style={{fontSize:20,fontWeight:900,color:s.color,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.stat}</p>
+                      <p style={{fontSize:14,color:'rgba(255,255,255,0.45)'}}>{s.label}</p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </SlideBase>
+      ),
+
+      /* ── 10: Real App — Papan Misi + Upload + AI Review ── */
       ()=>{
-        const a=slide===9;
+        const a=slide===10;
         const f1=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(60px)',delay:300,config:{tension:80,friction:20}});
         const f2=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(60px)',delay:600,config:{tension:70,friction:18}});
         const f3=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(60px)',delay:900,config:{tension:70,friction:18}});
@@ -6880,9 +6944,9 @@ export default function App(){
         </SlideBase>
       ),
 
-      /* ── 12: Gamifikasi — Centered mockup + callouts ── */
+      /* ── 13: Gamifikasi — Centered mockup + callouts ── */
       ()=>{
-        const a=slide===12;
+        const a=slide===13;
         const fP=useSpring({opacity:a?1:0,transform:a?'translateY(0) scale(1)':'translateY(40px) scale(0.95)',delay:200,config:{tension:80,friction:20}});
         const fL1=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(-30px)',delay:600,config:{tension:70,friction:18}});
         const fL2=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(-30px)',delay:900,config:{tension:70,friction:18}});
@@ -7008,9 +7072,9 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 13: Multiplier — Indonesia map with organic network ── */
+      /* ── 14: Multiplier — Indonesia map with organic network ── */
       ()=>{
-        const a=slide===13;
+        const a=slide===14;
         const mapAnim=useSpring({opacity:a?1:0,config:{duration:800}});
         const titleAnim=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(20px)',delay:200,config:{tension:70,friction:18}});
         const statsAnim=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(20px)',delay:1800,config:{tension:70,friction:18}});
@@ -7132,9 +7196,9 @@ export default function App(){
         </CineSlide>
       ),
 
-      /* ── 15: Admin Command Center — Auto-cycling pages ── */
+      /* ── 16: Admin Command Center — Auto-cycling pages ── */
       ()=>{
-        const a=slide===15;
+        const a=slide===16;
         const fD=useSpring({opacity:a?1:0,transform:a?'translateY(0) scale(1)':'translateY(30px) scale(0.96)',delay:200,config:{tension:80,friction:20}});
         const fCards=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(30px)',delay:600,config:{tension:70,friction:18}});
         return(
