@@ -5801,14 +5801,14 @@ export default function App(){
       return()=>timers.forEach(clearTimeout);
     },[]);
 
-    const TOTAL_SLIDES=15; // slides 0-14
+    const TOTAL_SLIDES=17; // slides 0-16
     const nextSlide=useCallback(()=>{setSlide(s=>Math.min(s+1,TOTAL_SLIDES-1));setDemoPhase(0);setAdminPage(0);},[]);
     const prevSlide=useCallback(()=>{setSlide(s=>Math.max(s-1,0));setDemoPhase(0);setAdminPage(0);},[]);
     const goFullscreen=useCallback(()=>{const d=document.documentElement;if(d.requestFullscreen)d.requestFullscreen();else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen();},[]);
 
-    // Auto-cycle admin dashboard pages on slide 17
+    // Auto-cycle admin dashboard pages on admin CC slide
     useEffect(()=>{
-      if(slide!==17)return;
+      if(slide!==15)return;
       const iv=setInterval(()=>setAdminPage(p=>(p+1)%4),3500);
       return()=>clearInterval(iv);
     },[slide]);
@@ -6008,7 +6008,7 @@ export default function App(){
         {arrow==='down'&&<div style={{width:2,height:16,background:`linear-gradient(180deg,${color},transparent)`,alignSelf:'center'}}/>}
         {arrow==='up'&&<div style={{width:2,height:16,background:`linear-gradient(0deg,${color},transparent)`,alignSelf:'center'}}/>}
         <div style={{background:'rgba(0,0,0,0.6)',backdropFilter:'blur(8px)',border:`1px solid ${color}40`,borderRadius:8,padding:'6px 12px',maxWidth:200}}>
-          <p style={{fontSize:13,fontWeight:700,color,lineHeight:1.3}}>{children}</p>
+          <p style={{fontSize:14,fontWeight:700,color,lineHeight:1.3}}>{children}</p>
         </div>
       </div>
     );
@@ -6126,7 +6126,7 @@ export default function App(){
                 <div key={i} style={{flex:'1 1 200px',maxWidth:240,padding:'20px',borderRadius:14,background:'rgba(255,255,255,0.04)',border:`1px solid ${s.c}20`,textAlign:'center'}}>
                   <MI name={s.icon} size={28} style={{color:s.c,marginBottom:8}}/>
                   <p style={{fontSize:36,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.v}</p>
-                  <p style={{fontSize:13,color:'rgba(255,255,255,0.5)',marginTop:8,lineHeight:1.4}}>{s.desc}</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.5)',marginTop:8,lineHeight:1.4}}>{s.desc}</p>
                 </div>
               ))}
             </div>
@@ -6141,7 +6141,85 @@ export default function App(){
         </SlideBase>
       ),
 
-      /* ── 2: Real Scenario — Soldiers filming the event ── */
+      /* ── 2: Apa Itu SINAR? — Clear Explanation ── */
+      ()=>(
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#050E09,#0A1A10,#050E09)'}}/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:950}}>
+            <SinarMark size={64}/>
+            <h1 style={{fontSize:48,fontWeight:900,color:'#FFFFFF',letterSpacing:8,marginTop:12}}>SINAR</h1>
+            <p style={{fontSize:16,color:'#D4A843',letterSpacing:5,marginTop:6,fontWeight:600}}>SISTEM INFORMASI NARASI AKTIF RAKYAT</p>
+            <GoldLine w={100}/>
+            <p style={{fontSize:22,color:'rgba(255,255,255,0.8)',lineHeight:1.7,marginTop:16,maxWidth:750,margin:'16px auto 0'}}>
+              Sebuah <strong style={{color:'#fff'}}>aplikasi mobile</strong> yang mengkoordinasikan prajurit dan keluarga TNI AD untuk menyebarkan <strong style={{color:'#D4A843'}}>narasi positif</strong> secara terstruktur melalui sistem misi dan gamifikasi.
+            </p>
+            <div style={{display:'flex',gap:16,marginTop:36,justifyContent:'center'}}>
+              {[
+                {icon:'phone_iphone',title:'Aplikasi Mobile',desc:'Satu platform untuk semua prajurit & keluarga TNI AD',color:'#4ADE80'},
+                {icon:'assignment',title:'Sistem Misi',desc:'Instruksi terstruktur langsung dari komando pusat ke perangkat',color:'#D4A843'},
+                {icon:'military_tech',title:'Gamifikasi',desc:'Poin, pangkat digital, lencana, dan reward merchandise nyata',color:'#A78BFA'},
+              ].map((c,i)=>(
+                <div key={i} style={{flex:'1 1 0',maxWidth:250,padding:'24px 18px',borderRadius:14,background:`${c.color}08`,border:`1px solid ${c.color}20`,textAlign:'center'}}>
+                  <div style={{width:56,height:56,borderRadius:16,background:`${c.color}15`,border:`1px solid ${c.color}30`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto'}}>
+                    <MI name={c.icon} size={28} style={{color:c.color}}/>
+                  </div>
+                  <p style={{fontSize:20,fontWeight:800,color:'#FFFFFF',marginTop:14}}>{c.title}</p>
+                  <p style={{fontSize:15,color:'rgba(255,255,255,0.55)',marginTop:8,lineHeight:1.5}}>{c.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </SlideBase>
+      ),
+
+      /* ── 3: Bagaimana Cara Kerjanya? — Step-by-step Flow ── */
+      ()=>(
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#050E09,#081510,#050E09)'}}/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:1100}}>
+            <SectionLabel>KONSEP SEDERHANA</SectionLabel>
+            <SlideTitle size={38}>Bagaimana <span style={{color:'#D4A843'}}>SINAR</span> Bekerja?</SlideTitle>
+            <GoldLine/>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'center',gap:8,marginTop:36}}>
+              {[
+                {icon:'campaign',title:'DISPENAD Buat Misi',desc:'Komando pusat membuat instruksi misi melalui dashboard admin',color:'#8B1A1A',bg:'/images/pres-command-center.png'},
+                {icon:'phone_iphone',title:'Prajurit Terima',desc:'400.000+ prajurit & keluarga menerima misi di aplikasi mobile',color:'#14532D',bg:'/images/pres-event-community.png'},
+                {icon:'cloud_upload',title:'Eksekusi & Upload',desc:'Hadir di acara, buat konten, upload bukti pelaksanaan',color:'#0F766E',bg:'/images/pres-konten-creator.png'},
+                {icon:'smart_toy',title:'Verifikasi AI',desc:'Sistem AI menilai kualitas konten secara otomatis',color:'#6D28D9',bg:'/images/pres-engagement-action-v2.png'},
+                {icon:'celebration',title:'Reward & Dampak',desc:'Poin masuk, pangkat naik, narasi positif menyebar nasional',color:'#D4A843',bg:'/images/pres-social-explosion.png'},
+              ].map((s,i)=>(
+                <React.Fragment key={i}>
+                  {i>0&&<MI name="arrow_forward" size={24} style={{color:'rgba(184,134,11,0.35)',flexShrink:0,marginTop:60}}/>}
+                  <div style={{flex:'1 1 0',maxWidth:180}}>
+                    <div style={{width:32,height:32,borderRadius:'50%',background:`${s.color}`,border:'2px solid rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',boxShadow:`0 0 16px ${s.color}60`}}>
+                      <span style={{fontSize:15,fontWeight:900,color:'#fff'}}>{i+1}</span>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.4)',letterSpacing:2,marginBottom:8}}>STEP {i+1}</p>
+                    <div style={{borderRadius:14,overflow:'hidden',background:'rgba(255,255,255,0.03)',border:`1px solid ${s.color}25`}}>
+                      <div style={{height:75,overflow:'hidden',position:'relative'}}>
+                        <img src={s.bg} alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.4)'}}/>
+                        <div style={{position:'absolute',inset:0,background:`linear-gradient(180deg,transparent 30%,${s.color}CC 100%)`}}/>
+                        <div style={{position:'absolute',bottom:8,left:0,right:0,textAlign:'center'}}>
+                          <MI name={s.icon} size={24} style={{color:'#FFFFFF',filter:'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'}}/>
+                        </div>
+                      </div>
+                      <div style={{padding:'12px 10px',textAlign:'center'}}>
+                        <p style={{fontSize:16,fontWeight:800,color:'#FFFFFF'}}>{s.title}</p>
+                        <p style={{fontSize:14,color:'rgba(255,255,255,0.5)',marginTop:6,lineHeight:1.4}}>{s.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+            <div style={{marginTop:32,padding:'14px 24px',borderRadius:12,background:'rgba(184,134,11,0.08)',border:'1px solid rgba(184,134,11,0.15)',display:'inline-block'}}>
+              <p style={{fontSize:16,color:'rgba(255,255,255,0.7)'}}>Selanjutnya: lihat <span style={{color:'#D4A843',fontWeight:700}}>contoh nyata</span> bagaimana ini terjadi di lapangan →</p>
+            </div>
+          </div>
+        </SlideBase>
+      ),
+
+      /* ── 4: Real Scenario — Soldiers filming the event ── */
       ()=>(
         <SlideBase>
           {/* New generated background: soldiers filming on bridge */}
@@ -6201,9 +6279,9 @@ export default function App(){
         </SlideBase>
       ),
 
-      /* ── 3: Video Viral — Cinematic viral spread + scrolling comments ── */
+      /* ── 5: Video Viral — Cinematic viral spread + scrolling comments ── */
       ()=>{
-        const a=slide===3;
+        const a=slide===5;
         const [vLikes,setVLikes]=useState(0);
         const [vComments,setVComments]=useState(0);
         const [vViews,setVViews]=useState(0);
@@ -6297,9 +6375,9 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 4: Solusi SINAR ── */
+      /* ── 6: Solusi SINAR ── */
       ()=>{
-        const a=slide===4;
+        const a=slide===6;
         const pillars=[
           {icon:'assignment',title:'Misi Terstruktur',desc:'Instruksi terstruktur dari DISPENAD langsung ke perangkat prajurit',color:'#14532D',img:'/images/pres-event-community.png'},
           {icon:'military_tech',title:'Sistem Poin & Hadiah',desc:'Sistem poin, jenjang pangkat digital, dan penghargaan nyata',color:'#D4A843',img:'/images/splash-hero-portrait.png'},
@@ -6338,7 +6416,7 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 5: SINAR BERAKSI — Icon+Label Cards ── */
+      /* ── 7: SINAR BERAKSI — Icon+Label Cards with step numbers ── */
       ()=>(
         <CineSlide img="/images/pres-social-explosion.png">
           <SectionLabel>SINAR DALAM AKSI</SectionLabel>
@@ -6347,20 +6425,20 @@ export default function App(){
           <p style={{fontSize:16,color:'rgba(255,255,255,0.6)',lineHeight:1.7,textAlign:'center',maxWidth:600,marginTop:12}}>
             Cukup satu instruksi dari komando — dalam hitungan jam, ratusan ribu prajurit dan keluarga menyebarkan konten positif secara terkoordinasi.
           </p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14,marginTop:28,maxWidth:640,width:'100%'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:14,marginTop:28,maxWidth:700,width:'100%'}}>
             {[
-              {icon:'thumb_up',title:'Like & Share Serentak',desc:'400.000 personel memberikan dukungan bersamaan — konten naik ke trending nasional',color:'#4ADE80'},
-              {icon:'play_circle',title:'Produksi Konten Orisinal',desc:'Prajurit membuat video, foto, dan narasi dari perspektif lapangan',color:'#60A5FA'},
-              {icon:'group',title:'Aktivasi Jaringan Sosial',desc:'Setiap prajurit menjangkau 10+ kontak — efek multiplikasi nasional',color:'#A78BFA'},
-              {icon:'send',title:'Distribusi ke 50.000+ Grup',desc:'Menjangkau grup WhatsApp & Telegram keluarga serta komunitas',color:'#FB923C'},
+              {icon:'thumb_up',title:'Step 1 — Like & Share Serentak',desc:'400.000 personel memberikan dukungan bersamaan — konten naik ke trending nasional',color:'#4ADE80'},
+              {icon:'play_circle',title:'Step 2 — Produksi Konten Orisinal',desc:'Prajurit membuat video, foto, dan narasi dari perspektif lapangan',color:'#60A5FA'},
+              {icon:'group',title:'Step 3 — Aktivasi Jaringan Sosial',desc:'Setiap prajurit menjangkau 10+ kontak — efek multiplikasi nasional',color:'#A78BFA'},
+              {icon:'send',title:'Step 4 — Distribusi ke 50.000+ Grup',desc:'Menjangkau grup WhatsApp & Telegram keluarga serta komunitas',color:'#FB923C'},
             ].map((a,i)=>(
               <div key={i} style={{padding:'16px 18px',borderRadius:14,background:'rgba(255,255,255,0.05)',border:`1px solid ${a.color}25`,display:'flex',alignItems:'flex-start',gap:12,backdropFilter:'blur(8px)'}}>
                 <div style={{width:44,height:44,borderRadius:12,background:`${a.color}15`,border:`1px solid ${a.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                   <MI name={a.icon} size={22} style={{color:a.color}}/>
                 </div>
                 <div>
-                  <p style={{fontSize:15,fontWeight:700,color:'#FFFFFF'}}>{a.title}</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:3,lineHeight:1.4}}>{a.desc}</p>
+                  <p style={{fontSize:16,fontWeight:700,color:'#FFFFFF'}}>{a.title}</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginTop:4,lineHeight:1.5}}>{a.desc}</p>
                 </div>
               </div>
             ))}
@@ -6368,104 +6446,48 @@ export default function App(){
         </CineSlide>
       ),
 
-      /* ── 6: Interactive Phone Demo — cinematic organic spread ── */
+      /* ── 8: Interactive Phone Demo — clean 3-phase spread ── */
       ()=>{
-        const a=slide===6;
-        // Phase: 0=phone centered cinematic, 1=mission taken, 2=content spreads organically
+        const a=slide===8;
+        // Phase: 0=phone centered, 1=mission taken, 2=phone left + spread right
         const phoneAnim=useSpring({
-          left:demoPhase>=2?'22%':'50%',
-          top:demoPhase>=2?'48%':'50%',
-          transform:demoPhase===0?'translate(-50%,-50%) scale(1)':demoPhase===1?'translate(-50%,-50%) scale(1.03)':'translate(-50%,-50%) scale(0.55)',
-          config:{tension:45,friction:18},
+          transform:demoPhase>=2?'scale(0.78)':'scale(1)',
+          config:{tension:60,friction:18},
         });
-        const titleAnim=useSpring({opacity:demoPhase<2?1:0,transform:demoPhase<2?'translateY(0)':'translateY(-20px)',config:{duration:500}});
-        const phase2TitleAnim=useSpring({opacity:demoPhase>=2?1:0,transform:demoPhase>=2?'translateY(0)':'translateY(20px)',delay:200,config:{tension:70,friction:18}});
         const notifAnim=useSpring({opacity:demoPhase>=1&&demoPhase<2?1:0,transform:demoPhase>=1?'scale(1)':'scale(0)',config:{tension:200,friction:14}});
+        const spreadAnim=useSpring({opacity:demoPhase>=2?1:0,transform:demoPhase>=2?'translateX(0)':'translateX(40px)',config:{tension:60,friction:18}});
 
         const handleTap=()=>{
           if(demoPhase===0){setDemoPhase(1);setTimeout(()=>setDemoPhase(2),1500);}
         };
 
-        // Floating social posts data for organic spread
+        // 4 clean social posts for the spread grid
         const spreadPosts=[
-          {platform:'youtube',user:'TNI AD',text:'KSAD Resmikan 200 Jembatan Garuda',likes:'180K',img:'/images/pres-kasad-jembatan.png',isYT:true,tx:280,ty:-120,rot:-4,sc:0.95,dx:5,dy:8,delay:0},
-          {platform:'instagram',user:'@arif_santoso',text:'Bangga hadir HUT TNI AD ke-81!',likes:'2.4K',img:'/images/mission-event-hut-tniad.png',tx:200,ty:100,rot:3,sc:0.85,dx:-6,dy:5,delay:0.1},
-          {platform:'tiktok',user:'@prajurit_muda',text:'POV: behind the scenes upacara',likes:'18.7K',img:'/images/mission-konten-video-reels.png',tx:350,ty:20,rot:-2,sc:0.78,dx:4,dy:-6,delay:0.2},
-          {platform:'instagram',user:'@rina_dewi_ad',text:'Suami di barisan depan',likes:'892',img:'/images/mission-engagement-medsos.png',tx:150,ty:-200,rot:5,sc:0.72,dx:-4,dy:4,delay:0.3},
-          {platform:'x',user:'@keluarga_tniad',text:'#BanggaTNIAD viral! 200K+',likes:'45.2K',img:'/images/mission-konten-challenge.png',tx:380,ty:-200,rot:-6,sc:0.7,dx:6,dy:-4,delay:0.4},
-          {platform:'tiktok',user:'@kopral_digital',text:'Tutorial konten aesthetic',likes:'8.3K',img:'/images/mission-konten-infografis.png',tx:100,ty:220,rot:4,sc:0.68,dx:-3,dy:6,delay:0.5},
-          {platform:'instagram',user:'@gen_z_patriot',text:'Cinta tanah air itu keren!',likes:'6.7K',img:'/images/mission-aksi-modernisasi.png',tx:320,ty:190,rot:-3,sc:0.65,dx:5,dy:-5,delay:0.6},
-          {platform:'x',user:'@warga_nias',text:'Terima kasih TNI AD!',likes:'12.4K',img:'/images/pres-kasad-jembatan.png',tx:450,ty:-60,rot:2,sc:0.6,dx:-5,dy:3,delay:0.7},
+          {platform:'youtube',user:'TNI AD Official',text:'KSAD Resmikan 200 Jembatan Garuda di Aceh Utara',likes:'180K',img:'/images/pres-kasad-jembatan.png',color:'#FF0000',icon:'play_circle'},
+          {platform:'instagram',user:'@arif_santoso',text:'Bangga hadir di Upacara HUT TNI AD ke-81!',likes:'2.4K',img:'/images/mission-event-hut-tniad.png',color:'#E1306C',icon:'photo_camera'},
+          {platform:'tiktok',user:'@prajurit_muda',text:'POV: behind the scenes upacara TNI AD',likes:'18.7K',img:'/images/mission-konten-video-reels.png',color:'#25F4EE',icon:'music_note'},
+          {platform:'x',user:'@keluarga_tniad',text:'#BanggaTNIAD trending nasional! 200K+ engagement',likes:'45.2K',img:'/images/mission-konten-challenge.png',color:'#1DA1F2',icon:'tag'},
         ];
 
-        // Floating orbit icons for phase 0/1
-        const orbitIcons=[
-          {icon:'play_circle',color:'#FF0000',angle:0,r:180,dur:14},
-          {icon:'photo_camera',color:'#E1306C',angle:45,r:200,dur:16},
-          {icon:'music_note',color:'#25F4EE',angle:90,r:170,dur:12},
-          {icon:'favorite',color:'#EF4444',angle:135,r:210,dur:18},
-          {icon:'thumb_up',color:'#60A5FA',angle:180,r:185,dur:15},
-          {icon:'share',color:'#4ADE80',angle:225,r:195,dur:13},
-          {icon:'tag',color:'#A78BFA',angle:270,r:175,dur:17},
-          {icon:'chat_bubble',color:'#FB923C',angle:315,r:190,dur:11},
-        ];
-
-        // Live counters effect (uses lifted state) — runs 5 ticks then stops
-        useEffect(()=>{
-          if(demoPhase<2)return;
-          let ticks=0;
-          const iv=setInterval(()=>{
-            ticks++;
-            if(ticks>5){clearInterval(iv);return;}
-            setYtLikes(v=>v+Math.floor(Math.random()*500+100));
-            setYtComments(v=>v+Math.floor(Math.random()*80+20));
-            setPostCount(v=>v+Math.floor(Math.random()*3+1));
-          },2000);
-          return()=>clearInterval(iv);
-        },[demoPhase]);
-
-        const PW=240,PH=520;
+        const PW=220,PH=476;
         return(
         <SlideBase>
-          {/* Cinematic background */}
-          <div style={{position:'absolute',inset:0,overflow:'hidden'}}>
-            <div className={demoPhase>=2?'pres-bg-zoom':''} style={{position:'absolute',inset:'-5%',width:'110%',height:'110%'}}>
-              <img src="/images/pres-content-viral-spread.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover',opacity:demoPhase>=2?0.35:0.15,transition:'opacity 1.5s ease'}}/>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#030806,#081510,#030806)'}}/>
+
+          <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',padding:'0 4%',maxWidth:1200,margin:'0 auto'}}>
+
+            {/* Title — always visible at top */}
+            <div style={{position:'absolute',top:'2%',left:0,right:0,textAlign:'center',zIndex:15}}>
+              <SectionLabel>{demoPhase<2?'DEMO INTERAKTIF':'HASIL PENYEBARAN'}</SectionLabel>
+              <SlideTitle size={34}>{demoPhase===0?<>Klik Hape untuk Lihat <span style={{color:'#D4A843'}}>SINAR</span> Beraksi</>:demoPhase===1?<><span style={{color:'#4ADE80'}}>Misi Diambil!</span> Menyebar ke Media Sosial...</>:<>Satu Misi → <span style={{color:'#D4A843'}}>Konten Menyebar</span> ke 4 Platform</>}</SlideTitle>
             </div>
-            <div style={{position:'absolute',inset:0,background:`radial-gradient(ellipse at ${demoPhase>=2?'22%':'50%'} 50%, transparent 20%, rgba(3,8,6,0.85) 70%)`,transition:'all 1.5s ease'}}/>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,rgba(3,8,6,0.7),rgba(8,21,16,0.8),rgba(3,8,6,0.7))'}}/>
-          </div>
 
-          <div style={{position:'relative',zIndex:1,width:'100%',height:'100%'}}>
-            {/* Phase 0-1 title */}
-            <animated.div style={{...titleAnim,position:'absolute',top:'2%',left:0,right:0,textAlign:'center',zIndex:15}}>
-              <SectionLabel>{demoPhase===0?'KLIK HAPE UNTUK DEMO':'PRAJURIT MENGAMBIL MISI...'}</SectionLabel>
-              <SlideTitle size={40}>{demoPhase===0?<>Lihat <span style={{color:'#D4A843'}}>SINAR</span> Beraksi</>:<><span style={{color:'#4ADE80'}}>Misi Diambil!</span> Konten Menyebar...</>}</SlideTitle>
-            </animated.div>
-            {/* Phase 2 title */}
-            <animated.div style={{...phase2TitleAnim,position:'absolute',top:'2%',left:0,right:0,textAlign:'center',zIndex:15}}>
-              <SectionLabel>SINAR DALAM AKSI</SectionLabel>
-              <SlideTitle size={30}>Prajurit Posting → <span style={{color:'#D4A843'}}>Konten Menyebar Organik</span></SlideTitle>
-            </animated.div>
-
-            {/* Floating orbit icons (phase 0-1) */}
-            {demoPhase<2&&orbitIcons.map((ic,i)=>(
-              <div key={i} className={`pres-orbit-icon${demoPhase===1?' pres-icon-bright':''}`} style={{
-                '--start-angle':`${ic.angle}deg`,'--orbit-r':`${ic.r}px`,'--orbit-dur':`${ic.dur}s`,
-                left:'50%',top:'50%',marginLeft:-10,marginTop:-10,zIndex:5,
-              }}>
-                <MI name={ic.icon} size={20} style={{color:ic.color,opacity:0.6,filter:'drop-shadow(0 0 6px rgba(255,255,255,0.15))'}}/>
-              </div>
-            ))}
-
-            {/* Phone (all phases — moves smoothly) */}
-            <animated.div style={{...phoneAnim,position:'absolute',zIndex:10,cursor:demoPhase===0?'pointer':'default'}} onClick={handleTap}>
+            {/* LEFT: Phone */}
+            <animated.div style={{...phoneAnim,flexShrink:0,cursor:demoPhase===0?'pointer':'default',transition:'margin 0.8s ease',marginRight:demoPhase>=2?40:0}} onClick={handleTap}>
               <div style={{position:'relative'}}>
-                {/* Gold tap ring */}
                 {demoPhase===0&&<div className="pres-tap-ring" style={{position:'absolute',inset:-14,borderRadius:PW*0.11,border:'2px solid rgba(212,168,67,0.4)',zIndex:-1}}/>}
                 <PhoneFrame width={PW} height={PH}>
                   <div style={{display:'flex',flexDirection:'column',gap:5,padding:'3px 0'}}>
-                    {/* Header */}
                     <div style={{borderRadius:10,overflow:'hidden'}}>
                       <div style={{background:`linear-gradient(145deg,${C.primaryDark},${C.primary})`,padding:'8px 8px 10px',borderTop:`2px solid ${C.patriot}`}}>
                         <div className="flex items-center gap-2" style={{marginBottom:4}}>
@@ -6479,7 +6501,6 @@ export default function App(){
                         <div style={{marginTop:4,background:'rgba(255,255,255,0.1)',borderRadius:2,height:3,overflow:'hidden'}}><div className={a?'pres-xp-fill':''} style={{height:'100%',background:'linear-gradient(90deg,#D4A843,#14532D)',borderRadius:2,width:a?undefined:'0%'}}/></div>
                       </div>
                     </div>
-                    {/* Stats row */}
                     <div style={{display:'flex',gap:4}}>
                       {[{v:'15',l:'Misi Aktif',c:C.primary},{v:'1.8K',l:'Peserta',c:'#4ADE80'},{v:'89',l:'Online',c:'#60A5FA'}].map((s,i)=>(
                         <div key={i} style={{flex:1,borderRadius:6,background:C.bgCard,border:`1px solid ${C.border}`,padding:'4px 3px',textAlign:'center'}}>
@@ -6488,7 +6509,6 @@ export default function App(){
                         </div>
                       ))}
                     </div>
-                    {/* Main mission card */}
                     <div style={{borderRadius:8,overflow:'hidden',background:C.bgCard,border:`1px solid ${demoPhase>=1?C.gold:C.border}`,transition:'all 300ms',boxShadow:demoPhase>=1?`0 0 15px ${C.goldLight}`:'none'}}>
                       <div style={{height:55,overflow:'hidden',position:'relative'}}>
                         <img src="/images/mission-event-hut-tniad.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
@@ -6506,14 +6526,12 @@ export default function App(){
                         </div>
                       </div>
                     </div>
-                    {/* Second mission */}
                     <div style={{borderRadius:8,background:C.bgCard,border:`1px solid ${C.border}`,padding:'5px 7px'}}>
                       <div className="flex" style={{gap:5,alignItems:'center'}}>
                         <div style={{width:32,height:32,borderRadius:6,overflow:'hidden',flexShrink:0}}><img src="/images/mission-konten-video-reels.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/></div>
                         <div style={{flex:1}}><p style={{fontSize:7,fontWeight:700,color:C.text}}>Buat Video Reels #BanggaTNIAD</p><span style={{fontSize:6,fontWeight:700,color:C.gold}}>+300 XP</span></div>
                       </div>
                     </div>
-                    {/* Third mission */}
                     <div style={{borderRadius:8,background:C.bgCard,border:`1px solid ${C.border}`,padding:'5px 7px'}}>
                       <div className="flex" style={{gap:5,alignItems:'center'}}>
                         <div style={{width:32,height:32,borderRadius:6,overflow:'hidden',flexShrink:0}}><img src="/images/mission-engagement-medsos.png" alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/></div>
@@ -6530,102 +6548,60 @@ export default function App(){
                     ))}
                   </div>
                 </PhoneFrame>
-                {/* Phase 1 notifications */}
                 {demoPhase===1&&<>
                   <animated.div style={{...notifAnim,position:'absolute',top:-14,right:-24,zIndex:20}}>
                     <div style={{background:'linear-gradient(135deg,#D4A843,#B8860B)',borderRadius:10,padding:'5px 10px',boxShadow:'0 4px 15px rgba(184,134,11,0.5)'}}>
                       <span style={{fontSize:14,fontWeight:900,color:'#fff',fontFamily:"'JetBrains Mono'"}}>+400 XP</span>
                     </div>
                   </animated.div>
-                  <animated.div style={{...notifAnim,position:'absolute',bottom:80,left:-35,zIndex:20}}>
-                    <div style={{background:'rgba(34,197,94,0.9)',borderRadius:8,padding:'4px 8px',boxShadow:'0 4px 12px rgba(34,197,94,0.3)',display:'flex',alignItems:'center',gap:4}}>
-                      <MI name="group" size={10} style={{color:'#fff'}}/>
-                      <span style={{fontSize:9,fontWeight:700,color:'#fff'}}>+12 peserta baru!</span>
-                    </div>
-                  </animated.div>
                 </>}
               </div>
             </animated.div>
 
-            {/* Phase 2: Organic floating posts emerging from phone */}
-            {demoPhase>=2&&<div style={{position:'absolute',inset:0,zIndex:8,pointerEvents:'none'}}>
-              {spreadPosts.map((p,i)=>(
-                <div key={i} className="pres-post-emerge" style={{
-                  position:'absolute',left:'22%',top:'48%',
-                  '--tx':`${p.tx}px`,'--ty':`${p.ty}px`,'--rot':`${p.rot}deg`,'--sc':`${p.sc}`,
-                  animationDelay:`${p.delay}s`,
-                  zIndex:10-i,
-                }}>
-                  <div style={{width:180,borderRadius:12,overflow:'hidden',background:p.isYT?'rgba(10,10,10,0.95)':'rgba(8,16,12,0.92)',backdropFilter:'blur(12px)',border:`1px solid ${p.isYT?'rgba(255,0,0,0.2)':'rgba(255,255,255,0.1)'}`,boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}}>
-                    <div style={{padding:'5px 8px',display:'flex',alignItems:'center',gap:4}}>
-                      {p.isYT?<MI name="play_circle" size={11} style={{color:'#FF0000'}}/>:<SocialIcon platform={p.platform} size={11} color="rgba(255,255,255,0.5)"/>}
-                      <span style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.6)'}}>{p.user}</span>
-                      <MI name="verified" size={8} fill style={{color:'#60A5FA'}}/>
+            {/* ARROW between phone and spread */}
+            {demoPhase>=2&&<div style={{flexShrink:0,display:'flex',flexDirection:'column',alignItems:'center',gap:6,margin:'0 16px',opacity:0,animation:'fadeInUp 500ms ease-out 0.3s both'}}>
+              <MI name="arrow_forward" size={32} style={{color:'#D4A843'}}/>
+              <p style={{fontSize:14,fontWeight:700,color:'rgba(184,134,11,0.6)',letterSpacing:1,writingMode:'vertical-lr',textOrientation:'mixed'}}>MENYEBAR</p>
+            </div>}
+
+            {/* RIGHT: Clean 2x2 spread grid */}
+            {demoPhase>=2&&<animated.div style={{...spreadAnim,flex:'0 0 520px',display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                {spreadPosts.map((p,i)=>(
+                  <div key={i} style={{borderRadius:14,overflow:'hidden',background:'rgba(255,255,255,0.04)',border:`1px solid ${p.color}25`,boxShadow:'0 4px 20px rgba(0,0,0,0.3)',opacity:0,animation:`fadeInUp 500ms ease-out ${0.2+i*0.15}s both`}}>
+                    <div style={{height:90,overflow:'hidden',position:'relative'}}>
+                      <img src={p.img} alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.7)'}}/>
+                      <div style={{position:'absolute',inset:0,background:'linear-gradient(0deg,rgba(0,0,0,0.6) 0%,transparent 50%)'}}/>
+                      <div style={{position:'absolute',top:8,left:8,display:'flex',alignItems:'center',gap:4,background:'rgba(0,0,0,0.6)',borderRadius:6,padding:'3px 8px'}}>
+                        <MI name={p.icon} size={14} style={{color:p.color}}/>
+                        <span style={{fontSize:14,fontWeight:700,color:p.color,textTransform:'uppercase'}}>{p.platform}</span>
+                      </div>
                     </div>
-                    <div style={{height:70,overflow:'hidden',position:'relative'}}>
-                      <img src={p.img} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                      {p.isYT&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <div style={{width:28,height:20,borderRadius:4,background:'rgba(255,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                          <div style={{width:0,height:0,borderStyle:'solid',borderWidth:'5px 0 5px 8px',borderColor:'transparent transparent transparent #fff',marginLeft:1}}/>
-                        </div>
-                      </div>}
-                    </div>
-                    <div style={{padding:'4px 8px 6px'}}>
-                      <p style={{fontSize:8,color:'rgba(255,255,255,0.5)',lineHeight:1.3}}>{p.text}</p>
-                      <div className="flex items-center gap-2" style={{marginTop:3}}>
-                        {p.isYT?<>
-                          <span className="flex items-center gap-1 pres-metric-live" style={{fontSize:8,color:'#fff',fontWeight:700}}><MI name="thumb_up" size={9} style={{color:'rgba(255,255,255,0.7)'}}/>{(ytLikes/1000).toFixed(1)}K</span>
-                          <span style={{fontSize:6,color:'#4ADE80',fontWeight:600,marginLeft:'auto'}}>LIVE</span>
-                        </>:<>
-                          <span className="flex items-center gap-1" style={{fontSize:8,color:'#EF4444',fontWeight:600}}><MI name="favorite" size={9} fill style={{color:'#EF4444'}}/>{p.likes}</span>
-                          <MI name="share" size={8} style={{color:'rgba(255,255,255,0.2)'}}/>
-                        </>}
+                    <div style={{padding:'10px 12px'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+                        <span style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.7)'}}>{p.user}</span>
+                        <MI name="verified" size={12} fill style={{color:'#60A5FA'}}/>
+                      </div>
+                      <p style={{fontSize:14,color:'rgba(255,255,255,0.5)',lineHeight:1.4}}>{p.text}</p>
+                      <div className="flex items-center gap-3" style={{marginTop:8}}>
+                        <span className="flex items-center gap-1" style={{fontSize:14,color:'#EF4444',fontWeight:700}}><MI name="favorite" size={14} fill style={{color:'#EF4444'}}/>{p.likes}</span>
+                        <MI name="share" size={14} style={{color:'rgba(255,255,255,0.3)'}}/>
+                        <MI name="chat_bubble" size={14} style={{color:'rgba(255,255,255,0.3)'}}/>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>}
-
-            {/* Phase 2: Frosted glass dashboard overlay (bottom-right) */}
-            {demoPhase>=2&&<div className="pres-dash-glass" style={{position:'absolute',bottom:'5%',right:'4%',width:340,zIndex:12,borderRadius:16,overflow:'hidden',background:'rgba(8,16,12,0.75)',backdropFilter:'blur(20px)',border:'1px solid rgba(255,255,255,0.1)',boxShadow:'0 16px 48px rgba(0,0,0,0.5)'}}>
-              <div style={{padding:'10px 14px 8px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:6}}>
-                <SinarMark size={10}/>
-                <span style={{fontSize:10,fontWeight:800,color:'#fff',letterSpacing:1}}>COMMAND CENTER</span>
-                <span style={{fontSize:7,fontWeight:700,color:'#22C55E',background:'rgba(34,197,94,0.15)',padding:'1px 6px',borderRadius:3,marginLeft:'auto'}}>LIVE</span>
+                ))}
               </div>
-              {/* Stats bar */}
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:4,padding:'8px 14px'}}>
-                {[{v:postCount,l:'Peserta',c:'#60A5FA',live:true},{v:postCount*14,l:'Post',c:'#4ADE80',live:true},{v:`${(postCount*2.75).toFixed(0)}K`,l:'Reach',c:'#D4A843'},{v:'8.7%',l:'Engage',c:'#FB923C'}].map((s,i)=>(
-                  <div key={i} style={{textAlign:'center'}}>
-                    <p className={s.live?'pres-metric-live':''} style={{fontSize:14,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono'",transition:'all 0.3s'}}>{typeof s.v==='number'?s.v.toLocaleString():s.v}</p>
-                    <p style={{fontSize:6,color:'rgba(255,255,255,0.4)',marginTop:1}}>{s.l}</p>
+              {/* Simple stat bar */}
+              <div style={{display:'flex',gap:12,justifyContent:'center',background:'rgba(0,0,0,0.4)',borderRadius:12,padding:'12px 20px',border:'1px solid rgba(184,134,11,0.15)',opacity:0,animation:'fadeInUp 500ms ease-out 0.8s both'}}>
+                {[{v:'400K+',l:'Personel Aktif',c:'#D4A843'},{v:'4',l:'Platform',c:'#4ADE80'},{v:'246K',l:'Total Engagement',c:'#60A5FA'},{v:'#4',l:'Trending',c:'#FB923C'}].map((s,i)=>(
+                  <div key={i} style={{textAlign:'center',flex:1}}>
+                    <p style={{fontSize:22,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.v}</p>
+                    <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginTop:4,fontWeight:600}}>{s.l}</p>
                   </div>
                 ))}
               </div>
-              {/* Mini chart */}
-              <div style={{padding:'0 14px 6px'}}>
-                <svg width="100%" height="50" viewBox="0 0 300 50" preserveAspectRatio="none" style={{display:'block'}}>
-                  <defs>
-                    <linearGradient id="gf1s6" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#4ADE80" stopOpacity="0.25"/><stop offset="100%" stopColor="#4ADE80" stopOpacity="0"/></linearGradient>
-                  </defs>
-                  <path className="pres-chart-fill" d="M0,44 L30,41 60,38 90,34 120,30 150,24 180,17 210,11 240,7 270,4 300,1 L300,50 L0,50Z" fill="url(#gf1s6)"/>
-                  <path className="pres-chart-line" d="M0,44 L30,41 60,38 90,34 120,30 150,24 180,17 210,11 240,7 270,4 300,1" fill="none" stroke="#4ADE80" strokeWidth="1.5"/>
-                  <circle className="pres-chart-dot" cx="300" cy="1" r="2.5" fill="#4ADE80"/>
-                </svg>
-              </div>
-              {/* Recent submissions */}
-              <div style={{padding:'0 14px 10px'}}>
-                {[{a:'AS',n:'Arif Santoso',t:'Video Reels',sc:92},{a:'RD',n:'Rina Dewi',t:'Foto Event',sc:88},{a:'FN',n:'Fajar N.',t:'Thread X',sc:76}].map((s,i)=>(
-                  <div key={i} className="flex items-center gap-2" style={{padding:'3px 0',borderBottom:i<2?'1px solid rgba(255,255,255,0.04)':'none'}}>
-                    <AvatarImg initials={s.a} size={18} style={{borderRadius:4}}/>
-                    <div style={{flex:1}}><p style={{fontSize:7,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>{s.n}</p><p style={{fontSize:5,color:'rgba(255,255,255,0.3)'}}>{s.t}</p></div>
-                    <span style={{fontSize:9,fontWeight:800,color:'#22C55E',fontFamily:"'JetBrains Mono'"}}>{s.sc}</span>
-                    <MI name="check_circle" size={9} fill style={{color:'#22C55E'}}/>
-                  </div>
-                ))}
-              </div>
-            </div>}
+            </animated.div>}
 
             {/* Tap hint */}
             {demoPhase===0&&<div style={{position:'absolute',bottom:'5%',left:0,right:0,textAlign:'center',zIndex:15,animation:'pulse 2s ease-in-out infinite'}}>
@@ -6634,9 +6610,9 @@ export default function App(){
           </div>
         </SlideBase>);
       },
-      /* ── 7: Real App — Papan Misi + Upload + AI Review ── */
+      /* ── 9: Real App — Papan Misi + Upload + AI Review ── */
       ()=>{
-        const a=slide===7;
+        const a=slide===9;
         const f1=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(60px)',delay:300,config:{tension:80,friction:20}});
         const f2=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(60px)',delay:600,config:{tension:70,friction:18}});
         const f3=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(60px)',delay:900,config:{tension:70,friction:18}});
@@ -6648,7 +6624,7 @@ export default function App(){
             <div style={{flex:'0 0 280px',textAlign:'left'}}>
               <SectionLabel>ALUR OPERASIONAL</SectionLabel>
               <SlideTitle size={36}>4 Langkah<br/><span style={{color:'#D4A843'}}>Sederhana</span></SlideTitle>
-              <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:24}}>
+              <div style={{display:'flex',flexDirection:'column',gap:14,marginTop:24}}>
                 {[
                   {n:'1',t:'Terima instruksi via aplikasi',desc:'Notifikasi misi, panduan, dan target',c:'#D4A843',icon:'assignment'},
                   {n:'2',t:'Laksanakan misi',desc:'Hadir, buat konten, atau sebarkan',c:'#4ADE80',icon:'rocket_launch'},
@@ -6656,12 +6632,16 @@ export default function App(){
                   {n:'4',t:'Verifikasi & reward otomatis',desc:'Sistem AI memverifikasi, poin langsung diterima',c:'#A78BFA',icon:'smart_toy'},
                 ].map((s,i)=>(
                   <div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
-                    <div style={{width:40,height:40,borderRadius:12,background:`${s.c}15`,border:`1px solid ${s.c}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                      <MI name={s.icon} size={20} style={{color:s.c}}/>
+                    <div style={{position:'relative',flexShrink:0}}>
+                      <div style={{width:44,height:44,borderRadius:'50%',background:`${s.c}20`,border:`2px solid ${s.c}50`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <span style={{fontSize:18,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'"}}>{s.n}</span>
+                      </div>
+                      {i<3&&<div style={{position:'absolute',left:'50%',top:'100%',width:2,height:14,background:`linear-gradient(180deg,${s.c}40,transparent)`,transform:'translateX(-50%)'}}/>}
                     </div>
-                    <div>
-                      <p style={{fontSize:16,color:'#fff',fontWeight:700}}><span style={{color:s.c,fontFamily:"'JetBrains Mono'",marginRight:6}}>{s.n}.</span>{s.t}</p>
-                      <p style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>{s.desc}</p>
+                    <div style={{flex:1}}>
+                      <p style={{fontSize:14,color:s.c,fontWeight:700,letterSpacing:1,marginBottom:2}}>STEP {s.n}</p>
+                      <p style={{fontSize:16,color:'#fff',fontWeight:700}}>{s.t}</p>
+                      <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginTop:2}}>{s.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -6672,7 +6652,7 @@ export default function App(){
             <div style={{flex:1,display:'flex',gap:14,alignItems:'flex-start',justifyContent:'center',paddingTop:20}}>
               {/* Screen 1: Mission Board */}
               <animated.div style={{...f1}}>
-                <p style={{fontSize:10,fontWeight:700,color:'#D4A843',textAlign:'center',marginBottom:6,letterSpacing:1}}>STEP 1-2</p>
+                <p style={{fontSize:14,fontWeight:700,color:'#D4A843',textAlign:'center',marginBottom:6,letterSpacing:1}}>STEP 1-2</p>
                 <PhoneFrame width={180} height={390}>
                   <div style={{display:'flex',flexDirection:'column',gap:4,padding:'2px 0'}}>
                     <div style={{borderRadius:8,background:`linear-gradient(145deg,${C.primaryDark},${C.primary})`,padding:'6px',borderTop:`2px solid ${C.patriot}`}}>
@@ -6693,7 +6673,7 @@ export default function App(){
 
               {/* Screen 2: Upload Bukti */}
               <animated.div style={{...f2,marginTop:30}}>
-                <p style={{fontSize:10,fontWeight:700,color:'#60A5FA',textAlign:'center',marginBottom:6,letterSpacing:1}}>STEP 3</p>
+                <p style={{fontSize:14,fontWeight:700,color:'#60A5FA',textAlign:'center',marginBottom:6,letterSpacing:1}}>STEP 3</p>
                 <PhoneFrame width={180} height={390}>
                   <div style={{display:'flex',flexDirection:'column',gap:6,padding:'4px 0'}}>
                     <div className="flex items-center gap-1" style={{padding:'0 2px'}}><MI name="arrow_back" size={10} style={{color:C.text}}/><span style={{fontSize:7,fontWeight:700,color:C.text}}>Upload Bukti</span></div>
@@ -6728,7 +6708,7 @@ export default function App(){
 
               {/* Screen 3: AI Review */}
               <animated.div style={{...f3,marginTop:60}}>
-                <p style={{fontSize:10,fontWeight:700,color:'#A78BFA',textAlign:'center',marginBottom:6,letterSpacing:1}}>STEP 4</p>
+                <p style={{fontSize:14,fontWeight:700,color:'#A78BFA',textAlign:'center',marginBottom:6,letterSpacing:1}}>STEP 4</p>
                 <PhoneFrame width={180} height={390}>
                   <div style={{display:'flex',flexDirection:'column',gap:6,padding:'4px 0'}}>
                     <div className="flex items-center gap-1" style={{padding:'0 2px'}}><MI name="arrow_back" size={10} style={{color:C.text}}/><span style={{fontSize:7,fontWeight:700,color:C.text}}>Hasil Review</span></div>
@@ -6784,11 +6764,11 @@ export default function App(){
                   </div>
                 </div>
                 <div style={{padding:'14px 16px'}}>
-                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Kehadiran di Acara Resmi</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Dokumentasi, check-in digital, upload bukti kehadiran</p>
+                  <p style={{fontSize:16,fontWeight:700,color:'#fff',textAlign:'left'}}>Kehadiran di Acara Resmi</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Dokumentasi, check-in digital, upload bukti kehadiran</p>
                   <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
                     {['Foto & Video','Check-in QR','+400 XP'].map((t,i)=>(
-                      <span key={i} style={{fontSize:10,fontWeight:600,color:'#A78BFA',background:'rgba(109,40,217,0.12)',padding:'3px 8px',borderRadius:6}}>{t}</span>
+                      <span key={i} style={{fontSize:14,fontWeight:600,color:'#A78BFA',background:'rgba(109,40,217,0.12)',padding:'4px 10px',borderRadius:6}}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -6804,11 +6784,11 @@ export default function App(){
                   </div>
                 </div>
                 <div style={{padding:'14px 16px'}}>
-                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Produksi Konten Positif</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Video reels, infografis, dan challenge terkoordinasi</p>
+                  <p style={{fontSize:16,fontWeight:700,color:'#fff',textAlign:'left'}}>Produksi Konten Positif</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>Video reels, infografis, dan challenge terkoordinasi</p>
                   <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
                     {['Video Reels','Infografis','#BanggaTNIAD'].map((t,i)=>(
-                      <span key={i} style={{fontSize:10,fontWeight:600,color:'#4ADE80',background:'rgba(20,83,45,0.15)',padding:'3px 8px',borderRadius:6}}>{t}</span>
+                      <span key={i} style={{fontSize:14,fontWeight:600,color:'#4ADE80',background:'rgba(20,83,45,0.15)',padding:'4px 10px',borderRadius:6}}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -6824,11 +6804,11 @@ export default function App(){
                   </div>
                 </div>
                 <div style={{padding:'14px 16px'}}>
-                  <p style={{fontSize:15,fontWeight:700,color:'#fff',textAlign:'left'}}>Like & Share Serentak-bareng</p>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>400.000 personel bergerak serentak — konten naik ke trending nasional</p>
+                  <p style={{fontSize:16,fontWeight:700,color:'#fff',textAlign:'left'}}>Like & Share Serentak-bareng</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginTop:6,textAlign:'left',lineHeight:1.5}}>400.000 personel bergerak serentak — konten naik ke trending nasional</p>
                   <div style={{display:'flex',gap:6,marginTop:10,flexWrap:'wrap'}}>
                     {['400K Likes','200K Shares','150K Comments'].map((t,i)=>(
-                      <span key={i} style={{fontSize:10,fontWeight:600,color:'#FB923C',background:'rgba(194,65,12,0.12)',padding:'3px 8px',borderRadius:6}}>{t}</span>
+                      <span key={i} style={{fontSize:14,fontWeight:600,color:'#FB923C',background:'rgba(194,65,12,0.12)',padding:'4px 10px',borderRadius:6}}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -6864,7 +6844,7 @@ export default function App(){
                     {[{icon:'chat',title:'WhatsApp Groups',desc:'50K+ grup',c:'#25D366'},{icon:'send',title:'Telegram',desc:'Channel komunitas',c:'#0088CC'},{icon:'school',title:'Alumni Network',desc:'SMA/SMK nasional',c:'#A78BFA'},{icon:'group',title:'RT/RW',desc:'Komunitas lokal',c:'#FB923C'}].map((c,i)=>(
                       <div key={i} style={{padding:'10px',borderRadius:10,background:`${c.c}08`,border:`1px solid ${c.c}15`,display:'flex',alignItems:'center',gap:6}}>
                         <MI name={c.icon} size={18} style={{color:c.c,flexShrink:0}}/>
-                        <div><p style={{fontSize:11,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:9,color:'rgba(255,255,255,0.35)'}}>{c.desc}</p></div>
+                        <div><p style={{fontSize:14,fontWeight:700,color:'#fff'}}>{c.title}</p><p style={{fontSize:14,color:'rgba(255,255,255,0.35)'}}>{c.desc}</p></div>
                       </div>
                     ))}
                   </div>
@@ -6888,8 +6868,8 @@ export default function App(){
                     {[{icon:'group_add',title:'Rekrutmen Relawan',v:'5K target',c:'#4ADE80'},{icon:'rocket_launch',title:'Kampanye Modernisasi',v:'25K dukungan',c:'#D4A843'},{icon:'how_to_reg',title:'Petisi Publik',v:'10K tanda tangan',c:'#60A5FA'}].map((c,i)=>(
                       <div key={i} style={{padding:'10px 12px',borderRadius:10,background:`${c.c}08`,border:`1px solid ${c.c}15`,display:'flex',alignItems:'center',gap:8}}>
                         <MI name={c.icon} size={20} style={{color:c.c,flexShrink:0}}/>
-                        <p style={{fontSize:12,fontWeight:700,color:'#fff',flex:1}}>{c.title}</p>
-                        <span style={{fontSize:12,fontWeight:800,color:c.c,fontFamily:"'JetBrains Mono'"}}>{c.v}</span>
+                        <p style={{fontSize:14,fontWeight:700,color:'#fff',flex:1}}>{c.title}</p>
+                        <span style={{fontSize:14,fontWeight:800,color:c.c,fontFamily:"'JetBrains Mono'"}}>{c.v}</span>
                       </div>
                     ))}
                   </div>
@@ -6900,9 +6880,9 @@ export default function App(){
         </SlideBase>
       ),
 
-      /* ── 13: Gamifikasi — Centered mockup + callouts ── */
+      /* ── 12: Gamifikasi — Centered mockup + callouts ── */
       ()=>{
-        const a=slide===10;
+        const a=slide===12;
         const fP=useSpring({opacity:a?1:0,transform:a?'translateY(0) scale(1)':'translateY(40px) scale(0.95)',delay:200,config:{tension:80,friction:20}});
         const fL1=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(-30px)',delay:600,config:{tension:70,friction:18}});
         const fL2=useSpring({opacity:a?1:0,transform:a?'translateX(0)':'translateX(-30px)',delay:900,config:{tension:70,friction:18}});
@@ -6977,7 +6957,7 @@ export default function App(){
               return <div key={i} style={{position:'absolute',...positions[i],zIndex:6,opacity:0,animation:`badge-unlock 0.6s cubic-bezier(0.34,1.56,0.64,1) ${delays[i]}ms both`}}>
                 <div style={{background:'rgba(0,0,0,0.7)',backdropFilter:'blur(8px)',borderRadius:12,padding:'6px 8px',border:'1px solid rgba(184,134,11,0.2)',display:'flex',alignItems:'center',gap:6,boxShadow:'0 8px 24px rgba(0,0,0,0.4)'}}>
                   <Badge badge={b} size={28} compact/>
-                  <div><p style={{fontSize:10,fontWeight:700,color:'#fff'}}>{b.name}</p><p style={{fontSize:8,color:'rgba(255,255,255,0.4)'}}>{b.desc?.substring(0,25)||'Prestasi khusus'}</p></div>
+                  <div><p style={{fontSize:14,fontWeight:700,color:'#fff'}}>{b.name}</p><p style={{fontSize:14,color:'rgba(255,255,255,0.4)'}}>{b.desc?.substring(0,25)||'Prestasi khusus'}</p></div>
                 </div>
               </div>;
             })}
@@ -6987,8 +6967,8 @@ export default function App(){
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <div style={{background:'rgba(0,0,0,0.7)',backdropFilter:'blur(8px)',border:'1px solid rgba(184,134,11,0.3)',borderRadius:12,padding:'12px 16px'}}>
                   <div className="flex items-center gap-2 mb-1"><MI name="military_tech" size={18} fill style={{color:'#D4A843'}}/><span style={{fontSize:17,fontWeight:700,color:'#D4A843'}}>Naik Pangkat</span></div>
-                  <p style={{fontSize:13,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>5 tingkat pangkat digital:<br/><span style={{color:'#D4A843',fontWeight:600}}>Prajurit → Kopral → Sersan → Letnan → Kapten</span></p>
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginTop:4}}>Naik pangkat = unlock fitur & privilege baru</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>5 tingkat pangkat digital:<br/><span style={{color:'#D4A843',fontWeight:600}}>Prajurit → Kopral → Sersan → Letnan → Kapten</span></p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.35)',marginTop:4}}>Naik pangkat = unlock fitur & privilege baru</p>
                 </div>
                 <div style={{width:40,height:2,background:'linear-gradient(90deg,rgba(184,134,11,0.6),transparent)',flexShrink:0}}/>
               </div>
@@ -6997,8 +6977,8 @@ export default function App(){
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <div style={{background:'rgba(0,0,0,0.7)',backdropFilter:'blur(8px)',border:'1px solid rgba(74,222,128,0.3)',borderRadius:12,padding:'12px 16px'}}>
                   <div className="flex items-center gap-2 mb-1"><MI name="leaderboard" size={18} style={{color:'#4ADE80'}}/><span style={{fontSize:17,fontWeight:700,color:'#4ADE80'}}>Leaderboard</span></div>
-                  <p style={{fontSize:13,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>Kompetisi mingguan & bulanan antar <span style={{color:'#4ADE80',fontWeight:600}}>satuan & Kodam</span></p>
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginTop:4}}>Trigger semangat kompetitif prajurit</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>Kompetisi mingguan & bulanan antar <span style={{color:'#4ADE80',fontWeight:600}}>satuan & Kodam</span></p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.35)',marginTop:4}}>Trigger semangat kompetitif prajurit</p>
                 </div>
                 <div style={{width:40,height:2,background:'linear-gradient(90deg,rgba(74,222,128,0.6),transparent)',flexShrink:0}}/>
               </div>
@@ -7009,8 +6989,8 @@ export default function App(){
                 <div style={{width:40,height:2,background:'linear-gradient(90deg,transparent,rgba(167,139,250,0.6))',flexShrink:0}}/>
                 <div style={{background:'rgba(0,0,0,0.7)',backdropFilter:'blur(8px)',border:'1px solid rgba(167,139,250,0.3)',borderRadius:12,padding:'12px 16px'}}>
                   <div className="flex items-center gap-2 mb-1"><MI name="workspace_premium" size={18} fill style={{color:'#A78BFA'}}/><span style={{fontSize:17,fontWeight:700,color:'#A78BFA'}}>24 Lencana</span></div>
-                  <p style={{fontSize:13,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>Koleksi prestasi: <span style={{color:'#A78BFA',fontWeight:600}}>Misi Pertama, Viral King, Elite</span></p>
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginTop:4}}>Badge langka = status sosial di komunitas</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>Koleksi prestasi: <span style={{color:'#A78BFA',fontWeight:600}}>Misi Pertama, Viral King, Elite</span></p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.35)',marginTop:4}}>Badge langka = status sosial di komunitas</p>
                 </div>
               </div>
             </animated.div>
@@ -7019,8 +6999,8 @@ export default function App(){
                 <div style={{width:40,height:2,background:'linear-gradient(90deg,transparent,rgba(251,146,60,0.6))',flexShrink:0}}/>
                 <div style={{background:'rgba(0,0,0,0.7)',backdropFilter:'blur(8px)',border:'1px solid rgba(251,146,60,0.3)',borderRadius:12,padding:'12px 16px'}}>
                   <div className="flex items-center gap-2 mb-1"><MI name="storefront" size={18} style={{color:'#FB923C'}}/><span style={{fontSize:17,fontWeight:700,color:'#FB923C'}}>Tukar Reward</span></div>
-                  <p style={{fontSize:13,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>XP → <span style={{color:'#FB923C',fontWeight:600}}>kaos, jaket, voucher, undangan VIP</span></p>
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginTop:4}}>Merchandise eksklusif TNI AD</p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.55)',lineHeight:1.5}}>XP → <span style={{color:'#FB923C',fontWeight:600}}>kaos, jaket, voucher, undangan VIP</span></p>
+                  <p style={{fontSize:14,color:'rgba(255,255,255,0.35)',marginTop:4}}>Merchandise eksklusif TNI AD</p>
                 </div>
               </div>
             </animated.div>
@@ -7028,9 +7008,9 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── 14: Multiplier — Indonesia map with organic network ── */
+      /* ── 13: Multiplier — Indonesia map with organic network ── */
       ()=>{
-        const a=slide===11;
+        const a=slide===13;
         const mapAnim=useSpring({opacity:a?1:0,config:{duration:800}});
         const titleAnim=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(20px)',delay:200,config:{tension:70,friction:18}});
         const statsAnim=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(20px)',delay:1800,config:{tension:70,friction:18}});
@@ -7109,7 +7089,7 @@ export default function App(){
                         <MI name={s.icon} size={26} style={{color:s.c}}/>
                         <div>
                           <p style={{fontSize:26,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.v}</p>
-                          <p style={{fontSize:13,color:'rgba(255,255,255,0.5)',fontWeight:600}}>{s.l}</p>
+                          <p style={{fontSize:14,color:'rgba(255,255,255,0.5)',fontWeight:600}}>{s.l}</p>
                         </div>
                       </div>
                     </React.Fragment>
@@ -7143,8 +7123,8 @@ export default function App(){
               <div key={i} style={{width:130,borderRadius:12,overflow:'hidden',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)'}}>
                 <img src={p.img} alt="" style={{width:'100%',height:90,objectFit:'cover'}}/>
                 <div style={{padding:'8px 10px',textAlign:'center'}}>
-                  <p style={{fontSize:12,fontWeight:700,color:'#FFFFFF'}}>{p.name}</p>
-                  <p style={{fontSize:11,fontWeight:800,color:'#D4A843',fontFamily:"'JetBrains Mono'",marginTop:2}}>{p.cost}</p>
+                  <p style={{fontSize:14,fontWeight:700,color:'#FFFFFF'}}>{p.name}</p>
+                  <p style={{fontSize:14,fontWeight:800,color:'#D4A843',fontFamily:"'JetBrains Mono'",marginTop:2}}>{p.cost}</p>
                 </div>
               </div>
             ))}
@@ -7152,9 +7132,9 @@ export default function App(){
         </CineSlide>
       ),
 
-      /* ── 17: Admin Command Center — Auto-cycling pages ── */
+      /* ── 15: Admin Command Center — Auto-cycling pages ── */
       ()=>{
-        const a=slide===13;
+        const a=slide===15;
         const fD=useSpring({opacity:a?1:0,transform:a?'translateY(0) scale(1)':'translateY(30px) scale(0.96)',delay:200,config:{tension:80,friction:20}});
         const fCards=useSpring({opacity:a?1:0,transform:a?'translateY(0)':'translateY(30px)',delay:600,config:{tension:70,friction:18}});
         return(

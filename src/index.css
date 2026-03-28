@@ -698,7 +698,7 @@ button:focus-visible { border-radius: 8px; }
   50% { transform: scale(1.08); color: #4ADE80; }
 }
 .pres-metric-live {
-  animation: metric-pulse 2s ease-in-out 2 both;
+  animation: metric-pulse 2s ease-in-out 1 both;
 }
 
 /* ─── SLIDE TRANSITION & ENTRANCE ANIMATIONS ────────────────── */
