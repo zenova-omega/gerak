@@ -12,6 +12,8 @@ import { GamifikasiReward } from './remotion/scenes/GamifikasiReward';
 import { OperationalFlow } from './remotion/scenes/OperationalFlow';
 import { Demographics } from './remotion/scenes/Demographics';
 import { ClosingQuote } from './remotion/scenes/ClosingQuote';
+import { BeforeAfter } from './remotion/scenes/BeforeAfter';
+import { WhySinar } from './remotion/scenes/WhySinar';
 import {
   Plus, CirclePlus, UserCog, BarChart3, ArrowLeft, ArrowRight, ChevronRight,
   Sparkles, BatteryFull, Zap, MessageCircle, MessageSquare,
@@ -6123,7 +6125,7 @@ export default function App(){
           <GoldLine w={80}/>
           <SlideTitle size={48}>Membangun Citra Positif<br/>TNI AD <span style={{color:'#D4A843'}}>di Era Digital</span></SlideTitle>
           <p style={{fontSize:20,color:'rgba(255,255,255,0.55)',marginTop:16,lineHeight:1.7,textAlign:'center',maxWidth:700}}>
-            Platform digital untuk mengkoordinasikan <strong style={{color:'#fff'}}>400.000 prajurit</strong> dan <strong style={{color:'#D4A843'}}>1,6 juta keluarga</strong><br/>dalam menyebarkan narasi positif TNI AD secara nasional
+            Platform digital untuk mengkoordinasikan <strong style={{color:'#fff'}}>400.000 prajurit</strong> dan <strong style={{color:'#D4A843'}}>1,6 juta Keluarga Besar TNI (KBT)</strong><br/>dalam menyebarkan narasi positif TNI AD secara nasional
           </p>
           <div style={{marginTop:28,display:'flex',alignItems:'center',gap:14,justifyContent:'center'}}>
             <div style={{width:40,height:1,background:'linear-gradient(90deg,transparent,rgba(139,26,26,0.5))'}}/>
@@ -6131,48 +6133,6 @@ export default function App(){
             <div style={{width:40,height:1,background:'linear-gradient(90deg,rgba(139,26,26,0.5),transparent)'}}/>
           </div>
         </CineSlide>
-      ),
-
-      /* ── 1: Intro Video (15s promo) ── */
-      ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#030806'}}/></SlideBase>),
-
-      /* ── 2: PROLOGUE — Problem Statement ── */
-      ()=>(
-        <SlideBase>
-          <div style={{position:'absolute',inset:0}}>
-            <img src="/images/pres-negative-vs-positive.jpg" alt="" style={{width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.2) contrast(1.1)',opacity:0.5}}/>
-            <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,rgba(5,14,9,0.85),rgba(5,14,9,0.75),rgba(5,14,9,0.85))'}}/>
-          </div>
-          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:900}}>
-            <div style={{fontSize:14,fontWeight:700,color:'rgba(139,26,26,0.7)',letterSpacing:5,marginBottom:16}}>MENGAPA PLATFORM INI DIBUTUHKAN?</div>
-            <SlideTitle size={46}>Di era digital, <span style={{color:'#EF4444'}}>citra positif</span><br/>kalah cepat dari <span style={{color:'#D4A843'}}>sentimen negatif</span></SlideTitle>
-            <p style={{fontSize:20,color:'rgba(255,255,255,0.5)',marginTop:14,lineHeight:1.7,maxWidth:700,margin:'14px auto 0'}}>
-              TNI AD sudah melakukan banyak hal positif — tapi tanpa koordinasi digital, cerita baik ini tenggelam oleh konten negatif.
-            </p>
-            <GoldLine w={80}/>
-            <div style={{display:'flex',gap:20,marginTop:28,justifyContent:'center',flexWrap:'wrap'}}>
-              {[
-                {icon:'warning',v:'6×',desc:'Hoaks menyebar lebih cepat dari fakta',c:'#EF4444',src:'MIT/Science, 2018',href:'https://science.sciencemag.org/content/359/6380/1146'},
-                {icon:'public',v:'60%+',desc:'Warga Indonesia akses berita via media sosial',c:'#FB923C',src:'Reuters Digital News Report',href:'https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2024'},
-                {icon:'trending_up',v:'12K+',desc:'Hoaks teridentifikasi Kominfo sejak 2018',c:'#F59E0B',src:'Kominfo RI',href:'https://kominfo.go.id'},
-              ].map((s,i)=>(
-                <div key={i} style={{flex:'1 1 200px',maxWidth:260,padding:'22px',borderRadius:14,background:'rgba(255,255,255,0.04)',border:`1px solid ${s.c}20`,textAlign:'center'}}>
-                  <MI name={s.icon} size={28} style={{color:s.c,marginBottom:8}}/>
-                  <p style={{fontSize:40,fontWeight:900,color:s.c,fontFamily:"'JetBrains Mono'",lineHeight:1}}>{s.v}</p>
-                  <p style={{fontSize:16,color:'rgba(255,255,255,0.55)',marginTop:10,lineHeight:1.5}}>{s.desc}</p>
-                  <a href={s.href} target="_blank" rel="noopener" style={{fontSize:11,color:'rgba(255,255,255,0.25)',marginTop:8,display:'block',textDecoration:'none',fontStyle:'italic'}}>{s.src} ↗</a>
-                </div>
-              ))}
-            </div>
-            <div style={{marginTop:36,padding:'16px 28px',borderRadius:12,background:'rgba(184,134,11,0.08)',border:'1px solid rgba(184,134,11,0.15)',display:'inline-block'}}>
-              <p style={{fontSize:18,color:'#D4A843',fontWeight:700}}>Bagaimana jika <span style={{color:'#fff'}}>400.000+ prajurit & keluarga</span> bisa bergerak bersama<br/>menyebarkan <span style={{color:'#fff'}}>cerita positif TNI AD</span> ke seluruh Indonesia?</p>
-            </div>
-            {/* Arrow down hint */}
-            <div style={{marginTop:24,animation:'pulse 2.5s ease-in-out infinite'}}>
-              <MI name="expand_more" size={28} style={{color:'rgba(184,134,11,0.35)'}}/>
-            </div>
-          </div>
-        </SlideBase>
       ),
 
       /* ── 2: Apa Itu SINAR? — Clear Explanation + 4 Pillars ── */
@@ -6188,12 +6148,12 @@ export default function App(){
             <p style={{fontSize:16,color:'#D4A843',letterSpacing:5,marginTop:6,fontWeight:600}}>SISTEM INFORMASI NARASI AKTIF RAKYAT</p>
             <GoldLine w={100}/>
             <p style={{fontSize:22,color:'rgba(255,255,255,0.8)',lineHeight:1.7,marginTop:16,maxWidth:800,margin:'16px auto 0'}}>
-              Aplikasi mobile yang <strong style={{color:'#fff'}}>menggerakkan 400.000 prajurit dan keluarga</strong> secara serentak untuk menyebarkan <strong style={{color:'#D4A843'}}>narasi positif TNI AD</strong> melalui misi terstruktur dan insentif nyata.
+              Aplikasi mobile yang <strong style={{color:'#fff'}}>menggerakkan 400.000 prajurit dan KBT</strong> secara serentak untuk menyebarkan <strong style={{color:'#D4A843'}}>narasi positif TNI AD</strong> melalui misi terstruktur dan insentif nyata.
             </p>
             <div style={{display:'flex',gap:14,marginTop:32,justifyContent:'center'}}>
               {[
                 {icon:'campaign',title:'Misi dari Komando',desc:'DISPENAD kirim instruksi langsung ke perangkat 400K prajurit',color:'#14532D'},
-                {icon:'phone_iphone',title:'Aplikasi Mobile',desc:'Satu platform untuk prajurit & keluarga — terima, eksekusi, upload',color:'#4ADE80'},
+                {icon:'phone_iphone',title:'Aplikasi Mobile',desc:'Satu platform untuk prajurit & KBT — terima, eksekusi, upload',color:'#4ADE80'},
                 {icon:'military_tech',title:'Insentif & Gamifikasi',desc:'Poin XP, pangkat digital, lencana, dan reward merchandise nyata',color:'#D4A843'},
                 {icon:'dashboard',title:'Pusat Kendali',desc:'Dashboard admin untuk monitoring seluruh aktivitas nasional',color:'#8B1A1A'},
               ].map((c,i)=>(
@@ -6210,7 +6170,11 @@ export default function App(){
         </SlideBase>
       ),
 
-      /* (old Cara Kerja + Real Scenario + Video Viral removed — covered by Remotion compositions) */
+      /* ── Before/After — Contoh Nyata (Remotion) ── */
+      ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
+
+      /* ── Why SINAR — 5 langkah mengapa efektif (Remotion) ── */
+      ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
 
       /* ── Multiplier — Jangkauan Nasional (Remotion) ── */
       ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
@@ -6333,7 +6297,7 @@ export default function App(){
             Siap Meluncurkan<br/><span style={{color:'#D4A843'}}>SINAR Nasional</span>
           </h1>
           <p style={{fontSize:20,color:'rgba(255,255,255,0.55)',marginTop:20,lineHeight:1.6,textAlign:'center',maxWidth:600}}>
-            Mobilisasi <strong style={{color:'#FFFFFF'}}>400.000+ prajurit</strong> dan <strong style={{color:'#D4A843'}}>1.6 juta keluarga</strong><br/>
+            Mobilisasi <strong style={{color:'#FFFFFF'}}>400.000+ prajurit</strong> dan <strong style={{color:'#D4A843'}}>1.6 juta KBT</strong><br/>
             untuk citra positif TNI AD di era digital.
           </p>
           <div style={{display:'flex',gap:12,marginTop:28,justifyContent:'center'}}>
@@ -6381,7 +6345,8 @@ export default function App(){
     /* Map of slides that have Remotion cinematic versions */
     const LONG=3600; // 2 minutes — holds final frame while presenter talks
     const REMOTION_SLIDES={
-      1:{component:IntroVideo,frames:LONG},
+      2:{component:BeforeAfter,frames:LONG},
+      3:{component:WhySinar,frames:LONG},
       4:{component:IndonesiaNetwork,frames:LONG},
       5:{component:Demographics,frames:LONG},
       6:{component:OperationalFlow,frames:LONG},

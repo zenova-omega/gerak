@@ -57,12 +57,12 @@ const MISSIONS = [
 ];
 
 function MissionCard({ mission, frame, fps, index }) {
-  const startFrame = 40 + index * 25;
+  const startFrame = 20 + index * 12;
 
   const appear = spring({
     frame: frame - startFrame,
     fps,
-    config: { damping: 14, stiffness: 120, mass: 0.8 },
+    config: { damping: 20, stiffness: 120, mass: 0.8 },
   });
 
   const translateY = interpolate(appear, [0, 1], [60, 0], CLAMP);
@@ -71,7 +71,7 @@ function MissionCard({ mission, frame, fps, index }) {
   // Glow pulse after all cards are in
   const glowOpacity = interpolate(
     frame,
-    [300, 340],
+    [150, 170],
     [0, 0.15],
     CLAMP,
   );
@@ -150,15 +150,15 @@ export const MissionTypes = () => {
   const { fps } = useVideoConfig();
 
   // ── Title fade-in (0-60) ──
-  const titleOpacity = interpolate(frame, [0, 40], [0, 1], CLAMP);
-  const titleY = interpolate(frame, [0, 40], [24, 0], CLAMP);
+  const titleOpacity = interpolate(frame, [0, 20], [0, 1], CLAMP);
+  const titleY = interpolate(frame, [0, 20], [24, 0], CLAMP);
 
-  const labelOpacity = interpolate(frame, [10, 50], [0, 1], CLAMP);
-  const labelY = interpolate(frame, [10, 50], [16, 0], CLAMP);
+  const labelOpacity = interpolate(frame, [5, 25], [0, 1], CLAMP);
+  const labelY = interpolate(frame, [5, 25], [16, 0], CLAMP);
 
-  // ── Subtitle (300-420) ──
-  const subtitleOpacity = interpolate(frame, [300, 360], [0, 1], CLAMP);
-  const subtitleY = interpolate(frame, [300, 360], [20, 0], CLAMP);
+  // ── Subtitle (150-210) ──
+  const subtitleOpacity = interpolate(frame, [150, 180], [0, 1], CLAMP);
+  const subtitleY = interpolate(frame, [150, 180], [20, 0], CLAMP);
 
   return (
     <AbsoluteFill
@@ -168,8 +168,8 @@ export const MissionTypes = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'flex-start',
-        padding: '48px 60px',
+        justifyContent: 'center',
+        padding: '40px 60px',
       }}
     >
       {/* Section label */}

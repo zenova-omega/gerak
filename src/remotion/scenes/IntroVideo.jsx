@@ -330,7 +330,7 @@ function Scene2({ frame, fps }) {
       </div>
 
       <Subtitle
-        text="SINAR hadir — platform yang menggerakkan 400 ribu prajurit dan keluarga serentak."
+        text="SINAR hadir — platform yang menggerakkan 400 ribu prajurit dan Keluarga Besar TNI serentak."
         frame={frame}
         startFrame={90}
         endFrame={210}

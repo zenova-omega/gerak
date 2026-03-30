@@ -42,14 +42,14 @@ export const IndonesiaNetwork = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleOp = interpolate(frame, [0, 50], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const titleY = interpolate(frame, [0, 50], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const mapOp = interpolate(frame, [20, 70], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const titleOp = interpolate(frame, [0, 25], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const titleY = interpolate(frame, [0, 25], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const mapOp = interpolate(frame, [10, 35], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-  const formulaOp = interpolate(frame, [300, 360], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const formulaY = interpolate(frame, [300, 360], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const formulaOp = interpolate(frame, [150, 180], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const formulaY = interpolate(frame, [150, 180], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-  const totalProgress = interpolate(frame, [320, 420], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const totalProgress = interpolate(frame, [160, 210], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const totalEased = 1 - Math.pow(1 - totalProgress, 3);
   const totalReach = Math.floor(totalEased * 16000000);
 
@@ -93,7 +93,7 @@ export const IndonesiaNetwork = () => {
 
           {/* Connection lines */}
           {connections.map(([a, b], i) => {
-            const lineOp = interpolate(frame, [80 + i * 8, 110 + i * 8], [0, 0.3], {
+            const lineOp = interpolate(frame, [40 + i * 4, 55 + i * 4], [0, 0.3], {
               extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
             });
             return (
@@ -111,18 +111,18 @@ export const IndonesiaNetwork = () => {
 
           {/* KODAM markers */}
           {KODAMS.map((k, i) => {
-            const delay = i * 12;
-            const dotAppear = spring({ frame: frame - 50 - delay, fps, config: { damping: 14, mass: 0.6 } });
+            const delay = i * 6;
+            const dotAppear = spring({ frame: frame - 25 - delay, fps, config: { damping: 20, mass: 0.6 } });
             const color = statusColor(k.status);
             const dotSize = k.status === 'hot' ? 8 : k.status === 'warm' ? 6 : 4;
 
-            const countStart = 120 + delay;
-            const countProgress = interpolate(frame, [countStart, countStart + 70], [0, 1], {
+            const countStart = 60 + delay;
+            const countProgress = interpolate(frame, [countStart, countStart + 35], [0, 1], {
               extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
             });
             const count = Math.floor((1 - Math.pow(1 - countProgress, 3)) * k.agents);
 
-            const labelOp = interpolate(frame, [100 + delay, 130 + delay], [0, 1], {
+            const labelOp = interpolate(frame, [50 + delay, 65 + delay], [0, 1], {
               extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
             });
 
@@ -154,7 +154,7 @@ export const IndonesiaNetwork = () => {
                   <text
                     textAnchor="middle"
                     y={dotSize + 28}
-                    style={{ fontSize: 12, fontWeight: 600, fill: color, fontFamily: "'JetBrains Mono', monospace" }}
+                    style={{ fontSize: 13, fontWeight: 600, fill: color, fontFamily: "'JetBrains Mono', monospace" }}
                   >
                     {count > 0 ? count.toLocaleString() : ''}
                   </text>
@@ -177,7 +177,7 @@ export const IndonesiaNetwork = () => {
         }}>
           {[
             { value: '400K', label: 'Prajurit', color: GOLD },
-            { value: '×4', label: 'Keluarga', color: '#4ADE80' },
+            { value: '×4', label: 'KBT', color: '#4ADE80' },
             { value: '×10+', label: 'Jaringan', color: '#60A5FA' },
             { value: '×37', label: 'Kodam', color: '#FB923C' },
           ].map((item, i) => (

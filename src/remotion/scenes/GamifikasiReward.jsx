@@ -40,8 +40,8 @@ const REWARDS = [
 
 /* ── Hexagonal Badge ── */
 function HexBadge({ rank, index, frame, fps }) {
-  const delay = index * 8;
-  const s = spring({ frame: frame - delay, fps, config: { damping: 12, stiffness: 120 } });
+  const delay = index * 4;
+  const s = spring({ frame: frame - delay, fps, config: { damping: 20, stiffness: 120 } });
   const size = 100;
   const points = Array.from({ length: 6 }, (_, i) => {
     const angle = (Math.PI / 3) * i - Math.PI / 2;
@@ -90,8 +90,8 @@ function HexBadge({ rank, index, frame, fps }) {
 
 /* ── Arrow between ranks ── */
 function RankArrow({ index, frame, fps }) {
-  const delay = index * 8 + 4;
-  const s = spring({ frame: frame - delay, fps, config: { damping: 14 } });
+  const delay = index * 4 + 2;
+  const s = spring({ frame: frame - delay, fps, config: { damping: 20 } });
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -107,8 +107,8 @@ function RankArrow({ index, frame, fps }) {
 
 /* ── XP Progress Bar ── */
 function XPBar({ frame, fps }) {
-  const fillProgress = interpolate(frame, [60, 260], [0, 1], CLAMP);
-  const barAppear = spring({ frame: frame - 50, fps, config: { damping: 14 } });
+  const fillProgress = interpolate(frame, [30, 130], [0, 1], CLAMP);
+  const barAppear = spring({ frame: frame - 25, fps, config: { damping: 20 } });
   const currentXP = Math.floor(fillProgress * 50000);
 
   return (
@@ -149,8 +149,8 @@ function XPBar({ frame, fps }) {
 
 /* ── Achievement Badge ── */
 function AchievementBadge({ achievement, index, frame, fps }) {
-  const delay = 40 + index * 6;
-  const s = spring({ frame: frame - delay, fps, config: { damping: 12 } });
+  const delay = 20 + index * 3;
+  const s = spring({ frame: frame - delay, fps, config: { damping: 20 } });
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
@@ -166,7 +166,7 @@ function AchievementBadge({ achievement, index, frame, fps }) {
         {achievement.emoji}
       </div>
       <span style={{
-        fontSize: 11, color: 'rgba(255,255,255,0.5)',
+        fontSize: 12, color: 'rgba(255,255,255,0.5)',
         fontFamily: "'Inter', sans-serif", fontWeight: 600,
         textAlign: 'center', maxWidth: 80,
       }}>
@@ -178,11 +178,11 @@ function AchievementBadge({ achievement, index, frame, fps }) {
 
 /* ── Reward Card ── */
 function RewardCard({ reward, index, frame, fps }) {
-  const delay = index * 10;
-  const s = spring({ frame: frame - delay, fps, config: { damping: 12, stiffness: 100 } });
+  const delay = index * 5;
+  const s = spring({ frame: frame - delay, fps, config: { damping: 20, stiffness: 100 } });
 
   const shine = reward.legendary
-    ? interpolate(frame, [delay + 20, delay + 80], [-100, 260], CLAMP)
+    ? interpolate(frame, [delay + 10, delay + 40], [-100, 260], CLAMP)
     : 0;
 
   return (
@@ -248,13 +248,13 @@ export const GamifikasiReward = () => {
   const { fps } = useVideoConfig();
 
   // Phase transitions
-  const phase1Opacity = interpolate(frame, [280, 310], [1, 0], CLAMP);
-  const phase1Y = interpolate(frame, [280, 310], [0, -60], CLAMP);
-  const phase2Opacity = interpolate(frame, [300, 340], [0, 1], CLAMP);
-  const phase2Y = interpolate(frame, [300, 340], [40, 0], CLAMP);
+  const phase1Opacity = interpolate(frame, [140, 155], [1, 0], CLAMP);
+  const phase1Y = interpolate(frame, [140, 155], [0, -60], CLAMP);
+  const phase2Opacity = interpolate(frame, [150, 170], [0, 1], CLAMP);
+  const phase2Y = interpolate(frame, [150, 170], [40, 0], CLAMP);
 
   // Title animation
-  const titleAppear = spring({ frame, fps, config: { damping: 14 } });
+  const titleAppear = spring({ frame, fps, config: { damping: 20 } });
 
   return (
     <AbsoluteFill style={{
@@ -272,7 +272,7 @@ export const GamifikasiReward = () => {
       }} />
 
       {/* ═══ Phase 1: Gamifikasi ═══ */}
-      {frame < 340 && (
+      {frame < 170 && (
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -332,7 +332,7 @@ export const GamifikasiReward = () => {
       )}
 
       {/* ═══ Phase 2: Reward Shop ═══ */}
-      {frame >= 280 && (
+      {frame >= 140 && (
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -377,7 +377,7 @@ export const GamifikasiReward = () => {
                 key={reward.name}
                 reward={reward}
                 index={i}
-                frame={frame - 310}
+                frame={frame - 155}
                 fps={fps}
               />
             ))}

@@ -77,20 +77,20 @@ export const ClosingQuote = () => {
   const bgScale = interpolate(frame, [0, 600], [1.05, 1.15], { extrapolateRight: 'clamp' });
 
   // Quote phase
-  const headerOp = interpolate(frame, [30, 60], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const line1Op = interpolate(frame, [60, 90], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const line2Op = interpolate(frame, [90, 120], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const line3Op = interpolate(frame, [120, 150], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const statsOp = interpolate(frame, [180, 210], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const quoteFadeOut = interpolate(frame, [240, 280], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const headerOp = interpolate(frame, [15, 30], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const line1Op = interpolate(frame, [30, 45], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const line2Op = interpolate(frame, [45, 60], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const line3Op = interpolate(frame, [60, 75], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const statsOp = interpolate(frame, [90, 105], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const quoteFadeOut = interpolate(frame, [120, 140], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   // Logo phase
-  const logoScale = spring({ frame: frame - 300, fps, config: { damping: 15, mass: 0.8 } });
-  const logoOp = interpolate(frame, [300, 330], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const presentsOp = interpolate(frame, [340, 370], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const sinarOp = interpolate(frame, [360, 390], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const sinarY = interpolate(frame, [360, 390], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const tagOp = interpolate(frame, [420, 450], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const logoScale = spring({ frame: frame - 150, fps, config: { damping: 20, mass: 0.8 } });
+  const logoOp = interpolate(frame, [150, 165], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const presentsOp = interpolate(frame, [170, 185], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const sinarOp = interpolate(frame, [180, 195], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const sinarY = interpolate(frame, [180, 195], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const tagOp = interpolate(frame, [210, 225], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   const ringScale = interpolate(frame % 150, [0, 75, 150], [1, 1.08, 1]);
 

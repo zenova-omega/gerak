@@ -8,6 +8,8 @@ import { GamifikasiReward } from './scenes/GamifikasiReward';
 import { OperationalFlow } from './scenes/OperationalFlow';
 import { Demographics } from './scenes/Demographics';
 import { ClosingQuote } from './scenes/ClosingQuote';
+import { BeforeAfter } from './scenes/BeforeAfter';
+import { WhySinar } from './scenes/WhySinar';
 
 const FPS = 30;
 
@@ -65,6 +67,24 @@ export const RemotionRoot = () => {
       <Composition
         id="OperationalFlow"
         component={OperationalFlow}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      {/* Why SINAR works — 20 seconds */}
+      <Composition
+        id="WhySinar"
+        component={WhySinar}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      {/* Before/After comparison — 20 seconds */}
+      <Composition
+        id="BeforeAfter"
+        component={BeforeAfter}
         durationInFrames={20 * FPS}
         fps={FPS}
         width={1920}
