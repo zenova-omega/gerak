@@ -7,11 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "remotion:preview": "npx remotion studio src/remotion/index.jsx",
+    "remotion:render": "npx remotion render src/remotion/index.jsx",
+    "remotion:render:splash": "npx remotion render src/remotion/index.jsx SplashIntro out/splash-intro.mp4",
+    "remotion:render:viral": "npx remotion render src/remotion/index.jsx ViralCascade out/viral-cascade.mp4",
+    "remotion:render:network": "npx remotion render src/remotion/index.jsx IndonesiaNetwork out/indonesia-network.mp4",
+    "remotion:render:intro": "npx remotion render src/remotion/index.jsx IntroVideo out/intro-video.mp4"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "@react-spring/web": "^10.0.3",
+    "@remotion/bundler": "^4.0.441",
+    "@remotion/cli": "^4.0.441",
+    "@remotion/player": "^4.0.441",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
@@ -19,7 +28,8 @@
     "react-force-graph-3d": "^1.29.1",
     "react-globe.gl": "^2.37.0",
     "react-router-dom": "^7.13.1",
-    "react-simple-maps": "^3.0.0"
+    "react-simple-maps": "^3.0.0",
+    "remotion": "^4.0.441"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
