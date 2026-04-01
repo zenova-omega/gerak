@@ -1,15 +1,18 @@
 import React from 'react';
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  useVideoConfig,
-  interpolate,
-  spring,
-} from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simple-maps';
 
-const GOLD = '#D4A843';
-const DARK = '#050E09';
+/* ── Design Tokens ── */
+const BG_GRADIENT = 'linear-gradient(160deg, #0B2619, #1A1814)';
+const TEXT_PRIMARY = '#FFFFFF';
+const TEXT_DIM = 'rgba(255,255,255,0.45)';
+const TEXT_MID = 'rgba(255,255,255,0.6)';
+const GREEN_PRIMARY = '#1B4332';
+const GREEN_ACCENT = '#2D6A4F';
+const GOLD = '#B8860B';
+const GRADIENT_ACCENT = 'linear-gradient(90deg, #1B4332, #B8860B)';
+const FONT = "'Inter', sans-serif";
+const FONT_MONO = "'JetBrains Mono', monospace";
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
@@ -54,13 +57,30 @@ export const IndonesiaNetwork = () => {
   const totalReach = Math.floor(totalEased * 16000000);
 
   return (
-    <AbsoluteFill style={{ background: DARK, fontFamily: "'Inter', sans-serif" }}>
+    <AbsoluteFill style={{ background: BG_GRADIENT, fontFamily: FONT }}>
+
+      {/* ── Top Bar ── */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '20px 80px', zIndex: 30,
+      }}>
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2, textTransform: 'uppercase' }}>
+          Multiplier Effect
+        </span>
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2, textTransform: 'uppercase' }}>
+          National Network
+        </span>
+      </div>
 
       {/* Title */}
-      <div style={{ position: 'absolute', top: 30, left: 0, right: 0, textAlign: 'center', opacity: titleOp, transform: `translateY(${titleY}px)`, zIndex: 20 }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: 'rgba(184,134,11,0.7)', letterSpacing: 6, marginBottom: 8 }}>MULTIPLIER EFFECT</div>
-        <h2 style={{ fontSize: 44, fontWeight: 800, color: '#fff', margin: 0 }}>
-          Jaringan <span style={{ color: GOLD }}>Nasional</span> SINAR
+      <div style={{ position: 'absolute', top: 45, left: 80, right: 80, textAlign: 'left', opacity: titleOp, transform: `translateY(${titleY}px)`, zIndex: 20 }}>
+        <h2 style={{ fontSize: 44, fontWeight: 800, color: TEXT_PRIMARY, margin: 0 }}>
+          Jaringan{' '}
+          <span style={{ background: GRADIENT_ACCENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Nasional
+          </span>{' '}
+          SINAR
         </h2>
       </div>
 
@@ -82,8 +102,8 @@ export const IndonesiaNetwork = () => {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill="rgba(184,134,11,0.06)"
-                    stroke="rgba(184,134,11,0.25)"
+                    fill="rgba(27,67,50,0.08)"
+                    stroke="rgba(27,67,50,0.3)"
                     strokeWidth={0.8}
                     style={{ default: { outline: 'none' }, hover: { outline: 'none' }, pressed: { outline: 'none' } }}
                   />
@@ -126,7 +146,6 @@ export const IndonesiaNetwork = () => {
               extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
             });
 
-            // Pulse for hot zones
             const pulseScale = k.status === 'hot'
               ? interpolate(frame % 50, [0, 25, 50], [1, 1.8, 1])
               : 1;
@@ -141,20 +160,20 @@ export const IndonesiaNetwork = () => {
                   <circle r={dotSize * pulseScale} fill="none" stroke={color} strokeWidth={1} opacity={pulseOp * dotAppear} />
                 )}
                 {/* Main dot */}
-                <circle r={dotSize} fill={color} opacity={dotAppear} style={{ filter: `drop-shadow(0 0 6px ${color})` }} />
+                <circle r={dotSize} fill={color} opacity={dotAppear} />
                 {/* City label */}
                 <g opacity={labelOp * dotAppear}>
                   <text
                     textAnchor="middle"
                     y={dotSize + 14}
-                    style={{ fontSize: 13, fontWeight: 700, fill: 'rgba(255,255,255,0.75)', fontFamily: "'Inter', sans-serif" }}
+                    style={{ fontSize: 13, fontWeight: 700, fill: 'rgba(255,255,255,0.75)', fontFamily: FONT }}
                   >
                     {k.city}
                   </text>
                   <text
                     textAnchor="middle"
                     y={dotSize + 28}
-                    style={{ fontSize: 13, fontWeight: 600, fill: color, fontFamily: "'JetBrains Mono', monospace" }}
+                    style={{ fontSize: 13, fontWeight: 600, fill: color, fontFamily: FONT_MONO }}
                   >
                     {count > 0 ? count.toLocaleString() : ''}
                   </text>
@@ -166,38 +185,51 @@ export const IndonesiaNetwork = () => {
       </div>
 
       {/* Vignette */}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 90% 70% at 50% 45%, transparent 40%, rgba(5,14,9,0.7) 100%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 90% 70% at 50% 45%, transparent 40%, rgba(11,38,25,0.7) 100%)', pointerEvents: 'none' }} />
 
       {/* Bottom formula */}
-      <div style={{ position: 'absolute', bottom: 40, left: 0, right: 0, textAlign: 'center', opacity: formulaOp, transform: `translateY(${formulaY}px)`, zIndex: 20 }}>
+      <div style={{ position: 'absolute', bottom: 50, left: 80, right: 80, textAlign: 'center', opacity: formulaOp, transform: `translateY(${formulaY}px)`, zIndex: 20 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 28, padding: '24px 48px',
-          borderRadius: 20, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(184,134,11,0.25)',
-          backdropFilter: 'blur(12px)', boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+          borderRadius: 12, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)',
         }}>
           {[
             { value: '400K', label: 'Prajurit', color: GOLD },
-            { value: '×4', label: 'KBT', color: '#4ADE80' },
-            { value: '×10+', label: 'Jaringan', color: '#60A5FA' },
-            { value: '×37', label: 'Kodam', color: '#FB923C' },
+            { value: '\u00D74', label: 'Keluarga Besar TNI (KBT)', color: '#22C55E' },
+            { value: '\u00D710+', label: 'Jaringan', color: '#60A5FA' },
+            { value: '\u00D737', label: 'Kodam', color: '#F59E0B' },
           ].map((item, i) => (
             <React.Fragment key={i}>
-              {i > 0 && <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.2)' }}>&rarr;</span>}
+              {i > 0 && <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.15)' }}>&rarr;</span>}
               <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 40, fontWeight: 900, color: item.color, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1, margin: 0 }}>{item.value}</p>
-                <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0', fontWeight: 600, letterSpacing: 1 }}>{item.label}</p>
+                <p style={{ fontSize: 40, fontWeight: 900, color: item.color, fontFamily: FONT_MONO, lineHeight: 1, margin: 0 }}>{item.value}</p>
+                <p style={{ fontSize: 14, color: TEXT_DIM, margin: '4px 0 0', fontWeight: 600, letterSpacing: 1 }}>{item.label}</p>
               </div>
             </React.Fragment>
           ))}
-          <div style={{ width: 2, height: 44, background: 'rgba(255,255,255,0.1)', margin: '0 6px' }} />
+          <div style={{ width: 1, height: 44, background: 'rgba(255,255,255,0.08)', margin: '0 6px' }} />
           <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: 600, letterSpacing: 1 }}>Potensi Jangkauan</p>
-            <span style={{ fontSize: 56, fontWeight: 900, color: GOLD, fontFamily: "'JetBrains Mono', monospace", textShadow: '0 0 30px rgba(184,134,11,0.3)' }}>
+            <p style={{ fontSize: 14, color: TEXT_DIM, margin: 0, fontWeight: 600, letterSpacing: 1, fontFamily: FONT_MONO }}>Potensi Jangkauan</p>
+            <span style={{ fontSize: 56, fontWeight: 900, background: GRADIENT_ACCENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontFamily: FONT_MONO }}>
               {totalReach > 0 ? `${(totalReach / 1000000).toFixed(1)}M+` : '0'}
             </span>
           </div>
         </div>
       </div>
+
+      {/* ── Bottom Bar ── */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '20px 80px', zIndex: 30,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: GRADIENT_ACCENT }} />
+          <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 1 }}>sinar.id</span>
+        </div>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM }}>03</span>
+      </div>
+
     </AbsoluteFill>
   );
 };

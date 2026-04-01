@@ -10,6 +10,22 @@ import { Demographics } from './scenes/Demographics';
 import { ClosingQuote } from './scenes/ClosingQuote';
 import { BeforeAfter } from './scenes/BeforeAfter';
 import { WhySinar } from './scenes/WhySinar';
+import { SplashIntroV2 } from './scenes/SplashIntroV2';
+import { TitleSlideV2 } from './scenes/TitleSlideV2';
+import { ApaItuSinarV2 } from './scenes/ApaItuSinarV2';
+import { ViralCascadeV2 } from './scenes/ViralCascadeV2';
+import { IndonesiaNetworkV2 } from './scenes/IndonesiaNetworkV2';
+import { PlatformMisiV2 } from './scenes/PlatformMisiV2';
+import { TechPlatformV2 } from './scenes/TechPlatformV2';
+import { MissionTypesV2 } from './scenes/MissionTypesV2';
+import { GamifikasiRewardV2 } from './scenes/GamifikasiRewardV2';
+import { TokoPoinV2 } from './scenes/TokoPoinV2';
+import { PaketLayananV2 } from './scenes/PaketLayananV2';
+import { OperationalFlowV2 } from './scenes/OperationalFlowV2';
+import { WhySinarV2 } from './scenes/WhySinarV2';
+import { BeforeAfterV2 } from './scenes/BeforeAfterV2';
+import { ClosingQuoteV2 } from './scenes/ClosingQuoteV2';
+import { DemographicsV2 } from './scenes/DemographicsV2';
 
 const FPS = 30;
 
@@ -113,6 +129,140 @@ export const RemotionRoot = () => {
         id="IntroVideo"
         component={IntroVideo}
         durationInFrames={450}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── V2: Title Slide ── */}
+      <Composition
+        id="TitleSlideV2"
+        component={TitleSlideV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── V2: Apa Itu SINAR ── */}
+      <Composition
+        id="ApaItuSinarV2"
+        component={ApaItuSinarV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ── V2 Samples: Opsi C (Green & Steel) ── */}
+      <Composition
+        id="SplashIntroV2"
+        component={SplashIntroV2}
+        durationInFrames={12 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ViralCascadeV2"
+        component={ViralCascadeV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="IndonesiaNetworkV2"
+        component={IndonesiaNetworkV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="PlatformMisiV2"
+        component={PlatformMisiV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="MissionTypesV2"
+        component={MissionTypesV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="GamifikasiRewardV2"
+        component={GamifikasiRewardV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="TechPlatformV2"
+        component={TechPlatformV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="TokoPoinV2"
+        component={TokoPoinV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="PaketLayananV2"
+        component={PaketLayananV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="OperationalFlowV2"
+        component={OperationalFlowV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="WhySinarV2"
+        component={WhySinarV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="BeforeAfterV2"
+        component={BeforeAfterV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ClosingQuoteV2"
+        component={ClosingQuoteV2}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="DemographicsV2"
+        component={DemographicsV2}
+        durationInFrames={20 * FPS}
         fps={FPS}
         width={1920}
         height={1080}

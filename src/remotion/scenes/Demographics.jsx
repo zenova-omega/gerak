@@ -172,7 +172,7 @@ export const Demographics = () => {
           <div style={{ display: 'flex', gap: 8 }}>
             <StatCard icon="👥" value="1.6M" label="Total Pengguna" color={GOLD} frame={frame} startFrame={15} />
             <StatCard icon="🎖️" value="400K" label="Prajurit Aktif" color="#14532D" frame={frame} startFrame={22} />
-            <StatCard icon="👨‍👩‍👧‍👦" value="1.2M" label="KBT" color="#0F766E" frame={frame} startFrame={30} />
+            <StatCard icon="👨‍👩‍👧‍👦" value="1.2M" label="Keluarga Besar TNI (KBT)" color="#0F766E" frame={frame} startFrame={30} />
           </div>
 
           {/* User type donut + legend */}
@@ -223,7 +223,7 @@ export const Demographics = () => {
 
         {/* MIDDLE COLUMN — Age Distribution */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ padding: '16px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', flex: 1 }}>
+          <div style={{ padding: '16px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: 'rgba(255,255,255,0.5)', margin: '0 0 12px', letterSpacing: 1 }}>DISTRIBUSI USIA</p>
             {ageGroups.map((g, i) => (
               <HBar key={i} label={g.label} value={g.value} maxValue={35} color={g.color} frame={frame} startFrame={50 + i * 6} />

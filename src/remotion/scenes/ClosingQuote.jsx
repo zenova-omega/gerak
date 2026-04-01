@@ -9,9 +9,13 @@ import {
   staticFile,
 } from 'remotion';
 
-const GOLD = '#D4A843';
-const GOLD_RAW = 'rgba(184,134,11,';
-const DARK = '#030806';
+const FONT = "'Inter', sans-serif";
+const FONT_MONO = "'JetBrains Mono', monospace";
+const TEXT_DIM = 'rgba(255,255,255,0.45)';
+const GOLD = '#B8860B';
+const BG_GRADIENT = 'linear-gradient(160deg, #0B2619, #1A1814)';
+const OVERLAY = 'linear-gradient(180deg, #0B2619E6 0%, #1A1814CC 50%, #1A1814F2 100%)';
+const BG_FILTER = 'brightness(0.15) contrast(1.2) saturate(0.3)';
 
 function SinarMark({ size = 110, opacity = 1 }) {
   return (
@@ -42,41 +46,16 @@ function SinarMark({ size = 110, opacity = 1 }) {
   );
 }
 
-function Particle({ x, y, size, delay, frame }) {
-  const drift = Math.sin((frame + delay * 30) * 0.02) * 20;
-  const floatY = Math.cos((frame + delay * 30) * 0.015) * 15;
-  const opacity = interpolate((frame + delay * 30) % 300, [0, 50, 250, 300], [0, 0.25, 0.25, 0]);
-  return (
-    <div style={{
-      position: 'absolute', left: `${x}%`, top: `${y}%`, width: size, height: size,
-      borderRadius: '50%', background: `${GOLD_RAW}0.3)`,
-      transform: `translate(${drift}px, ${floatY}px)`, opacity,
-    }} />
-  );
-}
-
 export const ClosingQuote = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Timeline (30fps, 600 frames = 20s):
-  // 0-30:     Fade from black
-  // 30-90:    "TENTARA NASIONAL INDONESIA" header
-  // 60-180:   Quote lines fade in one by one
-  // 180-240:  Gold line + "400.000 PRAJURIT · SATU TEKAD"
-  // 240-300:  Quote fades out
-  // 300-360:  Logo springs in
-  // 340-400:  "TNI AD MEMPERSEMBAHKAN"
-  // 360-420:  "SINAR" title
-  // 420-480:  Tagline
-  // 480-600:  Hold
-
-  // Background
+  // Background images + Ken Burns
   const bgImages = ['splash-hero-soldiers.png', 'splash-hero-humanitarian.png', 'splash-hero-portrait.png', 'splash-hero-action.png'];
   const bgCycle = Math.floor(frame / 120) % 4;
   const bgScale = interpolate(frame, [0, 600], [1.05, 1.15], { extrapolateRight: 'clamp' });
 
-  // Quote phase
+  // === Phase 1 (0-140): Quote reveal ===
   const headerOp = interpolate(frame, [15, 30], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const line1Op = interpolate(frame, [30, 45], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const line2Op = interpolate(frame, [45, 60], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -84,7 +63,7 @@ export const ClosingQuote = () => {
   const statsOp = interpolate(frame, [90, 105], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const quoteFadeOut = interpolate(frame, [120, 140], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-  // Logo phase
+  // === Phase 2 (150+): Logo + SINAR reveal ===
   const logoScale = spring({ frame: frame - 150, fps, config: { damping: 20, mass: 0.8 } });
   const logoOp = interpolate(frame, [150, 165], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const presentsOp = interpolate(frame, [170, 185], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -92,15 +71,9 @@ export const ClosingQuote = () => {
   const sinarY = interpolate(frame, [180, 195], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const tagOp = interpolate(frame, [210, 225], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-  const ringScale = interpolate(frame % 150, [0, 75, 150], [1, 1.08, 1]);
-
-  const particles = Array.from({ length: 25 }, (_, i) => ({
-    id: i, x: ((i * 37 + 13) % 100), y: ((i * 53 + 7) % 100), size: (i % 3) + 1.5, delay: i * 0.3,
-  }));
-
   return (
-    <AbsoluteFill style={{ background: DARK, fontFamily: "'Inter', sans-serif" }}>
-      {/* Background slideshow */}
+    <AbsoluteFill style={{ background: BG_GRADIENT, fontFamily: FONT }}>
+      {/* Background slideshow with Ken Burns */}
       {bgImages.map((img, i) => (
         <div key={i} style={{
           position: 'absolute', inset: 0,
@@ -109,88 +82,97 @@ export const ClosingQuote = () => {
         }}>
           <Img src={staticFile(`images/${img}`)} style={{
             width: '100%', height: '100%', objectFit: 'cover',
-            filter: 'brightness(0.25) contrast(1.3) saturate(0.7)',
+            filter: BG_FILTER,
             transform: `scale(${bgScale})`,
           }} />
         </div>
       ))}
 
-      {/* Overlays */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(3,8,6,0.6) 0%,rgba(3,8,6,0.3) 35%,rgba(3,8,6,0.5) 65%,rgba(3,8,6,0.9) 100%)' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 50% 50%,transparent 30%,rgba(3,8,6,0.7) 100%)' }} />
+      {/* Overlay */}
+      <div style={{ position: 'absolute', inset: 0, background: OVERLAY }} />
 
-      {/* Gold border */}
-      <div style={{ position: 'absolute', inset: 20, border: `1px solid ${GOLD_RAW}0.12)`, borderRadius: 4, zIndex: 5 }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent 5%,${GOLD_RAW}0.4) 30%,rgba(139,26,26,0.5) 50%,${GOLD_RAW}0.4) 70%,transparent 95%)`, zIndex: 6 }} />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent 5%,${GOLD_RAW}0.4) 30%,rgba(139,26,26,0.5) 50%,${GOLD_RAW}0.4) 70%,transparent 95%)`, zIndex: 6 }} />
+      {/* Top bar */}
+      <div style={{ position: 'absolute', top: 32, left: 48, right: 48, display: 'flex', justifyContent: 'space-between', zIndex: 20 }}>
+        <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>CLOSING</span>
+        <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>SINAR PITCH DECK</span>
+      </div>
 
-      {/* Particles */}
-      {particles.map(p => <Particle key={p.id} {...p} frame={frame} />)}
+      {/* Bottom bar */}
+      <div style={{ position: 'absolute', bottom: 32, left: 48, right: 48, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'linear-gradient(90deg, #1B4332, #B8860B)' }} />
+          <span style={{ fontSize: 11, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 1 }}>sinar.id</span>
+        </div>
+        <span style={{ fontSize: 11, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM }}>09</span>
+      </div>
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 10, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
-        {/* Quote section */}
+        {/* === Phase 1: Quote section === */}
         <div style={{ position: 'absolute', textAlign: 'center', maxWidth: 750, padding: '0 48px', opacity: quoteFadeOut }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: `${GOLD_RAW}0.5)`, letterSpacing: 6, textTransform: 'uppercase', marginBottom: 24, opacity: headerOp }}>
+          <div style={{
+            fontSize: 11, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM,
+            letterSpacing: 5, textTransform: 'uppercase', marginBottom: 28, opacity: headerOp,
+          }}>
             TENTARA NASIONAL INDONESIA — ANGKATAN DARAT
           </div>
-          <p style={{ fontSize: 36, fontWeight: 300, color: 'rgba(255,255,255,0.92)', lineHeight: 1.7, fontStyle: 'italic', letterSpacing: 0.5 }}>
+
+          <p style={{ fontSize: 32, fontWeight: 300, color: '#FFFFFF', lineHeight: 1.8, fontStyle: 'italic', letterSpacing: 0.3, margin: 0 }}>
             <span style={{ opacity: line1Op }}>"Di setiap bencana, kami hadir pertama.</span>
             <br />
             <span style={{ opacity: line2Op }}>Di setiap ancaman, kami berdiri terdepan.</span>
             <br />
             <span style={{ opacity: line3Op, color: GOLD, fontWeight: 600 }}>Kami adalah prajurit rakyat."</span>
           </p>
-          <div style={{ width: 80, height: 1, background: `linear-gradient(90deg,transparent,#B8860B,transparent)`, margin: '28px auto 20px', opacity: statsOp }} />
-          <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.35)', letterSpacing: 4, fontWeight: 600, opacity: statsOp }}>
+
+          {/* Gradient line divider */}
+          <div style={{
+            width: 120, height: 2, margin: '32px auto 24px',
+            background: 'linear-gradient(90deg, #1B4332, #B8860B)',
+            opacity: statsOp,
+          }} />
+
+          <p style={{
+            fontSize: 14, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM,
+            letterSpacing: 4, margin: 0, opacity: statsOp,
+          }}>
             400.000 PRAJURIT &nbsp;&middot;&nbsp; SATU TEKAD
           </p>
         </div>
 
-        {/* Logo + SINAR reveal (appears after quote fades) */}
-        <div style={{ opacity: logoOp, transform: `scale(${logoScale})`, marginBottom: 20 }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ position: 'absolute', width: 180, height: 180, borderRadius: '50%', border: `1px solid ${GOLD_RAW}0.15)`, transform: `scale(${ringScale})` }} />
-            <div style={{ position: 'absolute', width: 150, height: 150, borderRadius: '50%', border: `1px solid ${GOLD_RAW}0.06)` }} />
-            <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: `radial-gradient(circle,${GOLD_RAW}0.1),transparent 70%)`, filter: 'blur(20px)' }} />
-            <SinarMark size={110} />
-          </div>
+        {/* === Phase 2: Logo + SINAR reveal === */}
+        <div style={{ opacity: logoOp, transform: `scale(${logoScale})`, marginBottom: 24 }}>
+          <SinarMark size={110} />
         </div>
 
         <div style={{ opacity: presentsOp }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, justifyContent: 'center', marginBottom: 8 }}>
-            <div style={{ width: 50, height: 1, background: `linear-gradient(90deg,transparent,${GOLD_RAW}0.5))` }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: `${GOLD_RAW}0.45)`, letterSpacing: 5 }}>TNI AD MEMPERSEMBAHKAN</span>
-            <div style={{ width: 50, height: 1, background: `linear-gradient(90deg,${GOLD_RAW}0.5),transparent)` }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, justifyContent: 'center', marginBottom: 12 }}>
+            <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2))' }} />
+            <span style={{ fontSize: 11, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 5 }}>
+              TNI AD MEMPERSEMBAHKAN
+            </span>
+            <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.2), transparent)' }} />
           </div>
         </div>
 
         <div style={{ opacity: sinarOp, transform: `translateY(${sinarY}px)` }}>
-          <h1 style={{ fontSize: 84, fontWeight: 900, color: '#FFFFFF', letterSpacing: 18, lineHeight: 1, textShadow: `0 4px 60px ${GOLD_RAW}0.25), 0 0 120px ${GOLD_RAW}0.1)`, margin: 0, textAlign: 'center' }}>
+          <h1 style={{
+            fontSize: 84, fontWeight: 900, color: '#FFFFFF', letterSpacing: 18,
+            lineHeight: 1, margin: 0, textAlign: 'center', fontFamily: FONT,
+          }}>
             SINAR
           </h1>
         </div>
 
         <div style={{ opacity: tagOp }}>
-          <p style={{ fontSize: 20, fontWeight: 600, color: GOLD, letterSpacing: 6, textTransform: 'uppercase', marginTop: 14, textAlign: 'center' }}>
+          <p style={{
+            fontSize: 18, fontWeight: 600, color: GOLD, letterSpacing: 6,
+            textTransform: 'uppercase', marginTop: 16, textAlign: 'center',
+          }}>
             Sistem Informasi Narasi Aktif Rakyat
           </p>
         </div>
-      </div>
-
-      {/* Corner markers */}
-      <div style={{ position: 'absolute', top: 32, left: 40, zIndex: 10 }}>
-        <p style={{ fontSize: 8, fontWeight: 700, color: `${GOLD_RAW}0.2)`, letterSpacing: 3, margin: 0 }}>RAHASIA</p>
-      </div>
-      <div style={{ position: 'absolute', top: 32, right: 40, zIndex: 10 }}>
-        <p style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.12)', letterSpacing: 3, margin: 0 }}>DISPENAD</p>
-      </div>
-      <div style={{ position: 'absolute', bottom: 32, left: 40, zIndex: 10 }}>
-        <p style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.12)', letterSpacing: 3, margin: 0 }}>TNI AD</p>
-      </div>
-      <div style={{ position: 'absolute', bottom: 32, right: 40, zIndex: 10 }}>
-        <p style={{ fontSize: 8, fontWeight: 700, color: `${GOLD_RAW}0.2)`, letterSpacing: 3, margin: 0 }}>2026</p>
       </div>
     </AbsoluteFill>
   );

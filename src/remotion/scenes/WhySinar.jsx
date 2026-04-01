@@ -1,75 +1,122 @@
 import React from 'react';
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  interpolate,
-  spring,
-} from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-const GOLD = '#D4A843';
-const DARK = '#050E09';
+const BG = '#F5F3EE';
+const CARD_BG = '#FFFFFF';
+const CARD_BORDER = '#DDD9D0';
+const TEXT_PRIMARY = '#1A1814';
+const TEXT_SECONDARY = '#3D3929';
+const TEXT_MUTED = '#6B6555';
+const FONT = "'Inter', sans-serif";
+const FONT_MONO = "'JetBrains Mono', monospace";
+const CLAMP = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' };
 
 const steps = [
-  { num: '1', title: 'Misi Terkoordinasi', desc: 'DISPENAD mengirim instruksi "Sebarkan Liputan Jembatan" langsung ke 400.000 prajurit melalui satu kali broadcast', color: '#8B1A1A', icon: '📡' },
-  { num: '2', title: 'Eksekusi Serentak', desc: 'Semua prajurit like, share, dan upload konten ke 6 platform media sosial secara bersamaan dalam hitungan menit', color: '#14532D', icon: '⚡' },
-  { num: '3', title: 'Efek KBT', desc: '1,2 juta anggota Keluarga Besar TNI (KBT) ikut menyebarkan ke grup WhatsApp, komunitas RT/RW, dan tetangga mereka', color: '#0F766E', icon: '👨‍👩‍👧‍👦' },
-  { num: '4', title: 'Algoritma Terpicu', desc: 'Engagement masif dalam waktu singkat memicu algoritma trending di YouTube, Instagram, TikTok, dan X sekaligus', color: '#6D28D9', icon: '📈' },
-  { num: '5', title: 'Viral Organik', desc: 'Konten yang sudah trending menarik audiens baru secara organik — snowball effect menuju jangkauan 16 juta+', color: GOLD, icon: '🚀' },
+  { num: '1', title: 'Misi Terkoordinasi', desc: 'DISPENAD mengirim instruksi langsung ke 400.000 prajurit melalui satu kali broadcast', color: '#8B1A1A' },
+  { num: '2', title: 'Eksekusi Serentak', desc: 'Semua prajurit like, share, dan upload konten ke 6 platform media sosial secara bersamaan', color: '#1B4332' },
+  { num: '3', title: 'Efek Keluarga Besar TNI (KBT)', desc: '1,2 juta anggota KBT ikut menyebarkan ke grup WhatsApp, komunitas RT/RW, dan tetangga', color: '#0F766E' },
+  { num: '4', title: 'Algoritma Terpicu', desc: 'Engagement masif memicu algoritma trending di YouTube, Instagram, TikTok, dan X sekaligus', color: '#6D28D9' },
+  { num: '5', title: 'Viral Organik', desc: 'Konten trending menarik audiens baru secara organik — snowball effect menuju 16 juta+ jangkauan', color: '#B8860B' },
 ];
 
 export const WhySinar = () => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
-  const titleOp = interpolate(frame, [0, 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const titleOp = interpolate(frame, [0, 20], [0, 1], CLAMP);
+  const titleY = interpolate(frame, [0, 20], [15, 0], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: DARK, fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, #030806, #081510, #030806)' }} />
-
-      {/* Title */}
-      <div style={{ position: 'absolute', top: 50, left: 0, right: 0, textAlign: 'center', opacity: titleOp, zIndex: 20 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: 'rgba(184,134,11,0.7)', letterSpacing: 6, marginBottom: 10 }}>
-          MENGAPA SINAR EFEKTIF?
-        </div>
-        <h2 style={{ fontSize: 44, fontWeight: 800, color: '#fff', margin: 0 }}>
-          5 Langkah Menuju <span style={{ color: GOLD }}>158× Jangkauan</span>
-        </h2>
+    <AbsoluteFill style={{ background: BG, fontFamily: FONT }}>
+      {/* Top bar */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 48,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 80px',
+        borderBottom: `1px solid ${CARD_BORDER}`,
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 2, fontFamily: FONT_MONO }}>
+          MENGAPA SINAR
+        </span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 2, fontFamily: FONT_MONO }}>
+          SINAR PLATFORM
+        </span>
       </div>
 
-      {/* Steps — large cards in a column */}
-      <div style={{ position: 'absolute', top: 170, bottom: 50, left: 80, right: 80, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'center' }}>
-        {steps.map((step, i) => {
-          const appear = spring({ frame: frame - 15 - i * 10, fps: 30, config: { damping: 20 } });
-          return (
-            <div key={i} style={{
-              opacity: appear,
-              display: 'flex', alignItems: 'center', gap: 20,
-              padding: '18px 28px', borderRadius: 16,
-              background: 'rgba(255,255,255,0.03)',
-              border: `1px solid ${step.color}25`,
-              borderLeft: `4px solid ${step.color}`,
-            }}>
-              {/* Number + Icon */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: step.color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 20px ${step.color}30` }}>
-                  <span style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{step.num}</span>
+      {/* Content area */}
+      <div style={{
+        position: 'absolute', top: 48, bottom: 48, left: 80, right: 80,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        gap: 20,
+      }}>
+        {/* Title */}
+        <div style={{ opacity: titleOp, transform: `translateY(${titleY}px)`, marginBottom: 8 }}>
+          <h2 style={{ fontSize: 42, fontWeight: 800, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.15 }}>
+            5 Langkah Menuju{' '}
+            <span style={{ background: 'linear-gradient(90deg, #1B4332, #B8860B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              158x Jangkauan
+            </span>
+          </h2>
+          <p style={{ fontSize: 17, color: TEXT_MUTED, margin: '8px 0 0', fontWeight: 500 }}>
+            Dari satu instruksi ke jutaan jangkauan organik
+          </p>
+        </div>
+
+        {/* Step cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {steps.map((step, i) => {
+            const appear = spring({ frame: frame - 12 - i * 8, fps, config: { damping: 22, mass: 0.7 } });
+            return (
+              <div key={i} style={{
+                opacity: appear,
+                transform: `translateX(${(1 - appear) * 30}px)`,
+                display: 'flex', alignItems: 'center', gap: 20,
+                padding: '18px 24px',
+                background: CARD_BG,
+                border: `1px solid ${CARD_BORDER}`,
+                borderLeft: `4px solid ${step.color}`,
+                borderRadius: 6,
+              }}>
+                {/* Step number */}
+                <div style={{
+                  fontSize: 40, fontWeight: 800, color: '#E8E4DD',
+                  fontFamily: FONT_MONO, lineHeight: 1, flexShrink: 0, width: 48, textAlign: 'center',
+                }}>
+                  {step.num}
                 </div>
-                <span style={{ fontSize: 28 }}>{step.icon}</span>
-              </div>
 
-              {/* Text */}
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: 0 }}>{step.title}</p>
-                <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', margin: '4px 0 0', lineHeight: 1.5 }}>{step.desc}</p>
-              </div>
+                {/* Colored indicator circle */}
+                <div style={{
+                  width: 10, height: 10, borderRadius: '50%', background: step.color, flexShrink: 0,
+                }} />
 
-              {/* Arrow indicator */}
-              {i < 4 && (
-                <div style={{ position: 'absolute', right: -20, color: `${GOLD}40`, fontSize: 20 }}>↓</div>
-              )}
-            </div>
-          );
-        })}
+                {/* Text */}
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>
+                    {step.title}
+                  </p>
+                  <p style={{ fontSize: 14, color: TEXT_MUTED, margin: '4px 0 0', lineHeight: 1.5 }}>
+                    {step.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: 48,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 80px',
+        borderTop: `1px solid ${CARD_BORDER}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(90deg, #1B4332, #B8860B)' }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_MUTED, fontFamily: FONT_MONO }}>sinar.id</span>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_MUTED, fontFamily: FONT_MONO }}>07</span>
       </div>
     </AbsoluteFill>
   );

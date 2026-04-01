@@ -198,7 +198,7 @@ export const MissionTypes = () => {
           fontWeight: 900,
           color: '#fff',
           letterSpacing: -0.5,
-          marginBottom: 40,
+          marginBottom: 20,
           textAlign: 'center',
         }}
       >
@@ -263,7 +263,7 @@ export const MissionTypes = () => {
           fontSize: 18,
           color: 'rgba(255,255,255,0.6)',
           fontWeight: 500,
-          marginTop: 32,
+          marginTop: 16,
           textAlign: 'center',
           letterSpacing: 0.3,
         }}
