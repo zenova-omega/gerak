@@ -113,3 +113,30 @@ class PaginatedResponse(BaseModel):
     page: int
     per_page: int
     pages: int
+
+
+class WatchTopicCreate(BaseModel):
+    label: str
+    query: str
+    sources: list[str] = ["rss"]
+    browserless_targets: list[str] | None = None
+    crawl_interval_minutes: int = 60
+
+
+class WatchTopicUpdate(BaseModel):
+    label: str | None = None
+    query: str | None = None
+    sources: list[str] | None = None
+    browserless_targets: list[str] | None = None
+    is_active: bool | None = None
+    crawl_interval_minutes: int | None = None
+
+
+class N8nItem(BaseModel):
+    topic_id: str
+    url: str
+    title: str | None = None
+    text: str = ""
+    author: str | None = None
+    platform: str | None = "web"
+    published_at: datetime | None = None

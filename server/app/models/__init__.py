@@ -3,6 +3,7 @@ from .mission import Mission, MissionJoin, Submission, MissionType, MissionStatu
 from .xp import XPTransaction, Badge, UserBadge, ShopItem, ShopOrder
 from .broadcast import Broadcast, Kodam, SystemSetting
 from .audit import AuditLog
+from .pulse import WatchTopic, Issue, SourceItem
 
 __all__ = [
     "User", "FamilyLink", "Role", "AccountType", "RankLevel", "Tier",
@@ -10,4 +11,5 @@ __all__ = [
     "XPTransaction", "Badge", "UserBadge", "ShopItem", "ShopOrder",
     "Broadcast", "Kodam", "SystemSetting",
     "AuditLog",
+    "WatchTopic", "Issue", "SourceItem",
 ]
