@@ -829,8 +829,8 @@ export default function App(){
   const [filter,setFilter]=useState('Semua');
   const [consent,setConsent]=useState(false);
   const [started,setStarted]=useState(false);
-  const [showSplash,setShowSplash]=useState(mode==='member');
-  useEffect(()=>{if(showSplash){const t=setTimeout(()=>setShowSplash(false),3200);return()=>clearTimeout(t);}},[showSplash]);
+  const [showSplash,setShowSplash]=useState(()=>{try{return mode==='member'&&!localStorage.getItem('sinar_splash_seen');}catch{return mode==='member';}});
+  useEffect(()=>{if(showSplash){try{localStorage.setItem('sinar_splash_seen','1');}catch{}const t=setTimeout(()=>setShowSplash(false),3200);return()=>clearTimeout(t);}},[showSplash]);
 
   /* ─── ACCOUNT & USER DATA ───────────────────────────────────────── */
   const [accountType,setAccountType]=useState('prajurit'); // 'prajurit' | 'suami' | 'istri' | 'anak'
@@ -1396,7 +1396,7 @@ export default function App(){
       <div className="stagger-7" style={{marginBottom:16}}>
         <div className="flex gap-2">
           {[
-            {icon:'add_task',label:'Buat Misi',color:C.primary,bg:C.primaryLight,action:()=>showToast('Segera hadir!')},
+            {icon:'flag',label:'Misi Saya',color:C.primary,bg:C.primaryLight,action:()=>nav('misi')},
             {icon:'qr_code_scanner',label:'Scan QR',color:C.teal,bg:C.tealLight,action:()=>showToast('Scan QR misi')},
             {icon:'share',label:'Undang',color:C.purple,bg:C.purpleLight,action:()=>showToast('Link undangan disalin!')},
             {icon:'help',label:'Panduan',color:C.orange,bg:C.orangeLight,action:()=>showToast('Panduan DISPENAD')},
@@ -1970,7 +1970,7 @@ export default function App(){
 
       {/* === KELOLA MISI === */}
       {adminTab==='missions'&&(()=>{
-        const missionTypes=['Semua','EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI'];
+        const missionTypes=['Semua','EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI','SURVEY'];
         const filteredMissions=adminMissionFilter==='Semua'?MISSIONS:MISSIONS.filter(m=>m.type===adminMissionFilter);
         const totalReach=filteredMissions.reduce((s,m)=>s+(m.participants||0)*120,0);
         const avgCompletion=Math.round(filteredMissions.reduce((s,m)=>s+(m.analytics?.completion||0),0)/filteredMissions.length);
