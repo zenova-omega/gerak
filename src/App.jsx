@@ -6043,7 +6043,7 @@ export default function App(){
       return()=>timers.forEach(clearTimeout);
     },[]);
 
-    const TOTAL_SLIDES=17; // slides 0-16
+    const TOTAL_SLIDES=18; // slides 0-17 (pricing removed; +Command Center & AI feature slides)
     const [subStep,setSubStep]=useState(0);
     // Slides with progressive reveal: slide index -> number of sub-steps
     // Slide 3: 5 workflow steps, Slide 6: 2 demo phases (send→mobilize→impact)
@@ -6535,8 +6535,70 @@ export default function App(){
         </SlideBase>);
       },
 
-      /* ── Paket Layanan — Pricing (Remotion) ── */
-      ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
+      /* ── Fitur: Command Center — 6 Modul ── */
+      ()=>(
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#050E09,#0A1A10,#050E09)'}}/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:1200}}>
+            <SinarMark size={52}/>
+            <SlideTitle size={42}>Command Center — <span style={{color:'#D4A843'}}>Satu Pusat Operasi</span></SlideTitle>
+            <GoldLine w={90}/>
+            <p style={{fontSize:18,color:'rgba(255,255,255,0.6)',marginTop:14,maxWidth:840,margin:'14px auto 0',lineHeight:1.6}}>Enam modul terpadu: dari mendengar isu sampai memproduksi konten dan menggerakkan engagement.</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginTop:34}}>
+              {[
+                {icon:'sensors',title:'Pulse',sub:'Social Listening',desc:'Pantau isu & post yang sedang dibicarakan, dedup & sentimen.',color:'#4ADE80'},
+                {icon:'ballot',title:'Survey',sub:'Polling & Hasil',desc:'Bangun survei, sebar sebagai misi, lihat hasil real-time.',color:'#D4A843'},
+                {icon:'auto_awesome',title:'Studio',sub:'Konten AI',desc:'Caption & meme dibuat AI, siap posting.',color:'#A78BFA'},
+                {icon:'schedule',title:'Scheduler',sub:'Distribusi',desc:'Jadwalkan posting ke akun resmi yang terhubung.',color:'#60A5FA'},
+                {icon:'groups',title:'Rally',sub:'Engagement',desc:'Ajak outlet meramaikan post resmi (sukarela).',color:'#F472B6'},
+                {icon:'flag',title:'Campaigns',sub:'Orkestrasi',desc:'Satukan listen → create → distribute → engage.',color:'#FB923C'},
+              ].map((c,i)=>(
+                <div key={i} style={{padding:'18px 18px',borderRadius:16,background:`${c.color}0D`,border:`1px solid ${c.color}26`,textAlign:'left'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <div style={{width:42,height:42,borderRadius:11,background:`${c.color}1A`,border:`1px solid ${c.color}33`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                      <MI name={c.icon} size={22} style={{color:c.color}}/>
+                    </div>
+                    <div>
+                      <p style={{fontSize:19,fontWeight:800,color:'#fff',lineHeight:1}}>{c.title}</p>
+                      <p style={{fontSize:11,color:c.color,fontWeight:600,letterSpacing:1,marginTop:3}}>{c.sub}</p>
+                    </div>
+                  </div>
+                  <p style={{fontSize:13,color:'rgba(255,255,255,0.55)',marginTop:12,lineHeight:1.5}}>{c.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </SlideBase>
+      ),
+
+      /* ── Fitur AI — AI di SCOUT ── */
+      ()=>(
+        <SlideBase>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(160deg,#0A0618,#140B2E,#050E09)'}}/>
+          <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:1080}}>
+            <div style={{width:64,height:64,borderRadius:18,background:'rgba(167,139,250,0.15)',border:'1px solid rgba(167,139,250,0.35)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto'}}>
+              <MI name="auto_awesome" size={32} style={{color:'#A78BFA'}}/>
+            </div>
+            <SlideTitle size={44}>AI di <span style={{color:'#A78BFA'}}>SCOUT</span></SlideTitle>
+            <GoldLine w={90}/>
+            <p style={{fontSize:19,color:'rgba(255,255,255,0.65)',marginTop:14,maxWidth:800,margin:'14px auto 0',lineHeight:1.6}}>AI menyatu di setiap langkah — dari memahami isu sampai memproduksi konten.</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:18,marginTop:36}}>
+              {[
+                {icon:'insights',title:'Pahami',desc:'Ringkasan & sentimen isu otomatis dari listening (Pulse).',color:'#4ADE80'},
+                {icon:'edit_note',title:'Produksi',desc:'Caption & meme dibuat AI dengan nada pilihan (positif/netral) — Studio.',color:'#A78BFA'},
+                {icon:'lightbulb',title:'Arahkan',desc:'Saran poin arahan positif untuk engagement sukarela (Rally).',color:'#D4A843'},
+              ].map((c,i)=>(
+                <div key={i} style={{padding:'24px 20px',borderRadius:16,background:`${c.color}0D`,border:`1px solid ${c.color}26`,textAlign:'left'}}>
+                  <MI name={c.icon} size={28} style={{color:c.color}}/>
+                  <p style={{fontSize:20,fontWeight:800,color:'#fff',marginTop:12}}>{c.title}</p>
+                  <p style={{fontSize:13,color:'rgba(255,255,255,0.55)',marginTop:8,lineHeight:1.5}}>{c.desc}</p>
+                </div>
+              ))}
+            </div>
+            <p style={{fontSize:12,color:'rgba(255,255,255,0.3)',letterSpacing:2,marginTop:28}}>Didukung model Claude · arsitektur pluggable</p>
+          </div>
+        </SlideBase>
+      ),
 
       /* ── CTA — V2 Style ── */
       ()=>(
@@ -6625,8 +6687,7 @@ export default function App(){
       9:{component:TechPlatformV2,frames:LONG},
       10:{component:GamifikasiRewardV2,frames:LONG},
       11:{component:TokoPoinV2,frames:LONG},
-      14:{component:PaketLayananV2,frames:LONG},
-      16:{component:ClosingQuoteV2,frames:LONG},
+      17:{component:ClosingQuoteV2,frames:LONG},
     };
     const remotionSlide=REMOTION_SLIDES[slide];
 
