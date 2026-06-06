@@ -29,7 +29,7 @@
     "react-globe.gl": "^2.37.0",
     "react-router-dom": "^7.13.1",
     "react-simple-maps": "^3.0.0",
-    "recharts": "^3.8.1",
+    "recharts": "^2.15.4",
     "remotion": "^4.0.441"
   },
   "devDependencies": {
@@ -42,6 +42,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "playwright-core": "^1.60.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.19",
     "vite": "^8.0.0-beta.13"
