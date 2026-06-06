@@ -34,6 +34,9 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads"
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    if settings.ENABLE_SCHEDULER:
+        from .services.scheduler import start_scheduler
+        start_scheduler()
 
 
 @app.get("/api/health")
