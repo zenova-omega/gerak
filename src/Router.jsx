@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 // Lazy-load pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const LegacyApp = lazy(() => import('./App'));
+const CommandCenter = lazy(() => import('./pages/admin/CommandCenter'));
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -31,6 +32,11 @@ export default function Router() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/command-center/*" element={
+            <ProtectedRoute>
+              <CommandCenter />
+            </ProtectedRoute>
+          } />
           <Route path="/*" element={
             <ProtectedRoute>
               <LegacyApp />
