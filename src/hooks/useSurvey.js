@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useApi, useMutation } from './useApi';
-import api from '../lib/api';
+import api, { ApiError } from '../lib/api';
 
 const MOCK_SURVEYS = [
   { id: 'sv1', title: 'Kepuasan Kegiatan Bakti Sosial', description: 'Polling singkat pasca-kegiatan', status: 'open', mission_id: 'm-sv1', response_count: 128,
@@ -61,7 +61,12 @@ export async function fetchSurvey(id) {
 export async function submitSurvey(id, answers) {
   try {
     return await api.post(`/surveys/${id}/respond`, { answers });
-  } catch {
-    return { response_id: 'demo', xp_awarded: 50 }; // demo fallback
+  } catch (err) {
+    // Re-throw real server errors so callers can surface them to the user.
+    // Only fall back to the demo result for network/offline failures (no numeric status).
+    if (err instanceof ApiError && typeof err.status === 'number') {
+      throw err;
+    }
+    return { response_id: 'demo', xp_awarded: 50 }; // offline/demo fallback
   }
 }

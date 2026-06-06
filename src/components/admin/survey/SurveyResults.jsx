@@ -41,8 +41,17 @@ function HorizBarChart({ data }) {
   );
 }
 
+const NEUTRAL = '#9A9486';
+
+function labelColor(label) {
+  if (!label) return NEUTRAL;
+  const l = label.toLowerCase();
+  if (l === 'ya' || l === 'yes' || l === 'iya') return GREEN;
+  if (l === 'tidak' || l === 'no' || l === 'bukan') return RED;
+  return NEUTRAL;
+}
+
 function DonutChart({ data }) {
-  const colors = [GREEN, RED];
   return (
     <div className="flex items-center gap-6">
       <ResponsiveContainer width={160} height={160}>
@@ -58,7 +67,7 @@ function DonutChart({ data }) {
             paddingAngle={3}
           >
             {data.map((entry, i) => (
-              <Cell key={i} fill={colors[i % colors.length]} />
+              <Cell key={i} fill={labelColor(entry.label)} />
             ))}
           </Pie>
           <Tooltip
@@ -72,7 +81,7 @@ function DonutChart({ data }) {
           <div key={i} className="flex items-center gap-2 text-sm">
             <span
               className="inline-block h-3 w-3 rounded-full"
-              style={{ background: colors[i % colors.length] }}
+              style={{ background: labelColor(d.label) }}
             />
             <span className="font-semibold text-[#1B4332]">{d.label}</span>
             <span className="text-[#6B6555]">{d.pct != null ? `${d.pct}%` : d.count}</span>
@@ -89,7 +98,7 @@ function RatingChart({ average, distribution }) {
       <div className="flex items-end gap-2">
         <span className="text-4xl font-black text-[#1B4332]">{average?.toFixed(1)}</span>
         <div className="mb-1 flex items-center gap-1 text-[#D4A843]">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: distribution.length || 5 }).map((_, i) => (
             <Star key={i} size={14} fill={i < Math.round(average) ? '#D4A843' : 'none'} />
           ))}
           <span className="ml-1 text-xs text-[#6B6555]">rata-rata</span>
@@ -169,7 +178,7 @@ export default function SurveyResults({ surveyId }) {
       <div className="rounded-2xl bg-white p-4 shadow-sm flex items-center gap-4">
         <div className="flex-1">
           <h2 className="text-base font-black text-[#1B4332]">{results.title}</h2>
-          <p className="text-xs text-[#6B6555]">Hasil survey — data langsung dari responden</p>
+          <p className="text-xs text-[#6B6555]">Ringkasan jawaban responden</p>
         </div>
         <div className="flex items-center gap-2 rounded-full bg-[#F5F3EE] px-4 py-2">
           <Users size={15} className="text-[#2D6A4F]" />

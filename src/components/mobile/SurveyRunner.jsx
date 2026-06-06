@@ -19,12 +19,14 @@ const P = {
 
 function SingleChoice({ question, value, onChange }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {(question.options || []).map((opt) => {
+    <div role="radiogroup" aria-label={question.text} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {(question.options || []).map((opt, i) => {
         const selected = value === opt;
         return (
           <button
-            key={opt}
+            key={i}
+            role="radio"
+            aria-checked={selected}
             onClick={() => onChange(opt)}
             style={{
               width: '100%',
@@ -71,12 +73,13 @@ function MultipleChoice({ question, value, onChange }) {
     onChange(next.length ? next : undefined);
   };
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {(question.options || []).map((opt) => {
+    <div role="group" aria-label={question.text} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {(question.options || []).map((opt, i) => {
         const selected = arr.includes(opt);
         return (
           <button
-            key={opt}
+            key={i}
+            aria-pressed={selected}
             onClick={() => toggle(opt)}
             style={{
               width: '100%',
@@ -121,12 +124,14 @@ function RatingControl({ question, value, onChange }) {
   const [hover, setHover] = useState(null);
   const active = hover !== null ? hover : value;
   return (
-    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+    <div role="group" aria-label={question.text} style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
       {Array.from({ length: max }, (_, i) => i + 1).map((n) => {
         const filled = active !== undefined && n <= active;
         return (
           <button
             key={n}
+            aria-label={`${n} dari ${max}`}
+            aria-pressed={value === n}
             onMouseEnter={() => setHover(n)}
             onMouseLeave={() => setHover(null)}
             onClick={() => onChange(n)}
@@ -157,14 +162,16 @@ function RatingControl({ question, value, onChange }) {
   );
 }
 
-function YesNo({ value, onChange }) {
+function YesNo({ question, value, onChange }) {
   return (
-    <div style={{ display: 'flex', gap: 12 }}>
+    <div role="radiogroup" aria-label={question?.text} style={{ display: 'flex', gap: 12 }}>
       {[{ label: 'Ya', val: true }, { label: 'Tidak', val: false }].map(({ label, val }) => {
         const selected = value === val;
         return (
           <button
             key={label}
+            role="radio"
+            aria-checked={selected}
             onClick={() => onChange(val)}
             style={{
               flex: 1,
@@ -192,7 +199,7 @@ function TextAnswer({ value, onChange }) {
     <textarea
       value={value || ''}
       onChange={(e) => onChange(e.target.value || undefined)}
-      placeholder="Tulis saran Anda di sini..."
+      placeholder="Tulis saran Anda di sini…"
       rows={5}
       style={{
         width: '100%',
@@ -307,6 +314,7 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [xpAwarded, setXpAwarded] = useState(50);
+  const [submitError, setSubmitError] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -334,7 +342,7 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
           borderTopColor: P.primary,
           animation: 'spin 0.8s linear infinite',
         }} />
-        <div style={{ color: P.muted, fontSize: 14 }}>Memuat survey...</div>
+        <div style={{ color: P.muted, fontSize: 14 }}>Memuat survey…</div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -365,7 +373,11 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
   const isAnswered = (() => {
     if (!q) return true;
     if (q.type === 'multiple') return Array.isArray(currentAnswer) && currentAnswer.length > 0;
-    if (q.type === 'text') return true; // text is always optional-safe
+    if (q.type === 'text') {
+      // Required text must have a non-empty trimmed value; non-required is always satisfied.
+      if (!q.required) return true;
+      return typeof currentAnswer === 'string' && currentAnswer.trim().length > 0;
+    }
     return currentAnswer !== undefined;
   })();
 
@@ -377,6 +389,7 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+    setSubmitError(null);
     const payload = questions
       .filter((qq) => answers[qq.id] !== undefined && answers[qq.id] !== '')
       .map((qq) => ({ question_id: qq.id, value: answers[qq.id] }));
@@ -385,7 +398,7 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
       setXpAwarded(result.xp_awarded || 50);
       setDone(true);
     } catch {
-      setDone(true);
+      setSubmitError('Gagal mengirim jawaban. Coba lagi.');
     } finally {
       setSubmitting(false);
     }
@@ -495,13 +508,51 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
               <RatingControl question={q} value={currentAnswer} onChange={setAnswer} />
             )}
             {q?.type === 'yesno' && (
-              <YesNo value={currentAnswer} onChange={setAnswer} />
+              <YesNo question={q} value={currentAnswer} onChange={setAnswer} />
             )}
             {q?.type === 'text' && (
               <TextAnswer value={currentAnswer} onChange={setAnswer} />
             )}
           </div>
         </div>
+
+        {/* Submit error banner */}
+        {submitError && (
+          <div style={{
+            margin: '0 20px 16px',
+            padding: '12px 16px',
+            borderRadius: 12,
+            background: 'rgba(220,38,38,0.08)',
+            border: '1.5px solid rgba(220,38,38,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}>
+            <span style={{ fontSize: 14, color: '#DC2626', fontWeight: 500, lineHeight: 1.4 }}>
+              {submitError}
+            </span>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              style={{
+                flexShrink: 0,
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#DC2626',
+                color: '#FFFFFF',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                opacity: submitting ? 0.7 : 1,
+                transition: 'opacity 0.15s ease',
+              }}
+            >
+              Coba lagi
+            </button>
+          </div>
+        )}
 
         {/* Navigation buttons */}
         <div style={{ padding: '0 20px', display: 'flex', gap: 12 }}>
@@ -577,7 +628,7 @@ export default function SurveyRunner({ surveyId, onBack, onComplete }) {
                 boxShadow: canProceed ? '0 4px 12px rgba(27,67,50,0.2)' : 'none',
               }}
             >
-              {submitting ? 'Mengirim...' : (
+              {submitting ? 'Mengirim…' : (
                 <>
                   <Check size={18} />
                   Kirim

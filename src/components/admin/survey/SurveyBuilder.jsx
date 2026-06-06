@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, GripVertical, X } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, X } from 'lucide-react';
 
 const QUESTION_TYPES = [
   { value: 'single',   label: 'Pilihan tunggal' },
@@ -13,7 +13,7 @@ function emptyQuestion() {
   return { _key: Math.random().toString(36).slice(2), type: 'single', text: '', options: ['', ''], rating_max: 5, required: true };
 }
 
-function QuestionEditor({ q, idx, onChange, onRemove }) {
+function QuestionEditor({ q, idx, onChange, onRemove, onMoveUp, onMoveDown, isFirst, isLast }) {
   function setField(field, val) { onChange({ ...q, [field]: val }); }
 
   function setOption(i, val) {
@@ -34,7 +34,24 @@ function QuestionEditor({ q, idx, onChange, onRemove }) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-[#F5F3EE] p-4">
       <div className="mb-3 flex items-center gap-2">
-        <GripVertical size={14} className="text-[#9A9486]" />
+        <div className="flex flex-col">
+          <button
+            onClick={onMoveUp}
+            disabled={isFirst}
+            title="Pindah ke atas"
+            className="rounded p-0.5 text-[#9A9486] transition hover:bg-[#EDEBE3] hover:text-[#1B4332] disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <ChevronUp size={14} />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={isLast}
+            title="Pindah ke bawah"
+            className="rounded p-0.5 text-[#9A9486] transition hover:bg-[#EDEBE3] hover:text-[#1B4332] disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <ChevronDown size={14} />
+          </button>
+        </div>
         <span className="text-[11px] font-bold uppercase tracking-widest text-[#9A9486]">
           Pertanyaan {idx + 1}
         </span>
@@ -153,6 +170,7 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
   );
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [saveError, setSaveError] = useState(null);
 
   function updateQuestion(idx, q) {
     setQuestions((qs) => qs.map((old, i) => (i === idx ? q : old)));
@@ -160,6 +178,16 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
 
   function removeQuestion(idx) {
     setQuestions((qs) => qs.filter((_, i) => i !== idx));
+  }
+
+  function moveQuestion(idx, direction) {
+    setQuestions((qs) => {
+      const next = [...qs];
+      const target = idx + direction;
+      if (target < 0 || target >= next.length) return qs;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
   }
 
   function addQuestion() {
@@ -171,7 +199,14 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
     if (!title.trim()) errs.title = 'Judul wajib diisi';
     if (questions.length === 0) errs.questions = 'Minimal satu pertanyaan';
     questions.forEach((q, i) => {
-      if (!q.text.trim()) errs[`q_${i}`] = `Pertanyaan ${i + 1} belum diisi`;
+      if (!q.text.trim()) {
+        errs[`q_${i}`] = `Pertanyaan ${i + 1}: teks belum diisi`;
+      } else if ((q.type === 'single' || q.type === 'multiple')) {
+        const nonEmpty = (q.options || []).filter((o) => o.trim());
+        if (nonEmpty.length < 2) errs[`q_${i}`] = `Pertanyaan ${i + 1}: butuh minimal 2 pilihan yang tidak kosong`;
+      } else if (q.type === 'rating' && (q.rating_max == null || q.rating_max < 2)) {
+        errs[`q_${i}`] = `Pertanyaan ${i + 1}: skala rating minimal 2`;
+      }
     });
     return errs;
   }
@@ -180,6 +215,7 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setSaving(true);
+    setSaveError(null);
     const payload = {
       title: title.trim(),
       description: description.trim(),
@@ -194,6 +230,8 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
     };
     try {
       await onSave(payload);
+    } catch {
+      setSaveError('Gagal menyimpan survey. Coba lagi.');
     } finally {
       setSaving(false);
     }
@@ -219,7 +257,7 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Opsional — jelaskan tujuan survey ini…"
+            placeholder="Opsional. Jelaskan tujuan survey ini…"
             rows={2}
             className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm text-[#2B2B2B] outline-none placeholder:text-[#9A9486] focus:border-[#2D6A4F] focus:ring-1 focus:ring-[#2D6A4F]"
           />
@@ -235,6 +273,10 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
               idx={i}
               onChange={(updated) => updateQuestion(i, updated)}
               onRemove={() => removeQuestion(i)}
+              onMoveUp={() => moveQuestion(i, -1)}
+              onMoveDown={() => moveQuestion(i, 1)}
+              isFirst={i === 0}
+              isLast={i === questions.length - 1}
             />
             {errors[`q_${i}`] && (
               <p className="mt-1 text-[11px] text-red-500 pl-2">{errors[`q_${i}`]}</p>
@@ -254,6 +296,20 @@ export default function SurveyBuilder({ initial, onSave, onCancel }) {
         <Plus size={16} />
         Tambah pertanyaan
       </button>
+
+      {/* Save error banner */}
+      {saveError && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <span className="text-sm font-medium text-red-600">{saveError}</span>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-red-700 disabled:opacity-60"
+          >
+            Coba lagi
+          </button>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-1">
