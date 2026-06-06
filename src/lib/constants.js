@@ -33,7 +33,7 @@ const ACCOUNT_TYPES={
   anak:{label:'Anak',desc:'Anak prajurit TNI AD',color:C.purple,icon:'school',xpMultiplier:0.5,missionTypes:['KONTEN','ENGAGEMENT']},
 };
 
-const typeColor=t=>({EVENT:C.purple,KONTEN:C.primary,ENGAGEMENT:C.orange,EDUKASI:C.secondary,AKSI:C.accent}[t]||C.primary);
+const typeColor=t=>({EVENT:C.purple,KONTEN:C.primary,ENGAGEMENT:C.orange,EDUKASI:C.secondary,AKSI:C.accent,SURVEY:'#6D28D9'}[t]||C.primary);
 
 const typeBonuses=t=>({
   EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:settingsXP?.EVENT?.base||200,color:C.purple}],

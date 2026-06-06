@@ -39,3 +39,29 @@ export function useSurveyResults(id) {
   const { data, loading, error, refetch } = useApi(id ? `/admin/surveys/${id}/results` : '/admin/surveys/none/results', { defaultData: MOCK_RESULTS, enabled: !!id });
   return { results: data, loading, error, refetch };
 }
+
+const MOCK_SURVEY = {
+  id: 'sv1', title: 'Kepuasan Kegiatan Bakti Sosial', description: 'Bantu kami menilai kegiatan kemarin. Hanya 4 pertanyaan singkat.', status: 'open',
+  questions: [
+    { id: 'q1', order: 0, type: 'single', text: 'Seberapa puas Anda dengan kegiatan?', options: ['Sangat puas', 'Puas', 'Biasa', 'Kurang'], rating_max: 5, required: true },
+    { id: 'q2', order: 1, type: 'rating', text: 'Nilai keseluruhan kegiatan (1-5)', options: null, rating_max: 5, required: true },
+    { id: 'q3', order: 2, type: 'yesno', text: 'Apakah Anda akan ikut kegiatan serupa lagi?', options: null, rating_max: 5, required: true },
+    { id: 'q4', order: 3, type: 'text', text: 'Saran untuk kegiatan berikutnya?', options: null, rating_max: 5, required: false },
+  ],
+};
+
+export async function fetchSurvey(id) {
+  try {
+    return await api.get(`/surveys/${id}`);
+  } catch {
+    return MOCK_SURVEY;
+  }
+}
+
+export async function submitSurvey(id, answers) {
+  try {
+    return await api.post(`/surveys/${id}/respond`, { answers });
+  } catch {
+    return { response_id: 'demo', xp_awarded: 50 }; // demo fallback
+  }
+}

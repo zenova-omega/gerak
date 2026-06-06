@@ -43,6 +43,7 @@ import {
   Gauge, Bot, Mic, Landmark, ListTodo, ClipboardList, Coffee,
   HelpCircle, Droplets, CheckSquare, Instagram, Youtube
 } from 'lucide-react';
+import SurveyRunner from './components/mobile/SurveyRunner';
 
 /* ─── PLACEHOLDER IMAGES — Contextual Military SVG ───────────────── */
 const AVATAR_COLORS={
@@ -2917,6 +2918,9 @@ export default function App(){
   /* ─── DETAIL MISI (Stepped Flow) ─────────────────────────────────── */
   function DetailMisi(){
     const m=sel||MISSIONS[0];const tc=typeColor(m.type);
+    if (m.type === 'SURVEY') {
+      return <SurveyRunner surveyId={(m.type_config && m.type_config.survey_id) || 'sv1'} onBack={() => nav('misi')} onComplete={() => nav('misi')} />;
+    }
     const jm=joinedMissions[m.id]; // joined mission state
     const isJoined=!!jm;
     const [step,setStep]=useState(()=>{

@@ -116,6 +116,13 @@ const MISSIONS=[
     eventSpec:{location:'Kodam I/Bukit Barisan & Lokasi Bencana, Sumbar',date:'22 Mar 2026, 09:00',capacity:30,checkin:'Akreditasi Khusus',lat:-0.9492,lng:100.3543,note:'KEAMANAN TINGGI — Akreditasi dari Puspen TNI AD wajib. Dress code formal. Koordinasi dengan Ajudan KASAD.'},
     contentSpec:{format:'Foto + Video',minPhotos:20,videoDuration:'120-300 detik',note:'Foto: KASAD inspeksi pasukan, KASAD menyapa pengungsi, KASAD memimpin rapat koordinasi. Video: pidato KASAD, suasana kunjungan.'},
     templates:['KASAD tinjau langsung penanganan bencana di Sumbar. "TNI AD akan terus hadir untuk rakyat" — Jenderal TNI.','Kunjungan KASAD ke Sumatera Barat: Pastikan setiap korban bencana mendapat pertolongan maksimal dari TNI AD.']},
+  /* ─── SURVEY — Polling & feedback ─── */
+  {id:16,type:'SURVEY',title:'Survey: Kepuasan Bakti Sosial',
+    desc:'Bantu kami menilai kegiatan bakti sosial kemarin. Hanya 4 pertanyaan singkat untuk meningkatkan kegiatan berikutnya.',
+    xp:50,bonus:0,participants:0,status:'TERBUKA',deadline:'30 Jun 2026',
+    analytics:{completion:0,avgTime:'3 menit',topCity:'-',reach:'0',engagement:'0%',sentiment:0,conversionRate:'0%'},
+    type_config:{ survey_id:'sv1' },
+    templates:[]},
 ];
 
 export { MISSIONS };
