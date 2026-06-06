@@ -45,7 +45,7 @@ async def health():
 
 
 # Import and register routers
-from .routers import auth, missions, users, admin, pulse, survey, survey_admin, studio, scheduler, rally, rally_admin
+from .routers import auth, missions, users, admin, pulse, survey, survey_admin, studio, scheduler, rally, rally_admin, campaign
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(missions.router, prefix="/api/missions", tags=["missions"])
@@ -58,3 +58,4 @@ app.include_router(studio.router, prefix="/api/admin/studio", tags=["studio"])
 app.include_router(scheduler.router, prefix="/api/admin/scheduler", tags=["scheduler"])
 app.include_router(rally_admin.router, prefix="/api/admin/rally", tags=["rally-admin"])
 app.include_router(rally.router, prefix="/api/rally", tags=["rally"])
+app.include_router(campaign.router, prefix="/api/admin/campaigns", tags=["campaigns"])

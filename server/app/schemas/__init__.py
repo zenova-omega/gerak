@@ -222,3 +222,16 @@ class RallyCreate(BaseModel):
     post_url: str
     talking_points: str = ""
     target: str = "Semua outlet"
+
+
+class CampaignCreate(BaseModel):
+    name: str
+    objective: str = ""
+    source_issue_id: str | None = None
+
+
+class CampaignUpdate(BaseModel):
+    name: str | None = None
+    objective: str | None = None
+    status: str | None = None
+    pipeline: dict | None = None

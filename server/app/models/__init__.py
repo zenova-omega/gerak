@@ -8,6 +8,7 @@ from .survey import Survey, SurveyQuestion, SurveyResponse, SurveyAnswer
 from .studio import ContentDraft
 from .scheduler import ConnectedAccount, ScheduledPost
 from .rally import EngagementRally, RallyAck
+from .campaign import Campaign
 
 __all__ = [
     "User", "FamilyLink", "Role", "AccountType", "RankLevel", "Tier",
@@ -20,4 +21,5 @@ __all__ = [
     "ContentDraft",
     "ConnectedAccount", "ScheduledPost",
     "EngagementRally", "RallyAck",
+    "Campaign",
 ]
