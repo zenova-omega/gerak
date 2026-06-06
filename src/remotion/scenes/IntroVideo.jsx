@@ -20,7 +20,7 @@ const BG_GRADIENT = 'linear-gradient(160deg, #0B2619, #1A1814)';
 const OVERLAY = 'linear-gradient(180deg, #0B2619E6 0%, #1A1814CC 50%, #1A1814F2 100%)';
 const BG_FILTER = 'brightness(0.15) contrast(1.2) saturate(0.3)';
 
-/* SINAR shield logo */
+/* SCOUT shield logo */
 function SinarMark({ size = 110, opacity = 1 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" style={{ opacity }}>
@@ -74,7 +74,7 @@ export const IntroVideo = () => {
   const s1Op = interpolate(frame, [0, 20, 100, 120], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const s1StatScale = spring({ frame: frame - 15, fps, config: { damping: 12 } });
 
-  // === SCENE 2 (120-270): SINAR — THE SOLUTION ===
+  // === SCENE 2 (120-270): SCOUT — THE SOLUTION ===
   const s2Op = interpolate(frame, [120, 140, 250, 270], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const logoScale = spring({ frame: frame - 130, fps, config: { damping: 14 } });
 
@@ -120,7 +120,7 @@ export const IntroVideo = () => {
       {/* Top bar */}
       <div style={{ position: 'absolute', top: 32, left: 48, right: 48, display: 'flex', justifyContent: 'space-between', zIndex: 20 }}>
         <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>VIDEO DEMO</span>
-        <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>SINAR PITCH DECK</span>
+        <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>SCOUT PITCH DECK</span>
       </div>
 
       {/* Bottom bar */}
@@ -149,12 +149,12 @@ export const IntroVideo = () => {
       </div>
       <Subtitle text="Di era digital, citra positif kalah cepat dari sentimen negatif." frame={frame} startFrame={10} endFrame={110} />
 
-      {/* === SCENE 2: SINAR === */}
+      {/* === SCENE 2: SCOUT === */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: s2Op, zIndex: 10 }}>
         <div style={{ transform: `scale(${logoScale})`, marginBottom: 16 }}>
           <SinarMark size={100} />
         </div>
-        <h1 style={{ fontSize: 72, fontWeight: 900, color: '#FFFFFF', letterSpacing: 16, margin: '0 0 8px', fontFamily: FONT }}>SINAR</h1>
+        <h1 style={{ fontSize: 72, fontWeight: 900, color: '#FFFFFF', letterSpacing: 16, margin: '0 0 8px', fontFamily: FONT }}>SCOUT</h1>
         <p style={{ fontSize: 16, fontWeight: 600, color: GOLD, letterSpacing: 6, margin: '0 0 28px', fontFamily: FONT }}>
           SISTEM INFORMASI NARASI AKTIF RAKYAT
         </p>
@@ -246,7 +246,7 @@ export const IntroVideo = () => {
           TNI AD &nbsp;·&nbsp; DISPENAD &nbsp;·&nbsp; 2026
         </p>
       </div>
-      <Subtitle text="SINAR — narasi positif dimulai dari kita." frame={frame} startFrame={415} endFrame={540} />
+      <Subtitle text="SCOUT — narasi positif dimulai dari kita." frame={frame} startFrame={415} endFrame={540} />
     </AbsoluteFill>
   );
 };

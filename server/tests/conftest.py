@@ -1,4 +1,4 @@
-"""Test fixtures for SINAR API."""
+"""Test fixtures for SCOUT API."""
 import pytest
 import asyncio
 from httpx import AsyncClient, ASGITransport

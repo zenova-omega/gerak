@@ -93,7 +93,7 @@ function BigArrow({ frame, startFrame }) {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, opacity: op * pulse, margin: '0 20px' }}>
       <div style={{ width: 60, height: 2, background: GRADIENT_ACCENT, borderRadius: 1 }} />
       <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '8px 0 8px 14px', borderColor: `transparent transparent transparent ${GOLD}`, marginLeft: 2 }} />
-      <span style={{ fontSize: 12, fontWeight: 800, color: GOLD, letterSpacing: 2, fontFamily: FONT_MONO }}>SINAR</span>
+      <span style={{ fontSize: 12, fontWeight: 800, color: GOLD, letterSpacing: 2, fontFamily: FONT_MONO }}>SCOUT</span>
     </div>
   );
 }
@@ -149,11 +149,11 @@ export const BeforeAfter = () => {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0,
       }}>
 
-        {/* LEFT — TANPA SINAR */}
+        {/* LEFT — TANPA SCOUT */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ opacity: leftLabelOp, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: RED }} />
-            <span style={{ fontSize: 16, fontWeight: 800, color: RED, letterSpacing: 2, fontFamily: FONT_MONO }}>TANPA SINAR</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: RED, letterSpacing: 2, fontFamily: FONT_MONO }}>TANPA SCOUT</span>
           </div>
 
           <YouTubeCard
@@ -194,11 +194,11 @@ export const BeforeAfter = () => {
         {/* ARROW */}
         <BigArrow frame={frame} startFrame={75} />
 
-        {/* RIGHT — DENGAN SINAR */}
+        {/* RIGHT — DENGAN SCOUT */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ opacity: rightLabelOp, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
-            <span style={{ fontSize: 16, fontWeight: 800, color: GREEN, letterSpacing: 2, fontFamily: FONT_MONO }}>DENGAN SINAR</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: GREEN, letterSpacing: 2, fontFamily: FONT_MONO }}>DENGAN SCOUT</span>
           </div>
 
           <YouTubeCard

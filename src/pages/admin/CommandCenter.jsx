@@ -14,11 +14,11 @@ export default function CommandCenter() {
     <div className="flex min-h-screen bg-[#F5F3EE] text-[#2B2B2B]">
       <aside className="flex w-60 shrink-0 flex-col bg-[#1B4332] p-4 text-white">
         <div className="mb-6">
-          <div className="text-base font-black tracking-[0.2em] text-white">SINAR</div>
+          <div className="text-base font-black tracking-[0.2em] text-white">SCOUT</div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-[#D4A843]">Command Center</div>
         </div>
 
-        {/* Operasi — links back into the legacy SINAR admin shell */}
+        {/* Operasi — links back into the legacy SCOUT admin shell */}
         <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">Operasi</p>
         <nav className="space-y-1">
           {OPERASI_ITEMS.map((o) => (

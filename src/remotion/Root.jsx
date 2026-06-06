@@ -88,7 +88,7 @@ export const RemotionRoot = () => {
         width={1920}
         height={1080}
       />
-      {/* Why SINAR works — 20 seconds */}
+      {/* Why SCOUT works — 20 seconds */}
       <Composition
         id="WhySinar"
         component={WhySinar}
@@ -144,7 +144,7 @@ export const RemotionRoot = () => {
         height={1080}
       />
 
-      {/* ── V2: Apa Itu SINAR ── */}
+      {/* ── V2: Apa Itu SCOUT ── */}
       <Composition
         id="ApaItuSinarV2"
         component={ApaItuSinarV2}

@@ -19,7 +19,7 @@ def mock_captions(prompt: str, tone: str, n: int) -> list[str]:
     base = (prompt or "konten").strip()
     hooks = ["", "Yuk simak: ", "Penting! ", "Update: ", "Tahukah kamu? ", "Bangga: "]
     emoji = {"positif": "💪", "negatif": "⚠️", "netral": "📌", "custom": "✨"}.get(tone, "📌")
-    return [f"{emoji} {hooks[i % len(hooks)]}{base} #SINAR #TNIAD".strip() for i in range(max(1, n))]
+    return [f"{emoji} {hooks[i % len(hooks)]}{base} #SCOUT #TNIAD".strip() for i in range(max(1, n))]
 
 
 def _parse_variants(out: str, n: int) -> list[str]:
@@ -54,7 +54,7 @@ async def generate_meme(prompt: str, custom: str | None = None) -> dict:
     base = (prompt or "Konten").strip()
     if ai is None:
         top = base[:40]
-        return {"caption": f"{top} / #SINAR", "top_text": top, "bottom_text": "#SINAR #TNIAD", "image_url": None}
+        return {"caption": f"{top} / #SCOUT", "top_text": top, "bottom_text": "#SCOUT #TNIAD", "image_url": None}
     system = "Kamu kreator meme. Buat teks meme singkat & catchy."
     p = (
         f'Buat satu meme untuk topik: "{prompt}". '
@@ -65,7 +65,7 @@ async def generate_meme(prompt: str, custom: str | None = None) -> dict:
         out = await ai.generate_text(p, system=system, max_tokens=120)
         lines = [l.strip() for l in out.splitlines() if l.strip()]
         top = lines[0] if lines else base[:40]
-        bottom = lines[1] if len(lines) > 1 else "#SINAR"
+        bottom = lines[1] if len(lines) > 1 else "#SCOUT"
     except Exception:
-        top, bottom = base[:40], "#SINAR #TNIAD"
+        top, bottom = base[:40], "#SCOUT #TNIAD"
     return {"caption": f"{top} / {bottom}", "top_text": top, "bottom_text": bottom, "image_url": None}

@@ -1,4 +1,4 @@
-// SINAR Constants — extracted from App.jsx
+// SCOUT Constants — extracted from App.jsx
 // Color palette, account types, utility functions
 
 const C={

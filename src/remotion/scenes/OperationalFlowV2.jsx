@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_ACCENT = '#2D6A4F';
 const GOLD = '#B8860B';
@@ -49,7 +49,7 @@ export const OperationalFlowV2 = () => {
         opacity: labelOp,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>CARA KERJA</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Split layout: left image, right content */}
@@ -91,7 +91,7 @@ export const OperationalFlowV2 = () => {
                   <div style={{ width: 24, height: 24, borderRadius: 6, background: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 8, fontWeight: 800, color: '#fff' }}>S</span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_PRIMARY }}>SINAR Dashboard</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_PRIMARY }}>SCOUT Dashboard</span>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {['Misi', 'Analitik', 'Agen'].map((t, i) => (

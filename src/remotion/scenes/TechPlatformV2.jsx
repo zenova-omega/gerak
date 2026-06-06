@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const PRIMARY_ACCENT = '#2D6A4F';
@@ -27,7 +27,7 @@ const SCREENSHOT = '#60A5FA';
   Platform integration — corrected:
   - WhatsApp & FB Group: manual (screenshot + upload ke app)
   - Geo-tag: hanya untuk misi EVENT/Kehadiran, bukan per-platform
-  - Offline/Event: user foto di lokasi + geo-tag + upload via SINAR app
+  - Offline/Event: user foto di lokasi + geo-tag + upload via SCOUT app
 */
 const PLATFORMS = [
   { name: 'YouTube', color: '#FF0000',
@@ -53,7 +53,7 @@ const PLATFORMS = [
     upload: 'screenshot', engage: 'screenshot', analytics: 'manual', method: 'Screenshot + upload' },
   { name: 'Offline / Event', color: GOLD,
     icon: <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z" stroke={GOLD} strokeWidth="1.5" fill={`${GOLD}30`}/><circle cx="12" cy="9" r="2.5" stroke={GOLD} strokeWidth="1.5" fill="none"/></svg>,
-    upload: 'geo', engage: 'no', analytics: 'auto', method: 'GPS + foto via SINAR app' },
+    upload: 'geo', engage: 'no', analytics: 'auto', method: 'GPS + foto via SCOUT app' },
 ];
 
 /* Status cell */
@@ -112,7 +112,7 @@ export const TechPlatformV2 = () => {
         opacity: headerOp, zIndex: 20,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>INTEGRASI TEKNIS</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Content */}
@@ -123,7 +123,7 @@ export const TechPlatformV2 = () => {
         {/* Title */}
         <div style={{ opacity: titleOp, transform: `translateY(${titleY}px)` }}>
           <h2 style={{ fontSize: 42, fontWeight: 900, color: WHITE, margin: 0, lineHeight: 1.15 }}>
-            Bagaimana SINAR{' '}
+            Bagaimana SCOUT{' '}
             <span style={{
               background: `linear-gradient(90deg, ${PRIMARY_ACCENT}, ${GOLD})`,
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -224,8 +224,8 @@ export const TechPlatformV2 = () => {
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '14px 20px', gap: 0 }}>
             {[
               { step: '1', title: 'Datang ke Lokasi', desc: 'Prajurit hadir di lokasi event', color: TEAL },
-              { step: '2', title: 'Foto + Geo-tag', desc: 'Buka SINAR app, ambil foto — GPS & timestamp otomatis tercatat', color: AUTO },
-              { step: '3', title: 'Upload ke App', desc: 'Foto + metadata lokasi dikirim ke server SINAR', color: PRIMARY_ACCENT },
+              { step: '2', title: 'Foto + Geo-tag', desc: 'Buka SCOUT app, ambil foto — GPS & timestamp otomatis tercatat', color: AUTO },
+              { step: '3', title: 'Upload ke App', desc: 'Foto + metadata lokasi dikirim ke server SCOUT', color: PRIMARY_ACCENT },
               { step: '4', title: 'Verifikasi Otomatis', desc: 'AI cek: lokasi ≤100m dari target, waktu sesuai, foto valid', color: PURPLE },
               { step: '5', title: 'XP Masuk', desc: 'Verifikasi lolos → XP langsung ditambahkan', color: GOLD },
             ].map((s, i) => {

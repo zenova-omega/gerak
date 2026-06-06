@@ -7,7 +7,7 @@ import {
   spring,
 } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_ACCENT = '#2D6A4F';
 const GOLD = '#B8860B';
@@ -147,7 +147,7 @@ export const MissionTypesV2 = () => {
           MISI TERSTRUKTUR
         </span>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>
-          SINAR PLATFORM
+          SCOUT PLATFORM
         </span>
       </div>
 
@@ -169,7 +169,7 @@ export const MissionTypesV2 = () => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            SINAR
+            SCOUT
           </span>
         </h2>
       </div>

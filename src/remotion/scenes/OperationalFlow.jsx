@@ -65,7 +65,7 @@ function PhoneNotifMini({ opacity }) {
     }}>
       <div style={{ padding: '4px 8px', borderBottom: `1px solid ${CARD_BORDER}`, display: 'flex', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 9, fontWeight: 600, color: TEXT_PRIMARY }}>09:41</span>
-        <span style={{ fontSize: 9, color: TEXT_MUTED }}>SINAR App</span>
+        <span style={{ fontSize: 9, color: TEXT_MUTED }}>SCOUT App</span>
       </div>
       <div style={{ padding: 8 }}>
         <div style={{ background: '#1B433208', border: '1px solid #1B433215', borderRadius: 4, padding: '5px 7px', marginBottom: 5 }}>
@@ -240,7 +240,7 @@ export const OperationalFlow = () => {
           CARA KERJA
         </span>
         <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 2, fontFamily: FONT_MONO }}>
-          SINAR PLATFORM
+          SCOUT PLATFORM
         </span>
       </div>
 

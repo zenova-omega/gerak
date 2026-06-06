@@ -1,4 +1,4 @@
-"""Input validation utilities for SINAR API."""
+"""Input validation utilities for SCOUT API."""
 import re
 from fastapi import HTTPException
 

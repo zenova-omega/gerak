@@ -1,4 +1,4 @@
-// SINAR Illustration Data
+// SCOUT Illustration Data
 const AVATAR_COLORS={
   'RD':{bg:'#14532D',accent:'#D97706',gender:'F',img:'/images/avatar-rd.png'},
   'BH':{bg:'#1C1917',accent:'#14532D',gender:'M',img:'/images/avatar-bh.png'},

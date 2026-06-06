@@ -61,8 +61,8 @@ export default function LoginPage() {
           <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${C.primary}, #2D6A4F)`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', boxShadow: '0 4px 12px rgba(27,67,50,0.2)' }}>
             <span style={{ fontSize: 24, fontWeight: 900, color: '#D4A843' }}>S</span>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: 4 }}>SINAR</h1>
-          <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Sistem Informasi Narasi Aktif Rakyat</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: 4 }}>SCOUT</h1>
+          <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>Social Cyber Outreach & Unified Tool</p>
         </div>
 
         <form onSubmit={handleLogin}>

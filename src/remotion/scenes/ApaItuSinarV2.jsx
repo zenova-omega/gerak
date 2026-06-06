@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_ACCENT = '#2D6A4F';
 const GOLD = '#B8860B';
@@ -50,8 +50,8 @@ export const ApaItuSinarV2 = () => {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         opacity: labelOp,
       }}>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>APA ITU SINAR</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>APA ITU SCOUT</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Main content — centered layout */}
@@ -79,7 +79,7 @@ export const ApaItuSinarV2 = () => {
             <span style={{
               background: `linear-gradient(90deg, ${PRIMARY}, ${GOLD})`,
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>SINAR</span>
+            }}>SCOUT</span>
           </h1>
         </div>
 

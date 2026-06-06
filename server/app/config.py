@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = "SINAR API"
+    APP_NAME: str = "SCOUT API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 

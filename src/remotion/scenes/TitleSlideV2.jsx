@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Img, staticFile } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const PRIMARY_ACCENT = '#2D6A4F';
@@ -15,7 +15,7 @@ const CLAMP = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' };
 const FONT = "'Inter', sans-serif";
 const FONT_MONO = "'JetBrains Mono', monospace";
 
-/* SINAR shield logo */
+/* SCOUT shield logo */
 function SinarMark({ size = 90, opacity = 1 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" style={{ opacity }}>

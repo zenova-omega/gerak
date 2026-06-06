@@ -13,7 +13,7 @@ const MOCK_ACCOUNTS = [
   { id: 'a8', label: 'Dimas Prayoga', platform: 'x', handle: '@dimaspray', status: 'connected' },
 ];
 const MOCK_POSTS = [
-  { id: 'p1', caption: 'Promo akhir pekan! Diskon 30% semua menu 🎉 #SINAR', platforms: ['instagram', 'tiktok'], scheduled_at: '2026-06-08T10:00:00', status: 'scheduled', published_at: null },
+  { id: 'p1', caption: 'Promo akhir pekan! Diskon 30% semua menu 🎉 #SCOUT', platforms: ['instagram', 'tiktok'], scheduled_at: '2026-06-08T10:00:00', status: 'scheduled', published_at: null },
   { id: 'p2', caption: 'Terima kasih sudah hadir di bakti sosial kemarin 🙏', platforms: ['x'], scheduled_at: '2026-06-06T08:00:00', status: 'published', published_at: '2026-06-06T08:00:00' },
 ];
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_ACCENT = '#2D6A4F';
 const GOLD = '#B8860B';
@@ -22,8 +22,8 @@ const FONT_MONO = "'JetBrains Mono', monospace";
 
 const REWARDS = [
   { name: 'Kaos TNI AD', desc: 'Kaos official edisi terbatas', xp: 500, color: PRIMARY, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 2l-4 4v2h4v14h12V8h4V6l-4-4H6z" stroke={PRIMARY} strokeWidth="1.5" fill={`${PRIMARY}15`}/></svg> },
-  { name: 'Topi Tactical', desc: 'Topi tactical SINAR edition', xp: 300, color: GOLD, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 14c0-4.4 3.6-8 8-8s8 3.6 8 8H4z" stroke={GOLD} strokeWidth="1.5" fill={`${GOLD}15`}/><rect x="2" y="14" width="20" height="3" rx="1" stroke={GOLD} strokeWidth="1.5" fill={`${GOLD}10`}/></svg> },
-  { name: 'Tumbler SINAR', desc: 'Tumbler stainless premium', xp: 400, color: TEAL, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="7" y="3" width="10" height="18" rx="2" stroke={TEAL} strokeWidth="1.5" fill={`${TEAL}15`}/><rect x="6" y="3" width="12" height="4" rx="1" stroke={TEAL} strokeWidth="1.5" fill={`${TEAL}10`}/></svg> },
+  { name: 'Topi Tactical', desc: 'Topi tactical SCOUT edition', xp: 300, color: GOLD, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 14c0-4.4 3.6-8 8-8s8 3.6 8 8H4z" stroke={GOLD} strokeWidth="1.5" fill={`${GOLD}15`}/><rect x="2" y="14" width="20" height="3" rx="1" stroke={GOLD} strokeWidth="1.5" fill={`${GOLD}10`}/></svg> },
+  { name: 'Tumbler SCOUT', desc: 'Tumbler stainless premium', xp: 400, color: TEAL, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="7" y="3" width="10" height="18" rx="2" stroke={TEAL} strokeWidth="1.5" fill={`${TEAL}15`}/><rect x="6" y="3" width="12" height="4" rx="1" stroke={TEAL} strokeWidth="1.5" fill={`${TEAL}10`}/></svg> },
   { name: 'Jaket Exclusive', desc: 'Jaket bomber limited edition', xp: 1500, color: PATRIOT, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M6 3l-3 3v12a2 2 0 002 2h14a2 2 0 002-2V6l-3-3H6z" stroke={PATRIOT} strokeWidth="1.5" fill={`${PATRIOT}15`}/><line x1="12" y1="3" x2="12" y2="20" stroke={PATRIOT} strokeWidth="1" opacity="0.3"/></svg> },
   { name: 'Voucher Belanja', desc: 'Voucher Rp 100.000', xp: 800, color: PURPLE, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="2" stroke={PURPLE} strokeWidth="1.5" fill={`${PURPLE}15`}/><circle cx="12" cy="12" r="3" stroke={PURPLE} strokeWidth="1.5" fill="none"/></svg> },
   { name: 'Power Bank', desc: 'Power bank 10.000mAh branded', xp: 600, color: PRIMARY_ACCENT, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="6" y="4" width="12" height="16" rx="2" stroke={PRIMARY_ACCENT} strokeWidth="1.5" fill={`${PRIMARY_ACCENT}15`}/><rect x="10" y="2" width="4" height="2" rx="1" fill={PRIMARY_ACCENT} opacity="0.5"/><path d="M10 10l2-2v4l2-2" stroke={PRIMARY_ACCENT} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg> },
@@ -49,7 +49,7 @@ export const TokoPoinV2 = () => {
         opacity: labelOp,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>REWARD SHOP</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Split: left content, right phone mockup */}
@@ -133,7 +133,7 @@ export const TokoPoinV2 = () => {
             {/* Status bar */}
             <div style={{ padding: '6px 16px', display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${CARD_BORDER}` }}>
               <span style={{ fontSize: 10, fontWeight: 600, color: TEXT_PRIMARY }}>09:41</span>
-              <span style={{ fontSize: 10, color: TEXT_MUTED }}>SINAR Shop</span>
+              <span style={{ fontSize: 10, color: TEXT_MUTED }}>SCOUT Shop</span>
             </div>
             {/* Balance */}
             <div style={{ padding: '12px 16px', background: `${GOLD}08`, borderBottom: `1px solid ${CARD_BORDER}` }}>

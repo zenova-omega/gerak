@@ -7,7 +7,7 @@ import {
   spring,
 } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const PRIMARY_ACCENT = '#2D6A4F';
@@ -32,7 +32,7 @@ export const SplashIntroV2 = () => {
   const metaOp = interpolate(frame, [90, 120], [0, 1], CLAMP);
   const ctaOp = interpolate(frame, [140, 170], [0, 1], CLAMP);
 
-  const letters = 'SINAR'.split('');
+  const letters = 'SCOUT'.split('');
 
   return (
     <AbsoluteFill style={{ background: `linear-gradient(160deg, ${PRIMARY_DARK}, ${BLACK})`, fontFamily: FONT }}>
@@ -152,7 +152,7 @@ export const SplashIntroV2 = () => {
               lineHeight: 1.6,
             }}
           >
-            Sistem Informasi Narasi Aktif Rakyat
+            Social Cyber Outreach & Unified Tool
           </p>
         </div>
 

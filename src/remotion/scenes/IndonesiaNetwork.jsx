@@ -80,7 +80,7 @@ export const IndonesiaNetwork = () => {
           <span style={{ background: GRADIENT_ACCENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Nasional
           </span>{' '}
-          SINAR
+          SCOUT
         </h2>
       </div>
 

@@ -203,7 +203,7 @@ export const MissionTypes = () => {
         }}
       >
         5 Tipe Misi{' '}
-        <span style={{ color: GOLD }}>SINAR</span>
+        <span style={{ color: GOLD }}>SCOUT</span>
       </div>
 
       {/* Cards grid: 3 top + 2 bottom centered */}

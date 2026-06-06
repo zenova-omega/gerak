@@ -90,7 +90,7 @@ export const PaketLayananV2 = () => {
         opacity: headerOp, zIndex: 20,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>PAKET LAYANAN</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Content */}

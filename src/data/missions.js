@@ -1,4 +1,4 @@
-// SINAR Mission Data — seed data (will move to DB)
+// SCOUT Mission Data — seed data (will move to DB)
 import { C } from '../lib/constants';
 
 const MISSIONS=[

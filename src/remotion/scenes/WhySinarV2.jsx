@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const PRIMARY_ACCENT = '#2D6A4F';
@@ -48,8 +48,8 @@ export const WhySinarV2 = () => {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         opacity: labelOp,
       }}>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>MENGAPA SINAR</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>MENGAPA SCOUT</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Split layout: left steps, right phone mockup */}
@@ -153,7 +153,7 @@ export const WhySinarV2 = () => {
                 <div style={{ width: 24, height: 24, borderRadius: 6, background: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontSize: 9, fontWeight: 800, color: '#fff' }}>S</span>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 2 }}>SINAR</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: 2 }}>SCOUT</span>
               </div>
             </div>
 

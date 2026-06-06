@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const PRIMARY_ACCENT = '#2D6A4F';
@@ -125,7 +125,7 @@ export const GamifikasiRewardV2 = () => {
         opacity: labelOp,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>GAMIFIKASI</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_MUTED, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Split: left content, right phone */}

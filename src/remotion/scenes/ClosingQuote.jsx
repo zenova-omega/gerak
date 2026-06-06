@@ -63,7 +63,7 @@ export const ClosingQuote = () => {
   const statsOp = interpolate(frame, [90, 105], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const quoteFadeOut = interpolate(frame, [120, 140], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-  // === Phase 2 (150+): Logo + SINAR reveal ===
+  // === Phase 2 (150+): Logo + SCOUT reveal ===
   const logoScale = spring({ frame: frame - 150, fps, config: { damping: 20, mass: 0.8 } });
   const logoOp = interpolate(frame, [150, 165], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const presentsOp = interpolate(frame, [170, 185], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
@@ -94,7 +94,7 @@ export const ClosingQuote = () => {
       {/* Top bar */}
       <div style={{ position: 'absolute', top: 32, left: 48, right: 48, display: 'flex', justifyContent: 'space-between', zIndex: 20 }}>
         <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>CLOSING</span>
-        <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>SINAR PITCH DECK</span>
+        <span style={{ fontSize: 10, fontFamily: FONT_MONO, fontWeight: 600, color: TEXT_DIM, letterSpacing: 3 }}>SCOUT PITCH DECK</span>
       </div>
 
       {/* Bottom bar */}
@@ -141,7 +141,7 @@ export const ClosingQuote = () => {
           </p>
         </div>
 
-        {/* === Phase 2: Logo + SINAR reveal === */}
+        {/* === Phase 2: Logo + SCOUT reveal === */}
         <div style={{ opacity: logoOp, transform: `scale(${logoScale})`, marginBottom: 24 }}>
           <SinarMark size={110} />
         </div>
@@ -161,7 +161,7 @@ export const ClosingQuote = () => {
             fontSize: 84, fontWeight: 900, color: '#FFFFFF', letterSpacing: 18,
             lineHeight: 1, margin: 0, textAlign: 'center', fontFamily: FONT,
           }}>
-            SINAR
+            SCOUT
           </h1>
         </div>
 
@@ -170,7 +170,7 @@ export const ClosingQuote = () => {
             fontSize: 18, fontWeight: 600, color: GOLD, letterSpacing: 6,
             textTransform: 'uppercase', marginTop: 16, textAlign: 'center',
           }}>
-            Sistem Informasi Narasi Aktif Rakyat
+            Social Cyber Outreach & Unified Tool
           </p>
         </div>
       </div>

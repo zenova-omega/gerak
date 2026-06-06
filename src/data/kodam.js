@@ -1,4 +1,4 @@
-// SINAR Kodam Zones — seed data
+// SCOUT Kodam Zones — seed data
 const KODAM_ZONES=[
   {id:'kodam-jaya',name:'Kodam Jaya',city:'Jakarta',coords:[106.845,-6.208],missions:12,active:8,agents:48200,status:'hot'},
   {id:'kodam-siliwangi',name:'Kodam III/Siliwangi',city:'Bandung',coords:[107.619,-6.917],missions:9,active:6,agents:38100,status:'hot'},

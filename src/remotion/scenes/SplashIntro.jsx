@@ -14,7 +14,7 @@ const GOLD_RAW = 'rgba(184,134,11,';
 const DARK = '#030806';
 const RED = '#8B1A1A';
 
-/* SINAR shield logo — inline SVG */
+/* SCOUT shield logo — inline SVG */
 function SinarMark({ size = 110, opacity = 1 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" style={{ opacity }}>
@@ -108,7 +108,7 @@ export const SplashIntro = () => {
     extrapolateRight: 'clamp',
   });
 
-  // Title "SINAR"
+  // Title "SCOUT"
   const titleOpacity = interpolate(frame, [40, 70], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -322,7 +322,7 @@ export const SplashIntro = () => {
           </div>
         </div>
 
-        {/* Title "SINAR" */}
+        {/* Title "SCOUT" */}
         <div style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)` }}>
           <div style={{ textAlign: 'center' }}>
             <h1
@@ -336,7 +336,7 @@ export const SplashIntro = () => {
                 margin: 0,
               }}
             >
-              SINAR
+              SCOUT
             </h1>
           </div>
         </div>
@@ -354,7 +354,7 @@ export const SplashIntro = () => {
               textAlign: 'center',
             }}
           >
-            Sistem Informasi Narasi Aktif Rakyat
+            Social Cyber Outreach & Unified Tool
           </p>
         </div>
 

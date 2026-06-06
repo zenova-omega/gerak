@@ -610,7 +610,7 @@ import { ADMIN_STATS } from '../../data/admin';
             {title:'Misi Baru: Upacara HUT TNI AD ke-81',target:'Semua Anggota',time:'2 jam lalu',urgency:'Penting',read:'89.2K',color:C.accent},
             {title:'Pengingat: Deadline Submit Konten',target:'Prajurit (EVENT)',time:'6 jam lalu',urgency:'Normal',read:'45.1K',color:C.primary},
             {title:'DARURAT: Banjir Demak — Mobilisasi Bantuan',target:'Kodam IV/Diponegoro',time:'1 hari lalu',urgency:'Darurat',read:'35.4K',color:C.patriot},
-            {title:'Update: Reward Baru di Toko SINAR',target:'Semua Anggota',time:'2 hari lalu',urgency:'Normal',read:'112.6K',color:C.primary},
+            {title:'Update: Reward Baru di Toko SCOUT',target:'Semua Anggota',time:'2 hari lalu',urgency:'Normal',read:'112.6K',color:C.primary},
             {title:'Pelatihan Digital Content untuk Kader',target:'Prajurit Only',time:'3 hari lalu',urgency:'Penting',read:'67.8K',color:C.accent},
           ].map((b,i)=>(
             <div key={i} className="flex items-center gap-3" style={{padding:'10px 0',borderBottom:i<4?`1px solid ${C.borderLight}`:'none'}}>

@@ -36,10 +36,10 @@ export const WhySinar = () => {
         borderBottom: `1px solid ${CARD_BORDER}`,
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 2, fontFamily: FONT_MONO }}>
-          MENGAPA SINAR
+          MENGAPA SCOUT
         </span>
         <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 2, fontFamily: FONT_MONO }}>
-          SINAR PLATFORM
+          SCOUT PLATFORM
         </span>
       </div>
 

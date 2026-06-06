@@ -1,4 +1,4 @@
-// SINAR Ranks & Badges — seed data
+// SCOUT Ranks & Badges — seed data
 const RANKS=[
   {name:'Prajurit',xp:0,icon:'person',subtitle:'Langkah Pertama'},
   {name:'Kopral',xp:1000,icon:'military_tech',subtitle:'Keandalan & Disiplin'},
@@ -18,7 +18,7 @@ const BADGES=[
   {name:'Streak 100',desc:'100 hari kontribusi tak terputus!',icon:'volcano',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Streak'},
   {name:'Naik Pangkat',desc:'Naik pangkat pertama kali',icon:'trending_up',color:C.purple,bg:C.purpleLight,unlocked:true,rarity:'common',cat:'Pangkat'},
   {name:'Amplifier',desc:'Viralkan 10 konten TNI AD',icon:'campaign',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Sosial'},
-  {name:'Bergabung',desc:'Resmi bergabung dengan SINAR DISPENAD',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
+  {name:'Bergabung',desc:'Resmi bergabung dengan SCOUT DISPENAD',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
   {name:'Viral King',desc:'Konten TNI AD viral 100K+ views',icon:'share',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Sosial'},
   {name:'IG Star',desc:'10 post konten TNI AD di Instagram',icon:'photo_camera',color:'#E1306C',bg:'rgba(225,48,108,0.12)',unlocked:true,rarity:'rare',cat:'Sosial'},
   {name:'TikToker',desc:'10 video TNI AD viral di TikTok',icon:'music_note',color:'#1A1A1A',bg:'rgba(232,232,232,0.12)',unlocked:false,rarity:'rare',cat:'Sosial'},

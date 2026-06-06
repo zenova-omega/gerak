@@ -1,5 +1,5 @@
 /**
- * Unified admin navigation — single source of truth shared by the legacy SINAR
+ * Unified admin navigation — single source of truth shared by the legacy SCOUT
  * admin shell (App.jsx) and the new Command Center shell (CommandCenter.jsx).
  * Keeping both sidebars from one config is what makes them identical, so the
  * user perceives a single application instead of two.

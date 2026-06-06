@@ -1,4 +1,4 @@
-"""Seed the database with initial data for SINAR."""
+"""Seed the database with initial data for SCOUT."""
 import asyncio
 from app.database import engine, async_session, Base
 from app.models import *

@@ -11,7 +11,7 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('SINAR Error:', error, info.componentStack);
+    console.error('SCOUT Error:', error, info.componentStack);
   }
 
   render() {

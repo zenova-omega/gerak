@@ -7,7 +7,7 @@ function mockCaptions(prompt, tone, n) {
   const base = (prompt || 'konten').trim();
   const hooks = ['', 'Yuk simak: ', 'Penting! ', 'Update: ', 'Tahukah kamu? ', 'Bangga: '];
   const e = EMOJI[tone] || '📌';
-  return Array.from({ length: n }, (_, i) => `${e} ${hooks[i % hooks.length]}${base} #SINAR #TNIAD`.trim());
+  return Array.from({ length: n }, (_, i) => `${e} ${hooks[i % hooks.length]}${base} #SCOUT #TNIAD`.trim());
 }
 
 export function useCaptions() {
@@ -41,7 +41,7 @@ export function useMeme() {
       return r;
     } catch {
       const base = (prompt || 'Konten').trim();
-      const m = { top_text: base.slice(0, 40), bottom_text: '#SINAR #TNIAD', caption: base, image_url: null };
+      const m = { top_text: base.slice(0, 40), bottom_text: '#SCOUT #TNIAD', caption: base, image_url: null };
       setMeme(m);
       return m;
     } finally {

@@ -37,7 +37,7 @@ import { RARITY_COLORS } from '../../lib/constants';
           <div className="flex items-center gap-2.5">
             <SinarMark size={28}/>
             <div>
-              <h2 style={{fontSize:14,fontWeight:900,color:'#FFFFFF',letterSpacing:2.5,lineHeight:1}}>SINAR</h2>
+              <h2 style={{fontSize:14,fontWeight:900,color:'#FFFFFF',letterSpacing:2.5,lineHeight:1}}>SCOUT</h2>
               <p style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.55)',letterSpacing:1.5,textTransform:'uppercase',lineHeight:1,marginTop:2}}>TNI AD</p>
             </div>
           </div>
@@ -146,7 +146,7 @@ import { RARITY_COLORS } from '../../lib/constants';
             </div>
             <MI name="arrow_forward" size={14} style={{color:C.textMuted}}/>
           </div>
-          <Tip text="Peringkat kamu di antara semua anggota SINAR"><p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'Inter'",marginTop:8,lineHeight:1}}>#4<span style={{fontSize:12,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p></Tip>
+          <Tip text="Peringkat kamu di antara semua anggota SCOUT"><p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'Inter'",marginTop:8,lineHeight:1}}>#4<span style={{fontSize:12,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p></Tip>
           <p style={{fontSize:11,color:C.textSec,fontWeight:500,marginTop:2}}>Peringkat</p>
           <div className="flex items-center gap-1" style={{marginTop:4}}>
             <MI name="arrow_upward" size={11} style={{color:C.teal}}/>

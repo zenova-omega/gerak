@@ -67,7 +67,7 @@ import { ADMIN_STATS } from '../../data/admin';
               <SinarMark size={22}/>
             </div>
             <div>
-              <h1 style={{fontSize:16,fontWeight:900,color:'#FFFFFF',letterSpacing:3}}>SINAR</h1>
+              <h1 style={{fontSize:16,fontWeight:900,color:'#FFFFFF',letterSpacing:3}}>SCOUT</h1>
               <p style={{fontSize:9,color:'rgba(255,255,255,0.35)',letterSpacing:2,textTransform:'uppercase',fontWeight:600}}>Command Center</p>
             </div>
           </div>
@@ -877,7 +877,7 @@ import { ADMIN_STATS } from '../../data/admin';
                         </div>
                       </div>
                     </div>
-                    <p style={{fontSize:10,color:C.textMuted,textAlign:'center',marginTop:8}}>Anggota melihat misi seperti ini di app SINAR</p>
+                    <p style={{fontSize:10,color:C.textMuted,textAlign:'center',marginTop:8}}>Anggota melihat misi seperti ini di app SCOUT</p>
                   </div>
 
                   {/* Summary Checklist */}
@@ -1679,7 +1679,7 @@ import { ADMIN_STATS } from '../../data/admin';
                             <MI name="campaign" size={16} style={{color:C.primary}}/>
                           </div>
                           <div style={{flex:1}}>
-                            <p style={{fontSize:11,fontWeight:700,color:C.primary}}>GERAK SINAR</p>
+                            <p style={{fontSize:11,fontWeight:700,color:C.primary}}>GERAK SCOUT</p>
                             <p style={{fontSize:10,color:C.textMuted}}>Sekarang</p>
                           </div>
                           {bcPriority==='urgent'&&<span style={{fontSize:9,fontWeight:800,color:C.red,background:`${C.red}15`,padding:'2px 6px',borderRadius:4}}>URGENT</span>}
@@ -1832,10 +1832,10 @@ import { ADMIN_STATS } from '../../data/admin';
             </DCard>
 
             {/* D. Informasi Sistem */}
-            <DCard title="Informasi Sistem" subtitle="Detail versi dan statistik platform SINAR" accent={C.gold||'#B8860B'}>
+            <DCard title="Informasi Sistem" subtitle="Detail versi dan statistik platform SCOUT" accent={C.gold||'#B8860B'}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
                 {[
-                  {label:'Versi',value:'SINAR v1.0.0',icon:'verified',color:C.primary},
+                  {label:'Versi',value:'SCOUT v1.0.0',icon:'verified',color:C.primary},
                   {label:'Total Kodam',value:'37',icon:'account_balance',color:'#E76F51'},
                   {label:'Total Personel Terdaftar',value:'445.067',icon:'groups',color:'#2A9D8F'},
                   {label:'Terakhir Diperbarui',value:'15 Maret 2026',icon:'update',color:'#E9C46A'},

@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const PRIMARY_ACCENT = '#2D6A4F';
@@ -66,7 +66,7 @@ export const BeforeAfterV2 = () => {
         opacity: headerOp, zIndex: 30,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>STUDI KASUS</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Title */}
@@ -90,7 +90,7 @@ export const BeforeAfterV2 = () => {
         display: 'flex', gap: 32,
       }}>
 
-        {/* LEFT — TANPA SINAR */}
+        {/* LEFT — TANPA SCOUT */}
         <div style={{
           flex: 1, opacity: beforeOp,
           transform: `translateX(${(1 - beforeOp) * -15}px)`,
@@ -101,7 +101,7 @@ export const BeforeAfterV2 = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: RED }} />
-            <span style={{ fontSize: 15, fontWeight: 800, color: RED, letterSpacing: 2, fontFamily: FONT_MONO }}>TANPA SINAR</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: RED, letterSpacing: 2, fontFamily: FONT_MONO }}>TANPA SCOUT</span>
           </div>
 
           {/* YT Card */}
@@ -136,7 +136,7 @@ export const BeforeAfterV2 = () => {
           </div>
         </div>
 
-        {/* RIGHT — DENGAN SINAR */}
+        {/* RIGHT — DENGAN SCOUT */}
         <div style={{
           flex: 1, opacity: afterOp,
           transform: `translateX(${(1 - afterOp) * 15}px)`,
@@ -147,7 +147,7 @@ export const BeforeAfterV2 = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: GREEN }} />
-            <span style={{ fontSize: 15, fontWeight: 800, color: GREEN, letterSpacing: 2, fontFamily: FONT_MONO }}>DENGAN SINAR</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: GREEN, letterSpacing: 2, fontFamily: FONT_MONO }}>DENGAN SCOUT</span>
           </div>
 
           {/* YT Card — trending */}

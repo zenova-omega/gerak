@@ -1,5 +1,5 @@
 /**
- * SINAR API Client
+ * SCOUT API Client
  * Wraps fetch with JWT auth, token refresh, and error handling.
  *
  * Usage:

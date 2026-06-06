@@ -187,7 +187,7 @@ function Tip({children,text}){
   </span>);
 }
 
-/* ─── SINAR LOGO SVG ─────────────────────────────────────────────── */
+/* ─── SCOUT LOGO SVG ─────────────────────────────────────────────── */
 function SinarMark({size=28}){return(
   <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
     <defs>
@@ -761,7 +761,7 @@ const BADGES=[
   {name:'Streak 100',desc:'100 hari kontribusi tak terputus!',icon:'volcano',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Streak'},
   {name:'Naik Pangkat',desc:'Naik pangkat pertama kali',icon:'trending_up',color:C.purple,bg:C.purpleLight,unlocked:true,rarity:'common',cat:'Pangkat'},
   {name:'Amplifier',desc:'Viralkan 10 konten TNI AD',icon:'campaign',color:C.orange,bg:C.orangeLight,unlocked:true,rarity:'rare',cat:'Sosial'},
-  {name:'Bergabung',desc:'Resmi bergabung dengan SINAR DISPENAD',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
+  {name:'Bergabung',desc:'Resmi bergabung dengan SCOUT DISPENAD',icon:'waving_hand',color:C.green,bg:C.greenLight,unlocked:true,rarity:'common',cat:'Pangkat'},
   {name:'Viral King',desc:'Konten TNI AD viral 100K+ views',icon:'share',color:C.pink,bg:C.pinkLight,unlocked:false,rarity:'legendary',cat:'Sosial'},
   {name:'IG Star',desc:'10 post konten TNI AD di Instagram',icon:'photo_camera',color:'#E1306C',bg:'rgba(225,48,108,0.12)',unlocked:true,rarity:'rare',cat:'Sosial'},
   {name:'TikToker',desc:'10 video TNI AD viral di TikTok',icon:'music_note',color:'#1A1A1A',bg:'rgba(232,232,232,0.12)',unlocked:false,rarity:'rare',cat:'Sosial'},
@@ -1050,7 +1050,7 @@ export default function App(){
           <div className="flex items-center gap-2.5">
             <SinarMark size={28}/>
             <div>
-              <h2 style={{fontSize:14,fontWeight:900,color:'#FFFFFF',letterSpacing:2.5,lineHeight:1}}>SINAR</h2>
+              <h2 style={{fontSize:14,fontWeight:900,color:'#FFFFFF',letterSpacing:2.5,lineHeight:1}}>SCOUT</h2>
               <p style={{fontSize:10,fontWeight:600,color:'rgba(255,255,255,0.55)',letterSpacing:1.5,textTransform:'uppercase',lineHeight:1,marginTop:2}}>TNI AD</p>
             </div>
           </div>
@@ -1159,7 +1159,7 @@ export default function App(){
             </div>
             <MI name="arrow_forward" size={14} style={{color:C.textMuted}}/>
           </div>
-          <Tip text="Peringkat kamu di antara semua anggota SINAR"><p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'Inter'",marginTop:8,lineHeight:1}}>#4<span style={{fontSize:12,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p></Tip>
+          <Tip text="Peringkat kamu di antara semua anggota SCOUT"><p style={{fontSize:24,fontWeight:800,color:C.text,fontFamily:"'Inter'",marginTop:8,lineHeight:1}}>#4<span style={{fontSize:12,fontWeight:600,color:C.textMuted,marginLeft:2}}>of 1.2K</span></p></Tip>
           <p style={{fontSize:11,color:C.textSec,fontWeight:500,marginTop:2}}>Peringkat</p>
           <div className="flex items-center gap-1" style={{marginTop:4}}>
             <MI name="arrow_upward" size={11} style={{color:C.teal}}/>
@@ -2492,7 +2492,7 @@ export default function App(){
             {title:'Misi Baru: Upacara HUT TNI AD ke-81',target:'Semua Anggota',time:'2 jam lalu',urgency:'Penting',read:'89.2K',color:C.accent},
             {title:'Pengingat: Deadline Submit Konten',target:'Prajurit (EVENT)',time:'6 jam lalu',urgency:'Normal',read:'45.1K',color:C.primary},
             {title:'DARURAT: Banjir Demak — Mobilisasi Bantuan',target:'Kodam IV/Diponegoro',time:'1 hari lalu',urgency:'Darurat',read:'35.4K',color:C.patriot},
-            {title:'Update: Reward Baru di Toko SINAR',target:'Semua Anggota',time:'2 hari lalu',urgency:'Normal',read:'112.6K',color:C.primary},
+            {title:'Update: Reward Baru di Toko SCOUT',target:'Semua Anggota',time:'2 hari lalu',urgency:'Normal',read:'112.6K',color:C.primary},
             {title:'Pelatihan Digital Content untuk Kader',target:'Prajurit Only',time:'3 hari lalu',urgency:'Penting',read:'67.8K',color:C.accent},
           ].map((b,i)=>(
             <div key={i} className="flex items-center gap-3" style={{padding:'10px 0',borderBottom:i<4?`1px solid ${C.borderLight}`:'none'}}>
@@ -4180,7 +4180,7 @@ export default function App(){
               <SinarMark size={22}/>
             </div>
             <div>
-              <h1 style={{fontSize:16,fontWeight:900,color:'#FFFFFF',letterSpacing:3}}>SINAR</h1>
+              <h1 style={{fontSize:16,fontWeight:900,color:'#FFFFFF',letterSpacing:3}}>SCOUT</h1>
               <p style={{fontSize:9,color:'rgba(255,255,255,0.35)',letterSpacing:2,textTransform:'uppercase',fontWeight:600}}>Command Center</p>
             </div>
           </div>
@@ -5010,7 +5010,7 @@ export default function App(){
                         </div>
                       </div>
                     </div>
-                    <p style={{fontSize:10,color:C.textMuted,textAlign:'center',marginTop:8}}>Anggota melihat misi seperti ini di app SINAR</p>
+                    <p style={{fontSize:10,color:C.textMuted,textAlign:'center',marginTop:8}}>Anggota melihat misi seperti ini di app SCOUT</p>
                   </div>
 
                   {/* Summary Checklist */}
@@ -5812,7 +5812,7 @@ export default function App(){
                             <MI name="campaign" size={16} style={{color:C.primary}}/>
                           </div>
                           <div style={{flex:1}}>
-                            <p style={{fontSize:11,fontWeight:700,color:C.primary}}>GERAK SINAR</p>
+                            <p style={{fontSize:11,fontWeight:700,color:C.primary}}>GERAK SCOUT</p>
                             <p style={{fontSize:10,color:C.textMuted}}>Sekarang</p>
                           </div>
                           {bcPriority==='urgent'&&<span style={{fontSize:9,fontWeight:800,color:C.red,background:`${C.red}15`,padding:'2px 6px',borderRadius:4}}>URGENT</span>}
@@ -5965,10 +5965,10 @@ export default function App(){
             </DCard>
 
             {/* D. Informasi Sistem */}
-            <DCard title="Informasi Sistem" subtitle="Detail versi dan statistik platform SINAR" accent={C.gold||'#B8860B'}>
+            <DCard title="Informasi Sistem" subtitle="Detail versi dan statistik platform SCOUT" accent={C.gold||'#B8860B'}>
               <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
                 {[
-                  {label:'Versi',value:'SINAR v1.0.0',icon:'verified',color:C.primary},
+                  {label:'Versi',value:'SCOUT v1.0.0',icon:'verified',color:C.primary},
                   {label:'Total Kodam',value:'37',icon:'account_balance',color:'#E76F51'},
                   {label:'Total Personel Terdaftar',value:'445.067',icon:'groups',color:'#2A9D8F'},
                   {label:'Terakhir Diperbarui',value:'15 Maret 2026',icon:'update',color:'#E9C46A'},
@@ -6199,13 +6199,13 @@ export default function App(){
               <span style={{fontSize:9,fontWeight:700,color:'rgba(184,134,11,0.45)',letterSpacing:5}}>TNI AD MEMPERSEMBAHKAN</span>
               <div style={{width:50,height:1,background:'linear-gradient(90deg,rgba(184,134,11,0.5),transparent)'}}/>
             </div>
-            <h1 style={{fontSize:72,fontWeight:900,color:'#FFFFFF',letterSpacing:18,lineHeight:1,textShadow:'0 4px 60px rgba(184,134,11,0.25), 0 0 120px rgba(184,134,11,0.1)'}}>SINAR</h1>
+            <h1 style={{fontSize:72,fontWeight:900,color:'#FFFFFF',letterSpacing:18,lineHeight:1,textShadow:'0 4px 60px rgba(184,134,11,0.25), 0 0 120px rgba(184,134,11,0.1)'}}>SCOUT</h1>
           </div>
         </animated.div>
 
         <animated.div style={taglineAnim}>
           <p style={{fontSize:16,fontWeight:600,color:'#D4A843',letterSpacing:6,textTransform:'uppercase',marginTop:14,textAlign:'center'}}>
-            Sistem Informasi Narasi Aktif Rakyat
+            Social Cyber Outreach & Unified Tool
           </p>
         </animated.div>
 
@@ -6311,7 +6311,7 @@ export default function App(){
             <div style={{width:8,height:8,borderRadius:'50%',background:'#F59E0B'}}/>
             <div style={{width:8,height:8,borderRadius:'50%',background:'#22C55E'}}/>
           </div>
-          <div style={{flex:1,textAlign:'center'}}><span style={{fontSize:9,color:'rgba(255,255,255,0.3)',fontWeight:500}}>SINAR Command Center — TNI AD</span></div>
+          <div style={{flex:1,textAlign:'center'}}><span style={{fontSize:9,color:'rgba(255,255,255,0.3)',fontWeight:500}}>SCOUT Command Center — TNI AD</span></div>
         </div>
         {/* Content */}
         <div style={{flex:1,overflow:'hidden'}}>{children}</div>
@@ -6365,7 +6365,7 @@ export default function App(){
         </CineSlide>
       ),
 
-      /* ── 2: Apa Itu SINAR? — Clear Explanation + 4 Pillars ── */
+      /* ── 2: Apa Itu SCOUT? — Clear Explanation + 4 Pillars ── */
       ()=>(
         <SlideBase>
           <div style={{position:'absolute',inset:0}}>
@@ -6374,7 +6374,7 @@ export default function App(){
           </div>
           <div style={{position:'relative',zIndex:1,textAlign:'center',padding:'0 48px',maxWidth:1100}}>
             <SinarMark size={64}/>
-            <h1 style={{fontSize:48,fontWeight:900,color:'#FFFFFF',letterSpacing:8,marginTop:12}}>SINAR</h1>
+            <h1 style={{fontSize:48,fontWeight:900,color:'#FFFFFF',letterSpacing:8,marginTop:12}}>SCOUT</h1>
             <p style={{fontSize:16,color:'#D4A843',letterSpacing:5,marginTop:6,fontWeight:600}}>SISTEM INFORMASI NARASI AKTIF RAKYAT</p>
             <GoldLine w={100}/>
             <p style={{fontSize:22,color:'rgba(255,255,255,0.8)',lineHeight:1.7,marginTop:16,maxWidth:800,margin:'16px auto 0'}}>
@@ -6403,13 +6403,13 @@ export default function App(){
       /* ── Before/After — Contoh Nyata (Remotion) ── */
       ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
 
-      /* ── Why SINAR — 5 langkah mengapa efektif (Remotion) ── */
+      /* ── Why SCOUT — 5 langkah mengapa efektif (Remotion) ── */
       ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
 
       /* ── Multiplier — Jangkauan Nasional (Remotion) ── */
       ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
 
-      /* ── Demographics — Siapa Pengguna SINAR (Remotion) ── */
+      /* ── Demographics — Siapa Pengguna SCOUT (Remotion) ── */
       ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#050E09'}}/></SlideBase>),
 
       /* ── Operational Flow (Remotion) — Cara Kerja ── */
@@ -6441,11 +6441,11 @@ export default function App(){
           {/* Top bar */}
           <div style={{position:'absolute',top:48,left:80,right:80,display:'flex',justifyContent:'space-between',alignItems:'center',zIndex:20}}>
             <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>PUSAT KOMANDO</span>
-            <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>SINAR PLATFORM</span>
+            <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>SCOUT PLATFORM</span>
           </div>
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px'}}>
             <h2 style={{fontSize:48,fontWeight:900,color:'#fff',margin:'0 0 8px',lineHeight:1.15,textAlign:'center'}}>
-              Pusat Kendali{' '}<span style={{background:'linear-gradient(90deg,#2D6A4F,#B8860B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SINAR</span>
+              Pusat Kendali{' '}<span style={{background:'linear-gradient(90deg,#2D6A4F,#B8860B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SCOUT</span>
             </h2>
             <div style={{width:120,height:3,background:'linear-gradient(90deg,#1B4332,#B8860B)',borderRadius:2,marginBottom:24}}/>
 
@@ -6512,11 +6512,11 @@ export default function App(){
           {/* Top bar */}
           <div style={{position:'absolute',top:48,left:80,right:80,display:'flex',justifyContent:'space-between',alignItems:'center',zIndex:20}}>
             <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>DEMO APLIKASI</span>
-            <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>SINAR PLATFORM</span>
+            <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>SCOUT PLATFORM</span>
           </div>
           <div style={{position:'relative',zIndex:1,width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px'}}>
             <h2 style={{fontSize:48,fontWeight:900,color:'#fff',margin:'0 0 8px',textAlign:'center'}}>
-              Lihat{' '}<span style={{background:'linear-gradient(90deg,#2D6A4F,#B8860B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SINAR</span>{' '}Langsung Beraksi
+              Lihat{' '}<span style={{background:'linear-gradient(90deg,#2D6A4F,#B8860B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SCOUT</span>{' '}Langsung Beraksi
             </h2>
             <div style={{width:120,height:3,background:'linear-gradient(90deg,#1B4332,#B8860B)',borderRadius:2,marginBottom:28}}/>
             <div style={{display:'flex',gap:48,flex:1,minHeight:0,alignItems:'flex-start',justifyContent:'center'}}>
@@ -6550,13 +6550,13 @@ export default function App(){
           {/* Top bar */}
           <div style={{position:'absolute',top:48,left:80,right:80,display:'flex',justifyContent:'space-between',alignItems:'center',zIndex:20}}>
             <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>LANGKAH SELANJUTNYA</span>
-            <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>SINAR PLATFORM</span>
+            <span style={{fontSize:12,fontFamily:"'JetBrains Mono'",color:'rgba(255,255,255,0.45)',letterSpacing:2}}>SCOUT PLATFORM</span>
           </div>
           <div style={{position:'relative',zIndex:10,width:'100%',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 80px'}}>
             <SinarMark size={80}/>
             <div style={{width:160,height:3,background:'linear-gradient(90deg,#1B4332,#B8860B)',borderRadius:2,margin:'24px 0'}}/>
             <h1 style={{fontSize:52,fontWeight:900,color:'#FFFFFF',letterSpacing:4,lineHeight:1.2,textAlign:'center',margin:0}}>
-              Siap Meluncurkan<br/><span style={{background:'linear-gradient(90deg,#2D6A4F,#B8860B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SINAR Nasional</span>
+              Siap Meluncurkan<br/><span style={{background:'linear-gradient(90deg,#2D6A4F,#B8860B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SCOUT Nasional</span>
             </h1>
             <p style={{fontSize:20,color:'rgba(255,255,255,0.6)',marginTop:20,lineHeight:1.6,textAlign:'center',maxWidth:600}}>
               Mengorganisir dan menggerakkan <strong style={{color:'#FFFFFF'}}>400.000+ prajurit</strong> dan <strong style={{color:'#B8860B'}}>1.6 juta Keluarga Besar TNI</strong> untuk narasi positif TNI AD
@@ -6581,7 +6581,7 @@ export default function App(){
         </SlideBase>
       ),
 
-      /* ── Closing — Emotional quote + SINAR reveal (Remotion) ── */
+      /* ── Closing — Emotional quote + SCOUT reveal (Remotion) ── */
       ()=>(<SlideBase><div style={{position:'absolute',inset:0,background:'#030806'}}/></SlideBase>),
     ];
 
@@ -6667,7 +6667,7 @@ export default function App(){
         </div>
         <div style={{position:'fixed',top:24,left:32,display:'flex',alignItems:'center',gap:8,zIndex:10000}}>
           <SinarMark size={22}/>
-          <span style={{fontSize:12,color:'rgba(255,255,255,0.25)',letterSpacing:3,fontWeight:700}}>SINAR</span>
+          <span style={{fontSize:12,color:'rgba(255,255,255,0.25)',letterSpacing:3,fontWeight:700}}>SCOUT</span>
         </div>
         {/* Click zones — z-index below interactive slide content */}
         <div onClick={prevSlide} style={{position:'fixed',left:0,top:0,bottom:0,width:'15%',cursor:'w-resize',zIndex:4}}/>
@@ -6740,12 +6740,12 @@ export default function App(){
                   <span style={{fontSize:8,fontWeight:700,color:'rgba(184,134,11,0.5)',letterSpacing:4}}>TNI AD</span>
                   <div style={{width:28,height:1,background:'linear-gradient(90deg,rgba(184,134,11,0.5),transparent)'}}/>
                 </div>
-                <h1 style={{fontSize:36,fontWeight:900,color:'#FFFFFF',letterSpacing:14,lineHeight:1,textShadow:'0 2px 30px rgba(184,134,11,0.2)'}}>SINAR</h1>
+                <h1 style={{fontSize:36,fontWeight:900,color:'#FFFFFF',letterSpacing:14,lineHeight:1,textShadow:'0 2px 30px rgba(184,134,11,0.2)'}}>SCOUT</h1>
               </div>
 
               {/* Tagline */}
               <p style={{fontSize:9,fontWeight:600,color:'rgba(184,134,11,0.7)',letterSpacing:3,textTransform:'uppercase',marginTop:10,animation:'fadeInUp 600ms ease-out 1000ms both'}}>
-                Sistem Informasi Narasi Aktif Rakyat
+                Social Cyber Outreach & Unified Tool
               </p>
             </div>
 

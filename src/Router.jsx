@@ -21,7 +21,7 @@ const Loading = () => (
       <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #1B4332, #2D6A4F)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
         <span style={{ fontSize: 20, fontWeight: 900, color: '#D4A843' }}>S</span>
       </div>
-      <p style={{ fontSize: 13, color: '#6B6555', fontWeight: 500 }}>Memuat SINAR...</p>
+      <p style={{ fontSize: 13, color: '#6B6555', fontWeight: 500 }}>Memuat SCOUT...</p>
     </div>
   </div>
 );

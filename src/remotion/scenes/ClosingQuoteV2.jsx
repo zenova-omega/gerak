@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Img, staticFile } from 'remotion';
 
-/* ── SINAR Brand Colors ── */
+/* ── SCOUT Brand Colors ── */
 const PRIMARY = '#1B4332';
 const PRIMARY_DARK = '#0B2619';
 const GOLD = '#B8860B';
@@ -95,7 +95,7 @@ export const ClosingQuoteV2 = () => {
         opacity: headerOp, zIndex: 20,
       }}>
         <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>CLOSING</span>
-        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SINAR PLATFORM</span>
+        <span style={{ fontSize: 12, fontFamily: FONT_MONO, color: TEXT_DIM, letterSpacing: 2 }}>SCOUT PLATFORM</span>
       </div>
 
       {/* Content */}
@@ -135,7 +135,7 @@ export const ClosingQuoteV2 = () => {
           </p>
         </div>
 
-        {/* Phase 2: Logo + SINAR */}
+        {/* Phase 2: Logo + SCOUT */}
         <div style={{ opacity: logoOp, transform: `scale(${logoScale})`, marginBottom: 24 }}>
           <SinarMark size={110} />
         </div>
@@ -155,7 +155,7 @@ export const ClosingQuoteV2 = () => {
             fontSize: 84, fontWeight: 900, color: WHITE, letterSpacing: 18,
             lineHeight: 1, margin: 0, textAlign: 'center', fontFamily: FONT,
           }}>
-            SINAR
+            SCOUT
           </h1>
         </div>
 
@@ -171,7 +171,7 @@ export const ClosingQuoteV2 = () => {
             fontSize: 18, fontWeight: 600, color: GOLD, letterSpacing: 6,
             textTransform: 'uppercase', marginTop: 16, textAlign: 'center',
           }}>
-            Sistem Informasi Narasi Aktif Rakyat
+            Social Cyber Outreach & Unified Tool
           </p>
         </div>
       </div>

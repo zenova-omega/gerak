@@ -31,7 +31,7 @@ const ACHIEVEMENTS = [
 const REWARDS = [
   { name: 'Kaos TNI AD', xp: 500, color: '#1B4332' },
   { name: 'Topi Tactical', xp: 300, color: '#B8860B' },
-  { name: 'Tumbler SINAR', xp: 400, color: '#0F766E' },
+  { name: 'Tumbler SCOUT', xp: 400, color: '#0F766E' },
   { name: 'Jaket Exclusive', xp: 1500, color: '#8B1A1A' },
 ];
 
@@ -203,7 +203,7 @@ export const GamifikasiReward = () => {
           GAMIFIKASI
         </span>
         <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MUTED, letterSpacing: 2, fontFamily: FONT_MONO }}>
-          SINAR PLATFORM
+          SCOUT PLATFORM
         </span>
       </div>
 
