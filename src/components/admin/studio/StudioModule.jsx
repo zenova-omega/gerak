@@ -28,7 +28,7 @@ export default function StudioModule() {
   return (
     <div>
       <header className="mb-5">
-        <h1 className="text-xl font-black text-[#1B4332]">Studio — Konten AI</h1>
+        <h1 className="text-xl font-black text-[#1B4332]">Studio · Konten AI</h1>
         <p className="text-sm text-[#6B6555]">Buat caption &amp; meme dengan AI.</p>
       </header>
 
