@@ -261,10 +261,10 @@ const C={
 
 /* ─── ACCOUNT TYPES ─────────────────────────────────────────────── */
 const ACCOUNT_TYPES={
-  prajurit:{label:'Prajurit',desc:'Anggota TNI AD aktif',color:C.primary,icon:'military_tech',xpMultiplier:1,missionTypes:['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI']},
-  suami:{label:'Suami',desc:'Suami prajurit TNI AD',color:C.accent,icon:'favorite',xpMultiplier:0.7,missionTypes:['EVENT','KONTEN','ENGAGEMENT']},
-  istri:{label:'Istri',desc:'Istri prajurit TNI AD',color:C.teal,icon:'favorite',xpMultiplier:0.7,missionTypes:['EVENT','KONTEN','ENGAGEMENT']},
-  anak:{label:'Anak',desc:'Anak prajurit TNI AD',color:C.purple,icon:'school',xpMultiplier:0.5,missionTypes:['KONTEN','ENGAGEMENT']},
+  prajurit:{label:'Prajurit',desc:'Anggota TNI AD aktif',color:C.primary,icon:'military_tech',xpMultiplier:1,missionTypes:['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI','SURVEY']},
+  suami:{label:'Suami',desc:'Suami prajurit TNI AD',color:C.accent,icon:'favorite',xpMultiplier:0.7,missionTypes:['EVENT','KONTEN','ENGAGEMENT','SURVEY']},
+  istri:{label:'Istri',desc:'Istri prajurit TNI AD',color:C.teal,icon:'favorite',xpMultiplier:0.7,missionTypes:['EVENT','KONTEN','ENGAGEMENT','SURVEY']},
+  anak:{label:'Anak',desc:'Anak prajurit TNI AD',color:C.purple,icon:'school',xpMultiplier:0.5,missionTypes:['KONTEN','ENGAGEMENT','SURVEY']},
 };
 
 /* ─── MISSION TYPES ──────────────────────────────────────────── */
@@ -580,6 +580,13 @@ const MISSIONS=[
     eventSpec:{location:'Kodam I/Bukit Barisan & Lokasi Bencana, Sumbar',date:'22 Mar 2026, 09:00',capacity:30,checkin:'Akreditasi Khusus',lat:-0.9492,lng:100.3543,note:'KEAMANAN TINGGI — Akreditasi dari Puspen TNI AD wajib. Dress code formal. Koordinasi dengan Ajudan KASAD.'},
     contentSpec:{format:'Foto + Video',minPhotos:20,videoDuration:'120-300 detik',note:'Foto: KASAD inspeksi pasukan, KASAD menyapa pengungsi, KASAD memimpin rapat koordinasi. Video: pidato KASAD, suasana kunjungan.'},
     templates:['KASAD tinjau langsung penanganan bencana di Sumbar. "TNI AD akan terus hadir untuk rakyat" — Jenderal TNI.','Kunjungan KASAD ke Sumatera Barat: Pastikan setiap korban bencana mendapat pertolongan maksimal dari TNI AD.']},
+  /* ─── SURVEY — Polling & feedback (membuka SurveyRunner) ─── */
+  {id:16,type:'SURVEY',title:'Survey: Kepuasan Kegiatan Bakti Sosial',
+    desc:'Bantu kami menilai kegiatan bakti sosial kemarin. Hanya 4 pertanyaan singkat untuk meningkatkan kegiatan berikutnya.',
+    xp:50,bonus:0,participants:0,status:'TERBUKA',deadline:'30 Jun 2026',
+    analytics:{completion:0,avgTime:'3 menit',topCity:'-',reach:'0',engagement:'0%',sentiment:0,conversionRate:'0%'},
+    type_config:{survey_id:'sv1'},
+    templates:[]},
 ];
 
 const RANKS=[
