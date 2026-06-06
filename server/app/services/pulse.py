@@ -1,5 +1,5 @@
 """Pulse core: ingest items, cluster into issues, crawl, enrich."""
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.pulse import WatchTopic, Issue, SourceItem
@@ -36,12 +36,15 @@ async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict]) -
         combined = f"{raw.get('title') or ''} {raw.get('text') or ''}".strip()
         sh = simhash(combined)
         issue = await _find_or_create_issue(db, topic, sh, raw.get("title"))
-        seen_at = raw.get("published_at") or datetime.utcnow()
+        pub = raw.get("published_at")
+        if pub is not None and pub.tzinfo is not None:
+            pub = pub.astimezone(timezone.utc).replace(tzinfo=None)
+        seen_at = pub or datetime.utcnow()
         db.add(SourceItem(
             topic_id=topic.id, issue_id=issue.id, source=raw["source"],
             platform=raw.get("platform"), url=url, title=raw.get("title"),
             text=raw.get("text", "") or "", author=raw.get("author"),
-            published_at=raw.get("published_at"), simhash=sh,
+            published_at=pub, simhash=sh,
         ))
         issue.item_count += 1
         if seen_at > issue.last_seen_at:
@@ -55,7 +58,7 @@ async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict]) -
 async def crawl_topic(db: AsyncSession, topic: WatchTopic, settings) -> int:
     """Fetch from configured sources and ingest. Network-bound; failures are swallowed per source."""
     from .ingest.rss import fetch_rss_items
-    from .ingest.browserless import scrape_content
+    from .ingest.browserless import scrape_content, is_allowed
     total = 0
     sources = topic.sources or ["rss"]
     if "rss" in sources:
@@ -66,6 +69,8 @@ async def crawl_topic(db: AsyncSession, topic: WatchTopic, settings) -> int:
     if "browserless" in sources and settings.BROWSERLESS_API_KEY and topic.browserless_targets:
         scraped = []
         for url in topic.browserless_targets:
+            if not is_allowed(url, settings.BROWSERLESS_ALLOWLIST):
+                continue
             try:
                 scraped.append(await scrape_content(url, settings.BROWSERLESS_API_KEY, settings.BROWSERLESS_BASE))
             except Exception:

@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     BROWSERLESS_BASE: str = "https://chrome.browserless.io"
     PULSE_WEBHOOK_SECRET: str = ""
     ENABLE_SCHEDULER: bool = True
+    BROWSERLESS_ALLOWLIST: list[str] = []
 
     class Config:
         env_file = ".env"

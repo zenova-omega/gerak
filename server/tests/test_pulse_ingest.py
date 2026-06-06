@@ -90,3 +90,21 @@ async def test_ingest_dedupes_same_url(db, topic):
     second = await ingest_items(db, topic, [raw])
     assert first == 1
     assert second == 0
+
+
+@pytest.mark.asyncio
+async def test_crawl_skips_disallowed_browserless_target(db):
+    from types import SimpleNamespace
+    from app.services.pulse import crawl_topic
+    from app.models.pulse import WatchTopic
+    t = WatchTopic(id="t-bl", label="x", query="x",
+                   sources=["browserless"], browserless_targets=["https://evil.com/a"])
+    db.add(t)
+    await db.flush()
+    settings = SimpleNamespace(
+        BROWSERLESS_API_KEY="key", BROWSERLESS_BASE="https://x",
+        BROWSERLESS_ALLOWLIST=["example.com"],
+    )
+    # Disallowed target is skipped -> no scrape attempted -> no network -> 0 ingested
+    count = await crawl_topic(db, t, settings)
+    assert count == 0

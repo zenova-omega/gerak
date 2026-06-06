@@ -84,3 +84,15 @@ async def test_enrich_without_ai_keeps_sentiment_null(client, admin_token):
     res = await client.post(f"/api/admin/pulse/issues/{issue_id}/enrich", headers=H(admin_token))
     assert res.status_code == 200
     assert res.json()["sentiment"] is None  # no AI key in tests
+
+
+@pytest.mark.asyncio
+async def test_webhook_accepts_timezone_aware_published_at(client, admin_token):
+    res = await client.post("/api/admin/pulse/topics", json={"label": "TZ", "query": "tz"}, headers=H(admin_token))
+    topic_id = res.json()["id"]
+    res = await client.post("/api/admin/pulse/webhook/n8n", json={
+        "topic_id": topic_id, "url": "https://x.com/tz1",
+        "title": "berita", "text": "isi", "published_at": "2026-06-06T08:00:00Z",
+    })
+    assert res.status_code == 200
+    assert res.json()["ingested"] == 1
