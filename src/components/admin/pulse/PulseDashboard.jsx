@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, ThumbsUp, ThumbsDown, Minus, Clock, Calendar } from 'lucide-react';
+import { Layers, ThumbsUp, ThumbsDown, Minus, Clock, Calendar, Flame, Eye, History } from 'lucide-react';
 import { useIssues } from '../../../hooks/usePulse';
 import { PlatformIcon } from './PlatformIcon';
 import TopicManager from './TopicManager';
@@ -34,8 +34,45 @@ function matchesSentiment(issue, filter) {
 
 function matchesPlatform(issue, platform) {
   if (platform === 'all') return true;
-  if (!issue.source_items) return true; // card filters its sources on expand
-  return issue.source_items.some((s) => s.platform === platform);
+  if (Array.isArray(issue.platforms)) return issue.platforms.includes(platform);
+  if (issue.source_items) return issue.source_items.some((s) => s.platform === platform);
+  return true;
+}
+
+const SORTS = [
+  { key: 'score', label: 'Skor', Icon: Flame },
+  { key: 'reach', label: 'Reach', Icon: Eye },
+  { key: 'recent', label: 'Terbaru', Icon: History },
+];
+
+const RANGES = [
+  { key: 'all', label: 'Semua' },
+  { key: '1', label: 'Hari ini' },
+  { key: '3', label: '3 hari' },
+  { key: '7', label: '7 hari' },
+  { key: '30', label: '30 hari' },
+  { key: 'custom', label: 'Kustom' },
+];
+
+function withinRange(iso, preset, from, to) {
+  if (preset === 'all') return true;
+  const t = new Date(iso || 0).getTime();
+  if (Number.isNaN(t)) return false;
+  if (preset === 'custom') {
+    const lo = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
+    const hi = to ? new Date(`${to}T23:59:59`).getTime() : Infinity;
+    return t >= lo && t <= hi;
+  }
+  return t >= Date.now() - Number(preset) * 86400000;
+}
+
+function sortIssues(list, sortBy) {
+  const arr = [...list];
+  if (sortBy === 'reach') return arr.sort((a, b) => (b.reach_total || 0) - (a.reach_total || 0));
+  if (sortBy === 'recent') {
+    return arr.sort((a, b) => new Date(b.last_seen_at || 0) - new Date(a.last_seen_at || 0));
+  }
+  return arr.sort((a, b) => (b.score || 0) - (a.score || 0));
 }
 
 function Chip({ active, onClick, children }) {
@@ -56,10 +93,20 @@ export default function PulseDashboard() {
   const [platform, setPlatform] = useState('all');
   const [sentiment, setSentiment] = useState('all');
   const [dateMode, setDateMode] = useState('relative'); // 'relative' | 'absolute'
+  const [sortBy, setSortBy] = useState('score'); // 'score' | 'reach' | 'recent'
+  const [range, setRange] = useState('all'); // 'all' | '1' | '3' | '7' | '30' | 'custom'
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const { issues, loading } = useIssues({ topicId });
 
-  const filtered = issues.filter(
-    (i) => matchesSentiment(i, sentiment) && matchesPlatform(i, platform)
+  const filtered = sortIssues(
+    issues.filter(
+      (i) =>
+        matchesSentiment(i, sentiment) &&
+        matchesPlatform(i, platform) &&
+        withinRange(i.last_seen_at, range, from, to)
+    ),
+    sortBy
   );
 
   return (
@@ -101,6 +148,43 @@ export default function PulseDashboard() {
                 {dateMode === 'relative' ? <Clock size={12} /> : <Calendar size={12} />}
                 {dateMode === 'relative' ? 'Relatif' : 'Tanggal'}
               </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">Urutkan</span>
+              {SORTS.map(({ key, label, Icon }) => (
+                <Chip key={key} active={sortBy === key} onClick={() => setSortBy(key)}>
+                  <Icon size={12} />
+                  {label}
+                </Chip>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">Rentang</span>
+              {RANGES.map((r) => (
+                <Chip key={r.key} active={range === r.key} onClick={() => setRange(r.key)}>
+                  {r.key === 'custom' ? <Calendar size={12} /> : null}
+                  {r.label}
+                </Chip>
+              ))}
+              {range === 'custom' && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-1 text-xs text-[#6B6555]">
+                  <input
+                    type="date"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                    className="bg-transparent text-xs outline-none"
+                    aria-label="Dari tanggal"
+                  />
+                  <span className="text-[#9A9486]">–</span>
+                  <input
+                    type="date"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    className="bg-transparent text-xs outline-none"
+                    aria-label="Sampai tanggal"
+                  />
+                </span>
+              )}
             </div>
           </div>
 

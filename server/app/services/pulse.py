@@ -40,15 +40,21 @@ async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict]) -
         if pub is not None and pub.tzinfo is not None:
             pub = pub.astimezone(timezone.utc).replace(tzinfo=None)
         seen_at = pub or datetime.utcnow()
+        metrics = raw.get("metrics") or None
         db.add(SourceItem(
             topic_id=topic.id, issue_id=issue.id, source=raw["source"],
             platform=raw.get("platform"), url=url, title=raw.get("title"),
             text=raw.get("text", "") or "", author=raw.get("author"),
-            published_at=pub, simhash=sh,
+            published_at=pub, simhash=sh, metrics=metrics,
         ))
         issue.item_count += 1
         if seen_at > issue.last_seen_at:
             issue.last_seen_at = seen_at
+        # Aggregate metrics + platforms to the issue level for list-view triage.
+        issue.reach_total = (issue.reach_total or 0) + int((metrics or {}).get("reach") or 0)
+        issue.engagement_total = (issue.engagement_total or 0) + int((metrics or {}).get("engagement") or 0)
+        if raw.get("platform"):
+            issue.platforms = sorted(set(issue.platforms or []) | {raw["platform"]})
         issue.score = issue_score(issue.item_count, issue.last_seen_at)
         created += 1
     await db.flush()

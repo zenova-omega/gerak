@@ -87,10 +87,11 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
         <div>
           <div className="font-semibold text-[#2B2B2B]">{issue.title || '(tanpa judul)'}</div>
           {issue.summary && <div className="mt-1 text-xs text-[#6B6555]">{issue.summary}</div>}
-          <div className="mt-2 flex items-center gap-2 text-[11px] text-[#6B6555]">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6B6555]">
             <span>{issue.item_count} post</span>
-            <span>·</span>
             <span>skor {Number(issue.score).toFixed(1)}</span>
+            <Metric icon={Eye} value={issue.reach_total} title="Total reach" />
+            <Metric icon={Activity} value={issue.engagement_total} title="Total engagement" />
             {headTag && <span className={`rounded-full px-2 py-0.5 ${headTag.cls}`}>{headTag.label}</span>}
           </div>
         </div>

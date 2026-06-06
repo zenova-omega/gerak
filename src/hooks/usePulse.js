@@ -10,7 +10,7 @@ const MOCK_ISSUES = [
   {
     id: 'm1', topic_id: 't1',
     title: 'TNI AD gelar bakti sosial & pengobatan gratis di Jakarta',
-    item_count: 8, score: 7.2, sentiment: 0.6,
+    item_count: 8, score: 7.2, reach_total: 389300, engagement_total: 27850, platforms: ['news', 'instagram', 'tiktok', 'x', 'youtube'], sentiment: 0.6,
     summary: 'Liputan positif soal bakti sosial dan pengobatan gratis TNI AD di Jakarta Timur menyebar di media dan sosmed.',
     last_seen_at: '2026-06-06T09:40:00',
     source_items: [
@@ -25,7 +25,7 @@ const MOCK_ISSUES = [
   {
     id: 'm2', topic_id: 't1',
     title: 'Diskusi kebijakan publik pekan ini menuai pro–kontra',
-    item_count: 5, score: 4.1, sentiment: -0.25,
+    item_count: 5, score: 4.1, reach_total: 56000, engagement_total: 2750, platforms: ['news', 'x', 'facebook'], sentiment: -0.25,
     summary: 'Perbincangan kebijakan baru memicu opini terbelah; nada cenderung kritis di kanal berita dan X.',
     last_seen_at: '2026-06-06T06:15:00',
     source_items: [
@@ -38,7 +38,7 @@ const MOCK_ISSUES = [
   {
     id: 'm3', topic_id: 't1',
     title: 'Harga pangan stabil jelang akhir bulan',
-    item_count: 3, score: 2.4, sentiment: 0.1,
+    item_count: 3, score: 2.4, reach_total: 23100, engagement_total: 1190, platforms: ['news', 'web', 'instagram'], sentiment: 0.1,
     summary: 'Pemberitaan netral soal stabilitas harga pangan menjelang akhir bulan.',
     last_seen_at: '2026-06-05T18:00:00',
     source_items: [

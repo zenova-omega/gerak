@@ -26,6 +26,8 @@ def _issue_dict(i: Issue) -> dict:
     return {
         "id": i.id, "topic_id": i.topic_id, "title": i.title,
         "item_count": i.item_count, "score": i.score,
+        "reach_total": i.reach_total, "engagement_total": i.engagement_total,
+        "platforms": i.platforms or [],
         "sentiment": i.sentiment, "summary": i.summary,
         "first_seen_at": i.first_seen_at, "last_seen_at": i.last_seen_at,
     }
@@ -142,7 +144,7 @@ async def n8n_webhook(
     raw = {
         "source": "n8n", "platform": item.platform, "url": item.url,
         "title": item.title, "text": item.text, "author": item.author,
-        "published_at": item.published_at,
+        "published_at": item.published_at, "metrics": item.metrics,
     }
     created = await ingest_items(db, topic, [raw])
     return {"ingested": created}

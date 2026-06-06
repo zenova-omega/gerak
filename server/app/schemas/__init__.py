@@ -140,3 +140,4 @@ class N8nItem(BaseModel):
     author: str | None = None
     platform: str | None = "web"
     published_at: datetime | None = None
+    metrics: dict | None = None

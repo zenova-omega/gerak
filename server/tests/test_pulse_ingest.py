@@ -108,3 +108,19 @@ async def test_crawl_skips_disallowed_browserless_target(db):
     # Disallowed target is skipped -> no scrape attempted -> no network -> 0 ingested
     count = await crawl_topic(db, t, settings)
     assert count == 0
+
+
+@pytest.mark.asyncio
+async def test_ingest_aggregates_reach_and_platforms(db, topic):
+    raws = [
+        {"source": "n8n", "platform": "instagram", "url": "https://a.com/ig",
+         "title": "Baksos TNI seru di Jakarta", "text": "", "metrics": {"reach": 1000, "engagement": 100}},
+        {"source": "rss", "platform": "news", "url": "https://b.com/news",
+         "title": "Baksos TNI Seru di Jakarta!", "text": "", "metrics": {"reach": 500, "engagement": 30}},
+    ]
+    await ingest_items(db, topic, raws)
+    from app.models.pulse import Issue
+    issue = (await db.execute(select(Issue).where(Issue.topic_id == topic.id))).scalars().first()
+    assert issue.reach_total == 1500
+    assert issue.engagement_total == 130
+    assert set(issue.platforms) == {"instagram", "news"}
