@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
+import { COMMAND_CENTER_ITEMS, OPERASI_IDS, commandCenterHref } from './lib/adminNav';
 import Globe from 'react-globe.gl';
 import ForceGraph3D from 'react-force-graph-3d';
 import { useSpring, animated, useTransition } from '@react-spring/web';
@@ -841,7 +842,7 @@ export default function App(){
   const [verified,setVerified]=useState({});
   const [uploaded,setUploaded]=useState(false);
   const [adminTab,setAdminTab]=useState('overview');
-  const [adSideTab,setAdSideTab]=useState('dashboard');
+  const [adSideTab,setAdSideTab]=useState(()=>{const t=new URLSearchParams(window.location.search).get('tab');return OPERASI_IDS.includes(t)?t:'dashboard';});
   const [adSubTab,setAdSubTab]=useState('ringkasan');
   const [missionForm,setMissionForm]=useState({type:'EVENT',step:0,title:'',desc:'',xp:200,bonus:0,deadline:'',status:'TERBUKA',
     /* EVENT */ location:'',eventDate:'',capacity:100,checkin:'QR Code',lat:'',lng:'',eventNote:'',
@@ -2929,6 +2930,9 @@ export default function App(){
     const [aiResult,setAiResult]=useState(null);
     const [uploading,setUploading]=useState(false);
     const [joining,setJoining]=useState(false);
+    // ENGAGEMENT: track completed like/share actions per post — {`${postIdx}-${action}`:true}
+    const [engActions,setEngActions]=useState({});
+    const [engDoneFlag,setEngDoneFlag]=useState(false);
     const done=m.status==='SELESAI'||(jm&&jm.status==='SELESAI');
 
     const steps=isJoined?[
@@ -2945,6 +2949,194 @@ export default function App(){
 
     const doAiCheck=()=>{setAiChecking(true);setTimeout(()=>{setAiChecking(false);setAiResult({pass:true,score:87,checks:[{label:'Format konten sesuai',pass:true},{label:'Hashtag terdeteksi',pass:true},{label:'Durasi memenuhi syarat',pass:true},{label:'Konten original (bukan duplikat)',pass:true},{label:'Tone & messaging sesuai brief',pass:false,note:'Minor: pertimbangkan tambah CTA'}]});},2000)};
 
+    /* ══════════════════════════════════════════════════════════════
+       ENGAGEMENT — alur simpel 1 layar.
+       Akun sosmed sudah tersambung otomatis → cukup Like/Share post
+       resmi dari admin. Tanpa upload konten, tanpa AI check.
+       Verifikasi otomatis: semua aksi selesai → XP langsung masuk.
+    ══════════════════════════════════════════════════════════════ */
+    if(m.type==='ENGAGEMENT'){
+      const engPosts=(m.refPosts&&m.refPosts.length>0)?m.refPosts:[{
+        platform:m.socialPlatform||(m.targetPlatforms&&m.targetPlatforms[0])||'instagram',
+        handle:'@dispenad_tniad',avatar:'DA',author:'TNI AD',time:'Baru saja',
+        content:m.desc,image:false,actions:['like','share'],likes:'—',comments:'—',shares:'—',
+      }];
+      const actMeta={like:{icon:'favorite',label:'Like'},share:{icon:'share',label:'Share'},repost:{icon:'repeat',label:'Repost'}};
+      const reqFor=p=>(p.actions||[]).filter(a=>['like','share','repost'].includes(a));
+      const totalReq=engPosts.reduce((n,p)=>n+reqFor(p).length,0);
+      const alreadyDone=done;
+      const doneCount=alreadyDone?totalReq:Object.keys(engActions).filter(key=>engActions[key]).length;
+      const allDone=alreadyDone||engDoneFlag||(totalReq>0&&doneCount>=totalReq);
+      const myHandle='@'+userData.name.toLowerCase().replace(/\s+/g,'_');
+      const platforms=[...new Set(engPosts.map(p=>p.platform))];
+      const pLabel={instagram:'Instagram',tiktok:'TikTok',x:'X',facebook:'Facebook',youtube:'YouTube'};
+      const pCol={instagram:'#E1306C',tiktok:'#1A1A1A',x:'#1DA1F2',facebook:'#1877F2',youtube:'#FF0000'};
+      const toggleAct=(i,a)=>{
+        const key=`${i}-${a}`;
+        setEngActions(prev=>{
+          if(prev[key])return prev; // sekali selesai, tetap selesai
+          const next={...prev,[key]:true};
+          const dc=Object.keys(next).filter(kk=>next[kk]).length;
+          if(totalReq>0&&dc>=totalReq){
+            setTimeout(()=>{
+              setEngDoneFlag(true);
+              setJoinedMissions(p=>({...p,[m.id]:{status:'SELESAI',joinedAt:p[m.id]?.joinedAt||'8 Mar 2026',submittedAt:'8 Mar 2026'}}));
+              showToast(`Misi selesai! +${m.xp} XP otomatis masuk 🎉`);
+            },300);
+          }else{
+            showToast(`${actMeta[a]?.label||a} terverifikasi`);
+          }
+          return next;
+        });
+      };
+      return(<div key={k} className="flex flex-col gap-4" style={{paddingBottom:0,minHeight:'100%'}}>
+        {/* Back */}
+        <button onClick={()=>nav('misi')} className="stagger-1 back-btn" style={{color:C.textSec,fontSize:13,fontWeight:600,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4,paddingTop:4}}>
+          <MI name="arrow_back" size={18} style={{color:'inherit'}}/> Kembali
+        </button>
+
+        {/* Hero */}
+        {MISSION_ILLUST[m.id]&&(()=>{const il=MISSION_ILLUST[m.id];return(
+        <div className="stagger-1" style={{borderRadius:16,overflow:'hidden',position:'relative'}}>
+          <IllustCard icon={il.icon} label={il.label} bg={il.bg} accent={il.accent} height={120} img={il.img}/>
+          <div style={{position:'absolute',bottom:10,left:12,display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:28,height:28,borderRadius:8,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="thumb_up" size={14} fill style={{color:'#fff'}}/>
+            </div>
+            <span style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.8)',textTransform:'uppercase',letterSpacing:1}}>ENGAGEMENT</span>
+          </div>
+        </div>);})()}
+
+        {/* Header + Reward */}
+        <div className="stagger-1">
+          {!MISSION_ILLUST[m.id]&&<div className="flex items-center gap-2 mb-2">
+            <div style={{width:28,height:28,borderRadius:8,background:C.orangeLight,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <MI name="thumb_up" size={14} fill style={{color:C.orange}}/>
+            </div>
+            <span style={{fontSize:11,fontWeight:700,color:C.orange,textTransform:'uppercase',letterSpacing:1}}>ENGAGEMENT</span>
+          </div>}
+          <h2 style={{fontSize:20,fontWeight:800,color:C.text,lineHeight:1.2,marginBottom:6}}>{m.title}</h2>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span style={{background:C.goldLight,color:C.gold,borderRadius:8,padding:'4px 12px',fontSize:13,fontWeight:800,fontFamily:"'JetBrains Mono'",border:'1px solid rgba(20,83,45,0.15)'}}>+{m.xp} XP</span>
+            {m.bonus&&<span style={{background:C.greenLight,color:C.green,borderRadius:8,padding:'4px 10px',fontSize:11,fontWeight:700,border:'1px solid rgba(34,197,94,0.2)'}}>+{m.bonus} bonus</span>}
+            <span style={{fontSize:11,color:C.textMuted}}><MI name="group" size={14} style={{verticalAlign:'middle',marginRight:2}}/>{m.participants}</span>
+            <span style={{fontSize:11,color:C.textMuted}}><MI name="schedule" size={14} style={{verticalAlign:'middle',marginRight:2}}/>{m.deadline}</span>
+          </div>
+        </div>
+
+        {/* Brief singkat */}
+        <Card className="stagger-2">
+          <p style={{fontSize:13,color:C.textSec,lineHeight:1.6}}>{m.desc}</p>
+        </Card>
+
+        {/* Akun tersambung otomatis */}
+        <Card className="stagger-2" style={{borderLeft:`3px solid ${C.green}`}}>
+          <div className="flex items-center gap-2 mb-2">
+            <MI name="link" size={18} fill style={{color:C.green}}/>
+            <h3 style={{fontSize:13,fontWeight:700,color:C.text}}>Akun Sosial Tersambung</h3>
+            <span style={{marginLeft:'auto',fontSize:10,fontWeight:700,color:C.green,background:C.greenLight,padding:'2px 8px',borderRadius:5}}>OTOMATIS</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {platforms.map((pf,i)=>(
+              <div key={i} className="flex items-center gap-3" style={{padding:'8px 10px',borderRadius:8,background:C.surfaceLight,border:`1px solid ${C.border}`}}>
+                <div style={{width:30,height:30,borderRadius:8,background:C.surface,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.border}`}}>
+                  <SocialIcon platform={pf} size={15} color={pCol[pf]||C.text}/>
+                </div>
+                <div className="flex-1">
+                  <p style={{fontSize:12,fontWeight:700,color:C.text}}>{pLabel[pf]||pf}</p>
+                  <p style={{fontSize:10,color:C.textMuted,fontFamily:"'JetBrains Mono'"}}>{myHandle}</p>
+                </div>
+                <span style={{fontSize:10,fontWeight:700,color:C.green,background:C.greenLight,padding:'3px 8px',borderRadius:5,display:'flex',alignItems:'center',gap:3}}>
+                  <MI name="check_circle" size={12} fill style={{color:C.green}}/>Tersambung
+                </span>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:11,color:C.textMuted,marginTop:8,lineHeight:1.4}}>Akunmu sudah tersambung — cukup <b style={{color:C.textSec}}>Like</b> atau <b style={{color:C.textSec}}>Share</b> post di bawah. Tanpa upload konten, terverifikasi otomatis.</p>
+        </Card>
+
+        {/* Progress */}
+        {!allDone&&totalReq>0&&(
+          <div className="stagger-3" style={{padding:'2px 2px'}}>
+            <div className="flex items-center justify-between mb-1">
+              <span style={{fontSize:11,fontWeight:600,color:C.textSec}}>Progress Aksi</span>
+              <span style={{fontSize:11,fontWeight:700,color:C.orange,fontFamily:"'JetBrains Mono'"}}>{doneCount}/{totalReq}</span>
+            </div>
+            <ProgressBar progress={totalReq?doneCount/totalReq:0} color={C.orange} height={6}/>
+          </div>
+        )}
+
+        {/* Selesai banner */}
+        {allDone&&(
+          <Card className="stagger-3" style={{borderLeft:`3px solid ${C.green}`,background:C.greenLight,position:'relative'}}>
+            <div style={{position:'absolute',top:-34,left:'50%',transform:'translateX(-50%)',pointerEvents:'none',fontSize:36,animation:'fadeInUp 400ms ease both'}}>🎉</div>
+            <div className="flex items-center gap-3">
+              <MI name="check_circle" size={32} fill style={{color:C.green}}/>
+              <div>
+                <p style={{fontSize:15,fontWeight:800,color:C.green}}>Misi Selesai!</p>
+                <p style={{fontSize:12,color:C.textSec}}>+{m.xp} XP otomatis masuk ke akunmu.</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Post resmi dari admin */}
+        <div className="stagger-4 flex flex-col gap-3">
+          <h3 style={{fontSize:14,fontWeight:700,color:C.text}}>Post Resmi dari Admin — Like & Share</h3>
+          {engPosts.map((post,i)=>{
+            const reqs=reqFor(post);
+            return(
+            <Card key={i} style={{padding:0,overflow:'hidden'}}>
+              <div className="flex items-center gap-3" style={{padding:'10px 14px',borderBottom:`1px solid ${C.borderLight}`}}>
+                <AvatarImg initials={post.avatar||'DA'} size={32} style={{borderRadius:8}}/>
+                <div className="flex-1">
+                  <p style={{fontSize:12,fontWeight:700,color:C.text}}>{post.handle}</p>
+                  <div className="flex items-center gap-1"><SocialIcon platform={post.platform} size={10} color={pCol[post.platform]||C.text}/><span style={{fontSize:10,color:C.textMuted}}>{post.author} · {post.time}</span></div>
+                </div>
+                <button onClick={()=>showToast('Membuka link post...')} style={{background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:3,color:C.primary,fontSize:11,fontWeight:600}}>
+                  <MI name="open_in_new" size={14} style={{color:C.primary}}/>Buka
+                </button>
+              </div>
+              <div style={{padding:'10px 14px'}}>
+                <p style={{fontSize:12,color:C.text,lineHeight:1.5,whiteSpace:'pre-line'}}>{post.content}</p>
+                {post.image&&<div style={{width:'100%',borderRadius:8,marginTop:8,overflow:'hidden'}}>
+                  {post.img?
+                    <img src={post.img} alt="" style={{width:'100%',height:160,objectFit:'cover',display:'block'}}/>
+                  :<IllustCard icon={post.platform==='tiktok'?'play_circle':'image'} label={post.platform==='tiktok'?'Video':'Foto'} bg={post.platform==='instagram'?'#833AB4':post.platform==='tiktok'?'#1A1A1A':'#1DA1F2'} accent="#14532D" height={120}/>}
+                </div>}
+              </div>
+              <div className="flex items-center gap-3" style={{padding:'0 14px 6px'}}>
+                <span style={{fontSize:10,color:C.textMuted}}><MI name="favorite" size={12} style={{color:C.red,verticalAlign:'middle',marginRight:1}}/>{post.likes}</span>
+                <span style={{fontSize:10,color:C.textMuted}}><MI name="chat_bubble" size={12} style={{verticalAlign:'middle',marginRight:1}}/>{post.comments}</span>
+                <span style={{fontSize:10,color:C.textMuted}}><MI name="share" size={12} style={{verticalAlign:'middle',marginRight:1}}/>{post.shares}</span>
+              </div>
+              <div className="flex" style={{borderTop:`1px solid ${C.borderLight}`}}>
+                {reqs.map((a,j)=>{
+                  const meta=actMeta[a]||{icon:'thumb_up',label:a};
+                  const isDone=alreadyDone||engActions[`${i}-${a}`];
+                  return <button key={j} disabled={isDone} onClick={()=>toggleAct(i,a)} className={!isDone?'tap-bounce':''} style={{flex:1,padding:'11px 0',background:isDone?C.greenLight:'transparent',border:'none',borderRight:j<reqs.length-1?`1px solid ${C.borderLight}`:'none',color:isDone?C.green:C.primary,fontSize:12,fontWeight:700,cursor:isDone?'default':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4,transition:'background 200ms'}}>
+                    <MI name={isDone?'check_circle':meta.icon} size={15} fill={isDone} style={{color:isDone?C.green:C.primary}}/>{isDone?`${meta.label} ✓`:meta.label}
+                  </button>;
+                })}
+              </div>
+            </Card>);
+          })}
+        </div>
+
+        {/* Bottom CTA */}
+        <div style={{position:'sticky',bottom:-8,zIndex:20,background:`linear-gradient(to top, ${C.bg} 60%, transparent)`,padding:'20px 0 8px',marginTop:8}}>
+          {allDone?(
+            <button onClick={()=>nav('misi')} className="tap-bounce" style={{width:'100%',padding:'14px 0',borderRadius:12,border:`1px solid ${C.border}`,background:C.surface,color:C.textSec,fontSize:15,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              <MI name="arrow_back" size={20} style={{color:C.textSec}}/> Kembali ke Misi
+            </button>
+          ):(
+            <div style={{width:'100%',padding:'13px 0',borderRadius:12,border:`1px dashed ${C.orange}60`,background:C.orangeLight,color:C.orange,fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              <MI name="touch_app" size={18} style={{color:C.orange}}/> Selesaikan {totalReq-doneCount} aksi lagi untuk dapat XP
+            </div>
+          )}
+        </div>
+      </div>);
+    }
 
     return(<div key={k} className="flex flex-col gap-4" style={{paddingBottom:0,minHeight:'100%'}}>
       {/* Back */}
@@ -3982,7 +4174,7 @@ export default function App(){
             </div>
           </div>
 
-          <p style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',textTransform:'uppercase',letterSpacing:3,padding:'0 20px',marginBottom:10}}>Menu</p>
+          <p style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',textTransform:'uppercase',letterSpacing:3,padding:'0 20px',marginBottom:10}}>Operasi</p>
           <nav className="flex flex-col gap-1" style={{padding:'0 10px'}}>
             {sideItems.map(s=>{
               const active=adSideTab===s.id;
@@ -3999,6 +4191,21 @@ export default function App(){
                 {s.id==='agents'&&<span style={{marginLeft:s.badge?4:'auto',fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.35)',background:'rgba(255,255,255,0.06)',padding:'2px 8px',borderRadius:6}}>412K</span>}
               </button>);
             })}
+          </nav>
+
+          {/* Command Center group — links into the new shell (/command-center) */}
+          <p style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',textTransform:'uppercase',letterSpacing:3,padding:'0 20px',margin:'18px 0 10px'}}>Command Center</p>
+          <nav className="flex flex-col gap-1" style={{padding:'0 10px'}}>
+            {COMMAND_CENTER_ITEMS.map(m=>(
+              <a key={m.id} href={m.enabled?commandCenterHref(m.id):undefined} style={{
+                display:'flex',alignItems:'center',gap:10,padding:'11px 14px',borderRadius:10,textDecoration:'none',
+                color:'rgba(255,255,255,0.5)',fontSize:13,fontWeight:500,textAlign:'left',transition:'all 200ms',width:'100%',
+                cursor:m.enabled?'pointer':'not-allowed',opacity:m.enabled?1:0.45,
+              }} onMouseEnter={e=>{if(m.enabled)e.currentTarget.style.background='rgba(255,255,255,0.04)'}} onMouseLeave={e=>{e.currentTarget.style.background='transparent'}}>
+                <MI name={m.icon} size={18} style={{color:'rgba(255,255,255,0.35)'}}/>{m.label}
+                {!m.enabled&&<span style={{marginLeft:'auto',fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.06)',padding:'2px 7px',borderRadius:6}}>segera</span>}
+              </a>
+            ))}
           </nav>
 
           {/* Presentation mode button */}
