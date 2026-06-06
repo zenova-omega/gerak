@@ -42,9 +42,10 @@ async def health():
 
 
 # Import and register routers
-from .routers import auth, missions, users, admin
+from .routers import auth, missions, users, admin, pulse
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(missions.router, prefix="/api/missions", tags=["missions"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(pulse.router, prefix="/api/admin/pulse", tags=["pulse"])
