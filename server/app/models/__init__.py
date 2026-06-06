@@ -5,6 +5,7 @@ from .broadcast import Broadcast, Kodam, SystemSetting
 from .audit import AuditLog
 from .pulse import WatchTopic, Issue, SourceItem
 from .survey import Survey, SurveyQuestion, SurveyResponse, SurveyAnswer
+from .studio import ContentDraft
 
 __all__ = [
     "User", "FamilyLink", "Role", "AccountType", "RankLevel", "Tier",
@@ -14,4 +15,5 @@ __all__ = [
     "AuditLog",
     "WatchTopic", "Issue", "SourceItem",
     "Survey", "SurveyQuestion", "SurveyResponse", "SurveyAnswer",
+    "ContentDraft",
 ]

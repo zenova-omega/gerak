@@ -174,3 +174,23 @@ class SurveyAnswerIn(BaseModel):
 
 class SurveyRespondRequest(BaseModel):
     answers: list[SurveyAnswerIn] = []
+
+
+class CaptionRequest(BaseModel):
+    prompt: str
+    tone: str = "netral"  # positif | negatif | netral | custom
+    n: int = 4
+    custom: str | None = None
+    source_issue_id: str | None = None
+
+
+class MemeRequest(BaseModel):
+    prompt: str
+    custom: str | None = None
+
+
+class DraftCreate(BaseModel):
+    kind: str  # caption | meme
+    prompt: str = ""
+    tone: str | None = None
+    payload: dict | None = None
