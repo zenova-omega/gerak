@@ -194,3 +194,24 @@ class DraftCreate(BaseModel):
     prompt: str = ""
     tone: str | None = None
     payload: dict | None = None
+
+
+class AccountCreate(BaseModel):
+    label: str
+    platform: str
+    handle: str = ""
+
+
+class ScheduledPostCreate(BaseModel):
+    caption: str = ""
+    media_url: str | None = None
+    platforms: list[str] = []
+    scheduled_at: datetime | None = None
+
+
+class ScheduledPostUpdate(BaseModel):
+    caption: str | None = None
+    media_url: str | None = None
+    platforms: list[str] | None = None
+    scheduled_at: datetime | None = None
+    status: str | None = None
