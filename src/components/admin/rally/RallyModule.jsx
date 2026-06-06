@@ -1,28 +1,12 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck,
   ExternalLink,
   Users,
   Trash2,
   PlusCircle,
-  RefreshCw,
   Megaphone,
 } from 'lucide-react';
 import { useRallies } from '../../../hooks/useRally';
-
-/* ─── Consent notice ─────────────────────────────────────────── */
-function ConsentNotice() {
-  return (
-    <div className="mb-5 flex items-start gap-3 rounded-2xl bg-[#1B4332]/5 border border-[#1B4332]/10 px-4 py-3">
-      <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#2D6A4F]" />
-      <p className="text-sm text-[#2D6A4F] leading-snug">
-        <span className="font-semibold">Pengingat sukarela.</span>{' '}
-        Setiap outlet like/komen sendiri dengan kalimatnya masing-masing.
-        Bukan otomasi, bukan komentar terkoordinasi.
-      </p>
-    </div>
-  );
-}
 
 /* ─── Create form ─────────────────────────────────────────────── */
 function CreateRallyForm({ onCreate }) {
@@ -187,27 +171,14 @@ function EmptyState() {
 
 /* ─── Main module ─────────────────────────────────────────────── */
 export default function RallyModule() {
-  const { rallies, loading, createRally, deleteRally, refetch } = useRallies();
+  const { rallies, loading, createRally, deleteRally } = useRallies();
 
   return (
     <div>
       {/* Header */}
-      <header className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-black text-[#1B4332]">Rally · Engagement</h1>
-          <p className="text-sm text-[#6B6555]">Ajak outlet meramaikan post resmi (sukarela).</p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#6B6555] transition hover:bg-[#EDEBE3]"
-        >
-          <RefreshCw size={13} />
-          Segarkan
-        </button>
+      <header className="mb-5">
+        <h1 className="text-xl font-black text-[#1B4332]">Rally · Engagement</h1>
       </header>
-
-      {/* Consent notice */}
-      <ConsentNotice />
 
       {/* Create form */}
       <CreateRallyForm onCreate={createRally} />
