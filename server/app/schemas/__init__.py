@@ -215,3 +215,10 @@ class ScheduledPostUpdate(BaseModel):
     platforms: list[str] | None = None
     scheduled_at: datetime | None = None
     status: str | None = None
+
+
+class RallyCreate(BaseModel):
+    title: str
+    post_url: str
+    talking_points: str = ""
+    target: str = "Semua outlet"

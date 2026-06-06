@@ -7,6 +7,7 @@ from .pulse import WatchTopic, Issue, SourceItem
 from .survey import Survey, SurveyQuestion, SurveyResponse, SurveyAnswer
 from .studio import ContentDraft
 from .scheduler import ConnectedAccount, ScheduledPost
+from .rally import EngagementRally, RallyAck
 
 __all__ = [
     "User", "FamilyLink", "Role", "AccountType", "RankLevel", "Tier",
@@ -18,4 +19,5 @@ __all__ = [
     "Survey", "SurveyQuestion", "SurveyResponse", "SurveyAnswer",
     "ContentDraft",
     "ConnectedAccount", "ScheduledPost",
+    "EngagementRally", "RallyAck",
 ]
