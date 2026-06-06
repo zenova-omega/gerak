@@ -38,7 +38,7 @@ export default function CommandCenter() {
           {COMMAND_CENTER_ITEMS.map((m) => (
             <NavLink
               key={m.id}
-              to={m.id}
+              to={`/command-center/${m.id}`}
               className={({ isActive }) =>
                 `block rounded-lg px-3 py-2 transition ${isActive ? 'bg-[#2D6A4F]' : 'hover:bg-[#234F3B]'} ${m.enabled ? '' : 'pointer-events-none opacity-40'}`
               }
@@ -67,6 +67,8 @@ export default function CommandCenter() {
           <Route path="scheduler" element={<SchedulerModule />} />
           <Route path="rally" element={<RallyModule />} />
           <Route path="campaigns" element={<CampaignsModule />} />
+          {/* Any unmatched / accumulated path falls back to Pulse instead of a blank screen */}
+          <Route path="*" element={<Navigate to="/command-center/pulse" replace />} />
         </Routes>
       </main>
     </div>
