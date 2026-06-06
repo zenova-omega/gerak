@@ -285,6 +285,15 @@ const typeBg=t=>({EVENT:C.purpleLight,KONTEN:C.primaryLight,ENGAGEMENT:C.orangeL
 const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONTEN:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,ENGAGEMENT:`linear-gradient(135deg,${C.orange},#EA580C)`,EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AKSI:`linear-gradient(135deg,${C.accent},#D32F2F)`,SURVEY:'linear-gradient(135deg,#4F46E5,#818CF8)'}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
 const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand',SURVEY:'ballot'}[t]||'star');
 const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan',SURVEY:'Polling & Feedback'}[t]||'');
+// Platform yang dipakai tiap tipe misi (untuk logo di kartu & detail). SURVEY = dalam aplikasi.
+const typePlatforms=t=>({
+  EVENT:['instagram','tiktok'],
+  KONTEN:['instagram','tiktok','x'],
+  ENGAGEMENT:['instagram','x','facebook'],
+  EDUKASI:['whatsapp','telegram'],
+  AKSI:['instagram','tiktok'],
+  SURVEY:[],
+}[t]||[]);
 const typeBonuses=t=>({
   EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:200,color:C.purple}],
   KONTEN:[{label:'Konten Terbaik',icon:'emoji_events',xp:250,color:C.gold},{label:'Paling Engaging',icon:'trending_up',xp:200,color:C.green},{label:'Paling Cepat Submit',icon:'speed',xp:100,color:C.teal},{label:'Paling Kreatif',icon:'auto_awesome',xp:150,color:C.purple}],
@@ -1553,6 +1562,11 @@ export default function App(){
           </div>
           <h3 style={{fontSize:16,fontWeight:700,color:done?C.textMuted:C.text,lineHeight:1.3,marginBottom:4,position:'relative',zIndex:1}} className="line-clamp-2">{m.title}</h3>
           <p style={{fontSize:13,color:C.textMuted,marginBottom:8,lineHeight:1.4,position:'relative',zIndex:1}} className="line-clamp-2">{m.desc}</p>
+          {(()=>{const pf=typePlatforms(m.type);return(
+            <div className="flex items-center gap-1.5" style={{marginBottom:8,position:'relative',zIndex:1}} title={pf.length?`Platform: ${pf.map(pName).join(', ')}`:'Dijawab dalam aplikasi'}>
+              {pf.length?pf.map(p=>(<span key={p} style={{display:'inline-flex',alignItems:'center'}}>{pIcon(p)?<MI name={pIcon(p)} size={13} style={{color:pColor(p)}}/>:<SocialIcon platform={p} size={13} color={pColor(p)}/>}</span>)):
+                <span style={{fontSize:10,color:C.textMuted,display:'inline-flex',alignItems:'center',gap:3}}><MI name="smartphone" size={12} style={{color:C.textMuted}}/>Dalam aplikasi</span>}
+            </div>);})()}
           <div className="flex items-center justify-between" style={{position:'relative',zIndex:1}}>
             <div className="flex items-center gap-3">
               <span style={{fontSize:12,fontWeight:700,color:done?C.textMuted:C.gold,fontFamily:"'JetBrains Mono'"}}>+{m.xp} XP</span>
@@ -3099,8 +3113,16 @@ export default function App(){
           </div>
         </div>
 
-        {/* Brief singkat */}
+        {/* Brief singkat — tipe + platform yang dipakai */}
         <Card className="stagger-2">
+          <div className="flex items-center gap-2 mb-2" style={{flexWrap:'wrap'}}>
+            <span style={{fontSize:10,fontWeight:700,color:tc,background:typeBg(m.type),padding:'3px 9px',borderRadius:6,letterSpacing:0.3}}>{m.type} · {typeDesc(m.type)}</span>
+            {(()=>{const pf=typePlatforms(m.type);if(!pf.length)return(<span style={{marginLeft:'auto',fontSize:11,color:C.textMuted,display:'inline-flex',alignItems:'center',gap:3}}><MI name="smartphone" size={13} style={{color:C.textMuted}}/>Dalam aplikasi</span>);return(
+              <span className="flex items-center gap-2" style={{marginLeft:'auto'}}>
+                <span style={{fontSize:10,color:C.textMuted}}>Platform</span>
+                {pf.map(p=>(<span key={p} style={{display:'inline-flex',alignItems:'center'}} title={pName(p)}>{pIcon(p)?<MI name={pIcon(p)} size={15} style={{color:pColor(p)}}/>:<SocialIcon platform={p} size={15} color={pColor(p)}/>}</span>))}
+              </span>);})()}
+          </div>
           <p style={{fontSize:13,color:C.textSec,lineHeight:1.6}}>{m.desc}</p>
         </Card>
 
@@ -3251,6 +3273,10 @@ export default function App(){
           <span style={{fontSize:11,color:C.textMuted}}>
             <MI name="schedule" size={14} style={{verticalAlign:'middle',marginRight:2}}/>{m.deadline}
           </span>
+          {(()=>{const pf=typePlatforms(m.type);if(!pf.length)return(<span style={{fontSize:11,color:C.textMuted,display:'inline-flex',alignItems:'center',gap:3}}><MI name="smartphone" size={13} style={{color:C.textMuted}}/>Dalam aplikasi</span>);return(
+            <span className="flex items-center gap-1.5" title={`Platform: ${pf.map(pName).join(', ')}`}>
+              {pf.map(p=>(<span key={p} style={{display:'inline-flex',alignItems:'center'}}>{pIcon(p)?<MI name={pIcon(p)} size={15} style={{color:pColor(p)}}/>:<SocialIcon platform={p} size={15} color={pColor(p)}/>}</span>))}
+            </span>);})()}
         </div>
         {/* Joined Status Banner */}
         {isJoined&&(
