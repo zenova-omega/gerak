@@ -273,11 +273,11 @@ const ACCOUNT_TYPES={
 // ENGAGEMENT = Like, share, comment, repost konten yang sudah ada
 // EDUKASI    = Distribusi materi edukasi ke grup/komunitas
 // AKSI       = Aksi langsung: petisi, door-to-door, rekrutmen relawan
-const typeColor=t=>({EVENT:C.purple,KONTEN:C.primary,ENGAGEMENT:C.orange,EDUKASI:C.secondary,AKSI:C.accent}[t]||C.primary);
-const typeBg=t=>({EVENT:C.purpleLight,KONTEN:C.primaryLight,ENGAGEMENT:C.orangeLight,EDUKASI:C.secondaryLight,AKSI:C.accentLight}[t]||C.primaryLight);
-const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONTEN:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,ENGAGEMENT:`linear-gradient(135deg,${C.orange},#EA580C)`,EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AKSI:`linear-gradient(135deg,${C.accent},#D32F2F)`}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
-const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand'}[t]||'star');
-const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan'}[t]||'');
+const typeColor=t=>({EVENT:C.purple,KONTEN:C.primary,ENGAGEMENT:C.orange,EDUKASI:C.secondary,AKSI:C.accent,SURVEY:'#4F46E5'}[t]||C.primary);
+const typeBg=t=>({EVENT:C.purpleLight,KONTEN:C.primaryLight,ENGAGEMENT:C.orangeLight,EDUKASI:C.secondaryLight,AKSI:C.accentLight,SURVEY:'rgba(79,70,229,0.12)'}[t]||C.primaryLight);
+const typeGradient=t=>({EVENT:`linear-gradient(135deg,${C.purple},#7C3AED)`,KONTEN:`linear-gradient(135deg,${C.primary},${C.primaryAccent})`,ENGAGEMENT:`linear-gradient(135deg,${C.orange},#EA580C)`,EDUKASI:`linear-gradient(135deg,${C.secondary},#546E7A)`,AKSI:`linear-gradient(135deg,${C.accent},#D32F2F)`,SURVEY:'linear-gradient(135deg,#4F46E5,#818CF8)'}[t]||`linear-gradient(135deg,${C.primary},${C.primaryAccent})`);
+const typeIcon=t=>({EVENT:'event',KONTEN:'videocam',ENGAGEMENT:'thumb_up',EDUKASI:'school',AKSI:'front_hand',SURVEY:'ballot'}[t]||'star');
+const typeDesc=t=>({EVENT:'Kehadiran & Partisipasi',KONTEN:'Buat Konten Original',ENGAGEMENT:'Like, Share & Comment',EDUKASI:'Distribusi Materi',AKSI:'Aksi Lapangan',SURVEY:'Polling & Feedback'}[t]||'');
 const typeBonuses=t=>({
   EVENT:[{label:'Paling Tepat Waktu',icon:'timer',xp:100,color:C.teal},{label:'Dokumentasi Terbaik',icon:'photo_camera',xp:150,color:C.primary},{label:'Koordinator Lapangan',icon:'handshake',xp:200,color:C.purple}],
   KONTEN:[{label:'Konten Terbaik',icon:'emoji_events',xp:250,color:C.gold},{label:'Paling Engaging',icon:'trending_up',xp:200,color:C.green},{label:'Paling Cepat Submit',icon:'speed',xp:100,color:C.teal},{label:'Paling Kreatif',icon:'auto_awesome',xp:150,color:C.purple}],
@@ -4777,7 +4777,7 @@ export default function App(){
                   <div>
                     <FLabel>Tipe Misi</FLabel>
                     <div className="flex gap-2 flex-wrap">
-                      {['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI'].map(t=>(
+                      {['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI','SURVEY'].map(t=>(
                         <button key={t} onClick={()=>setMissionForm(f=>({...f,type:t}))} style={{
                           padding:'10px 16px',borderRadius:12,border:`1.5px solid ${mf.type===t?typeColor(t):C.border}`,cursor:'pointer',
                           background:mf.type===t?typeBg(t):'transparent',color:mf.type===t?typeColor(t):C.textSec,
@@ -4788,6 +4788,11 @@ export default function App(){
                       ))}
                     </div>
                     <p style={{fontSize:11,color:tc,fontWeight:600,marginTop:6}}>{typeDesc(mf.type)}</p>
+                    {mf.type==='SURVEY'&&(
+                      <a href="/command-center/survey" style={{display:'inline-flex',alignItems:'center',gap:5,marginTop:8,padding:'8px 12px',borderRadius:10,background:'rgba(79,70,229,0.1)',color:'#4F46E5',fontSize:11,fontWeight:600,textDecoration:'none'}}>
+                        <MI name="ballot" size={15}/> Bangun pertanyaan & lihat hasil di Command Center → Survey
+                      </a>
+                    )}
                   </div>
                   <div><FLabel>Judul Misi</FLabel><FInput value={mf.title} onChange={e=>setMissionForm(f=>({...f,title:e.target.value}))} placeholder="Judul misi yang jelas dan menarik..."/></div>
                   <div><FLabel>Deskripsi</FLabel><FArea value={mf.desc} onChange={e=>setMissionForm(f=>({...f,desc:e.target.value}))} placeholder="Jelaskan apa yang harus dilakukan anggota..."/></div>
