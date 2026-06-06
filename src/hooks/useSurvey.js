@@ -98,21 +98,47 @@ export function useSurveyResults(id) {
   return { results: data, loading, error, refetch };
 }
 
-const MOCK_SURVEY = {
-  id: 'sv1', title: 'Kepuasan Kegiatan Bakti Sosial', description: 'Bantu kami menilai kegiatan kemarin. Hanya 4 pertanyaan singkat.', status: 'open',
-  questions: [
-    { id: 'q1', order: 0, type: 'single', text: 'Seberapa puas Anda dengan kegiatan?', options: ['Sangat puas', 'Puas', 'Biasa', 'Kurang'], rating_max: 5, required: true },
-    { id: 'q2', order: 1, type: 'rating', text: 'Nilai keseluruhan kegiatan (1-5)', options: null, rating_max: 5, required: true },
-    { id: 'q3', order: 2, type: 'yesno', text: 'Apakah Anda akan ikut kegiatan serupa lagi?', options: null, rating_max: 5, required: true },
-    { id: 'q4', order: 3, type: 'text', text: 'Saran untuk kegiatan berikutnya?', options: null, rating_max: 5, required: false },
-  ],
+const MOCK_RUNNER_SURVEYS = {
+  sv1: {
+    id: 'sv1', title: 'Kepuasan Kegiatan Bakti Sosial', description: 'Bantu kami menilai kegiatan kemarin. Hanya 4 pertanyaan singkat.', status: 'open',
+    questions: [
+      { id: 'q1', order: 0, type: 'single', text: 'Seberapa puas Anda dengan kegiatan?', options: ['Sangat puas', 'Puas', 'Biasa', 'Kurang'], rating_max: 5, required: true },
+      { id: 'q2', order: 1, type: 'rating', text: 'Nilai keseluruhan kegiatan (1-5)', options: null, rating_max: 5, required: true },
+      { id: 'q3', order: 2, type: 'yesno', text: 'Apakah Anda akan ikut kegiatan serupa lagi?', options: null, rating_max: 5, required: true },
+      { id: 'q4', order: 3, type: 'text', text: 'Saran untuk kegiatan berikutnya?', options: null, rating_max: 5, required: false },
+    ],
+  },
+  sv2: {
+    id: 'sv2', title: 'Preferensi Konten Media Sosial', description: 'Konten seperti apa yang paling kamu suka? 3 pertanyaan singkat.', status: 'open',
+    questions: [
+      { id: 'q1', order: 0, type: 'single', text: 'Format konten favoritmu?', options: ['Video pendek', 'Foto / Carousel', 'Infografis', 'Teks / Caption'], rating_max: 5, required: true },
+      { id: 'q2', order: 1, type: 'multiple', text: 'Topik apa yang ingin kamu lihat? (boleh lebih dari satu)', options: ['Edukasi', 'Hiburan', 'Berita', 'Behind the scene'], rating_max: 5, required: true },
+      { id: 'q3', order: 2, type: 'text', text: 'Ide konten yang kamu harapkan?', options: null, rating_max: 5, required: false },
+    ],
+  },
+  sv3: {
+    id: 'sv3', title: 'Jam Aktif & Platform Favorit', description: 'Bantu kami memilih waktu & platform terbaik. 3 pertanyaan.', status: 'open',
+    questions: [
+      { id: 'q1', order: 0, type: 'single', text: 'Kapan kamu paling aktif di media sosial?', options: ['Pagi', 'Siang', 'Sore', 'Malam'], rating_max: 5, required: true },
+      { id: 'q2', order: 1, type: 'single', text: 'Platform yang paling sering kamu pakai?', options: ['Instagram', 'TikTok', 'X', 'YouTube', 'Facebook'], rating_max: 5, required: true },
+      { id: 'q3', order: 2, type: 'yesno', text: 'Bersedia menerima pengingat saat ada konten baru?', options: null, rating_max: 5, required: true },
+    ],
+  },
+  sv4: {
+    id: 'sv4', title: 'Kepuasan Aplikasi SCOUT', description: 'Pendapatmu soal aplikasi. 3 pertanyaan singkat.', status: 'open',
+    questions: [
+      { id: 'q1', order: 0, type: 'rating', text: 'Seberapa mudah aplikasi ini dipakai? (1-5)', options: null, rating_max: 5, required: true },
+      { id: 'q2', order: 1, type: 'single', text: 'Fitur yang paling berguna buatmu?', options: ['Misi', 'Polling', 'Pangkat & XP', 'Toko Poin'], rating_max: 5, required: true },
+      { id: 'q3', order: 2, type: 'text', text: 'Apa yang bisa kami tingkatkan?', options: null, rating_max: 5, required: false },
+    ],
+  },
 };
 
 export async function fetchSurvey(id) {
   try {
     return await api.get(`/surveys/${id}`);
   } catch {
-    return MOCK_SURVEY;
+    return MOCK_RUNNER_SURVEYS[id] || MOCK_RUNNER_SURVEYS.sv1;
   }
 }
 

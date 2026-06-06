@@ -587,6 +587,24 @@ const MISSIONS=[
     analytics:{completion:0,avgTime:'3 menit',topCity:'-',reach:'0',engagement:'0%',sentiment:0,conversionRate:'0%'},
     type_config:{survey_id:'sv1'},
     templates:[]},
+  {id:17,type:'SURVEY',title:'Survey: Preferensi Konten Media Sosial',
+    desc:'Konten seperti apa yang paling kamu suka? 3 pertanyaan singkat.',
+    xp:50,bonus:0,participants:0,status:'TERBUKA',deadline:'30 Jun 2026',
+    analytics:{completion:0,avgTime:'2 menit',topCity:'-',reach:'0',engagement:'0%',sentiment:0,conversionRate:'0%'},
+    type_config:{survey_id:'sv2'},
+    templates:[]},
+  {id:18,type:'SURVEY',title:'Survey: Jam Aktif & Platform Favorit',
+    desc:'Bantu kami memilih waktu & platform terbaik untuk posting. 3 pertanyaan.',
+    xp:50,bonus:0,participants:0,status:'TERBUKA',deadline:'30 Jun 2026',
+    analytics:{completion:0,avgTime:'2 menit',topCity:'-',reach:'0',engagement:'0%',sentiment:0,conversionRate:'0%'},
+    type_config:{survey_id:'sv3'},
+    templates:[]},
+  {id:19,type:'SURVEY',title:'Survey: Kepuasan Aplikasi SCOUT',
+    desc:'Pendapatmu soal aplikasi SCOUT. 3 pertanyaan singkat.',
+    xp:50,bonus:0,participants:0,status:'TERBUKA',deadline:'30 Jun 2026',
+    analytics:{completion:0,avgTime:'2 menit',topCity:'-',reach:'0',engagement:'0%',sentiment:0,conversionRate:'0%'},
+    type_config:{survey_id:'sv4'},
+    templates:[]},
 ];
 
 const RANKS=[
@@ -1105,6 +1123,45 @@ export default function App(){
           </div>
         </div>
       </div>
+
+      {/* ═══ POLLING — muncul otomatis, jawab langsung tanpa accept ═══ */}
+      {(()=>{
+        const polls=MISSIONS.filter(m=>m.type==='SURVEY'&&m.status!=='SELESAI');
+        if(polls.length===0)return null;
+        return(
+        <div className="stagger-2" style={{marginBottom:16}}>
+          <div className="flex items-center justify-between" style={{marginBottom:10,padding:'0 2px'}}>
+            <div className="flex items-center gap-2">
+              <MI name="ballot" size={18} fill style={{color:'#4F46E5'}}/>
+              <h3 style={{fontSize:15,fontWeight:800,color:C.text}}>Polling untuk Kamu</h3>
+            </div>
+            <span style={{fontSize:11,fontWeight:600,color:C.textMuted}}>{polls.length} aktif</span>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {polls.map(m=>(
+              <div key={m.id} role="button" aria-label={`Jawab polling: ${m.title}`} onClick={()=>openM(m)} className="tap-bounce" style={{
+                display:'flex',alignItems:'center',gap:12,padding:14,borderRadius:16,cursor:'pointer',
+                background:'linear-gradient(135deg,rgba(79,70,229,0.07),rgba(79,70,229,0.02))',
+                border:'1px solid rgba(79,70,229,0.18)',
+              }}>
+                <div style={{width:40,height:40,borderRadius:11,background:'rgba(79,70,229,0.12)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <MI name="how_to_vote" size={20} style={{color:'#4F46E5'}}/>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:13.5,fontWeight:700,color:C.text,lineHeight:1.3}}>{m.title.replace(/^Survey:\s*/,'')}</p>
+                  <div className="flex items-center gap-2" style={{marginTop:3}}>
+                    <span style={{fontSize:11,fontWeight:600,color:'#4F46E5'}}>+{m.xp} XP</span>
+                    <span style={{fontSize:11,color:C.textMuted}}>· {m.analytics?.avgTime||'2 menit'}</span>
+                  </div>
+                </div>
+                <div style={{padding:'7px 14px',borderRadius:10,background:'#4F46E5',color:'#fff',fontSize:12,fontWeight:700,flexShrink:0,display:'flex',alignItems:'center',gap:4}}>
+                  Jawab <MI name="arrow_forward" size={14} style={{color:'#fff'}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>);
+      })()}
 
       {/* ═══ BENTO STATS GRID ═══ */}
       <div className="stagger-2" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
