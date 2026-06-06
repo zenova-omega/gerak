@@ -24,6 +24,17 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
 
+    # AI (pluggable; opsional — Pulse jalan tanpa ini)
+    AI_PROVIDER: str = "claude"
+    ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
+
+    # Pulse / listening
+    BROWSERLESS_API_KEY: str = ""
+    BROWSERLESS_BASE: str = "https://chrome.browserless.io"
+    PULSE_WEBHOOK_SECRET: str = ""
+    ENABLE_SCHEDULER: bool = True
+
     class Config:
         env_file = ".env"
 
