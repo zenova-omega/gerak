@@ -35,7 +35,7 @@ function CreateRallyForm({ onCreate }) {
 
   return (
     <form onSubmit={handleSubmit} className="mb-6 rounded-2xl bg-white shadow-sm p-5">
-      <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-[#1B4332]">Buat Ajakan Baru</h2>
+      <h2 className="mb-4 text-sm font-black uppercase tracking-widest text-[#1B4332]">Create Actions</h2>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {/* Judul */}
