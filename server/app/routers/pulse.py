@@ -108,7 +108,8 @@ async def get_issue(issue_id: str, db: AsyncSession = Depends(get_db), admin: Us
     data = _issue_dict(issue)
     data["source_items"] = [
         {"id": s.id, "source": s.source, "platform": s.platform, "url": s.url,
-         "title": s.title, "author": s.author, "published_at": s.published_at}
+         "title": s.title, "author": s.author, "published_at": s.published_at,
+         "metrics": s.metrics}
         for s in items
     ]
     return data

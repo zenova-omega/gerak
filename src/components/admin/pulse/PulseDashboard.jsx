@@ -3,9 +3,63 @@ import { useIssues } from '../../../hooks/usePulse';
 import TopicManager from './TopicManager';
 import IssueCard from './IssueCard';
 
+const PLATFORMS = [
+  { key: 'all', label: 'Semua platform' },
+  { key: 'news', label: 'Berita' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'tiktok', label: 'TikTok' },
+  { key: 'x', label: 'X' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'web', label: 'Web' },
+];
+
+const SENTIMENTS = [
+  { key: 'all', label: 'Semua' },
+  { key: 'pos', label: 'Positif' },
+  { key: 'neg', label: 'Negatif' },
+  { key: 'netral', label: 'Netral' },
+];
+
+function matchesSentiment(issue, filter) {
+  if (filter === 'all') return true;
+  const s = issue.sentiment;
+  if (s === null || s === undefined) return false;
+  if (filter === 'pos') return s > 0.2;
+  if (filter === 'neg') return s < -0.2;
+  return s >= -0.2 && s <= 0.2; // netral
+}
+
+function matchesPlatform(issue, platform) {
+  if (platform === 'all') return true;
+  // List endpoint may not include source_items; keep the issue and let the
+  // card filter its sources on expand. Hide only when we can already tell.
+  if (!issue.source_items) return true;
+  return issue.source_items.some((s) => s.platform === platform);
+}
+
+function Chip({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+        active ? 'bg-[#1B4332] text-white' : 'bg-white text-[#6B6555] hover:bg-[#EDEBE3]'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function PulseDashboard() {
   const [topicId, setTopicId] = useState(null);
+  const [platform, setPlatform] = useState('all');
+  const [sentiment, setSentiment] = useState('all');
   const { issues, loading } = useIssues({ topicId });
+
+  const filtered = issues.filter(
+    (i) => matchesSentiment(i, sentiment) && matchesPlatform(i, platform)
+  );
 
   return (
     <div>
@@ -18,14 +72,36 @@ export default function PulseDashboard() {
         <TopicManager onSelectTopic={setTopicId} selectedTopicId={topicId} />
 
         <section className="space-y-3">
+          {/* Filter bar */}
+          <div className="space-y-2 rounded-2xl bg-white/60 p-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">Platform</span>
+              {PLATFORMS.map((p) => (
+                <Chip key={p.key} active={platform === p.key} onClick={() => setPlatform(p.key)}>
+                  {p.label}
+                </Chip>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">Sentimen</span>
+              {SENTIMENTS.map((s) => (
+                <Chip key={s.key} active={sentiment === s.key} onClick={() => setSentiment(s.key)}>
+                  {s.label}
+                </Chip>
+              ))}
+            </div>
+          </div>
+
           {loading && <div className="text-sm text-[#6B6555]">Memuat isu…</div>}
-          {!loading && issues.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div className="rounded-2xl bg-white p-6 text-center text-sm text-[#6B6555] shadow-sm">
-              Belum ada isu. Tambahkan watch topic lalu klik ↻ untuk crawl.
+              {issues.length === 0
+                ? 'Belum ada isu. Tambahkan watch topic lalu klik ↻ untuk crawl.'
+                : 'Tidak ada isu yang cocok dengan filter ini.'}
             </div>
           )}
-          {issues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} />
+          {filtered.map((issue) => (
+            <IssueCard key={issue.id} issue={issue} platformFilter={platform} />
           ))}
         </section>
       </div>

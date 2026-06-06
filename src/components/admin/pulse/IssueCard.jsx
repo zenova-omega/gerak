@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Eye, Activity, Heart } from 'lucide-react';
 import { fetchIssueDetail } from '../../../hooks/usePulse';
 
 function sentimentBadge(s) {
@@ -42,7 +43,25 @@ function timeAgo(iso) {
   return `${Math.round(hrs / 24)}h`;
 }
 
-export default function IssueCard({ issue }) {
+function fmt(n) {
+  if (n === null || n === undefined) return null;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1).replace(/\.0$/, '')}K`;
+  return String(n);
+}
+
+function Metric({ icon: Icon, value, title }) {
+  const v = fmt(value);
+  if (v === null) return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] text-[#6B6555]" title={title}>
+      <Icon size={12} className="text-[#9A9486]" />
+      {v}
+    </span>
+  );
+}
+
+export default function IssueCard({ issue, platformFilter = 'all' }) {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +82,11 @@ export default function IssueCard({ issue }) {
   };
 
   const badge = sentimentBadge(issue.sentiment);
-  const sources = detail?.source_items || [];
+  const allSources = detail?.source_items || [];
+  const sources =
+    platformFilter === 'all'
+      ? allSources
+      : allSources.filter((s) => s.platform === platformFilter);
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -90,6 +113,9 @@ export default function IssueCard({ issue }) {
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">
                   Sumber ({sources.length})
+                  {platformFilter !== 'all' && (
+                    <span className="ml-1 font-normal normal-case text-[#C7C2B6]">· difilter</span>
+                  )}
                 </span>
               </div>
 
@@ -98,6 +124,7 @@ export default function IssueCard({ issue }) {
                   const meta = platformMeta(s.platform);
                   const dom = domain(s.url);
                   const ago = timeAgo(s.published_at);
+                  const m = s.metrics || {};
                   return (
                     <li key={s.id}>
                       <a
@@ -120,6 +147,12 @@ export default function IssueCard({ issue }) {
                             {ago && <span>·</span>}
                             {ago && <span className="shrink-0">{ago}</span>}
                           </span>
+                          {/* Metrics */}
+                          <span className="mt-1 flex items-center gap-3">
+                            <Metric icon={Eye} value={m.reach} title="Reach" />
+                            <Metric icon={Activity} value={m.engagement} title="Engagement" />
+                            <Metric icon={Heart} value={m.likes} title="Likes" />
+                          </span>
                         </span>
                         <span className="mt-0.5 shrink-0 text-[#C7C2B6] group-hover:text-[#2D6A4F]">↗</span>
                       </a>
@@ -127,7 +160,11 @@ export default function IssueCard({ issue }) {
                   );
                 })}
                 {sources.length === 0 && (
-                  <li className="px-2 py-2 text-xs text-[#9A9486]">Belum ada sumber.</li>
+                  <li className="px-2 py-2 text-xs text-[#9A9486]">
+                    {platformFilter === 'all'
+                      ? 'Belum ada sumber.'
+                      : `Tidak ada sumber dari platform "${platformMeta(platformFilter).label}".`}
+                  </li>
                 )}
               </ul>
             </>
