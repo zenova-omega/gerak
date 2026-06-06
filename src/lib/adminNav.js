@@ -25,7 +25,7 @@ export const COMMAND_CENTER_ITEMS = [
   { id: 'pulse', label: 'Pulse', sub: 'Social Listening', icon: 'sensors', enabled: true },
   { id: 'survey', label: 'Survey', sub: 'Polling & Hasil', icon: 'ballot', enabled: true },
   { id: 'studio', label: 'Studio', sub: 'Konten AI', icon: 'auto_awesome', enabled: true },
-  { id: 'scheduler', label: 'Scheduler', sub: 'Distribusi', icon: 'schedule', enabled: false },
+  { id: 'scheduler', label: 'Scheduler', sub: 'Distribusi', icon: 'schedule', enabled: true },
   { id: 'rally', label: 'Rally', sub: 'Engagement', icon: 'groups', enabled: false },
   { id: 'campaigns', label: 'Campaigns', sub: 'Orkestrasi', icon: 'flag', enabled: false },
 ];

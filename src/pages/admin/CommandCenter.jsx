@@ -4,6 +4,7 @@ import PulseDashboard from '../../components/admin/pulse/PulseDashboard';
 import SurveyModule from '../../components/admin/survey/SurveyModule';
 import StudioModule from '../../components/admin/studio/StudioModule';
 import ComingSoon from '../../components/admin/ComingSoon';
+import SchedulerModule from '../../components/admin/scheduler/SchedulerModule';
 import { OPERASI_ITEMS, COMMAND_CENTER_ITEMS, adminTabHref } from '../../lib/adminNav';
 
 export default function CommandCenter() {
@@ -61,7 +62,7 @@ export default function CommandCenter() {
           <Route path="pulse" element={<PulseDashboard />} />
           <Route path="survey" element={<SurveyModule />} />
           <Route path="studio" element={<StudioModule />} />
-          <Route path="scheduler" element={<ComingSoon name="Scheduler" />} />
+          <Route path="scheduler" element={<SchedulerModule />} />
           <Route path="rally" element={<ComingSoon name="Rally" />} />
           <Route path="campaigns" element={<ComingSoon name="Campaigns" />} />
         </Routes>
