@@ -49,3 +49,44 @@ def test_extract_title_and_text():
     text = extract_text(html)
     assert "Isi konten." in text
     assert "x=1" not in text
+
+
+import pytest
+from app.models.pulse import WatchTopic, Issue, SourceItem
+from app.services.pulse import ingest_items
+from sqlalchemy import select
+
+
+@pytest.fixture
+async def topic(db):
+    t = WatchTopic(id="topic-1", label="Test", query="tni")
+    db.add(t)
+    await db.flush()
+    return t
+
+
+@pytest.mark.asyncio
+async def test_ingest_groups_near_duplicates(db, topic):
+    raws = [
+        {"source": "rss", "platform": "news", "url": "https://a.com/1",
+         "title": "TNI Gelar Bakti Sosial!", "text": ""},
+        {"source": "rss", "platform": "news", "url": "https://b.com/2",
+         "title": "tni gelar bakti sosial", "text": ""},
+        {"source": "rss", "platform": "news", "url": "https://c.com/3",
+         "title": "Harga kopi lokal naik tajam", "text": ""},
+    ]
+    created = await ingest_items(db, topic, raws)
+    assert created == 3
+    issues = (await db.execute(select(Issue).where(Issue.topic_id == topic.id))).scalars().all()
+    assert len(issues) == 2  # 2 near-dup grouped, 1 distinct
+    items = (await db.execute(select(SourceItem))).scalars().all()
+    assert len(items) == 3
+
+
+@pytest.mark.asyncio
+async def test_ingest_dedupes_same_url(db, topic):
+    raw = {"source": "rss", "platform": "news", "url": "https://a.com/x", "title": "Halo", "text": ""}
+    first = await ingest_items(db, topic, [raw])
+    second = await ingest_items(db, topic, [raw])
+    assert first == 1
+    assert second == 0
