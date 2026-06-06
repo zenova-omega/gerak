@@ -36,3 +36,19 @@ export function useRallies() {
 
   return { rallies: data || [], loading, createRally, deleteRally, refetch };
 }
+
+// AI suggestion of POSITIVE talking points for the brand's own post. These are
+// hints each outlet rewrites in their own words — not ready-to-paste comments.
+export async function suggestTalkingPoints(topic) {
+  const base = (topic || 'kegiatan ini').trim();
+  try {
+    const r = await api.post('/admin/studio/captions', { prompt: base, tone: 'positif', n: 3 });
+    return (r.variants || []).join('\n');
+  } catch {
+    return [
+      `Ceritakan pengalaman positifmu soal ${base} dengan kalimatmu sendiri.`,
+      `Sebutkan satu hal yang paling kamu suka dari ${base}.`,
+      `Ucapkan dukungan tulus, hindari menyalin kalimat yang sama.`,
+    ].join('\n');
+  }
+}

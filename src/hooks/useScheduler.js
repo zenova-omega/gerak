@@ -6,6 +6,11 @@ const MOCK_ACCOUNTS = [
   { id: 'a1', label: 'Brand Pusat', platform: 'instagram', handle: '@brand.pusat', status: 'connected' },
   { id: 'a2', label: 'Cabang Jakarta', platform: 'tiktok', handle: '@brand.jkt', status: 'connected' },
   { id: 'a3', label: 'Brand X Resmi', platform: 'x', handle: '@brand', status: 'connected' },
+  { id: 'a4', label: 'Cabang Surabaya', platform: 'facebook', handle: '@brand.sby', status: 'connected' },
+  { id: 'a5', label: 'Rina Dewi', platform: 'instagram', handle: '@rina.dewi', status: 'connected' },
+  { id: 'a6', label: 'Budi Santoso', platform: 'tiktok', handle: '@budi.santoso', status: 'connected' },
+  { id: 'a7', label: 'Sari Melati', platform: 'youtube', handle: '@sarimelati', status: 'connected' },
+  { id: 'a8', label: 'Dimas Prayoga', platform: 'x', handle: '@dimaspray', status: 'connected' },
 ];
 const MOCK_POSTS = [
   { id: 'p1', caption: 'Promo akhir pekan! Diskon 30% semua menu 🎉 #SINAR', platforms: ['instagram', 'tiktok'], scheduled_at: '2026-06-08T10:00:00', status: 'scheduled', published_at: null },

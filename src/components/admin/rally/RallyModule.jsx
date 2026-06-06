@@ -5,29 +5,52 @@ import {
   Trash2,
   PlusCircle,
   Megaphone,
+  Sparkles,
 } from 'lucide-react';
-import { useRallies } from '../../../hooks/useRally';
+import { useRallies, suggestTalkingPoints } from '../../../hooks/useRally';
+import { useAccounts } from '../../../hooks/useScheduler';
+import { PlatformIcon } from '../pulse/PlatformIcon';
 
 /* ─── Create form ─────────────────────────────────────────────── */
 function CreateRallyForm({ onCreate }) {
+  const { accounts } = useAccounts();
   const [title, setTitle] = useState('');
   const [postUrl, setPostUrl] = useState('');
   const [talkingPoints, setTalkingPoints] = useState('');
-  const [target, setTarget] = useState('Semua outlet');
+  const [targetIds, setTargetIds] = useState([]); // selected account ids; empty = semua
   const [saving, setSaving] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
 
   const canSubmit = title.trim() !== '' && postUrl.trim() !== '';
+
+  const toggleTarget = (id) =>
+    setTargetIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const targetLabel =
+    targetIds.length === 0
+      ? 'Semua outlet'
+      : accounts.filter((a) => targetIds.includes(a.id)).map((a) => a.label).join(', ');
+
+  async function suggest() {
+    if (!title.trim()) return;
+    setSuggesting(true);
+    try {
+      setTalkingPoints(await suggestTalkingPoints(title.trim()));
+    } finally {
+      setSuggesting(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!canSubmit) return;
     setSaving(true);
     try {
-      await onCreate({ title: title.trim(), post_url: postUrl.trim(), talking_points: talkingPoints.trim(), target: target.trim() || 'Semua outlet' });
+      await onCreate({ title: title.trim(), post_url: postUrl.trim(), talking_points: talkingPoints.trim(), target: targetLabel });
       setTitle('');
       setPostUrl('');
       setTalkingPoints('');
-      setTarget('Semua outlet');
+      setTargetIds([]);
     } finally {
       setSaving(false);
     }
@@ -52,7 +75,9 @@ function CreateRallyForm({ onCreate }) {
 
         {/* URL Post */}
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold text-[#6B6555]">URL Post</label>
+          <label className="mb-1 block text-xs font-semibold text-[#6B6555]">
+            URL Post <span className="font-normal text-[#9A9486]">(post resmi brand-mu)</span>
+          </label>
           <input
             type="url"
             value={postUrl}
@@ -62,42 +87,67 @@ function CreateRallyForm({ onCreate }) {
           />
         </div>
 
-        {/* Poin Arahan */}
+        {/* Poin Arahan + AI suggest (positif) */}
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-semibold text-[#6B6555]">
-            Poin Arahan <span className="font-normal text-[#9A9486]">(opsional)</span>
-          </label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="block text-xs font-semibold text-[#6B6555]">
+              Poin Arahan <span className="font-normal text-[#9A9486]">(opsional, positif)</span>
+            </label>
+            <button
+              type="button"
+              onClick={suggest}
+              disabled={!title.trim() || suggesting}
+              className="inline-flex items-center gap-1 rounded-full bg-[#1B4332]/8 px-2.5 py-1 text-[11px] font-semibold text-[#2D6A4F] transition hover:bg-[#1B4332]/15 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Sparkles size={12} /> {suggesting ? 'Membuat…' : 'Saran poin (AI)'}
+            </button>
+          </div>
           <textarea
             value={talkingPoints}
             onChange={(e) => setTalkingPoints(e.target.value)}
-            rows={2}
+            rows={3}
             placeholder="Contoh: Sebutkan kegiatan yang paling kamu sukai…"
             className="w-full resize-none rounded-xl border border-gray-200 bg-[#F5F3EE] px-3 py-2 text-sm text-[#2B2B2B] placeholder:text-[#9A9486] focus:border-[#2D6A4F] focus:outline-none focus:ring-1 focus:ring-[#2D6A4F]"
           />
-          <p className="mt-1 text-[11px] text-[#9A9486]">Saran isi. Outlet menulis dengan kata-katanya sendiri.</p>
+          <p className="mt-1 text-[11px] text-[#9A9486]">Saran positif. Tiap outlet menulis ulang dengan kalimatnya sendiri (sukarela).</p>
         </div>
 
-        {/* Target */}
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-[#6B6555]">Target</label>
-          <input
-            type="text"
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-            placeholder="Semua outlet"
-            className="w-full rounded-xl border border-gray-200 bg-[#F5F3EE] px-3 py-2 text-sm text-[#2B2B2B] placeholder:text-[#9A9486] focus:border-[#2D6A4F] focus:outline-none focus:ring-1 focus:ring-[#2D6A4F]"
-          />
+        {/* Target: pilih dari akun di Scheduler */}
+        <div className="sm:col-span-2">
+          <label className="mb-1.5 block text-xs font-semibold text-[#6B6555]">
+            Target <span className="font-normal text-[#9A9486]">(pilih akun, kosong = semua outlet)</span>
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {accounts.map((a) => {
+              const on = targetIds.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => toggleTarget(a.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${on ? 'bg-[#1B4332] text-white' : 'bg-[#F5F3EE] text-[#6B6555] hover:bg-[#EDEBE3]'}`}
+                >
+                  <PlatformIcon platform={a.platform} size={12} className={on ? 'text-white' : ''} />
+                  {a.label}
+                </button>
+              );
+            })}
+            {accounts.length === 0 && (
+              <span className="text-[11px] text-[#9A9486]">Belum ada akun. Tambah di Scheduler → Akun.</span>
+            )}
+          </div>
+          <p className="mt-1.5 text-[11px] text-[#9A9486]">{targetLabel}</p>
         </div>
 
         {/* Submit */}
-        <div className="flex items-end justify-end">
+        <div className="sm:col-span-2 flex items-center justify-end">
           <button
             type="submit"
             disabled={!canSubmit || saving}
             className="inline-flex items-center gap-2 rounded-full bg-[#1B4332] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#2D6A4F] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <PlusCircle size={14} />
-            {saving ? 'Menyimpan…' : 'Buat ajakan'}
+            {saving ? 'Menyimpan…' : 'Create Action'}
           </button>
         </div>
       </div>
