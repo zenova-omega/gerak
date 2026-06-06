@@ -27,7 +27,7 @@ export const COMMAND_CENTER_ITEMS = [
   { id: 'studio', label: 'Studio', sub: 'Konten AI', icon: 'auto_awesome', enabled: true },
   { id: 'scheduler', label: 'Scheduler', sub: 'Distribusi', icon: 'schedule', enabled: true },
   { id: 'rally', label: 'Rally', sub: 'Engagement', icon: 'groups', enabled: true },
-  { id: 'campaigns', label: 'Campaigns', sub: 'Orkestrasi', icon: 'flag', enabled: false },
+  { id: 'campaigns', label: 'Campaigns', sub: 'Orkestrasi', icon: 'flag', enabled: true },
 ];
 
 export const adminTabHref = (id) => `/admin?tab=${id}`;
