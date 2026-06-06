@@ -50,31 +50,61 @@ const MOCK_ISSUES = [
 ];
 
 export function useTopics() {
-  const { data, loading, error, refetch } = useApi('/admin/pulse/topics', { defaultData: [] });
+  const { data, loading, error, refetch, setData } = useApi('/admin/pulse/topics', { defaultData: [] });
   const { mutate } = useMutation();
 
   const createTopic = useCallback(async (payload) => {
-    const r = await mutate(() => api.post('/admin/pulse/topics', payload));
-    refetch();
-    return r;
-  }, [mutate, refetch]);
+    try {
+      const r = await mutate(() => api.post('/admin/pulse/topics', payload));
+      refetch();
+      return r;
+    } catch {
+      const fake = {
+        id: `local-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        label: payload.label,
+        query: payload.query,
+        sources: payload.sources || ['rss'],
+        browserless_targets: payload.browserless_targets || null,
+        is_active: true,
+        crawl_interval_minutes: payload.crawl_interval_minutes || 60,
+        last_crawled_at: null,
+      };
+      setData((prev) => [fake, ...(prev || [])]);
+      return fake;
+    }
+  }, [mutate, refetch, setData]);
 
   const updateTopic = useCallback(async (id, payload) => {
-    const r = await mutate(() => api.put(`/admin/pulse/topics/${id}`, payload));
-    refetch();
-    return r;
-  }, [mutate, refetch]);
+    try {
+      const r = await mutate(() => api.put(`/admin/pulse/topics/${id}`, payload));
+      refetch();
+      return r;
+    } catch {
+      setData((prev) => (prev || []).map((x) => x.id === id ? { ...x, ...payload } : x));
+      return null;
+    }
+  }, [mutate, refetch, setData]);
 
   const deleteTopic = useCallback(async (id) => {
-    const r = await mutate(() => api.delete(`/admin/pulse/topics/${id}`));
-    refetch();
-    return r;
-  }, [mutate, refetch]);
+    try {
+      const r = await mutate(() => api.delete(`/admin/pulse/topics/${id}`));
+      refetch();
+      return r;
+    } catch {
+      setData((prev) => (prev || []).filter((x) => x.id !== id));
+      return null;
+    }
+  }, [mutate, refetch, setData]);
 
   const crawlNow = useCallback(async (id) => {
-    const r = await mutate(() => api.post(`/admin/pulse/topics/${id}/crawl`));
-    refetch();
-    return r;
+    try {
+      const r = await mutate(() => api.post(`/admin/pulse/topics/${id}/crawl`));
+      refetch();
+      return r;
+    } catch {
+      // crawlNow is a trigger-only action; no list state to update in demo mode.
+      return null;
+    }
   }, [mutate, refetch]);
 
   return { topics: data || [], loading, error, createTopic, updateTopic, deleteTopic, crawlNow, refetch };

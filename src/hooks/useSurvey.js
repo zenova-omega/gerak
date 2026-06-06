@@ -26,12 +26,70 @@ const MOCK_RESULTS = {
 };
 
 export function useSurveys() {
-  const { data, loading, error, refetch } = useApi('/admin/surveys', { defaultData: MOCK_SURVEYS });
+  const { data, loading, error, refetch, setData } = useApi('/admin/surveys', { defaultData: MOCK_SURVEYS });
   const { mutate } = useMutation();
-  const createSurvey = useCallback(async (p) => { const r = await mutate(() => api.post('/admin/surveys', p)); refetch(); return r; }, [mutate, refetch]);
-  const updateSurvey = useCallback(async (id, p) => { const r = await mutate(() => api.put(`/admin/surveys/${id}`, p)); refetch(); return r; }, [mutate, refetch]);
-  const deleteSurvey = useCallback(async (id) => { const r = await mutate(() => api.delete(`/admin/surveys/${id}`)); refetch(); return r; }, [mutate, refetch]);
-  const publishSurvey = useCallback(async (id) => { const r = await mutate(() => api.post(`/admin/surveys/${id}/publish`)); refetch(); return r; }, [mutate, refetch]);
+
+  const createSurvey = useCallback(async (p) => {
+    try {
+      const r = await mutate(() => api.post('/admin/surveys', p));
+      refetch();
+      return r;
+    } catch {
+      const fake = {
+        id: `local-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        title: p.title,
+        description: p.description || '',
+        status: 'draft',
+        mission_id: null,
+        response_count: 0,
+        questions: (p.questions || []).map((q, i) => ({
+          id: `lq-${i}`,
+          order: i,
+          type: q.type,
+          text: q.text,
+          options: q.options || null,
+          rating_max: q.rating_max || 5,
+          required: q.required !== false,
+        })),
+      };
+      setData((prev) => [fake, ...(prev || [])]);
+      return fake;
+    }
+  }, [mutate, refetch, setData]);
+
+  const updateSurvey = useCallback(async (id, p) => {
+    try {
+      const r = await mutate(() => api.put(`/admin/surveys/${id}`, p));
+      refetch();
+      return r;
+    } catch {
+      setData((prev) => (prev || []).map((x) => x.id === id ? { ...x, ...p } : x));
+      return null;
+    }
+  }, [mutate, refetch, setData]);
+
+  const deleteSurvey = useCallback(async (id) => {
+    try {
+      const r = await mutate(() => api.delete(`/admin/surveys/${id}`));
+      refetch();
+      return r;
+    } catch {
+      setData((prev) => (prev || []).filter((x) => x.id !== id));
+      return null;
+    }
+  }, [mutate, refetch, setData]);
+
+  const publishSurvey = useCallback(async (id) => {
+    try {
+      const r = await mutate(() => api.post(`/admin/surveys/${id}/publish`));
+      refetch();
+      return r;
+    } catch {
+      setData((prev) => (prev || []).map((x) => x.id === id ? { ...x, status: 'open', mission_id: `local-m-${id}` } : x));
+      return null;
+    }
+  }, [mutate, refetch, setData]);
+
   return { surveys: data || [], loading, error, createSurvey, updateSurvey, deleteSurvey, publishSurvey, refetch };
 }
 

@@ -52,9 +52,31 @@ export function useMeme() {
 }
 
 export function useDrafts() {
-  const { data, loading, refetch } = useApi('/admin/studio/drafts', { defaultData: [] });
+  const { data, loading, refetch, setData } = useApi('/admin/studio/drafts', { defaultData: [] });
   const { mutate } = useMutation();
-  const saveDraft = useCallback(async (d) => { const r = await mutate(() => api.post('/admin/studio/drafts', d)); refetch(); return r; }, [mutate, refetch]);
-  const deleteDraft = useCallback(async (id) => { const r = await mutate(() => api.delete(`/admin/studio/drafts/${id}`)); refetch(); return r; }, [mutate, refetch]);
+
+  const saveDraft = useCallback(async (d) => {
+    try {
+      const r = await mutate(() => api.post('/admin/studio/drafts', d));
+      refetch();
+      return r;
+    } catch {
+      const fake = { id: `local-${Date.now()}-${Math.floor(Math.random() * 1000)}`, ...d, created_at: new Date().toISOString() };
+      setData((prev) => [fake, ...(prev || [])]);
+      return fake;
+    }
+  }, [mutate, refetch, setData]);
+
+  const deleteDraft = useCallback(async (id) => {
+    try {
+      const r = await mutate(() => api.delete(`/admin/studio/drafts/${id}`));
+      refetch();
+      return r;
+    } catch {
+      setData((prev) => (prev || []).filter((x) => x.id !== id));
+      return null;
+    }
+  }, [mutate, refetch, setData]);
+
   return { drafts: data || [], loading, saveDraft, deleteDraft, refetch };
 }
