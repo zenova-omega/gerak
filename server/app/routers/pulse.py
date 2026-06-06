@@ -69,3 +69,79 @@ async def delete_topic(topic_id: str, db: AsyncSession = Depends(get_db), admin:
         raise HTTPException(status_code=404, detail="Topic tidak ditemukan")
     await db.delete(topic)
     return {"deleted": topic_id}
+
+
+@router.post("/topics/{topic_id}/crawl")
+async def crawl_now(topic_id: str, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    result = await db.execute(select(WatchTopic).where(WatchTopic.id == topic_id))
+    topic = result.scalar_one_or_none()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic tidak ditemukan")
+    count = await crawl_topic(db, topic, get_settings())
+    return {"topic_id": topic_id, "ingested": count}
+
+
+@router.get("/issues")
+async def list_issues(
+    topic_id: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    query = select(Issue)
+    if topic_id:
+        query = query.where(Issue.topic_id == topic_id)
+    query = query.order_by(Issue.score.desc()).limit(limit)
+    result = await db.execute(query)
+    return [_issue_dict(i) for i in result.scalars().all()]
+
+
+@router.get("/issues/{issue_id}")
+async def get_issue(issue_id: str, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    result = await db.execute(select(Issue).where(Issue.id == issue_id))
+    issue = result.scalar_one_or_none()
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue tidak ditemukan")
+    items = (await db.execute(
+        select(SourceItem).where(SourceItem.issue_id == issue_id).order_by(SourceItem.published_at.desc())
+    )).scalars().all()
+    data = _issue_dict(issue)
+    data["source_items"] = [
+        {"id": s.id, "source": s.source, "platform": s.platform, "url": s.url,
+         "title": s.title, "author": s.author, "published_at": s.published_at}
+        for s in items
+    ]
+    return data
+
+
+@router.post("/issues/{issue_id}/enrich")
+async def enrich(issue_id: str, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    result = await db.execute(select(Issue).where(Issue.id == issue_id))
+    issue = result.scalar_one_or_none()
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue tidak ditemukan")
+    await enrich_issue(db, issue)
+    await db.flush()
+    return _issue_dict(issue)
+
+
+@router.post("/webhook/n8n")
+async def n8n_webhook(
+    item: N8nItem,
+    x_webhook_secret: str | None = Header(None),
+    db: AsyncSession = Depends(get_db),
+):
+    settings = get_settings()
+    if settings.PULSE_WEBHOOK_SECRET and x_webhook_secret != settings.PULSE_WEBHOOK_SECRET:
+        raise HTTPException(status_code=401, detail="Webhook secret tidak valid")
+    result = await db.execute(select(WatchTopic).where(WatchTopic.id == item.topic_id))
+    topic = result.scalar_one_or_none()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic tidak ditemukan")
+    raw = {
+        "source": "n8n", "platform": item.platform, "url": item.url,
+        "title": item.title, "text": item.text, "author": item.author,
+        "published_at": item.published_at,
+    }
+    created = await ingest_items(db, topic, [raw])
+    return {"ingested": created}

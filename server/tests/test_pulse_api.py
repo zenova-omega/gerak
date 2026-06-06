@@ -39,3 +39,48 @@ async def test_update_and_delete_topic(client, admin_token):
 
     res = await client.get("/api/admin/pulse/topics", headers=H(admin_token))
     assert all(t["id"] != topic_id for t in res.json())
+
+
+@pytest.mark.asyncio
+async def test_webhook_creates_issue_and_list_issues(client, admin_token):
+    res = await client.post("/api/admin/pulse/topics", json={"label": "T", "query": "t"}, headers=H(admin_token))
+    topic_id = res.json()["id"]
+
+    res = await client.post("/api/admin/pulse/webhook/n8n", json={
+        "topic_id": topic_id, "url": "https://x.com/1",
+        "title": "Berita penting hari ini", "text": "isi",
+    })
+    assert res.status_code == 200
+    assert res.json()["ingested"] == 1
+
+    res = await client.get("/api/admin/pulse/issues", params={"topic_id": topic_id}, headers=H(admin_token))
+    assert res.status_code == 200
+    issues = res.json()
+    assert len(issues) == 1
+    issue_id = issues[0]["id"]
+
+    res = await client.get(f"/api/admin/pulse/issues/{issue_id}", headers=H(admin_token))
+    assert res.status_code == 200
+    assert len(res.json()["source_items"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_webhook_unknown_topic_404(client):
+    res = await client.post("/api/admin/pulse/webhook/n8n", json={
+        "topic_id": "nope", "url": "https://x.com/2", "title": "x",
+    })
+    assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_enrich_without_ai_keeps_sentiment_null(client, admin_token):
+    res = await client.post("/api/admin/pulse/topics", json={"label": "E", "query": "e"}, headers=H(admin_token))
+    topic_id = res.json()["id"]
+    await client.post("/api/admin/pulse/webhook/n8n", json={
+        "topic_id": topic_id, "url": "https://x.com/e1", "title": "isu", "text": "konten",
+    })
+    issues = (await client.get("/api/admin/pulse/issues", params={"topic_id": topic_id}, headers=H(admin_token))).json()
+    issue_id = issues[0]["id"]
+    res = await client.post(f"/api/admin/pulse/issues/{issue_id}/enrich", headers=H(admin_token))
+    assert res.status_code == 200
+    assert res.json()["sentiment"] is None  # no AI key in tests
