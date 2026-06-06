@@ -5,6 +5,7 @@ import SurveyModule from '../../components/admin/survey/SurveyModule';
 import StudioModule from '../../components/admin/studio/StudioModule';
 import ComingSoon from '../../components/admin/ComingSoon';
 import SchedulerModule from '../../components/admin/scheduler/SchedulerModule';
+import RallyModule from '../../components/admin/rally/RallyModule';
 import { OPERASI_ITEMS, COMMAND_CENTER_ITEMS, adminTabHref } from '../../lib/adminNav';
 
 export default function CommandCenter() {
@@ -63,7 +64,7 @@ export default function CommandCenter() {
           <Route path="survey" element={<SurveyModule />} />
           <Route path="studio" element={<StudioModule />} />
           <Route path="scheduler" element={<SchedulerModule />} />
-          <Route path="rally" element={<ComingSoon name="Rally" />} />
+          <Route path="rally" element={<RallyModule />} />
           <Route path="campaigns" element={<ComingSoon name="Campaigns" />} />
         </Routes>
       </main>
