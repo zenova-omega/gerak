@@ -12,6 +12,7 @@ class MissionType(str, enum.Enum):
     ENGAGEMENT = "ENGAGEMENT"
     EDUKASI = "EDUKASI"
     AKSI = "AKSI"
+    SURVEY = "SURVEY"
 
 
 class MissionStatus(str, enum.Enum):

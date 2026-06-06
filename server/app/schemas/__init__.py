@@ -141,3 +141,36 @@ class N8nItem(BaseModel):
     platform: str | None = "web"
     published_at: datetime | None = None
     metrics: dict | None = None
+
+
+class SurveyQuestionIn(BaseModel):
+    type: str  # single | multiple | rating | yesno | text
+    text: str
+    options: list[str] | None = None
+    rating_max: int = 5
+    required: bool = True
+    order: int = 0
+
+
+class SurveyCreate(BaseModel):
+    title: str
+    description: str = ""
+    closes_at: datetime | None = None
+    questions: list[SurveyQuestionIn] = []
+
+
+class SurveyUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None
+    closes_at: datetime | None = None
+    questions: list[SurveyQuestionIn] | None = None
+
+
+class SurveyAnswerIn(BaseModel):
+    question_id: str
+    value: object = None  # scalar/list/bool/str depending on question type
+
+
+class SurveyRespondRequest(BaseModel):
+    answers: list[SurveyAnswerIn] = []
