@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { Layers, ThumbsUp, ThumbsDown, Minus, Clock, Calendar } from 'lucide-react';
 import { useIssues } from '../../../hooks/usePulse';
+import { PlatformIcon } from './PlatformIcon';
 import TopicManager from './TopicManager';
 import IssueCard from './IssueCard';
 
 const PLATFORMS = [
-  { key: 'all', label: 'Semua platform' },
+  { key: 'all', label: 'Semua' },
   { key: 'news', label: 'Berita' },
   { key: 'instagram', label: 'Instagram' },
   { key: 'tiktok', label: 'TikTok' },
@@ -15,10 +17,10 @@ const PLATFORMS = [
 ];
 
 const SENTIMENTS = [
-  { key: 'all', label: 'Semua' },
-  { key: 'pos', label: 'Positif' },
-  { key: 'neg', label: 'Negatif' },
-  { key: 'netral', label: 'Netral' },
+  { key: 'all', label: 'Semua', Icon: Layers },
+  { key: 'pos', label: 'Positif', Icon: ThumbsUp },
+  { key: 'neg', label: 'Negatif', Icon: ThumbsDown },
+  { key: 'netral', label: 'Netral', Icon: Minus },
 ];
 
 function matchesSentiment(issue, filter) {
@@ -32,9 +34,7 @@ function matchesSentiment(issue, filter) {
 
 function matchesPlatform(issue, platform) {
   if (platform === 'all') return true;
-  // List endpoint may not include source_items; keep the issue and let the
-  // card filter its sources on expand. Hide only when we can already tell.
-  if (!issue.source_items) return true;
+  if (!issue.source_items) return true; // card filters its sources on expand
   return issue.source_items.some((s) => s.platform === platform);
 }
 
@@ -42,7 +42,7 @@ function Chip({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
         active ? 'bg-[#1B4332] text-white' : 'bg-white text-[#6B6555] hover:bg-[#EDEBE3]'
       }`}
     >
@@ -55,6 +55,7 @@ export default function PulseDashboard() {
   const [topicId, setTopicId] = useState(null);
   const [platform, setPlatform] = useState('all');
   const [sentiment, setSentiment] = useState('all');
+  const [dateMode, setDateMode] = useState('relative'); // 'relative' | 'absolute'
   const { issues, loading } = useIssues({ topicId });
 
   const filtered = issues.filter(
@@ -78,17 +79,28 @@ export default function PulseDashboard() {
               <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">Platform</span>
               {PLATFORMS.map((p) => (
                 <Chip key={p.key} active={platform === p.key} onClick={() => setPlatform(p.key)}>
+                  {p.key === 'all' ? <Layers size={12} /> : <PlatformIcon platform={p.key} size={12} className={platform === p.key ? 'text-white' : ''} />}
                   {p.label}
                 </Chip>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9A9486]">Sentimen</span>
-              {SENTIMENTS.map((s) => (
-                <Chip key={s.key} active={sentiment === s.key} onClick={() => setSentiment(s.key)}>
-                  {s.label}
+              {SENTIMENTS.map(({ key, label, Icon }) => (
+                <Chip key={key} active={sentiment === key} onClick={() => setSentiment(key)}>
+                  <Icon size={12} />
+                  {label}
                 </Chip>
               ))}
+              {/* Date format toggle */}
+              <button
+                onClick={() => setDateMode((m) => (m === 'relative' ? 'absolute' : 'relative'))}
+                title={dateMode === 'relative' ? 'Tampilkan tanggal lengkap' : 'Tampilkan waktu relatif'}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-[#6B6555] transition hover:bg-[#EDEBE3]"
+              >
+                {dateMode === 'relative' ? <Clock size={12} /> : <Calendar size={12} />}
+                {dateMode === 'relative' ? 'Relatif' : 'Tanggal'}
+              </button>
             </div>
           </div>
 
@@ -101,7 +113,7 @@ export default function PulseDashboard() {
             </div>
           )}
           {filtered.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} platformFilter={platform} />
+            <IssueCard key={issue.id} issue={issue} platformFilter={platform} dateMode={dateMode} />
           ))}
         </section>
       </div>
