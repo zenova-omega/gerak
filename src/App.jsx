@@ -41,7 +41,9 @@ import {
   ScanLine, ArrowUp, MousePointerClick, Map, IdCard, Rocket,
   Save, PiggyBank, Timer, Search, SearchX, Send, Share2, Signal,
   Gauge, Bot, Mic, Landmark, ListTodo, ClipboardList, Coffee,
-  HelpCircle, Droplets, CheckSquare, Instagram, Youtube
+  HelpCircle, Droplets, CheckSquare, Instagram, Youtube,
+  AlarmClock, LineChart, Mail, Settings, RefreshCw,
+  XCircle, Square, TrendingDown
 } from 'lucide-react';
 import SurveyRunner from './components/mobile/SurveyRunner';
 
@@ -119,6 +121,11 @@ const POST_ILLUST={
 
 /* ─── ICON (Lucide React) ────────────────────────────────────────── */
 const ICON_MAP = {
+  alarm: AlarmClock, ballot: ClipboardList, chevron_right: ChevronRight,
+  how_to_vote: ListChecks, insights: LineChart, mark_email_unread: Mail,
+  picture_as_pdf: FileText, sensors: Radio, settings: Settings,
+  shield: Shield, smartphone: Smartphone, summarize: FileText, update: RefreshCw,
+  cancel: XCircle, check_box_outline_blank: Square, trending_down: TrendingDown,
   add: Plus, add_circle: CirclePlus, admin_panel_settings: UserCog,
   ads_click: MousePointerClick, analytics: BarChart3, arrow_back: ArrowLeft,
   arrow_forward: ArrowRight, arrow_forward_ios: ChevronRight, arrow_upward: ArrowUp,
