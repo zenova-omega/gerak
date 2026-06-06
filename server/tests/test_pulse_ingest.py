@@ -27,3 +27,25 @@ def test_parse_rss_returns_items():
 
 def test_parse_empty_feed():
     assert parse_rss_feed("<rss><channel></channel></rss>") == []
+
+
+from app.services.ingest.browserless import is_allowed, extract_title, extract_text
+
+
+def test_is_allowed_empty_allowlist_allows_all():
+    assert is_allowed("https://anything.com/x", []) is True
+
+
+def test_is_allowed_matches_domain_and_subdomain():
+    allow = ["example.com"]
+    assert is_allowed("https://example.com/a", allow) is True
+    assert is_allowed("https://news.example.com/a", allow) is True
+    assert is_allowed("https://evil.com/a", allow) is False
+
+
+def test_extract_title_and_text():
+    html = "<html><head><title> Berita TNI </title></head><body><script>x=1</script><p>Isi konten.</p></body></html>"
+    assert extract_title(html) == "Berita TNI"
+    text = extract_text(html)
+    assert "Isi konten." in text
+    assert "x=1" not in text
