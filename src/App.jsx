@@ -4389,8 +4389,8 @@ export default function App(){
 
             {/* Misi per Tipe — full width horizontal layout */}
             <DCard title="Misi per Tipe" subtitle="Distribusi misi aktif berdasarkan tipe" accent={C.primary}>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12}}>
-              {['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI'].map((t,i)=>{
+              <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:12}}>
+              {['EVENT','KONTEN','ENGAGEMENT','EDUKASI','AKSI','SURVEY'].map((t,i)=>{
                 const count=MISSIONS.filter(m=>m.type===t).length;
                 const active=MISSIONS.filter(m=>m.type===t&&m.status!=='SELESAI').length;
                 const tc2=typeColor(t);
