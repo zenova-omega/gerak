@@ -145,3 +145,69 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db)):
             'scope': {'posts': scope['posts'], 'from': req.date_from, 'to': req.date_to,
                       'platforms': req.platforms or None, 'truncated': scope['truncated']},
             'answered_at': datetime.utcnow().isoformat() + 'Z'}
+
+
+class SummaryRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid', populate_by_name=True)
+    format: Literal['brief', 'timeline', 'executive'] = 'brief'
+    date_from: date | None = Field(default=None, alias='from')
+    date_to: date | None = Field(default=None, alias='to')
+    platforms: list[str] | None = Field(default=None, max_length=12)
+
+
+@router.get('/topics/{topic_id}/summary')
+async def stored_summaries(topic_id: str, db: AsyncSession = Depends(get_db)):
+    """Summaries made earlier, one per format. Reading never calls the model."""
+    from sqlalchemy import func, select
+    from ..models.pulse import SourceItem, WatchTopic
+    from ..models.pulse_summary import PulseSummary
+    from ..services.pulse_summary import FORMATS, MIN_POSTS
+    if await db.get(WatchTopic, topic_id) is None:
+        raise HTTPException(404, 'Project tidak ditemukan.')
+    rows = (await db.scalars(select(PulseSummary).where(PulseSummary.topic_id == topic_id))).all()
+    posts = await db.scalar(select(func.count()).select_from(SourceItem).where(SourceItem.topic_id == topic_id))
+    return {'available': configured(get_settings()), 'posts_now': posts or 0, 'min_posts': MIN_POSTS,
+            'formats': [{'key': key, 'label': label} for key, (label, _) in FORMATS.items()],
+            'summaries': {row.format: {**row.data, 'created_at': row.created_at.isoformat() + 'Z'} for row in rows}}
+
+
+@router.post('/topics/{topic_id}/summary')
+async def make_summary(topic_id: str, req: SummaryRequest, db: AsyncSession = Depends(get_db)):
+    """Write (or rewrite) the summary in one format from stored data. Only runs when asked."""
+    from ..models.pulse_summary import PulseSummary
+    from ..services.ai import get_ai_service
+    from ..services import pulse_summary as service
+    if req.date_from and req.date_to and req.date_from > req.date_to:
+        raise HTTPException(422, 'Tanggal akhir harus sama atau setelah tanggal mulai.')
+    start, end = _bounds(req.date_from, req.date_to)
+    built = await service.build_summary_input(db, topic_id, datetime.utcnow(), start=start, end=end, platforms=req.platforms or None)
+    if built is None:
+        raise HTTPException(404, 'Project tidak ditemukan.')
+    if not built['posts']:
+        raise HTTPException(409, 'Belum ada posting dalam cakupan ini untuk diringkas.')
+    ai = get_ai_service()
+    if ai is None:
+        raise HTTPException(503, 'Ringkasan AI belum tersedia di instalasi ini.')
+    try:
+        async with interactive():
+            text = await asyncio.wait_for(ai.generate_text(service.build_prompt(built['data'], req.format), system=service.BASE,
+                                                           max_tokens=service.ANSWER_TOKENS, context_tokens=service.CONTEXT_TOKENS), timeout=170)
+    except Exception:
+        raise HTTPException(502, 'Ringkasan tidak berhasil disusun. Coba lagi; tidak ada data yang berubah.')
+    sections = service.parse_sections(text)
+    if not sections:
+        raise HTTPException(502, 'Ringkasan tidak berhasil disusun. Coba lagi; tidak ada data yang berubah.')
+    now = datetime.utcnow()
+    data = {'format': req.format, 'sections': sections, 'facts': built['facts'],
+            'sources': [{**source, 'published_at': source['published_at'].isoformat() + 'Z' if source.get('published_at') else None}
+                        for source in service.cited(text, built['sources'])],
+            'scope': {'posts': built['posts'], 'comments': built['comments'], 'truncated': built['truncated'],
+                      'from': req.date_from.isoformat() if req.date_from else None, 'to': req.date_to.isoformat() if req.date_to else None,
+                      'platforms': req.platforms or None}}
+    row = await db.get(PulseSummary, (topic_id, req.format))
+    if row is None:
+        db.add(PulseSummary(topic_id=topic_id, format=req.format, created_at=now, data=data))
+    else:
+        row.data, row.created_at = data, now
+    await db.flush()
+    return {**data, 'created_at': now.isoformat() + 'Z'}

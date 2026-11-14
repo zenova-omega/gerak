@@ -45,8 +45,8 @@ function scopeNetwork(network, posts, platforms) {
   return {...network,nodes,edges,accounts,narratives,earliest:filterPosts(posts,{}).filter(p=>p.published_at).slice(0,10),total_posts:posts.length,analyzed_posts:posts.filter(p=>sampleIds.has(p.id)).length};
 }
 
-export function scopeProjectData(data,{platforms=null,from='',to=''}={}) {
-  const posts=filterPosts(data.posts||[],{platforms,from,to});
+export function scopeProjectData(data,{platforms=null,from='',to='',sentiments=null}={}) {
+  const posts=filterPosts(data.posts||[],{platforms,from,to,sentiments});
   const sources=new Map(),authors=new Map();
   for(const p of posts){
     sources.set(p.platform,(sources.get(p.platform)||0)+1);

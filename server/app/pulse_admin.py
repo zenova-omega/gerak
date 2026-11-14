@@ -11,6 +11,8 @@ from .services.pulse_identity import provision_user, password_hash, revoke_sessi
 async def execute(args):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        from .services.pulse_migrate import add_missing_columns
+        await conn.run_sync(add_missing_columns)
     password = getpass.getpass('Password baru (12–128 karakter): ')
     if password != getpass.getpass('Ulangi password: '):
         raise ValueError('Password tidak sama.')

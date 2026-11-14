@@ -20,6 +20,8 @@ class ResponseAnalysisJob(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     error: Mapped[str | None] = mapped_column(String(40), nullable=True)
     result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Position of a comment in its post's stored list (0 = most liked): the most-liked comments are analysed first.
+    comment_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class ResponseAnalysisCursor(Base):

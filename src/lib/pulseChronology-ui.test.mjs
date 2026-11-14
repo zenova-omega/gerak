@@ -15,8 +15,11 @@ test('explorer opens chronological evidence cards and exposes the observed profi
     assert.equal((html.match(/class="nx-chronology-card"/g) || []).length, 15);
     assert.match(html, /17 posting.*16 bertanggal.*1 tanpa tanggal/);
     assert.match(html, /Terawal teramati dalam sampel/);
-    assert.match(html, /asal sebenarnya belum diketahui/);
-    assert.match(html, /Urutan waktu bukan bukti sebab-akibat/);
+    // The reading notes sit behind the info mark beside the title instead of above every list.
+    assert.match(html, /aria-label="Cara membaca jejak penyebaran"/);
+    const { chronologyNotes } = await server.ssrLoadModule('/src/lib/pulseChronology.js');
+    assert.match(chronologyNotes.join(' '), /asal sebenarnya belum diketahui/);
+    assert.match(chronologyNotes.join(' '), /Urutan waktu bukan bukti sebab-akibat/);
     assert.match(html, /Profil berdasarkan bukti/);
     assert.match(html, /Demografi/);
     assert.match(html, /Tidak diketahui; tidak disimpulkan/);
@@ -37,15 +40,17 @@ test('network starts in 2D, explains empty relations and does not force a separa
   }finally{await server.close();}
 });
 
-test('2D replay starts at first publication, not at the final timestamp',async()=>{
+test('2D opens on the whole period and offers a replay from the first publication',async()=>{
   const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
   try {
     const {default:Explorer}=await server.ssrLoadModule('/src/components/admin/pulse/NetworkExplorer.jsx');
     const evidence=[{id:'late',title:'Later evidence',published_at:'2026-11-11T00:00:00Z'},{id:'early',title:'First evidence',published_at:'2026-11-10T00:00:00Z'}];
     const html=renderToStaticMarkup(React.createElement(Explorer,{data:{nodes:[{id:'a',label:'Account A',observed:true}],accounts:[{id:'a',evidence}],edges:[],analyzed_posts:2}}));
-    assert.match(html,/aria-label="Posisi replay"[^>]*value="0"/);
+    assert.match(html,/aria-label="Posisi replay"[^>]*max="1"[^>]*value="1"/);
     assert.match(html,/First evidence/);
-    assert.doesNotMatch(html,/Later evidence/);
+    assert.match(html,/Later evidence/);
+    assert.match(html,/Putar ulang/);
+    assert.doesNotMatch(html,/Semua waktu<\/button>/);
   }finally{await server.close();}
 });
 

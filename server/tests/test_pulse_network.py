@@ -37,6 +37,7 @@ def test_repetition_and_burst_are_explained_signals_not_probability():
     account = analyze_network(rows)['accounts'][0]
     assert account['assessment'] == 'review_signals'
     assert {s['kind'] for s in account['signals']} == {'repetition', 'burst'}
+    assert account['pattern'] == 'amplification'   # two different behaviours: a named pattern, still no probability
     assert 'bot_probability' not in account
 
 

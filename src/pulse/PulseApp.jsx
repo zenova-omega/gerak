@@ -1,6 +1,6 @@
 import { createElement, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Settings, LogOut, Moon, Sun, Users, ChartNoAxesCombined, Database, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Settings, LogOut, Moon, Sun, Users, Database, Sparkles, Search, HeartPulse, FileText, ChartPie } from 'lucide-react';
 import api from '../lib/api';
 import PulseDashboard from '../components/admin/pulse/PulseDashboard';
 import SourcesCoverage from './SourcesCoverage.jsx';
@@ -15,6 +15,8 @@ import './brand-system.css';
 import { PulseButton } from '../components/ui/PulseUI';
 import DesignSystemGallery from './DesignSystemGallery';
 import QuickSearch from './TaggedSearch';
+import { pageMeta, pageOrder, pageGroups } from './pageMeta';
+import { PulseLoader } from '../components/ui/PulseLoader';
 import { quickSearchDestination } from './projectQuery';
 import WorkspaceNavigation from './WorkspaceNavigation';
 import './workspace-layout.css';
@@ -52,8 +54,16 @@ function Login({ onLogin, message }) {
     finally { setBusy(false); }
   }
   return <div className="ps-login-layout">
-    <section className="ps-intro"><Brand /><div><h1>Percakapan publik.<br />Bukti yang bisa ditelusuri.</h1><p>Ruang kerja pemantauan untuk organisasi Anda. Telusuri topik, jaringan, dan sumber dalam satu tempat.</p><div className="ps-capabilities"><span>Monitor</span><span>Jaringan</span><span>Sumber</span></div></div><p className="ps-deployment">PULSE / instalasi organisasi</p></section>
-    <main className="ps-login-main"><section className="ps-auth-card"><h2>Masuk ke PULSE</h2><p>Gunakan akun yang disiapkan administrator organisasi.</p>
+    <section className="ps-intro"><Brand /><div className="ps-intro-pitch">
+      <h1>Social Media Listening</h1>
+      <p className="ps-intro-lead">Satu ruang kerja untuk memantau percakapan publik.</p>
+      <ul className="ps-intro-points">
+        <li><Radio size={18} aria-hidden="true" />Alert saat isu melonjak</li>
+        <li><Sparkles size={18} aria-hidden="true" />Jawaban AI dengan sumbernya</li>
+        <li><Newspaper size={18} aria-hidden="true" />Laporan siap cetak</li>
+      </ul>
+    </div><p className="ps-deployment">PULSE / instalasi organisasi</p></section>
+    <main className="ps-login-main"><section className="ps-auth-card"><h2>Masuk ke PULSE</h2><p>Gunakan akun dari administrator organisasi Anda.</p>
       {message && <p className="ps-notice" role="status">{message}</p>}
       {status.loading ? <p role="status">Memeriksa instalasi…</p> : status.error ? <div className="ps-error" role="alert"><p>{status.error}</p><PulseButton onClick={() => { setStatus({ loading: true }); setAttempt(value => value + 1); }}>Coba lagi</PulseButton></div> : !status.configured ? <div className="ps-notice"><h3>Instalasi belum dikonfigurasi</h3><p>Minta administrator membuat akun pemilik pertama melalui CLI lokal di server. Tidak ada pendaftaran publik.</p><PulseButton onClick={() => { setStatus({ loading: true }); setAttempt(value => value + 1); }}>Periksa kembali</PulseButton></div> : <form onSubmit={submit} aria-busy={busy}>
         <label htmlFor="ps-email">Email</label><input id="ps-email" name="email" type="email" autoComplete="username" required disabled={busy} />
@@ -94,9 +104,7 @@ function PasswordSettings({ user, onChanged }) {
   </form></div><DesignSystemGallery/></section>;
 }
 
-const sections = [['overview', 'Ikhtisar', LayoutDashboard], ['sentiment', 'Sentimen', ChartNoAxesCombined], ['posts', 'Posting', Newspaper], ['accounts', 'Akun & sumber', Users], ['network', 'Jaringan', Network], ['comments', 'Komentar', MessageCircle], ['infographics', 'Infografik', ChartNoAxesCombined], ['monitor', 'Monitor Project', Radio], ['sources', 'Sumber & Cakupan', Database]];
-sections.splice(2,0,['reports','Laporan',ChartNoAxesCombined]);
-sections.splice(1,0,['chat','Tanya AI',Sparkles]);
+const sections = pageOrder.map(id => [id, pageMeta[id].title, pageMeta[id].icon]);
 
 export default function PulseApp() {
   const [session, setSession] = useState({ loading: true, user: null });
@@ -173,12 +181,12 @@ export default function PulseApp() {
   }
   const themeButton = <PulseButton className="ps-theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Gunakan tema terang' : 'Gunakan tema gelap'}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}<span>Tema {theme === 'dark' ? 'terang' : 'gelap'}</span></PulseButton>;
   return <div className="pulse-standalone" data-theme={theme}>
-    {session.loading ? <main className="ps-loading" role="status"><Brand /><p>Memeriksa sesi PULSE…</p></main> : session.error ? <main className="ps-loading"><Brand /><p role="alert">{session.error}</p><PulseButton onClick={() => { setSession({ loading: true, user: null }); setAttempt(value => value + 1); }}>Coba lagi</PulseButton></main> : !session.user ? <><div className="ps-login-theme">{themeButton}</div><Login message={message} onLogin={user => { setSession({ user, loading: false }); setMessage(''); if (location.pathname === '/pulse/login') navigate('/pulse', { replace: true }); }} /></> : <div className="ps-workspace" key={`${session.user.id}:${session.user.csrf_token}`}>
+    {session.loading ? <main className="ps-loading"><Brand /><PulseLoader size="lg" label="Memeriksa sesi PULSE…" /></main> : session.error ? <main className="ps-loading"><Brand /><p role="alert">{session.error}</p><PulseButton onClick={() => { setSession({ loading: true, user: null }); setAttempt(value => value + 1); }}>Coba lagi</PulseButton></main> : !session.user ? <><div className="ps-login-theme">{themeButton}</div><Login message={message} onLogin={user => { setSession({ user, loading: false }); setMessage(''); if (location.pathname === '/pulse/login') navigate('/pulse', { replace: true }); }} /></> : <div className="ps-workspace" key={`${session.user.id}:${session.user.csrf_token}`}>
       <a className="ps-skip" href="#ps-content">Lewati ke konten</a>
       <WorkspaceNavigation key={location.pathname} brand={<Brand />} label={sections.find(([id]) => location.pathname === `/pulse/${id}`)?.[1] || (location.pathname === '/pulse/settings' ? 'Pengaturan' : location.pathname === '/pulse/search' ? 'Pencarian cepat' : 'Ikhtisar')}>
-        <nav aria-label="Navigasi PULSE"><Link to="/pulse/search" aria-current={location.pathname === '/pulse/search' ? 'page' : undefined}><Newspaper size={19}/>Pencarian cepat</Link>{sections.map(([id, label, icon]) => <Link key={id} to={`/pulse/${id}${navigationSearch}`} aria-current={location.pathname === `/pulse/${id}` || (id === 'overview' && location.pathname === '/pulse') ? 'page' : undefined}>{createElement(icon, { size: 19 })}{label}</Link>)}</nav><div className="ps-sidebar-bottom"><Link to={`/pulse/settings${location.search}`} aria-current={location.pathname === '/pulse/settings' ? 'page' : undefined}><Settings size={19} />Pengaturan</Link>{themeButton}<div className="ps-user"><strong>{session.user.name || session.user.email}</strong><span>{session.user.role}</span></div><PulseButton onClick={logout} disabled={logoutBusy}><LogOut size={18} />{logoutBusy ? 'Keluar…' : 'Keluar'}</PulseButton>{logoutError && <p role="alert" className="ps-error">{logoutError}</p>}</div>
+        <nav aria-label="Navigasi PULSE"><Link to="/pulse/search" aria-current={location.pathname === '/pulse/search' ? 'page' : undefined}>{createElement(pageMeta.search.icon, { size: 19 })}{pageMeta.search.title}</Link>{pageGroups.map(([group, ids]) => <div className="ps-nav-group" key={group} role="group" aria-label={group}><span className="ps-nav-group-label" aria-hidden="true">{group}</span>{ids.map(id => [id, pageMeta[id].title, pageMeta[id].icon]).map(([id, label, icon]) => <Link key={id} to={`/pulse/${id}${navigationSearch}`} aria-current={location.pathname === `/pulse/${id}` || (id === 'overview' && location.pathname === '/pulse') ? 'page' : undefined}>{createElement(icon, { size: 19 })}{label}</Link>)}</div>)}</nav><div className="ps-sidebar-bottom"><Link to={`/pulse/settings${location.search}`} aria-current={location.pathname === '/pulse/settings' ? 'page' : undefined}><Settings size={19} />Pengaturan</Link>{themeButton}<div className="ps-user"><strong>{session.user.name || session.user.email}</strong><span>{session.user.role}</span></div><PulseButton onClick={logout} disabled={logoutBusy}><LogOut size={18} />{logoutBusy ? 'Keluar…' : 'Keluar'}</PulseButton>{logoutError && <p role="alert" className="ps-error">{logoutError}</p>}</div>
       </WorkspaceNavigation>
-      <div className="ps-content" id="ps-content" tabIndex={-1}><div className="ps-topline"><span>Pemantauan percakapan</span><span>Instalasi privat</span></div>{location.pathname !== '/pulse/search' && !quickDestination && <ProjectBar readOnly={!["owner", "admin"].includes(session.user.role)} />}<Routes><Route path="/pulse/search" element={<QuickSearch/>}/><Route path="/pulse" element={<PulseDashboard standalone view="overview" />} />{sections.map(([id]) => <Route key={id} path={`/pulse/${id}`} element={id === 'posts' && quickDestination ? <Navigate to={quickDestination} replace/> : id === 'chat' ? <ProjectChat /> : id === 'sources' ? <SourcesCoverage projectPicker={false} user={session.user} readOnly={!['owner', 'admin'].includes(session.user.role)} /> : <PulseDashboard standalone view={id} />} />)}<Route path="/pulse/settings" element={<PasswordSettings user={session.user} onChanged={() => endSession('Kata sandi diperbarui. Semua sesi telah berakhir. Silakan masuk kembali.')} />} /><Route path="*" element={<Navigate to={`/pulse${location.search}`} replace />} /></Routes></div>
+      <div className="ps-content" id="ps-content" tabIndex={-1}><div className="ps-topline"><span>Pemantauan percakapan</span><span>Instalasi privat</span></div>{location.pathname !== '/pulse/search' && !quickDestination && <ProjectBar readOnly={!["owner", "admin"].includes(session.user.role)} />}<Routes><Route path="/pulse/search" element={<QuickSearch/>}/><Route path="/pulse" element={<PulseDashboard standalone view="overview" />} />{sections.map(([id]) => <Route key={id} path={`/pulse/${id}`} element={id === 'posts' && quickDestination ? <Navigate to={quickDestination} replace/> : id === 'chat' ? <ProjectChat /> : id === 'sources' ? <SourcesCoverage projectPicker={false} user={session.user} readOnly={!['owner', 'admin'].includes(session.user.role)} /> : <PulseDashboard standalone view={id} />} />)}<Route path="/pulse/infographics" element={<Navigate to={`/pulse/overview${location.search}#overview-words`} replace/>}/><Route path="/pulse/settings" element={<PasswordSettings user={session.user} onChanged={() => endSession('Kata sandi diperbarui. Semua sesi telah berakhir. Silakan masuk kembali.')} />} /><Route path="*" element={<Navigate to={`/pulse${location.search}`} replace />} /></Routes></div>
     </div>}
   </div>;
 }

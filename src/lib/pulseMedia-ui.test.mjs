@@ -20,9 +20,11 @@ test('feed exposes inline media, original caption, safe links and truthful legac
     assert.doesNotMatch(videoFeed,/<iframe|<video/);
     const { default: ProjectPeriod } = await server.ssrLoadModule('/src/pulse/ProjectPeriod.jsx');
     const periodHtml = renderToStaticMarkup(React.createElement(ProjectPeriod,{topicId:'test'}));
-    assert.match(periodHtml, /<details class="ps-period-editor"><summary>/);
-    assert.match(periodHtml, /Seluruh periode tersimpan/);
-    assert.match(periodHtml, /name="from"/);
+    // The period is a row of presets; the two date fields appear only after "Kustom" is pressed.
+    assert.match(periodHtml, /role="group" aria-label="Pilih periode"/);
+    assert.match(periodHtml, /aria-pressed="true"[^>]*>(?:<[^>]*>)*Semua/);
+    assert.match(periodHtml, /aria-expanded="false"[^>]*>(?:<[^>]*>)*Kustom/);
+    assert.doesNotMatch(periodHtml, /name="from"/);
     const posts = [{ id: '1', platform: 'instagram', author: 'Display Name', url: 'https://instagram.com/p/Abc/?track=1', title: 'Original caption headline', text: 'Original caption in full', metrics: { profile_image_url:'https://cdn.example.com/avatar.jpg',author_username: 'real.user', media_url: 'https://cdn.example.com/photo.jpg', media_type: 'image', likes: 0, engagement: 0 } }, { id: '2', platform: 'tiktok', author: 'Older record', metrics: {} }];
     const html = renderToStaticMarkup(React.createElement(PostFeed, { posts }));
     assert.match(html, /aria-label="Filter cepat posting"/);

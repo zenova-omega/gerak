@@ -71,11 +71,14 @@ def analyze_network(posts):
         else:
             groups.append({'tokens': tokens, 'posts': [p]})
     narratives = []
+    shared = Counter()   # per account: similar-content groups it shares with at least two other accounts
     for group in groups:
         rows = group['posts']
         authors = {account_key(p) for p in rows if p.get('author')}
         if len(authors) < 2:
             continue
+        if len(authors) >= 3:
+            shared.update(authors)
         dated = [p for p in rows if timestamp(p.get('published_at'))]
         first = dated[0] if dated else None
         later = {account_key(p) for p in dated if first and timestamp(p['published_at']) > timestamp(first['published_at']) and account_key(p) != account_key(first)}
@@ -106,8 +109,12 @@ def analyze_network(posts):
             signals.append({'kind': 'repetition', 'detail': f'{repeated} posting memiliki teks identik setelah normalisasi.'})
         if peak >= 5:
             signals.append({'kind': 'burst', 'detail': f'{peak} posting teramati dalam jendela 10 menit.'})
-        accounts.append({**nodes[key], 'posts': len(rows), 'signals': signals,
-                         'assessment': 'insufficient_data' if len(rows) < 5 else 'review_signals' if signals else 'no_signals_observed',
+        if shared[key] >= 2:
+            signals.append({'kind': 'shared_copy', 'detail': f'Teksnya serupa dengan akun lain di {shared[key]} kelompok konten, masing-masing dipakai tiga akun atau lebih.'})
+        # Two different amplification behaviours together are worth a named pattern. It describes what the
+        # account did in this sample; it is not a probability and says nothing about who runs the account.
+        accounts.append({**nodes[key], 'posts': len(rows), 'signals': signals, 'pattern': 'amplification' if len(signals) >= 2 else None,
+                         'assessment': 'review_signals' if signals else 'insufficient_data' if len(rows) < 5 else 'no_signals_observed',
                          'first_seen': dates[0].isoformat() if dates else None,
                          'engagement': sum((p.get('metrics') or {}).get('engagement') or 0 for p in rows),
                          'evidence': [evidence(p) for p in rows]})

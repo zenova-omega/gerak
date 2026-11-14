@@ -18,7 +18,7 @@ export default function ProjectPeriod({topicId}) {
     try{setPeriod({from:data.get('from'),to:data.get('to')});setError('');setCustom(false);}catch(err){setError(err.message);}
   }
   return <section className="ps-project-period ps-scope-group" aria-label="Periode analisis project">
-    <span className="ps-scope-label">Periode <InfoTip label="Tentang periode analisis">Waktu publikasi dalam WIB, bukan tanggal crawl. Saat filter aktif, posting tanpa tanggal tidak dihitung. Ikhtisar, Posting, Akun dan Jaringan memakai rentang yang sama. Disimpan per project di browser ini; jadwal crawler dan kuota tidak berubah.</InfoTip></span>
+    <span className="ps-scope-label">Periode <InfoTip label="Tentang periode analisis">Waktu publikasi dalam WIB, bukan tanggal pengambilan. Saat filter aktif, posting tanpa tanggal tidak dihitung. Ikhtisar, Posting, Akun dan Jaringan memakai rentang yang sama. Disimpan per project di browser ini; jadwal crawler dan kuota tidak berubah.</InfoTip></span>
     <div className="pu-tag-group" role="group" aria-label="Pilih periode">
       <PulseTag size="lg" tone="accent" pressed={active==='all'&&!custom} onClick={()=>choose({})}>Semua</PulseTag>
       {presets.map(([key,label,days])=><PulseTag key={key} size="lg" tone="accent" pressed={active===key&&!custom} onClick={()=>choose({from:wibDay(days),to:today})}>{label}</PulseTag>)}

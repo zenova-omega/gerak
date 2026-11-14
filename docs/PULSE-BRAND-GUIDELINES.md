@@ -197,3 +197,41 @@ Reports print in light theme regardless of the screen theme. The masthead carrie
 - Does it hold at 390px, in dark theme, and with the keyboard?
 - Does any text reveal the engine room?
 - Did you reuse a component from section 7?
+
+## 15. Infografik
+
+Infografik adalah cara PULSE menjawab sebelum pembaca selesai membaca kalimatnya. Ia elemen brand setingkat logo dan warna: setiap ringkasan, laporan, dan panel bukti memakainya dengan bentuk yang sama.
+
+**Prinsip**
+
+- Angka dihitung dari data tersimpan, bukan diambil dari kalimat AI. Kalimat menjelaskan; infografik membuktikan.
+- Satu infografik menjawab satu pertanyaan. Bila perlu dua jawaban, pakai dua.
+- Selalu ada label teks. Warna dan bentuk hanya memperkuat.
+- Nilai yang tidak tersedia ditulis "—", tidak pernah 0, dan infografiknya tidak digambar bila datanya kosong.
+- Tayangan tidak pernah disebut jangkauan.
+
+**Template**
+
+| Template | Menjawab | Bentuk |
+| --- | --- | --- |
+| Deret angka | Seberapa besar? | Dua sampai lima angka tebal dengan label kecil, opsional garis tren di kanan |
+| Batang proporsi | Bagaimana pembagiannya? | Satu batang 12px, urutan negatif, netral, positif, dengan persentase di bawahnya |
+| Lencana tanggal | Kapan mulai? | Tanggal di lencana gelap, diikuti akun dan platform |
+| Lonjakan | Kapan naik? | Tanda denyut, tambahan interaksi, dan laju per jam; bila riwayat belum ada, hari teramai dengan garis tren |
+| Batang peringkat | Apa yang paling banyak? | Tiga baris judul dengan angka dan garis proporsional |
+| Kutipan | Apa kata orang? | Satu komentar teratas, miring, dengan penulis dan jumlah suka |
+| Linimasa | Bagaimana urutannya? | Tanggal di kiri, titik dan garis, peristiwa di kanan |
+| Kartu bernomor | Apa yang perlu dipantau? | Butir pendek dengan nomor di lingkaran gelap |
+| Awan | Apa yang sering muncul? | Tagar atau emotikon tersusun rapat dari tengah, ukuran skala logaritmik |
+| KPI penyebaran | Seberapa jauh menyebar? | Interaksi, dibagikan, tayangan dengan tanda metrik PULSE |
+
+**Rupa**
+
+- Latar infografik memakai warna pilihan (`--ps-selected`), radius kontrol, padding 12 × 14px. Di dalam kartu ungu SUMMARY AI ia duduk di atas panel putih.
+- Angka utama 22px tebal 700, angka tabular. Label 12px warna redup.
+- Sentimen selalu merah, abu, hijau dari token sentimen. Aksen ungu untuk semua yang bukan sentimen.
+- Tidak ada grafik 3D, gradien, atau ikon dekoratif. Garis tren 1,75px tanpa sumbu.
+
+**Pemetaan bagian ringkasan AI**
+
+Awal → lencana tanggal · Viral → lonjakan · Topik utama dan Ringkasan → deret angka · Yang dibicarakan → batang peringkat · Sentimen, Nada publik, Suasana → batang proporsi · Kenapa orang marah → persentase negatif dan kutipan · Kronologi → garis tren dan linimasa · Perlu diperhatikan → kartu bernomor.

@@ -2,6 +2,7 @@
 import httpx
 import feedparser
 from datetime import datetime
+from .site_icon import public_site
 
 GOOGLE_NEWS_RSS = "https://news.google.com/rss/search"
 
@@ -13,11 +14,14 @@ def parse_rss_feed(xml: str) -> list[dict]:
         published = None
         if getattr(e, "published_parsed", None):
             published = datetime(*e.published_parsed[:6])
-        source_title = None
+        source_title = source_url = None
         src = getattr(e, "source", None)
         if src is not None:
             source_title = src.get("title") if hasattr(src, "get") else getattr(src, "title", None)
+            source_url = public_site(src.get("href") if hasattr(src, "get") else getattr(src, "href", None))
         items.append({
+            # The publisher's own site, as the feed names it: where its logo is looked up.
+            **({"metrics": {"source_url": source_url}} if source_url else {}),
             "source": "rss",
             "platform": "news",
             "url": getattr(e, "link", None),

@@ -68,7 +68,7 @@ async def test_empty_scope_never_falls_back_to_other_projects(client, admin_toke
     assert data['jobs'] == data['schedules'] == data['alerts'] == []
     assert data['job_counts'] == {}
     assert data['unread'] == data['alert_total'] == 0
-    assert len(data['workers']) == 3
+    assert len(data['workers']) == 6  # news, X, YouTube, the comment lane and the two profile lanes
 
 
 @pytest.mark.asyncio

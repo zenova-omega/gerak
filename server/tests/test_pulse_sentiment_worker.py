@@ -101,3 +101,43 @@ async def test_invalid_response_retries_bounded_without_neutral_label():
             assert 'sentiment' not in (await db.get(SourceItem,'bad-post')).metrics
     finally:
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_form_of_the_text_is_stored_with_the_label_and_an_answer_without_a_label_is_refused():
+    import json
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+    from app.database import Base
+    from app.models.pulse_sentiment import SentimentJob
+    from app.services import pulse_sentiment as service
+    engine = create_async_engine('sqlite+aiosqlite:///:memory:')
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    emotion = {'label': 'none', 'confidence': 0.9, 'reason': 'Datar'}
+    class AI:
+        model = 'installed-test-model'
+        def __init__(self, answer): self.answer = answer
+        async def generate_text(self, content, **kwargs): return json.dumps(self.answer)
+    try:
+        async with factory() as db:
+            db.add(WatchTopic(id='k', label='K', query='k'))
+            await db.flush()
+            db.add(SourceItem(id='ask', topic_id='k', source='xpoz', platform='x', url='https://example.com/ask', text='Kapan berlaku?', metrics={'likes': 2}))
+            await db.commit()
+        # The model once answered with emotion and kind only. Without a label nothing may be stored.
+        assert await service.run_one(factory, AI({'emotion': emotion, 'kind': 'question'})) == 'failed'
+        async with factory() as db:
+            assert (await db.get(SourceItem, 'ask')).metrics == {'likes': 2}
+            job = await db.get(SentimentJob, 'ask')
+            job.available_at = job.available_at.replace(year=2000)
+            await db.commit()
+        assert await service.run_one(factory, AI({'label': 'neutral', 'confidence': 0.9, 'reason': 'Bertanya', 'kind': 'question', 'emotion': emotion})) == 'done'
+        async with factory() as db:
+            sentiment = (await db.get(SourceItem, 'ask')).metrics['sentiment']
+            assert sentiment['label'] == 'neutral' and sentiment['kind'] == 'question'
+        # The answer format names the label before anything optional, so the model cannot skip it.
+        assert service.PROMPT.index('label (positive/neutral/negative)') < service.PROMPT.index('kind (') < service.PROMPT.index('emotion (')
+        assert 'semuanya wajib' in service.PROMPT
+    finally:
+        await engine.dispose()

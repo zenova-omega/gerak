@@ -11,6 +11,9 @@ from .pulse_sentiment import SentimentJob, SentimentLane
 from .pulse_response_analysis import ResponseAnalysisJob, ResponseAnalysisCursor
 from .pulse_review import PostReview
 from .pulse_report import PulseReport
+from .pulse_summary import PulseSummary
+from .pulse_settings import PulseProjectSettings
+from .pulse_profiles import PulseAccountProfile
 from .survey import Survey, SurveyQuestion, SurveyResponse, SurveyAnswer
 from .studio import ContentDraft
 from .scheduler import ConnectedAccount, ScheduledPost

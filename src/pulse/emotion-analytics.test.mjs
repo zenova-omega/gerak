@@ -8,7 +8,7 @@ test('emotion UI separates missing results from observed zero and exposes source
  try{
   const {default:Panel}=await server.ssrLoadModule('/src/pulse/EmotionAnalytics.jsx');
   const missing=renderToStaticMarkup(React.createElement(Panel,{posts:[{id:'a',metrics:{sentiment:{label:'negative'}}}]}));
-  assert.match(missing,/Hasil emosi belum tersedia/);assert.match(missing,/1 belum dianalisis/);assert.match(missing,/Belum tersedia/);
+  assert.match(missing,/Hasil emosi belum tersedia/);assert.match(missing,/1 posting belum dianalisis/);assert.doesNotMatch(missing,/aria-label="Marah:/);
   const result=renderToStaticMarkup(React.createElement(Panel,{posts:[{id:'a',metrics:{emotion:{label:'anger',confidence:.9,reason:'Nada marah'}}}]}));
   assert.match(result,/aria-label="Marah: 1 posting. Lihat sumber"/);assert.match(result,/100%/);assert.doesNotMatch(result,/Hasil emosi belum tersedia/);
  }finally{await server.close();}

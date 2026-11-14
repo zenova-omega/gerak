@@ -34,6 +34,8 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads"
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        from .services.pulse_migrate import add_missing_columns
+        await conn.run_sync(add_missing_columns)
         # Additive index migration for existing prototype databases. Never delete
         # duplicate source rows automatically; duplicate legacy data must be resolved explicitly.
         from .models.pulse import SourceItem

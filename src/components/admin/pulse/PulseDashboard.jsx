@@ -20,7 +20,9 @@ import InfographicsPanel from './InfographicsPanel';
 import './pulse.css';
 import { PulseButton } from '../../ui/PulseUI';
 import AnalysisNavigation from '../../../pulse/AnalysisNavigation';
-import PageGuide from '../../../pulse/PageGuide';
+import { pageMeta } from '../../../pulse/pageMeta';
+import { sentimentLabels } from '../../../lib/pulsePostFilters';
+import { PulsePageHead, PulseSkeleton } from '../../ui/PulsePatterns';
 import useProjectPeriod from '../../../pulse/useProjectPeriod';
 import SentimentSummary from './SentimentSummary';
 import SentimentProgress from '../../../pulse/SentimentProgress';
@@ -33,7 +35,8 @@ import useProjectPlatforms from '../../../pulse/useProjectPlatforms';
 import {scopeProjectData,projectPlatformOptions} from '../../../lib/pulseProjectFilters';
 import ResponseAnalysisPanel, { ResponseAnalysisSummary } from '../../../pulse/ResponseAnalysisPanel';
 import { PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
-import { PulseTag } from '../../ui/PulseTag';
+import { PulseTag, SentimentTag } from '../../ui/PulseTag';
+import { ProjectPostsContext } from '../../../pulse/projectPosts';
 
 function Empty({ children }) {
   return <div className="pulse-empty"><Database size={25} strokeWidth={1.3} /><p>{children}</p></div>;
@@ -41,6 +44,10 @@ function Empty({ children }) {
 function ErrorNotice({ error, retry, standalone }) {
   return <div className="pulse-error" role="alert"><AlertCircle size={20} /><div><strong>Data tidak tersedia</strong><p>{pulseError(error)}</p>{!standalone && <Link to="/login?returnTo=pulse">Masuk dengan akun admin</Link>}</div>{retry && <PulseButton variant="secondary" className="pulse-button" onClick={retry}>Coba lagi</PulseButton>}</div>;
 }
+// What each page looks like before its data arrives.
+const skeletonShape = { overview: { stats: 6, panels: 2, rows: 3 }, sentiment: { stats: 4, panels: 1, rows: 3 }, posts: { stats: 0, panels: 0, rows: 6 }, comments: { stats: 0, panels: 3, rows: 4 }, accounts: { stats: 4, panels: 0, rows: 8 }, network: { stats: 4, panels: 1, rows: 2 }, infographics: { stats: 0, panels: 2, rows: 0 }, reports: { stats: 4, panels: 2, rows: 3 } };
+// Pages that narrow to the sentiment carried in the URL. Ikhtisar, Sentimen and Laporan always show the whole picture; Posting has its own filter chips.
+const sentimentScoped = ['comments', 'accounts', 'network', 'infographics'];
 function Panel({ title, note, children, className = '' }) {
   return <section className={'pulse-panel ' + className}><div className="pulse-panel-heading"><div><h2>{title}</h2>{note && <p>{note}</p>}</div></div>{children}</section>;
 }
@@ -75,7 +82,7 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
   const responsePanel=<ResponseAnalysisPanel posts={data.posts||[]} topicId={topic?.id||analysisParams.get('topic')}/>;
   const responseSummary=<ResponseAnalysisSummary posts={data.posts||[]} topicId={topic?.id||analysisParams.get('topic')}/>;
   if(view==='overview') return <><OverviewAnalytics data={data} topic={topic} period={period} platforms={selectedPlatforms} onPlatformsChange={onPlatformsChange} availablePlatforms={availablePlatforms}/>{responseSummary}</>;
-  if(view==='sentiment') return <><SentimentAnalytics data={data}/>{responseSummary}<details className="pulse-evaluation-disclosure"><summary>Evaluasi dari koreksi analis</summary><SentimentEvaluation topicId={topic?.id||analysisParams.get('topic')} period={period} platforms={selectedPlatforms}/></details></>;
+  if(view==='sentiment') return <><SentimentAnalytics data={data} topicId={topic?.id||analysisParams.get('topic')}/><details className="pulse-evaluation-disclosure"><summary>Evaluasi dari koreksi analis</summary><SentimentEvaluation topicId={topic?.id||analysisParams.get('topic')} period={period} platforms={selectedPlatforms}/></details></>;
   if(view==='reports') return <ProjectReport data={data} topic={topic} period={period} selectedPlatforms={selectedPlatforms}/>;
   return <>
     {view === 'all' && <nav className="pulse-section-nav" aria-label="Bagian dashboard"><a href="#pulse-network">Jaringan & narasi</a><a href="#pulse-comments">Top comments</a><a href="#pulse-posts">Kartu posting</a><a href="#pulse-infographics-view">Infografik</a></nav>}
@@ -106,13 +113,13 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     </div>
     <SentimentSummary posts={data.posts||[]} onSelect={openSentiment}/>
     </>}
-    {view === 'accounts' && <PulseStatGrid label="Ringkasan akun dan sumber"><PulseStat label="Akun / sumber unik" icon={Users} value={allAccounts.length} note="Per platform, termasuk penerbit berita" /><PulseStat label="Posting terkumpul" icon={Radio} value={data.total_mentions} note={`${platforms.length} platform`} /><PulseStat label="Interaksi teramati" icon={Activity} value={totals.engagement?.value ?? null} note={coverage('engagement')} /><PulseStat label="Views teramati" icon={Layers} value={totals.views?.value ?? null} note="Tayangan, bukan audiens unik" /></PulseStatGrid>}
+    {view === 'accounts' && <PulseStatGrid label="Ringkasan akun dan sumber"><PulseStat label="Akun / sumber unik" icon={Users} value={allAccounts.length} note="Per platform, termasuk penerbit berita" /><PulseStat label="Posting terkumpul" icon={Radio} value={data.total_mentions} note={allAccounts.length ? `${(data.total_mentions / allAccounts.length).toLocaleString('id-ID', { maximumFractionDigits: 1 })} posting per akun · ${platforms.length} platform` : `${platforms.length} platform`} /><PulseStat label="Interaksi teramati" icon={Activity} value={totals.engagement?.value ?? null} share={data.total_mentions ? (totals.engagement?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting bermetrik" /><PulseStat label="Tayangan teramati" icon={Layers} value={totals.views?.value ?? null} share={data.total_mentions ? (totals.views?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting punya tayangan" note="Bukan audiens unik" /></PulseStatGrid>}
     {['all', 'accounts'].includes(view) && <div className="pulse-detail-grid">
-      <Panel title="Top influencers & sumber" note="Ranking dihitung ulang dari posting dalam periode project. Interaksi adalah snapshot terakhir yang tersedia, bukan pertambahan interaksi selama periode.">
+      <Panel title="Akun & sumber teratas" note="Ranking dihitung ulang dari posting dalam periode project. Interaksi adalah angka terakhir yang tercatat, bukan pertambahan selama periode.">
         <label className="pulse-narrative-select">Jenis sumber ranking<select value={accountKind} onChange={e=>setAccountKind(e.target.value)}><option value="all">Semua akun & sumber</option><option value="social">Akun media sosial</option><option value="news">Sumber berita</option></select></label>
         <div className="pulse-filters ps-account-search"><label>Cari akun atau platform<input type="search" value={accountQuery} onChange={event => setAccountQuery(event.target.value)} placeholder="Nama akun, Instagram, YouTube…" /></label><span role="status">{accounts.length} dari {allAccounts.length} akun</span>{accountQuery && <PulseButton onClick={() => setAccountQuery('')}>Hapus pencarian</PulseButton>}</div>
         <div className="pulse-ranking-controls pu-tag-group" role="group" aria-label="Urutan ranking"><PulseTag size="lg" tone="accent" pressed={rankBy === 'engagement'} onClick={() => setRankBy('engagement')}>Interaksi tertinggi</PulseTag><PulseTag size="lg" tone="accent" pressed={rankBy === 'mentions'} onClick={() => setRankBy('mentions')}>Posting terbanyak</PulseTag></div>
-        {!accountQuery.trim() && accounts.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + (rankBy === 'mentions' ? 'jumlah posting' : 'interaksi')}>{accounts.slice(0, 3).map((row, i) => <PulseStat key={row.platform + row.author} label={`#${i + 1} · ${platformLabel(row.platform)}`} value={row[rankBy] ?? null} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {rankBy === 'mentions' ? 'posting' : 'interaksi, snapshot terakhir'}</>} />)}</PulseStatGrid></div>}
+        {!accountQuery.trim() && accounts.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + (rankBy === 'mentions' ? 'jumlah posting' : 'interaksi')}>{accounts.slice(0, 3).map((row, i) => <PulseStat key={row.platform + row.author} label={`#${i + 1} · ${platformLabel(row.platform)}`} value={row[rankBy] ?? null} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {rankBy === 'mentions' ? 'posting' : 'interaksi, angka terakhir'}</>} />)}</PulseStatGrid></div>}
         {accounts.length ? <div className="pulse-table-wrap"><table className="pulse-ranking"><thead><tr><th scope="col">Akun / sumber</th><th scope="col">Posting <PulseArrow/></th><th scope="col">Interaksi</th><th scope="col">Porsi posting</th><th scope="col"><span className="sr-only">Bukti</span></th></tr></thead><tbody>{accounts.map((row, index) => <AccountRankingRow key={row.platform + ':' + row.author + ':' + index} row={row} rank={allAccounts.indexOf(row)+1} posts={data.posts||[]} total={data.total_mentions} search={analysisParams.toString()}/>)}</tbody></table></div> : <Empty>{accountQuery ? "Tidak ada akun yang cocok. Ubah atau hapus pencarian." : "Belum ada akun untuk diperingkat. Metrik yang tidak tersedia bukan nol."}</Empty>}
         <p className="pulse-footnote">Porsi posting = jumlah posting akun ÷ seluruh posting project pada periode ini, termasuk posting tanpa nama akun. Penyebut tidak berubah saat pencarian atau jenis sumber disaring. Bukan jangkauan maupun skor pengaruh. “—” berarti metrik tidak tersedia, bukan nol.</p>
       </Panel>
@@ -122,7 +129,7 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     </div>}
     {['all', 'network'].includes(view) && <NetworkAnalysis key={'network-' + (data.posts?.[0]?.id || 'empty')} data={data.network} posts={data.posts || []} locations={data.locations||[]} unknownCount={data.unknown_location_count||0} />}
     {['all', 'comments'].includes(view) && <>{responsePanel}<CommentsPanel key={'comments-' + (data.posts?.[0]?.id || 'empty')} posts={data.posts || []} topicId={topic?.id||analysisParams.get('topic')} /></>}
-    {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postPlatform,analysisParams.get('day')].join(':')} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={analysisParams.get('day')||''} initialSentiment={sentiment} initialAuthor={postAuthor} initialPlatform={postPlatform} />}
+    {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postPlatform,analysisParams.get('day'),analysisParams.get('find')].join(':')} initialQuery={analysisParams.get('find') || ''} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={analysisParams.get('day')||''} initialSentiment={sentiment} initialAuthor={postAuthor} initialPlatform={postPlatform} />}
     {['all', 'infographics'].includes(view) && <div id="pulse-infographics-view"><InfographicsPanel posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></div>}
   </>;
 }
@@ -145,7 +152,9 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const topics = useTopics();
   const issues = useIssues({ topicId });
   const analytics = usePulseAnalytics(topicId, alertId, standalone?period:{});
-  const scopedData=useMemo(()=>analytics.data&&standalone?scopeProjectData(analytics.data,{from:period.from,to:period.to,platforms:JSON.parse(platformKey)}):analytics.data,[analytics.data,standalone,period.from,period.to,platformKey]);
+  const carriedSentiment = sentimentLabels[searchParams.get('sentiment')] && sentimentScoped.includes(view) ? searchParams.get('sentiment') : null;
+  const scopedData=useMemo(()=>analytics.data&&standalone?scopeProjectData(analytics.data,{from:period.from,to:period.to,platforms:JSON.parse(platformKey),sentiments:carriedSentiment?[carriedSentiment]:null}):analytics.data,[analytics.data,standalone,period.from,period.to,platformKey,carriedSentiment]);
+  const dropSentiment = () => { const next = new URLSearchParams(searchParams); next.delete('sentiment'); setSearchParams(next); };
   const availablePlatforms=[...new Set([...projectPlatformOptions,...(analytics.data?.posts||[]).map(p=>p.platform),...(selectedPlatforms||[])])];
   useEffect(() => {
     if (!alertId || !analytics.data) return;
@@ -194,11 +203,12 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   descriptions.reports='Ringkasan eksekutif dan bukti sumber sesuai periode project, siap dicetak sebagai PDF.';
   if (standalone && !topicId) return <div className="pulse-empty"><Database size={28} /><h1>Pilih project untuk mulai memantau</h1><p>Gunakan picker di atas. Setiap project menyimpan satu topik beserta keyword, posting, dan alert-nya.</p></div>;
   if (standalone && !topics.loading && !topics.error && !selected) return <div className="pulse-empty"><h1>Project tidak tersedia</h1><p>Pilih project lain melalui picker di atas.</p></div>;
-  return <div className="pulse-dashboard" id="pulse-dashboard" data-view={view}>
-    <header className="pulse-header">
+  return <ProjectPostsContext.Provider value={scopedData?.posts || null}><div className="pulse-dashboard" id="pulse-dashboard" data-view={view}>
+    {standalone ? <PulsePageHead icon={pageMeta[view]?.icon} title={pageMeta[view]?.title || titles[view] || 'Pulse'} tagline={pageMeta[view]?.tagline} guide={pageMeta[view]?.guide}><PulseButton variant="secondary" className="pulse-button" disabled={!!action || analytics.loading || issues.loading || topics.loading} onClick={refresh}><RefreshCw size={15} />Muat ulang</PulseButton></PulsePageHead> : <header className="pulse-header">
       <div className="pulse-brand"><span className="pulse-brand-icon"><Activity size={25} /></span><div><h1>{standalone ? titles[view] || 'Pulse' : 'Pulse'}</h1><p>{standalone ? descriptions[view] : 'Pantau percakapan. Telusuri buktinya.'}</p></div></div>
       <div className="pulse-header-actions"><span className="pulse-data-badge"><ShieldCheck size={14} />Sumber publik</span><PulseButton variant="secondary" className="pulse-button" disabled={!!action || analytics.loading || issues.loading || topics.loading} onClick={refresh}><RefreshCw size={15} />Muat ulang</PulseButton></div>
-    </header>
+    </header>}
+    {carriedSentiment && <div className="pu-carried" role="status"><span>Filter dari halaman sebelumnya</span><SentimentTag value={carriedSentiment} /><PulseTag size="lg" variant="outline" onRemove={dropSentiment} removeLabel="Lepas filter sentimen">Lepas filter</PulseTag><small>Halaman ini hanya menghitung posting bersentimen {sentimentLabels[carriedSentiment].toLowerCase()}.</small></div>}
     {standalone && <SentimentProgress key={topicId} topicId={topicId} posts={analytics.loading?undefined:scopedData?.posts} onChange={analytics.refetch} quiet/>}
     {needsLogin && <div className="pulse-auth-note"><ShieldCheck size={21} /><div><strong>Analytics live memerlukan login admin asli.</strong><p>Login demo tidak memberi akses API. Gunakan kredensial admin pada formulir login; data contoh tidak ditampilkan di Pulse.</p></div><Link className="pulse-button primary" to="/login?returnTo=pulse">Masuk dengan akun admin</Link></div>}
     <div className="pulse-layout">
@@ -206,7 +216,6 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
         {!standalone && <div className="pulse-bootstrap"><Database size={20} /><strong>Mulai dari topik awal</strong><p>Siapkan GERAK dan Isu Penyadapan Presiden tanpa duplikasi.</p><PulseButton variant="secondary" className="pulse-button" disabled={!!action || needsLogin || topics.loading} onClick={() => run('bootstrap')}>{action === 'bootstrap' ? 'Menyiapkan…' : 'Siapkan topik awal'}</PulseButton><small>Tidak menjalankan crawl.</small></div>}
       </div>}
       <main className="pulse-main">
-        {standalone&&<PageGuide view={view}/>}
         {view === 'posts' && <div className="ps-content-switch" role="group" aria-label="Jenis konten"><PulseButton aria-pressed={contentMode === 'posts'} onClick={()=>setContentMode('posts')}>Posting individual</PulseButton><PulseButton aria-pressed={contentMode === 'issues'} onClick={()=>setContentMode('issues')}>Kelompok percakapan</PulseButton></div>}
         {!standalone && <details className="ps-data-tools"><summary>Pengaturan pengumpulan</summary>
         <div className="pulse-scope"><div><h2>{selected ? selected.label : 'Ikhtisar semua topik'}</h2><p>Pengumpulan mengikuti query project, bukan filter tanggal analisis.</p></div><PulseButton variant="primary" className="pulse-button primary" disabled={!topicId || !!action || needsLogin || topics.loading} onClick={() => run('crawl')}><Download size={15} />{action === 'crawl' ? 'Mengumpulkan sumber…' : 'Crawl manual'}</PulseButton></div>
@@ -221,8 +230,8 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
         {notice && <p className="pulse-notice" role="status">{notice}</p>}
         {action === 'crawl' && <p className="pulse-notice" role="status">Crawl sedang berjalan. Hasil dan status provider akan ditampilkan setelah respons API diterima.</p>}
         {result && <section className="pulse-crawl-result" aria-label="Hasil crawl" role="status"><strong>Respons crawl diterima · {allegationLabel(result.label)}</strong><p>{formatCount(result.ingested)} item diingest. Periksa status tiap provider; respons selesai tidak berarti semua provider berhasil.</p><div className="pulse-provider-list">{providers.map((row, index) => <div key={row.provider || index}><strong>{row.provider || row.source || 'Provider'}</strong><span>{row.status || 'Status tidak tersedia'}</span>{row.ingested != null && <span>{formatCount(row.ingested)} item</span>}<small>{row.reason || row.error || row.message}</small></div>)}</div>{!providers.length && <p>Status provider tidak disertakan oleh API.</p>}</section>}
-        {view !== 'monitor' && !(view === 'posts' && contentMode === 'issues') && (analytics.loading ? <div className="pulse-loading" role="status"><Activity size={22} /><span>Memuat analisis…</span></div> : analytics.error ? <ErrorNotice standalone={standalone} error={analytics.error} retry={analytics.refetch} /> : scopedData && <Analytics key={topicId+':'+period.from+':'+period.to+':'+platformKey} data={scopedData} view={view} topic={selected} period={standalone?period:null} onPeriodChange={standalone?setPeriod:null} selectedPlatforms={standalone?selectedPlatforms:null} onPlatformsChange={setSelectedPlatforms} availablePlatforms={availablePlatforms} />)}
-        {standalone && view === 'posts' && contentMode === 'issues' && (analytics.loading ? <p className="pulse-loading" role="status">Memuat kelompok sesuai filter…</p> : analytics.error ? <ErrorNotice standalone error={analytics.error} retry={analytics.refetch}/> : scopedData && <ConversationGroups key={topicId+':'+period.from+':'+period.to+':'+platformKey} posts={scopedData.posts||[]} period={period} platforms={selectedPlatforms}/>)}
+        {view !== 'monitor' && !(view === 'posts' && contentMode === 'issues') && (analytics.loading ? (standalone ? <PulseSkeleton label={`Memuat ${(pageMeta[view]?.title || 'analisis').toLowerCase()}…`} {...skeletonShape[view]} /> : <div className="pulse-loading" role="status"><Activity size={22} /><span>Memuat analisis…</span></div>) : analytics.error ? <ErrorNotice standalone={standalone} error={analytics.error} retry={analytics.refetch} /> : scopedData && <Analytics key={topicId+':'+period.from+':'+period.to+':'+platformKey} data={scopedData} view={view} topic={selected} period={standalone?period:null} onPeriodChange={standalone?setPeriod:null} selectedPlatforms={standalone?selectedPlatforms:null} onPlatformsChange={setSelectedPlatforms} availablePlatforms={availablePlatforms} />)}
+        {standalone && view === 'posts' && contentMode === 'issues' && (analytics.loading ? <PulseSkeleton label="Memuat kelompok percakapan…" stats={0} panels={0} rows={5} /> : analytics.error ? <ErrorNotice standalone error={analytics.error} retry={analytics.refetch}/> : scopedData && <ConversationGroups key={topicId+':'+period.from+':'+period.to+':'+platformKey} posts={scopedData.posts||[]} period={period} platforms={selectedPlatforms}/>)}
         {!standalone && (view === 'all' || (view === 'posts' && contentMode === 'issues')) && <section className="pulse-issues">
           <div className="pulse-issues-heading"><div><h2>Kelompok percakapan</h2><p>Dikelompokkan berdasarkan kemiripan teks, bukan hubungan antar akun. Maksimal 50 kelompok; cakupan seluruh data project, tidak mengikuti rentang tanggal posting. Buka kelompok untuk melihat metode dan sumber.</p></div><span>{issues.loading || issues.error ? '—' : filtered.length} kelompok ditampilkan</span></div>
           <div className="pulse-filters"><PlatformCheckboxes platforms={issuePlatforms} value={platform} onChange={setPlatform} /><label>Urutkan<select value={sort} onChange={e => setSort(e.target.value)}><option value="score">Skor isu</option><option value="recent">Terbaru</option></select></label><span>Filter ini hanya berlaku untuk daftar isu.</span></div>
@@ -232,5 +241,5 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
         <footer className="pulse-footer"><ShieldCheck size={14} />Sampel percakapan publik · bukan keseluruhan aktivitas media sosial</footer>
       </main>
     </div>
-  </div>;
+  </div></ProjectPostsContext.Provider>;
 }

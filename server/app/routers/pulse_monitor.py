@@ -40,7 +40,11 @@ def alert_dict(row):
 @router.get('')
 async def state(topic_id:str|None=Query(None),alert_offset:int=Query(0,ge=0),db:AsyncSession=Depends(get_db)):
     from ..services.scheduler import scheduler
+    from ..services.pulse_comments_auto import ensure_comment_policy
+    from ..services.pulse_profiles import ensure_profile_policy
     await ensure_policies(db)
+    await ensure_comment_policy(db)
+    await ensure_profile_policy(db)
     now=datetime.utcnow(); day=now.date().isoformat()
     policies=(await db.execute(select(WorkerPolicy).order_by(WorkerPolicy.provider))).scalars().all()
     usage={u.provider:u.used for u in (await db.execute(select(WorkerUsage).where(WorkerUsage.day==day))).scalars()}
@@ -80,9 +84,13 @@ async def state(topic_id:str|None=Query(None),alert_offset:int=Query(0,ge=0),db:
 
 @router.put('/workers/{provider}')
 async def configure_worker(provider:str,req:PolicyUpdate,db:AsyncSession=Depends(get_db)):
-    if provider not in PROVIDERS:
+    from ..services.pulse_comments_auto import PROVIDER as COMMENTS, ensure_comment_policy
+    from ..services.pulse_profiles import PROVIDER as PROFILES, X_PROVIDER as PROFILES_X, ensure_profile_policy
+    if provider not in PROVIDERS and provider not in (COMMENTS, PROFILES, PROFILES_X):
         raise HTTPException(404,'Unknown provider')
     await ensure_policies(db)
+    await ensure_comment_policy(db)
+    await ensure_profile_policy(db)
     values={'daily_limit':req.daily_limit}
     if req.clear_block:
         values['blocked_reason']=None

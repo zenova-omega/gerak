@@ -37,3 +37,10 @@ export function observedProfile(node, account) {
     bio: 'Tidak tersedia dalam data saat ini', demography: 'Tidak diketahui; tidak disimpulkan',
   };
 }
+
+/** What the order does and does not show. Read on demand from the info mark beside the title. */
+export const chronologyNotes = [
+  'Urutan publikasi dari bukti yang tersedia, bukan rantai repost. Urutan waktu bukan bukti sebab-akibat; asal sebenarnya belum diketahui.',
+  '“Terawal teramati” berarti publikasi bertanggal paling awal dalam sampel yang dimuat, bukan waktu ditemukan atau pencetus asli. Waktu yang sama dapat dimiliki beberapa posting.',
+  'Filter hubungan membatasi akun bila “Akun tanpa hubungan” dimatikan.',
+];

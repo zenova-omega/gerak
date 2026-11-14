@@ -60,9 +60,9 @@ function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
   </article>;
 }
 
-export default function PostFeed({ posts = [], period, onPeriodChange, initialSentiment, initialAuthor='', initialPlatform='', initialDay='', topicId='' }) {
+export default function PostFeed({ posts = [], period, onPeriodChange, initialSentiment, initialAuthor='', initialPlatform='', initialDay='', initialQuery='', topicId='' }) {
   const day=/^\d{4}-\d{2}-\d{2}$/.test(initialDay)&&!Number.isNaN(Date.parse(initialDay))?initialDay:'';
-  const [filters, setFilters] = useState({...defaultPostFilters,from:day,to:day,exactAuthor:initialAuthor,platforms:initialPlatform?[initialPlatform]:null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
+  const [filters, setFilters] = useState({...defaultPostFilters,query:initialQuery,from:day,to:day,exactAuthor:initialAuthor,platforms:initialPlatform?initialPlatform.split(',').filter(Boolean):null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
   const [page, setPage] = useState(0);
   const [layout, setLayout] = useState('list');
   const [reviewState, setReviewState] = useState({topicId:'', loaded:false, rows:[], error:''});
@@ -87,7 +87,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
   return <section id="pulse-posts" className="pulse-post-feed pm-workspace" data-layout={layout} aria-label="Posting terkumpul">
     <PulsePanelHeading title="Posting terkumpul" description="Konten asli, interaksi, dan analisis per posting."><PulseTag>{formatCount(rows.length)} dari {formatCount(posts.length)} posting</PulseTag></PulsePanelHeading>
     {reviewState.topicId===topicId && reviewState.error && <p role="alert">Review belum dapat dimuat: {reviewState.error}</p>}
-    <div className="pm-mentions-search"><label>Cari dalam posting<input type="search" placeholder="Keyword, caption atau nama akun" value={filters.query} onChange={e=>{setFilters({...filters,query:e.target.value});setPage(0);}}/></label><label>Urutan posting<select value={filters.sort} onChange={e=>{setFilters({...filters,sort:e.target.value});setPage(0);}}><option value="engagement">Interaksi tertinggi</option><option value="recent">Terbaru dahulu</option><option value="oldest">Terlama dahulu · kronologis</option><option value="shares">Repost terbanyak</option><option value="views">Views tertinggi</option></select></label></div>
+    <div className="pm-mentions-search"><label>Cari dalam posting<input type="search" placeholder="Keyword, caption atau nama akun" value={filters.query} onChange={e=>{setFilters({...filters,query:e.target.value});setPage(0);}}/></label><label>Urutan posting<select value={filters.sort} onChange={e=>{setFilters({...filters,sort:e.target.value});setPage(0);}}><option value="engagement">Interaksi tertinggi</option><option value="recent">Terbaru dahulu</option><option value="oldest">Terlama dahulu · kronologis</option><option value="shares">Repost terbanyak</option><option value="views">Tayangan tertinggi</option></select></label></div>
     <div className="pm-tools-row">
     <details className="pm-timeline-disclosure"><summary>Timeline percakapan</summary><MentionTimeline posts={posts} filters={period?{...filters,...period}:filters} globalPeriod={!!period} onApply={next=>{if(onPeriodChange)onPeriodChange({from:next.from,to:next.to});else setFilters(next);setPage(0);}}/></details>
     <PostFilterDrawer posts={effectivePosts} filters={filters} topicId={topicId} globalPeriod={!!period} onApply={next=>{setFilters(next);setPage(0);}}/>

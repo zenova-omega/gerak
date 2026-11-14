@@ -19,6 +19,8 @@ from .routers import pulse_response_analysis
 async def lifespan(app):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        from .services.pulse_migrate import add_missing_columns
+        await conn.run_sync(add_missing_columns)
         from .models.pulse import SourceItem
         index = next(i for i in SourceItem.__table__.indexes if i.name == 'uq_pulse_topic_url')
         await conn.run_sync(lambda sync: index.create(sync, checkfirst=True))

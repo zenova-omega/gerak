@@ -1,6 +1,15 @@
 import React from 'react';
 
 // Original PULSE vector marks. Text labels always accompany color/shape.
+/** "Pola mirip buzzer": shown only when two or more different amplification behaviours were observed
+ * for the account. It names what the account did in the collected data, with the evidence beside it. */
+export function PatternTag({ signals = [] }) {
+  return <span className="pulse-pattern-tag" title={`Dua atau lebih pola penguatan teramati: ${signals.map(signal => signal.detail).join(' ')} Ini pola perilaku pada data terkumpul, bukan bukti identitas, bayaran, atau otomatisasi.`}>
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 6.5v3h2l4 3v-9l-4 3h-2Z"/><path d="M11 5.8a3 3 0 0 1 0 4.4M12.8 4a5.5 5.5 0 0 1 0 8"/></svg>
+    Pola mirip buzzer
+  </span>;
+}
+
 export default function AccountSignal({ kind, compact = false }) {
   const viral = kind === 'viral';
   const label = viral ? 'Top interaksi · sampel' : 'Indikasi otomatisasi';

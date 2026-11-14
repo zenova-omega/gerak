@@ -69,3 +69,25 @@ async def fetch_youtube_items(query: str, api_key: str, *, pages: int = 2, publi
                       "author": snippet.get("channelTitle"), "published_at": published(snippet.get("publishedAt")),
                       "metrics": metrics})
     return items
+
+
+async def fetch_youtube_channels(ids, api_key):
+    """One request: picture and subscriber count for up to 50 channels. Hidden subscriber counts stay unknown."""
+    ids = [value for value in ids if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", value)]
+    if not ids or len(ids) > 50:
+        raise ValueError("Invalid bounded channel request")
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=False, headers={"X-Goog-Api-Key": api_key}) as client:
+        response = await client.get(f"{BASE}/channels", params={"part": "snippet,statistics", "id": ",".join(ids), "maxResults": 50})
+        response.raise_for_status()
+        payload = response.json()
+    if not isinstance(payload, dict) or not isinstance(payload.get("items", []), list):
+        raise ValueError("Invalid provider response")
+    channels = {}
+    for row in payload.get("items", [])[:50]:
+        if not isinstance(row, dict) or row.get("id") not in ids:
+            continue
+        thumbs, stats = (row.get("snippet") or {}).get("thumbnails") or {}, row.get("statistics") or {}
+        photo = next((thumbs[size].get("url") for size in ("medium", "default", "high") if isinstance(thumbs.get(size), dict) and thumbs[size].get("url")), None)
+        subscribers = stats.get("subscriberCount")
+        channels[row["id"]] = {"photo_url": photo, "followers": int(subscribers) if not stats.get("hiddenSubscriberCount") and str(subscribers).isdigit() else None}
+    return channels

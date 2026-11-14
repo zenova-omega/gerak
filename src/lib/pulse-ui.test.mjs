@@ -24,6 +24,7 @@ test('standalone project selection, account drill-down and refresh use stored po
   assert.equal(await page.getByText('Stored GERAK evidence', { exact: true }).count(), 0);
   await page.getByLabel('Cari dalam posting', { exact: true }).fill('');
   await page.getByText('Stored GERAK evidence', { exact: true }).waitFor();
+  await page.locator('.ps-menu-toggle').click();   // at phone width the navigation sits behind the menu button
   await page.getByRole('navigation', { name: 'Navigasi PULSE' }).getByRole('link', { name: 'Akun & sumber', exact: true }).click();
   await ranking.getByText('Test account', { exact: true }).waitFor();
   state.updated = true;
@@ -61,6 +62,7 @@ test('standalone login rejects invalid credentials, uses session CSRF, and expir
   state.loginAllowed = true;
   await page.getByRole('button', { name: 'Masuk', exact: true }).click();
   await page.locator('.pulse-ranking').getByText('Test account', { exact: true }).waitFor();
+  await page.locator('.ps-menu-toggle').click();
   await page.getByRole('button', { name: 'Keluar', exact: true }).click();
   await page.getByRole('heading', { name: 'Masuk ke PULSE', exact: true }).waitFor();
   assert.equal(state.requests.find(r => r.path.endsWith('/logout')).csrf, 'fixture-csrf');

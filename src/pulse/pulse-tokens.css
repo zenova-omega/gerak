@@ -25,7 +25,25 @@
   --ps-danger-ink: oklch(39% 0.12 20);
   --ps-info: oklch(93% 0.028 245);
   --ps-info-ink: oklch(36% 0.075 245);
-  --ps-control-height: 44px;
+  /* Controls: one height scale for every button, dropdown, input and filter chip. */
+  --ps-control-xs: 32px;   /* inline icon button only (info tip) */
+  --ps-control-sm: 36px;   /* filter chips, segmented items, compact buttons */
+  --ps-control-md: 44px;   /* default: buttons, dropdowns, inputs */
+  --ps-control-height: var(--ps-control-md);
+  --ps-control-pad-sm: 12px;
+  --ps-control-pad-md: 16px;
+  --ps-control-gap: 8px;
+  --ps-control-font-sm: .8125rem;
+  --ps-control-font-md: .875rem;
+  --ps-control-weight: 600;
+  --ps-control-icon: 16px;
+  --ps-control-edge: 2px;
+  --ps-control-focus: 2px solid var(--ps-accent);
+  /* Reverse button: ink surface, page-colour text. Flips with the theme because both sides are tokens. */
+  --ps-btn-reverse-bg: var(--ps-ink);
+  --ps-btn-reverse-ink: var(--ps-bg);
+  --ps-btn-reverse-hover: color-mix(in oklch, var(--ps-ink) 84%, var(--ps-bg));
+  --ps-btn-reverse-edge: color-mix(in oklch, var(--ps-ink) 62%, var(--ps-accent));
   --ps-radius-mark: 3px;
   --ps-radius-control: 8px;
   --ps-z-raised: 1;
@@ -40,6 +58,41 @@
   --ps-weight-label: 600;
   --ps-weight-strong: 650;
   --ps-radius-panel: 12px;
+  /* Surfaces: cards, panels, tiles. One radius, one line, two paddings. */
+  --ps-surface-radius: var(--ps-radius-panel);
+  --ps-surface-bg: var(--ps-panel);
+  --ps-surface-line: var(--ps-line);
+  --ps-surface-pad: 20px;      /* a card or panel on the page */
+  --ps-surface-pad-sm: 16px;   /* a block inside a panel, and every card under 700px */
+  --ps-surface-gap: 16px;      /* between sibling cards */
+  --ps-section-gap: 32px;      /* between page sections */
+  --ps-shadow-overlay: 0 12px 32px oklch(20% 0.02 285 / .18);  /* drawers, dialogs, menus only */
+  /* Titles: page, panel, block. */
+  --ps-title-page: 2.25rem;
+  --ps-title-panel: 1.25rem;
+  --ps-title-block: 1rem;
+  --ps-title-weight: 650;
+  /* Sidebar and its navigation rows. */
+  --ps-sidebar-width: 216px;
+  --ps-sidebar-pad: 16px;
+  --ps-nav-item-height: var(--ps-control-md);
+  --ps-nav-item-pad: 12px;
+  --ps-nav-item-gap: 12px;
+  --ps-nav-item-radius: var(--ps-radius-control);
+  --ps-nav-item-font: .875rem;
+  --ps-nav-hover-bg: var(--ps-soft);
+  --ps-nav-active-bg: var(--ps-lavender);
+  --ps-nav-active-ink: var(--ps-accent-ink);
+  /* Top bar and the search field. */
+  --ps-topbar-gap: 12px;
+  --ps-search-width: 320px;
+  --ps-field-icon: 16px;
+  --ps-field-icon-inset: 14px;
+  /* Tables. */
+  --ps-table-head-bg: var(--ps-soft);
+  --ps-table-cell-pad-x: 16px;
+  --ps-table-cell-pad-y: 14px;
+  --ps-table-font: .8125rem;
   --ps-space-1: 4px;
   --ps-space-2: 8px;
   --ps-space-3: 12px;
@@ -75,17 +128,23 @@
 .pulse-standalone .ps-user { border-color:var(--ps-line); }
 .pulse-standalone .ps-user span,.pulse-standalone .ps-workspace-label { color:var(--ps-muted); }
 .pulse-standalone .pu-button {
-  display: inline-flex; justify-content: center; align-items: center; gap: var(--ps-space-2);
-  min-height: var(--ps-control-height); padding: 9px 14px; border-radius: var(--ps-radius-control);box-shadow:none;
-  font-size: var(--ps-text-body); font-weight: 600; line-height: 1.4;
+  display: inline-flex; justify-content: center; align-items: center; gap: var(--ps-control-gap);
+  height: auto; min-height: var(--ps-control-md); padding: 0 var(--ps-control-pad-md); border-radius: var(--ps-radius-control);box-shadow:none;
+  font-size: var(--ps-control-font-md); font-weight: var(--ps-control-weight); line-height: 1.2;
   transition: background-color var(--ps-motion) var(--ps-ease), border-color var(--ps-motion) var(--ps-ease);
 }
+.pulse-standalone .pu-button > svg { width: var(--ps-control-icon); height: var(--ps-control-icon); flex: 0 0 auto; }
+.pulse-standalone .pu-button[data-size=sm] { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
+.pulse-standalone .pu-button[data-icon-only] { min-width: var(--ps-control-md); padding: 0; }
+.pulse-standalone .pu-button[data-icon-only][data-size=sm] { min-width: var(--ps-control-sm); }
 .pulse-standalone .pu-button-primary { background: var(--ps-lavender); color: var(--ps-accent-ink); border-color: var(--ps-lavender); }
 .pulse-standalone .pu-button-secondary { background: var(--ps-panel); color: var(--ps-ink); border-color: var(--ps-control-line); }
 .pulse-standalone .pu-button-quiet { background: transparent; color: var(--ps-ink); border-color: transparent; }
+.pulse-standalone .pu-button-reverse { background: var(--ps-btn-reverse-bg); color: var(--ps-btn-reverse-ink); border-color: var(--ps-btn-reverse-bg); }
 .pulse-standalone .pu-button:not(:disabled):hover { background: var(--ps-soft); color: var(--ps-ink); border-color: var(--ps-muted); }
+.pulse-standalone .pu-button.pu-button-reverse:not(:disabled):hover { background: var(--ps-btn-reverse-hover); color: var(--ps-btn-reverse-ink); border-color: var(--ps-btn-reverse-hover); }
 .pulse-standalone .pu-button:not(:disabled):active { border-color: var(--ps-accent); }
-.pulse-standalone .pu-button:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 3px; }
+.pulse-standalone .pu-button:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
 .pulse-standalone .pu-button:disabled { opacity: .55; cursor: not-allowed; }
 .pu-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--ps-tag-radius, 6px); font-size: var(--ps-text-small); font-weight: 600; white-space: nowrap; background: var(--ps-soft); color: var(--ps-ink); }
 .pu-badge-success { background: var(--ps-mint); color: var(--ps-success-ink); }

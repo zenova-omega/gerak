@@ -197,6 +197,12 @@ async def delete_topic(topic_id: str, db: AsyncSession = Depends(get_db), admin:
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic tidak ditemukan")
+    # Rows that hang off the project without an ORM cascade.
+    from sqlalchemy import delete as sql_delete
+    from ..models.pulse_settings import PulseProjectSettings
+    from ..models.pulse_summary import PulseSummary
+    await db.execute(sql_delete(PulseSummary).where(PulseSummary.topic_id == topic_id))
+    await db.execute(sql_delete(PulseProjectSettings).where(PulseProjectSettings.topic_id == topic_id))
     await db.delete(topic)
     return {"deleted": topic_id}
 
@@ -252,6 +258,35 @@ async def backfill_topic(topic_id: str, req: BackfillRequest, db: AsyncSession =
         return await backfill(db, topic, get_settings(), req.platform, req.date_from, req.date_to)
     except ValueError as exc:
         raise HTTPException(422, str(exc))
+
+
+class LookbackRequest(BaseModel):
+    days: int
+
+
+@router.get('/topics/{topic_id}/lookback')
+async def get_lookback(topic_id: str, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    from ..services import pulse_lookback
+    if await db.get(WatchTopic, topic_id) is None:
+        raise HTTPException(404, 'Topic not found')
+    return await pulse_lookback.read(db, topic_id)
+
+
+@router.put('/topics/{topic_id}/lookback')
+async def set_lookback(topic_id: str, req: LookbackRequest, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    """Save how many days back the project collects and pull that range once, in the background."""
+    import asyncio
+    from ..database import async_session
+    from ..services import pulse_lookback
+    if await db.get(WatchTopic, topic_id) is None:
+        raise HTTPException(404, 'Topic not found')
+    try:
+        await pulse_lookback.save(db, topic_id, req.days)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    await db.commit()
+    asyncio.get_running_loop().create_task(pulse_lookback.run(topic_id, req.days, async_session, get_settings()))
+    return {**await pulse_lookback.read(db, topic_id), 'running': True}
 
 
 @router.get('/topics/{topic_id}/comments/coverage')

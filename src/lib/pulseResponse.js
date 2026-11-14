@@ -1,4 +1,6 @@
-export const stanceLabels={supports:'Mendukung',opposes:'Menolak',unclear:'Tidak jelas / hanya membahas',unknown:'Belum dianalisis'};
+export const stanceLabels={supports:'Mendukung',opposes:'Menolak',unclear:'Hanya membahas',unknown:'Belum dianalisis'};
+// Short form for chips on a card: an emoticon and one word. The full label stays in stanceLabels.
+export const stanceShort={supports:['👍','Dukung'],opposes:['👎','Tolak'],unclear:['💬','Membahas'],unknown:['⏳','Belum']};
 export const commentLabels={positive:'Positif',neutral:'Netral',negative:'Negatif',unknown:'Belum dianalisis'};
 const validated=(value,labels)=>value&&value.label!=='unknown'&&Object.hasOwn(labels,value.label)?value:null;
 export function responseEvidence(posts=[],data){

@@ -95,7 +95,7 @@ test('date-only and impossible publication dates do not create guessed hourly ac
   assert.ok(result.bins.every(value => value === 0));
 });
 
-test('panel suppresses misleading empty geography and renders a grid only for located evidence', async () => {
+test('panel shows words and hours, and no longer carries the Jakarta map', async () => {
   const { createServer } = await import('vite');
   const React = await import('react');
   const { renderToStaticMarkup } = await import('react-dom/server');
@@ -105,7 +105,7 @@ test('panel suppresses misleading empty geography and renders a grid only for lo
     const posts = Array.from({ length: 12 }, (_, id) => ({ id, title: 'Banjir warga Jakarta', published_at: '2026-11-10T18:15:00Z', url: id ? 'https://example.com/' + id : 'javascript:alert(1)' }));
     const html = renderToStaticMarkup(React.createElement(Panel, { posts, locations: [], unknownCount: 12 }));
     assert.match(html, /id="pulse-infographics"/);
-    assert.match(html, /Peta sebaran belum tersedia/);
+    assert.doesNotMatch(html, /Peta sumber|Peta sebaran/);
     assert.equal((html.match(/class="pi-hour-bar"/g) || []).length, 24);
     assert.equal((html.match(/class="pi-grid-cell"/g) || []).length, 0);
     assert.equal((html.match(/class="pi-source"/g) || []).length, 10);
@@ -113,9 +113,5 @@ test('panel suppresses misleading empty geography and renders a grid only for lo
     assert.match(html, /aria-label="banjir: 12 posting"/);
     assert.doesNotMatch(html, /href="javascript:/);
     assert.doesNotMatch(html, /data-active="true"/);
-    const located = renderToStaticMarkup(React.createElement(Panel, { posts: [], locations: [{ lat: -6.08, lon: 106.68, count: 2, provenance: 'Test source geotag' }], unknownCount: 0 }));
-    assert.equal((located.match(/data-active="true"/g) || []).length, 1);
-    assert.match(located, /Test source geotag/);
-    assert.doesNotMatch(located, /Peta sebaran belum tersedia/);
   } finally { await server.close(); }
 });

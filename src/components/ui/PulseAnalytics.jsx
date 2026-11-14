@@ -23,21 +23,31 @@ export function PulseStatGrid({ label, children, className = '' }) {
   return <div className={`pu-stat-grid ${className}`.trim()} role="group" aria-label={label}>{children}</div>;
 }
 
-/** One observed figure. A null value renders as unavailable, never as zero. Pass a string
+/** One observed figure: the KPI card. A null value renders as unavailable, never as zero. Pass a string
  * value for states such as "Memuat…". Becomes a link or button when `href` / `onClick` is set.
+ *
+ * Anatomy, top to bottom: label · value with its change · one visual (a share meter or a trend line) · note.
+ * - `delta` is the change against a comparison; `deltaIntent` colours it by meaning (good green, bad red),
+ *   never by direction alone. `deltaNote` says what it is compared with.
+ * - `share` (0 to 100) draws a meter with the percentage; `shareLabel` says of what.
+ * - `trend` draws the line; when both are given the meter sits under the value and the line beside it.
  * @param {{label: string, value: number|string|null, note?: import('react').ReactNode, icon?: import('react').ElementType,
  *   tone?: 'positive'|'negative'|'neutral-sentiment'|'unknown', delta?: number|null, deltaUnit?: string,
- *   deltaIntent?: 'neutral'|'good'|'bad', trend?: number[], href?: string, onClick?: Function}} props
+ *   deltaIntent?: 'neutral'|'good'|'bad', deltaNote?: string, share?: number|null, shareLabel?: string,
+ *   trend?: number[], href?: string, onClick?: Function}} props
  */
-export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, trend, href, onClick, as: Link, to }) {
+export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareLabel, trend, href, onClick, as: Link, to }) {
   const text = typeof value === 'string';
+  const hasShare = Number.isFinite(share);
+  const percent = hasShare ? Math.max(0, Math.min(100, share)) : 0;
   const body = <>
     <span className="pu-stat-label">{tone ? <i aria-hidden="true" /> : Icon && <Icon size={14} aria-hidden="true" />}{label}</span>
-    <span className="pu-stat-value"><strong data-kind={text ? 'text' : undefined}>{text ? value : value == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(value)}</strong><PulseDelta value={delta} unit={deltaUnit} intent={deltaIntent} /></span>
+    <span className="pu-stat-value"><strong data-kind={text ? 'text' : undefined}>{text ? value : value == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(value)}</strong><PulseDelta value={delta} unit={deltaUnit} intent={deltaIntent} />{deltaNote && Number.isFinite(delta) && <small className="pu-stat-delta-note">{deltaNote}</small>}</span>
+    {hasShare && <span className="pu-stat-meter" role="img" aria-label={`${Math.round(percent)}%${shareLabel ? ' ' + shareLabel : ''}`}><span className="pu-stat-meter-track"><i style={{ width: `${percent}%` }} /></span><b>{percent < 1 && percent > 0 ? '<1' : Math.round(percent)}%</b>{shareLabel && <small>{shareLabel}</small>}</span>}
     {note && <span className="pu-stat-note">{note}</span>}
     {trend && <span className="pu-stat-spark"><Sparkline values={trend} /></span>}
   </>;
-  const shared = { className: 'pu-stat', 'data-tone': tone };
+  const shared = { className: 'pu-stat', 'data-tone': tone, 'data-has-meter': hasShare ? '' : undefined };
   if (Link && to) return <Link {...shared} to={to}>{body}</Link>;
   if (href) return <a {...shared} href={href}>{body}</a>;
   if (onClick) return <button type="button" {...shared} onClick={onClick}>{body}</button>;
@@ -49,14 +59,16 @@ export function PulseLegend({ items, label = 'Keterangan warna' }) {
   return <ul className="pu-legend" aria-label={label}>{items.map(item => <li key={item.key}><span className="pu-swatch" data-hatch={item.hatch ? '' : undefined} style={{ '--swatch': item.color }} aria-hidden="true" />{item.label}{item.value != null && <strong>{formatCount(item.value)}</strong>}</li>)}</ul>;
 }
 
-/** Recharts tooltip in the PULSE surface language. Pass as `content={<PulseChartTooltip/>}`. */
-export function PulseChartTooltip({ active, payload, label, labelFormatter, total = false, note }) {
+/** Recharts tooltip in the PULSE surface language. Pass as `content={<PulseChartTooltip/>}`.
+ * `percent` adds each row's share of the rows shown. `top(label)` may return up to three `{id, author, text, value}` rows to preview what is behind the bar. */
+export function PulseChartTooltip({ active, payload, label, labelFormatter, total = false, note, top, percent = false }) {
   if (!active || !payload?.length) return null;
   const rows = payload.filter(row => Number.isFinite(row.value));
   const sum = rows.reduce((value, row) => value + row.value, 0);
   return <div className="pu-chart-tooltip"><strong>{labelFormatter ? labelFormatter(label) : label}</strong>
-    <ul>{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={row.payload?.__hatch === row.dataKey || row.dataKey === 'unknown' ? '' : undefined} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}</b></li>)}</ul>
+    <ul>{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={row.payload?.__hatch === row.dataKey || row.dataKey === 'unknown' ? '' : undefined} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}{percent && sum > 0 && <em>{Math.round(row.value / sum * 100)}%</em>}</b></li>)}</ul>
     {total && rows.length > 1 && <small>Total {formatCount(sum)}</small>}{note && <small>{note}</small>}
+    {top && (list => list.length > 0 && <ol className="pu-chart-top" aria-label="Posting teratas pada tanggal ini">{list.map(row => <li key={row.id}><b>{row.author || 'Tanpa nama'}</b><span>{row.text}</span><i>{row.value == null ? '—' : formatCount(row.value)}</i></li>)}</ol>)(top(label))}
   </div>;
 }
 

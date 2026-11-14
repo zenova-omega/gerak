@@ -245,3 +245,243 @@ Token semantik dipakai seluruh shell PULSE. Primitive baru dipakai pada Sumber &
 - **One definition per number.** Interactions = observed likes + comments + shares (`postInteractions` in `src/lib/pulseEngagement.js`); the provider's own total stands in only when none of the three was reported. Sentiment percentages are shares of all posts in scope, everywhere.
 - **Post cards scan first.** Collapsed: identity, sentiment tag, caption, one line of counts. "Rincian & tinjauan" opens the breakdown, review tools, comments and history.
 - **Layer order**: dropdown 10, drawer 80/81, modal 85/86, tooltip 90. A viewer opened from inside the drawer covers it.
+
+## Control system (14 Nov)
+
+Every button, dropdown, input and filter chip takes its size from the `--ps-control-*` tokens in `src/pulse/pulse-tokens.css`. Page CSS never sets a control's height, padding or font size.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--ps-control-md` | 44px | Default: buttons, dropdowns, inputs, the scope toggle, button-like links |
+| `--ps-control-sm` | 36px | Filter chips, segmented-switch items, `size="sm"` buttons in dense rows. Becomes 44px under 700px wide |
+| `--ps-control-xs` | 32px | The inline info button only |
+| `--ps-control-pad-md` / `-sm` | 16px / 12px | Horizontal padding |
+| `--ps-control-font-md` / `-sm` | 14px / 13px | One type size per control size; inputs and dropdowns are 16px under 700px so iOS does not zoom |
+| `--ps-control-weight` | 600 | Label weight |
+| `--ps-control-gap`, `--ps-control-icon` | 8px, 16px | Icon to label gap, icon size |
+| `--ps-control-edge` | 2px | The keycap base under primary, secondary, reverse buttons and dropdowns |
+| `--ps-control-focus` | 2px accent outline, 2px offset | Focus ring for every control |
+| `--ps-radius-control` | 8px | Radius for every control |
+
+Buttons (`PulseButton`):
+
+| Variant | Look | When |
+| --- | --- | --- |
+| `primary` | Lavender fill, keycap edge | The one main action of a view |
+| `secondary` (default) | Panel fill, control line, keycap edge | Everything else that acts |
+| `quiet` | No fill or line | Low-stakes actions next to content, disclosure toggles |
+| `reverse` | Ink fill, page-colour label (`--ps-btn-reverse-*`), keycap edge | The single action that must stand out on a tinted or busy surface. Flips with the theme. Never beside a `primary` |
+
+`size="sm"` gives the 36px button; `iconOnly` gives a square one and requires `aria-label`.
+
+Dropdown: a native `select` styled as a secondary button: 44px, keycap edge, caret drawn 16px from the right edge in the text colour. The project picker is the one exception in type (16px, weight 650) because it names the working context. Text inputs share the same box without the edge.
+
+Filter chips: any pressable `PulseTag` is 36px with the control radius. Selected is a tinted fill; unselected is an outline. Static tags (sentiment, platform labels) keep their own smaller sizes because they are not controls.
+
+Segmented switch (`.pm-view-switch`): a 44px track holding 36px items.
+
+Live specimens are in the design-system gallery on the settings page.
+
+## Surface, title, sidebar, table and search tokens (14 Nov)
+
+All in `src/pulse/pulse-tokens.css`. Page CSS uses these instead of literal values.
+
+| Group | Tokens | Rule |
+| --- | --- | --- |
+| Surface | `--ps-surface-radius` 12px, `--ps-surface-bg`, `--ps-surface-line`, `--ps-surface-pad` 20px, `--ps-surface-pad-sm` 16px, `--ps-surface-gap` 16px, `--ps-section-gap` 32px | Every card, panel and tile. `pad-sm` is for a block inside a panel and for all cards under 700px. No shadows on cards |
+| Overlay | `--ps-shadow-overlay` | Drawers, dialogs and menus only |
+| Titles | `--ps-title-page` 36px, `--ps-title-panel` 20px, `--ps-title-block` 16px, `--ps-title-weight` 650 | h1 is the page, h2 a panel, h3 a block. The printed report keeps its own document scale |
+| Sidebar | `--ps-sidebar-width` 216px, `--ps-sidebar-pad` 16px, `--ps-nav-item-height` 44px, `--ps-nav-item-pad`, `--ps-nav-item-gap`, `--ps-nav-item-radius`, `--ps-nav-item-font`, `--ps-nav-hover-bg`, `--ps-nav-active-bg`, `--ps-nav-active-ink` | Navigation rows are the control height; active is the lavender fill with accent ink |
+| Top bar | `--ps-topbar-gap` 12px, `--ps-search-width` 320px | Project picker, scope, search, then actions on the right |
+| Search field | `--ps-field-icon` 16px, `--ps-field-icon-inset` 14px, plus the control tokens | `.pu-search`: a 44px input with a leading icon |
+| Table | `--ps-table-head-bg`, `--ps-table-cell-pad-x` 16px, `--ps-table-cell-pad-y` 14px, `--ps-table-font` 13px | Ranking and data tables |
+
+Top-bar search: when a project is selected, the bar always shows "Cari posting atau akun". Submitting opens Posting filtered by that text (`?find=`), matching post text, title and account name inside the stored data of the project. It never starts a crawl.
+
+Login: the left panel is a fixed dark brand surface in both themes. Copy is short on purpose: the headline names the product category ("Social Media Listening", chosen by the owner on 14 Nov), one line, three single-line points. Every claim there must stay true to a shipped feature.
+
+## Icon and symbol plan (14 Nov)
+
+State today: navigation and actions use Lucide; five metric marks (like, comment, share, view, beat) are drawn in-house in `PulseMetricIcons.jsx`; the arrow is `PulseArrow`. The sidebar no longer repeats an icon (search, dashboard, sparkles, heart-pulse, file, newspaper, users, network, message, pie, radio, database).
+
+The PULSE hand, taken from the wordmark and the existing marks:
+
+- 16px grid for inline marks, 20px for navigation. 1.6px stroke at 16px, 1.75px at 20px. Round caps and joins. No fills except a 2px dot.
+- One idea per icon. Interaction marks carry the heartbeat line; exposure marks (view, reach) never do, because exposure is not a reaction.
+- Corners follow the control radius scaled to the grid (2px at 16px). Terminals end on the pixel grid.
+- Colour is always `currentColor`. An icon never carries meaning alone: it sits beside a label or has an accessible name.
+
+Build order, each phase replaces Lucide one group at a time so the two hands never mix inside one group:
+
+| Phase | Set | Icons |
+| --- | --- | --- |
+| 1 | KPI marks (extends the existing five) | reach, impressions, engagement rate, saves, quotes, followers, growth, peak |
+| 2 | Navigation (12) | search, overview, ask, sentiment, report, posts, accounts, network, comments, infographics, monitor, sources |
+| 3 | States and evidence | collected, waiting, failed, needs review, source link, evidence, alert |
+| 4 | Actions | filter, sort, period, platform scope, export, refresh |
+
+Rules for the navigation set: no two items share a silhouette; an item's icon is reused wherever that page is linked from; active state changes colour only, never the drawing.
+
+Each phase ships as components in `src/components/ui/` with a specimen row in the gallery and a 16px and 20px check in both themes.
+
+## KPI and reporting components (14 Nov)
+
+One vocabulary across cards, panels and the report. A value that was not observed shows "—", never 0.
+
+| KPI | Definition in PULSE | Stored today |
+| --- | --- | --- |
+| Interaksi | likes + comments + shares that were observed | Yes, all social platforms |
+| Suka, Komentar, Bagikan | Platform counts (Balasan and Repost on X) | Yes. Shares: 19% of TikTok, 80% of Instagram |
+| Tayangan | Impressions on X, plays on TikTok and YouTube, video plays on Instagram | Yes. Instagram only 53% (video posts) |
+| Rasio interaksi | Interaksi ÷ Tayangan | Derived, only where Tayangan exists |
+| Simpan | Bookmarks on X, saves on Instagram, collects on TikTok | No. The provider offers it; not requested yet |
+| Kutipan | Quote posts on X | No. Offered, not requested |
+| Pengikut | Follower count of the account | No. Needs one profile lookup per account |
+| Engagement rate | Interaksi ÷ Pengikut | No. Blocked on Pengikut |
+| Jangkauan | Unique accounts that saw a post | Not available for other people's posts on any platform. Never label Tayangan as Jangkauan; if an estimate is added later it is labelled "perkiraan" and shows its formula |
+
+Components:
+
+- `PulseEngagement`: the breakdown of one post or one scope. Order is always Suka, Komentar, Bagikan, Tayangan; derived ratios sit after a divider with an info tip that states the formula.
+- `PulseStat` / `PulseStatGrid`: one figure with label, note and optional trend. Used for KPI strips on pages and in the report.
+- `PulseBreakdown` / `PulseDistribution`: part-to-whole (platform, sentiment).
+- Report blocks reuse the same components at print size; the report never introduces a KPI the workspace does not show.
+
+When Simpan, Kutipan and Pengikut are stored, they join `PulseEngagement` after Bagikan, and Engagement rate becomes a `PulseStat` next to Rasio interaksi.
+
+## Page heading (14 Nov)
+
+Every page starts with `PulsePageHead` and reads its content from `src/pulse/pageMeta.js`, the single source for a page's title, mark, tagline and guide. The sidebar reads the same file, so a page has one name and one mark everywhere.
+
+- One row: 48px mark tile (lavender, accent ink), title (28px, weight 700) with the info button beside it, tagline under it, actions on the right.
+- Tagline: five words or fewer, a noun phrase, no full stop ("Nada percakapan", "Jadwal dan alert"). It says what the page is, not how to use it.
+- Guide: at most two sentences, opened from the info button. There is no separate help row.
+- Under 700px the tagline hides and the mark is 40px.
+- The mark is the page's navigation icon today. When the custom navigation set from the icon plan ships, it replaces the icon here and in the sidebar in the same change.
+
+## Cross-page interaction patterns (14 Nov)
+
+- **Hover preview**: a small card that answers "what is behind this?" without leaving the page. Opens after 350ms on hover and on keyboard focus, never on touch, and never holds the only path to an action. In use: the source post of a comment, the account behind a name (`PulseSourceHeading`, when the account has two or more posts in scope), and the top three posts of a day in the trend chart tooltip.
+- **Carried filter**: a sentiment chosen on one page stays in the URL and narrows Komentar, Akun & sumber, Jaringan and Infografik. Those pages show it in a `pu-carried` bar with a remove chip. Ikhtisar, Sentimen and Laporan always show the whole picture; Posting shows it in its own filter chips.
+- **Loading**: `PulseSkeleton` draws the shape of the page (stat strip, panels, rows) instead of a "Memuat…" line. The status text stays available to screen readers.
+
+## Overview additions (14 Nov)
+
+- **SUMMARY AI card** (`AiSummaryCard`): the one tinted, branded surface on Ikhtisar (lavender, accent-ink mark and reverse button). Nothing is generated until the analyst presses "Buat summary AI". Three formats (Ringkas, Kronologi, Eksekutif); the latest of each is stored per project. Text is parsed into sections server-side; every claim cites evidence codes that open the source list. Shows when it was made and from how many posts, and offers "Perbarui" when the project has grown.
+- **Sorotan** (`OverviewInsights`): "Paling banyak dilihat" (top posts by Tayangan, never called reach), "Emotikon teratas" (bubbles whose area follows use, seeded layout), "Tagar" (cloud sized by use, a few upright, coloured from the categorical chart palette so colour carries no sentiment).
+- Infografik is no longer a page: "Kata dan waktu" lives at the end of Ikhtisar and `/pulse/infographics` redirects there. The Jakarta map is removed.
+- Emoticons appear only where they are content (comments, emoji bubbles) or name a reaction (stance chips).
+
+## Page layout grid (14 Nov)
+
+Twelve columns (`.lay-grid` with `.lay-12`, `.lay-8`, `.lay-6`, `.lay-4`). A row is one of three shapes:
+
+| Shape | Use |
+| --- | --- |
+| 12 | Anything read across: tables, timelines, the AI summary, evidence lists |
+| 8 + 4 | A chart or ranked list with its key or breakdown beside it |
+| 6 + 6 | Two things of equal weight that are compared |
+
+8 + 4 stacks under 1180px; 6 + 6 stacks under 900px. Cards in a row share a height.
+
+Order follows the questions a reader asks, top to bottom: what is this and how big, how does it feel, what is being said, who drives it, then detail and method.
+
+- **Ikhtisar**: Summary AI (12) · figures (12) · Perkembangan isu 8 + Sentimen 4 · Narasi utama 8 + Sumber percakapan 4 · Paling banyak dilihat 6 + Posting teratas 6 · Tagar 8 + Emotikon 4 · Penggerak 6 + Rincian interaksi 6 · Pertumbuhan interaksi (12) · Penyebaran 6 + Suara di komentar 6 · Kata dan waktu (12).
+- **Sentimen**: suasana (12) · Tren harian 8 + Sentimen per platform 4 · Posting di balik angka (12) · Emotikon menurut sentimen (12) · Emosi (12).
+- **Monitor**: Alert inbox leads (two thirds); collection activity, schedules and limits sit in the side column.
+- **Komentar**: list with a sticky side rail. **Posting**: list with the quick-filter rail. **Jaringan**: explorer with the evidence column. **Akun & sumber**: figures, then the ranking table full width.
+
+Sentiment keeps its own marks (coloured dot and label). Emoticons are analysed as content: "Emotikon menurut sentimen" groups the emoji of a post and its comments by the sentiment of the post.
+
+## Infographics (14 Nov)
+
+A brand element, specified in `docs/PULSE-BRAND-GUIDELINES.md` (section "Infografik"). In code: `src/pulse/SummaryInfographics.jsx` (templates keyed by section kind) with the `.sig-*` styles; the evidence drawer and the narrative rows reuse them.
+
+- Figures come from `facts`, counted on the server from stored posts, never parsed out of model text.
+- The server tags each summary section with a `kind` from its title (`start`, `viral`, `topic`, `overview`, `talk`, `sentiment`, `anger`, `timeline`, `watch`); unknown titles render as text only.
+- Narrative rows show spread KPIs (interaksi, dibagikan, tayangan, dominant sentiment) instead of a bare proportional bar.
+- The evidence drawer opens with a figures strip and a sentiment bar, merges posts that carry the same text into one card listing the accounts, and shows one compact metric row per post.
+
+## Card division rules (14 Nov, extends "Page layout grid")
+
+Four row shapes only: 12, 8 + 4, 6 + 6, 4 + 4 + 4. Never more than three cards in a row.
+
+1. The first row is one full-width card that answers the page's question. Switches and filters that apply to the whole page live in that card (for example "Hanya yang sudah dianalisis" on Sentimen), not on a chart further down.
+2. The one-third column holds a key, a breakdown or filters. Primary content never goes there.
+3. Cards in a row share a height. Gap between cards is `--ps-surface-gap` (16px) in both directions.
+4. A card has a heading (title, one line of description, at most one action), a body and an optional method note. No framed card inside a card: inner groups use dividers or a tinted block.
+5. Order top to bottom: what and how big, how it feels, what is said, who drives it, then detail and method.
+
+| Page | Rows |
+| --- | --- |
+| Ikhtisar | 12 Summary AI · 12 figures · 8 + 4 Perkembangan, Sentimen · 8 + 4 Narasi, Sumber · 6 + 6 Paling banyak dilihat, Posting teratas · 8 + 4 Tagar, Emotikon · 6 + 6 Penggerak, Rincian interaksi · 12 Pertumbuhan · 6 + 6 Penyebaran, Suara di komentar · 12 Kata dan waktu |
+| Sentimen | 12 Suasana (with the analysed-only switch) · 8 + 4 Tren harian, Per platform · 12 Posting di balik angka · 12 Emotikon menurut sentimen · 12 Emosi |
+| Komentar | 4 + 4 + 4 Sentimen komentar, Sikap posting, Sikap komentar · 8 + 4 comment list, rail (filters, figures, emoticons, automatic collection) |
+| Posting | 8 + 4 post list, quick filters |
+| Akun & sumber | 12 figures · 12 ranking table |
+| Jaringan | 12 figures · 8 + 4 explorer, selected-account evidence |
+| Monitor | 8 + 4 Alert inbox, collection (activity, schedules, limits, history) |
+| Laporan | 12 throughout (a printed document) |
+
+The gallery on the settings page shows the four shapes.
+
+## Card system (14 Nov)
+
+Seven card types. Each has one anatomy on every page; none carries a framed card inside it.
+
+| Card | Anatomy | Notes |
+| --- | --- | --- |
+| KPI card (`PulseStat` in a `PulseStatGrid`) | label · value with its change · one visual (share meter or trend line) · note | Strip of divided cells on one surface. Under 230px wide the trend line drops out before the value does |
+| Post card, list (`PostCard`) | header (avatar with platform badge, name, time, tone, link) · media beside text · one metric line · "Rincian & tinjauan" | The grid tile is the same card with the picture on top |
+| Post card, evidence (`SentimentEvidenceCard`, drawer cards) | header · text · reading ("Kenapa dinilai begitu") · one metric line | A source without metrics (news) shows no metric line. Identical texts merge into one card listing the posts |
+| Comment card (`Comment`) | initials, name, time, likes · text · tone and stance chips · folded reasons · source post | Source post opens on hover or focus |
+| Chart card (`AnalyticsPanel`) | title, one line, at most one action · chart · method note | Page-wide switches never live here |
+| Summary card (`AiSummaryCard`) | brand header with format chips · sections, each with its infographic · evidence · footer | The only tinted card |
+| Insight card (ranked list, cloud) | title, one line · rows with a value and a proportional mark | Rows are buttons or links when they open something |
+
+**KPI indications.** Colour is meaning, never decoration: red is a negative reading or a change for the worse, green the opposite, grey is no judgement, purple is a plain share. An arrow shows direction; its colour shows whether that direction is good (`deltaIntent`). Rising negative posts is a red up arrow; falling negative posts is a green down arrow; rising volume is grey. Changes come from a loaded comparison period or, without one, from the last days of the series against the same number of days before (`recentChange`). Shares follow the page's "Hanya yang sudah dianalisis" switch.
+
+**Containment.** A card is a single-column grid with `minmax(0, 1fr)`, so long unbroken text never widens it. Names truncate with an ellipsis; body text wraps anywhere. The layout audit in the verification scripts runs every page at 1440, 1100, 768 and 390px with long names, long captions and long comments, and fails on anything that spills out of its card or the viewport.
+
+**Waiting.** `PulseLoader` is the pulse: a dot that beats twice and rests, with a ring leaving on each beat. It is used where the reader waits for an answer. Page content that is loading uses `PulseSkeleton`. Reduced motion shows a still dot.
+
+**Toggles.** A boolean view option is a switch (`UnanalysedToggle`, or `input.pu-switch-input`), 36 by 20px, accent when on. Checkboxes are for choosing items in a list.
+
+**Accounts.** "Pola mirip buzzer" appears only when two or more different amplification behaviours were observed for an account (identical texts, bursts, text shared with other accounts across groups). It always shows its evidence and never claims identity, payment, automation or AI authorship.
+
+## Network explorer and account panel (14 Nov)
+
+**Chrome above the map is three lines, never more.** (1) Title with its info mark on the left, the view switch on the right. (2) One replay line: play, first date, histogram over the scrubber, last date, speed; "Semua waktu" appears only while replaying. (3) A count line inside the map area that also carries the two filters (relation kind, accounts without relations). The explorer opens on the whole period; replay is on request.
+
+**Notes are tooltips.** Reading rules and limits of the analysis ("not a repost chain", "order is not cause") sit behind `InfoTip` beside the title they explain. A line of text stays visible only when it is a number or a state the reader needs right now (counts, "sampai <waktu>" during replay).
+
+**Nodes.** Radius grows with the account's share of the busiest account's relations (`14 + √weight · 10`); accounts without relations are 10px and faint. A name is drawn for hubs and for the selected account only. The circle shows the account's picture when one is known, initials otherwise.
+
+**Account panel (`.nxi`).** Beside the map it is exactly as tall as the map and scrolls inside; beside a long list it is sticky. Its header (avatar with platform badge, account select, one meta line, tags) stays put while cards scroll under it. Below: `Posting` then `Hubungan`, each a small caps label with a count pill and an info mark.
+
+| Part | Anatomy | Rule |
+|---|---|---|
+| Post card (`.nxi-card`) | platform glyph · time · sentiment tag at the right · headline, three lines at most, with the open arrow · metric row when the source reports numbers | One post, one card. Five shown, the rest behind "Tampilkan semua". A publisher's name repeated at the end of its own headline is dropped. |
+| Relation row (`.nxi-link`) | direction glyph (→ menyebut, ← disebut, ↔ konten serupa) · other account · evidence count | Opens to the same post cards, with the author shown |
+
+**Account pictures.** `metrics.profile_image_url` is the one field every avatar reads. Instagram posts carry it; YouTube channels and news publishers (their own site icon) are looked up by the `profiles` lane at no provider cost; X accounts by the `profiles_x` lane, which costs provider credit and is off until switched on in Monitor. A failed image falls back to initials.
+
+## Sentiment by voice (14 Nov)
+
+**Three readings, never added together.** One figure for a whole project mostly measures how much news was collected, because news is written to sound neutral. The Sentiment page therefore opens on one card with three voices:
+
+| Voice | Read from | Role |
+|---|---|---|
+| Opini publik | analysed comments under posts | The leading reading: this is where the public answers. Always a share of the analysed sample, with the coverage ("N dari M komentar tersimpan") shown as a thin meter. Comments not analysed yet are coverage, not a category. Carries the stance chips (Dukung, Tolak, Membahas). |
+| Posting warganet | posts on social platforms | What people who start the conversation say. |
+| Pemberitaan | news items | The tone of the press. Mostly neutral by nature. |
+
+Each voice has the same anatomy: leading share as the headline number, the count it is a share of, a stacked bar, a legend with whole-number shares that add up to 100, then "Netral terdiri dari". The switch "Hanya yang sudah dianalisis" sits in the header of this top card and changes the two post bars and every chart below. "Rincian di bawah untuk" picks which posts the rest of the page details (the public's posts by default); the chosen voice is marked with a tint and a rule on top, the other stays fully readable. Links from a number open exactly the posts it counts: the voice travels as its list of platforms.
+
+**Neutral is broken down, not forced into positive or negative.** A neutral text has a form: `Berita` (any neutral news item), `Pernyataan`, `Pertanyaan`, `Ajakan`, `Sindiran`, or `Belum dirinci` (analysed before forms existed; filled in over time). Forms are shown as pills in the neutral colour; `Sindiran` carries a negative outline because its words are flat but its meaning is not, and `Belum dirinci` is an outline only. On a card, a neutral post or comment shows its form as an outline tag beside the sentiment tag (a plain statement shows none on comments). In "Posting di balik angka", choosing Netral reveals a "Bentuk netral" row to read one form at a time.
+
+**Order of analysis.** Thousands of comments arrive at once and the local model reads them slowly, so the most-liked comments of the most-commented posts are analysed first, ten per inference. Never present comment figures without their coverage.
+
+## Account avatar (14 Nov)
+
+**An account is always shown the same way:** a round picture with the platform mark at the lower right, then the name. Never a bare platform glyph beside an account name. `AccountAvatar` (`author`, `platform`, optional `photo`, `size`) is the component; it finds the picture among the project's loaded posts when the caller does not pass one, and falls back to initials. Sizes: `md` 44px on post and evidence cards, `sm` 32px in list rows (ranked lists, comment cards, signal lists), `xs` 24px inside a line of text (sources, chronology, relation evidence). A bare platform glyph is for a platform itself (legend, per-platform rows) or for a post whose account is already named by the surrounding panel.

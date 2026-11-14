@@ -245,6 +245,8 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
         snapshot = comment_snapshots.get((post['platform'], post['url']))
         if snapshot is not None:
             post['metrics']['comment_snapshot'] = snapshot
+    from .pulse_profiles import attach_profiles
+    await attach_profiles(db, posts)   # account pictures and follower counts looked up separately
     totals = {}
     for metric in ("likes", "comments", "shares", "views", "engagement"):
         values = [p["metrics"].get(metric) for p in posts]

@@ -1,8 +1,9 @@
 """Bounded, explicit comment snapshots.
 
 YouTube comes from the Data API (up to three pages per video). X, Instagram and TikTok come from the
-provider's comment tools (one call, up to 300 comments per post). Collection is always an explicit,
-counted batch: each post costs provider quota, so nothing here runs on its own.
+provider's comment tools (one call, up to 300 comments per post). Each post costs provider quota, so
+collection is always a counted batch: on request from the Comments page, or the capped automatic
+trickle in pulse_comments_auto.
 """
 import re
 from datetime import datetime, timezone
@@ -15,6 +16,7 @@ from .pulse_network import timestamp
 
 
 YOUTUBE_PAGES = 3
+AUTO_TOP_POSTS = 100   # per project, kept complete by the automatic lane
 STOP_STATUSES = ('quotaExceeded', 'dailyLimitExceeded', 'quota_stopped', 'authentication_failed',
                  'access_or_quota_restricted', 'plan_restricted', 'rate_limited', 'not_configured')
 
@@ -86,24 +88,33 @@ def comment_target(item):
     return None
 
 
+def comment_rank(row):
+    return (-((row.metrics or {}).get('comments') or 0), -(observed_engagement(row.metrics) or 0), row.id)
+
+
 def comment_coverage(rows):
     """How many stored posts can have comments, have them, or cannot be requested yet."""
     eligible = [row for row in rows if comment_target(row)]
     done = [row for row in eligible if ((row.metrics or {}).get('comment_snapshot') or {}).get('status') == 'success']
     waiting = [row for row in eligible if not (row.metrics or {}).get('comment_snapshot')]
-    return {'posts': len(rows), 'eligible': len(eligible), 'collected': len(done), 'waiting': len(waiting),
+    # The automatic lane keeps the most-commented posts complete; say how far that is.
+    top = sorted((row for row in eligible if (row.metrics or {}).get('comments') != 0), key=comment_rank)[:AUTO_TOP_POSTS]
+    auto_done = sum(1 for row in top if (row.metrics or {}).get('comment_snapshot'))
+    return {'auto_target': len(top), 'auto_done': auto_done,
+            'posts': len(rows), 'eligible': len(eligible), 'collected': len(done), 'waiting': len(waiting),
             'not_requestable': len(rows) - len(eligible),
             'comments': sum(len(((row.metrics or {}).get('comment_snapshot') or {}).get('items') or []) for row in rows)}
 
 
-async def collect_project_comments(db, topic_id, settings, max_posts=10):
-    """Fetch comments for the next posts that have none yet, most-commented first. One explicit, bounded batch."""
+async def collect_project_comments(db, topic_id, settings, max_posts=10, top=None):
+    """Fetch comments for the next posts that have none yet, most-commented first. One explicit, bounded batch.
+
+    `top` limits the work to the project's `top` most-commented posts: once those have comments, nothing is pending."""
     from .ingest.common import credential
     from .ingest.xpoz import XpozToolError, fetch_xpoz_comments
     rows = (await db.execute(select(SourceItem).where(SourceItem.topic_id == topic_id))).scalars().all()
-    pending = [row for row in rows if comment_target(row) and not (row.metrics or {}).get('comment_snapshot')
-               and (row.metrics or {}).get('comments') != 0]
-    pending.sort(key=lambda row: (-((row.metrics or {}).get('comments') or 0), -(observed_engagement(row.metrics) or 0), row.id))
+    ranked = sorted((row for row in rows if comment_target(row) and (row.metrics or {}).get('comments') != 0), key=comment_rank)
+    pending = [row for row in (ranked[:top] if top else ranked) if not (row.metrics or {}).get('comment_snapshot')]
     keys = {'youtube': credential(settings, 'YOUTUBE_API_KEY'), 'xpoz': credential(settings, 'XPOZ_API_KEY')}
     results, stopped = [], set()
     for row in pending[:max_posts]:

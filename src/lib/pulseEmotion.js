@@ -1,4 +1,6 @@
 import {sentimentDate} from './pulseSentiment.js';
+// Faces for emotion labels. Always shown with the label.
+export const emotionFaces={joy:'😄',anger:'😡',sadness:'😢',fear:'😨',disgust:'🤢',admiration:'🤩',none:'🤔'};
 export const emotionLabels={joy:'Senang',anger:'Marah',sadness:'Sedih',fear:'Takut',disgust:'Jijik',admiration:'Kagum',none:'Tidak jelas'};
 export function postEmotion(post){
  const value=post.metrics?.emotion;

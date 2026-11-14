@@ -27,7 +27,7 @@ export default function SeedPostPreview({ url, onUseCaption }) {
       {media.imageUrl && failedImage !== media.imageUrl && <img src={media.imageUrl} alt="Media posting acuan" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailedImage(media.imageUrl)} />}
       <p>{post.title || post.text || 'Caption tidak tersedia'}</p>
       {onUseCaption && <PulseButton onClick={() => onUseCaption((post.title || post.text || '').slice(0,250))}>Gunakan caption sebagai keyword, lalu tinjau</PulseButton>}
-      <p>Preview dari snapshot tersimpan, bukan pemeriksaan langsung platform.</p></>}
+      <p>Pratinjau dari data tersimpan, bukan pemeriksaan langsung ke platform.</p></>}
     {safeSourceUrl(url) && <a href={safeSourceUrl(url)} target="_blank" rel="noopener noreferrer">Buka posting acuan <PulseArrow/></a>}
   </section>;
 }

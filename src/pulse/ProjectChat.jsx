@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sparkles, SendHorizontal, RotateCcw } from 'lucide-react';
+import { SendHorizontal, RotateCcw } from 'lucide-react';
 import api from '../lib/api';
 import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
-import { PulseTag, PlatformTag } from '../components/ui/PulseTag';
+import { PulseTag } from '../components/ui/PulseTag';
 import { PulsePanelEmpty } from '../components/ui/PulseAnalytics';
 import { PulseArrow } from '../components/ui/PulseArrow';
 import { formatCount, pulseDate, safeSourceUrl } from '../lib/pulseData';
 import useProjectPeriod from './useProjectPeriod';
+import { pageMeta } from './pageMeta';
+import { PulsePageHead } from '../components/ui/PulsePatterns';
+import { PulseLoader } from '../components/ui/PulseLoader';
 import useProjectPlatforms from './useProjectPlatforms';
+import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 
 const generalQuestions = [
   'Apa isu utama dalam 7 hari terakhir?',
@@ -36,9 +40,9 @@ function Sources({ sources, turn }) {
   return <ol className="pc-sources" aria-label="Posting yang dirujuk">{sources.map(source => <li key={source.code} id={`pc-${turn}-${source.code}`}>
     <span className="pc-source-code">{source.code}</span>
     <div className="pc-source-body">
-      <strong>{source.author || 'Nama sumber tidak tersedia'}</strong>
+      <span className="pu-account-line"><AccountAvatar size="xs" author={source.author} platform={source.platform} /><strong>{source.author || 'Nama sumber tidak tersedia'}</strong></span>
       <p>{source.text || 'Teks tidak tersedia'}</p>
-      <span className="pc-source-meta"><PlatformTag size="sm" platform={source.platform} />{source.published_at ? pulseDate(source.published_at) : 'Tanggal tidak tersedia'}{source.interactions != null && <> · {formatCount(source.interactions)} interaksi</>}</span>
+      <span className="pc-source-meta">{source.published_at ? pulseDate(source.published_at) : 'Tanggal tidak tersedia'}{source.interactions != null && <> · {formatCount(source.interactions)} interaksi</>}</span>
     </div>
     {safeSourceUrl(source.url) && <a className="pc-source-link" href={safeSourceUrl(source.url)} target="_blank" rel="noopener noreferrer" aria-label={`Buka posting ${source.author || source.code}`}><PulseArrow /></a>}
   </li>)}</ol>;
@@ -97,10 +101,7 @@ export default function ProjectChat() {
   const scopeText = `${period.from || period.to ? `${period.from || 'awal data'} – ${period.to || 'akhir data'}` : 'seluruh periode'} · ${platforms === null ? 'semua platform' : `${platforms.length} platform`}`;
   const overview = new URLSearchParams(params); overview.delete('post');
   return <section className="pc-chat" aria-label="Tanya AI tentang project">
-    <header className="pc-head">
-      <div><h2><Sparkles size={20} aria-hidden="true" />Tanya AI</h2><p>Jawaban disusun dari posting, riwayat metrik, dan kelompok percakapan yang tersimpan di project ini. Cakupan: {scopeText}.</p></div>
-      <div className="pc-head-meta">{turns.length > 0 && <PulseButton variant="quiet" onClick={() => { setTurns([]); setError(''); }}><RotateCcw size={16} />Percakapan baru</PulseButton>}</div>
-    </header>
+    <PulsePageHead icon={pageMeta.chat.icon} title={pageMeta.chat.title} tagline={<>{pageMeta.chat.tagline} · {scopeText}</>} guide={pageMeta.chat.guide}>{turns.length > 0 && <PulseButton variant="quiet" onClick={() => { setTurns([]); setError(''); }}><RotateCcw size={16} />Percakapan baru</PulseButton>}</PulsePageHead>
     {postId && <PulseNotice>Pertanyaan difokuskan pada satu posting pilihan. <Link to={'/pulse/chat?' + overview}>Tanya tentang seluruh project</Link></PulseNotice>}
     {status && !ready && <PulsePanelEmpty title="Tanya AI belum tersedia">{status.error ? 'Status layanan tidak dapat diperiksa. Muat ulang halaman.' : 'Fitur ini belum diaktifkan di instalasi Anda. Hubungi administrator organisasi.'}</PulsePanelEmpty>}
     <div className="pc-thread" aria-live="polite">
@@ -113,7 +114,7 @@ export default function ProjectChat() {
           <p className="pc-answer-meta">Dari {formatCount(turn.scope?.posts)} posting tersimpan{turn.scope?.truncated ? ' (dibatasi 3.000 posting terbaru)' : ''} · {pulseDate(turn.answered_at)}</p>
         </div>
       </article>)}
-      {busy && <p className="pc-pending" role="status">Menyusun jawaban dari data tersimpan…</p>}
+      {busy && <div className="pc-pending"><PulseLoader inline label="Menyusun jawaban dari data tersimpan…" /></div>}
       <span ref={end} />
     </div>
     <form className="pc-composer" onSubmit={event => { event.preventDefault(); ask(draft); }}>

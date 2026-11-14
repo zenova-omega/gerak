@@ -1,22 +1,20 @@
 import { PulseArrow } from '../../ui/PulseArrow';
-import { PlatformLabel } from "./PlatformIcon";
 import React from 'react';
-import { chronologyPage } from '../../../lib/pulseChronology.js';
+import { chronologyNotes, chronologyPage } from '../../../lib/pulseChronology.js';
 import { pulseDate, safeSourceUrl } from '../../../lib/pulseData.js';
+import InfoTip from '../../../pulse/InfoTip';
+import AccountAvatar from './AccountAvatar';
 import './chronology.css';
 
 export default function ChronologyCards({ rows, page, onPageChange, selected, onSelect, firstTime }) {
   const result = chronologyPage(rows, page);
   return <section className="nx-chronology" aria-label="Jejak Penyebaran">
-    <h3>Jejak Penyebaran</h3>
-    <p>Urutan publikasi dari bukti yang tersedia, bukan rantai repost. Urutan waktu bukan bukti sebab-akibat; asal sebenarnya belum diketahui.</p>
-    <p>“Terawal teramati” berarti publikasi bertanggal paling awal dalam sampel yang dimuat, bukan waktu ditemukan atau pencetus asli. Waktu yang sama dapat dimiliki beberapa posting.</p>
-    <p role="status">{result.total} posting · {result.dated} bertanggal · {result.unknown} tanpa tanggal · {result.rows.length} tampil</p>
-    <p>Filter hubungan membatasi akun bila “Sertakan akun tanpa hubungan” dimatikan.</p>
+    <div className="nx-chronology-head"><h3>Jejak Penyebaran</h3><InfoTip label="Cara membaca jejak penyebaran">{chronologyNotes.map(note => <p key={note}>{note}</p>)}</InfoTip>
+      <p role="status">{result.total} posting · {result.dated} bertanggal · {result.unknown} tanpa tanggal · {result.rows.length} tampil</p></div>
     {!rows.length && <p className="nx-empty">Belum ada posting untuk filter dan waktu ini.</p>}
     <ol className="nx-chronology-list" start={result.page * 15 + 1}>
       {result.rows.map(post => <li key={post.id} className="nx-chronology-card">
-        <div className="nx-chronology-meta"><span><PlatformLabel platform={post.platform} /></span>
+        <div className="nx-chronology-meta"><span className="pu-account-line"><AccountAvatar size="xs" author={post.author} platform={post.platform} />{post.author || 'Akun tanpa nama'}</span>
           {post.time === null ? <span>Tanggal tidak diketahui · di luar urutan waktu</span> : <time>{pulseDate(post.published_at)}</time>}
         </div>
         {post.time !== null && post.time === firstTime && <strong className="nx-chronology-first">Terawal teramati dalam sampel</strong>}

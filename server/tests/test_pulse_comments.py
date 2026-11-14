@@ -156,3 +156,55 @@ async def test_project_collection_is_bounded_ordered_and_stops_on_quota(db, monk
     assert coverage['eligible'] == 5 and coverage['collected'] == 1 and coverage['not_requestable'] == 1
     again = await service.collect_project_comments(db, 'ct', settings, max_posts=1)
     assert [r['post_id'] for r in again['posts']] == ['tt']  # collected posts are never fetched twice
+
+
+@pytest.mark.asyncio
+async def test_automatic_comment_collection_is_capped_and_only_for_monitored_projects(db, monkeypatch):
+    from datetime import datetime
+    from types import SimpleNamespace
+    from app.models.pulse import WatchTopic
+    from app.models.pulse_monitor import MonitorSchedule, WorkerPolicy, WorkerUsage
+    from app.services import pulse_comments_auto as auto
+    topic = WatchTopic(label='Auto komentar', query='auto')
+    db.add(topic)
+    await db.flush()
+    now, calls = datetime(2026, 11, 14, 3, 0, 0), []
+    async def collect(session, topic_id, settings, max_posts=10, top=None):
+        assert top == 100
+        calls.append((topic_id, max_posts))
+        return {'posts': [{'post_id': str(i)} for i in range(max_posts)], 'comments': 7, 'stopped': []}
+    monkeypatch.setattr(auto, 'collect_project_comments', collect)
+    await db.execute(MonitorSchedule.__table__.update().values(enabled=False))
+    assert (await auto.auto_collect(db, SimpleNamespace(), now))['status'] == 'no_monitored_project' and not calls
+    db.add(MonitorSchedule(topic_id=topic.id, provider='rss', enabled=True))
+    await db.flush()
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider == 'comments').values(daily_limit=4, blocked_reason=None))
+    await db.execute(WorkerUsage.__table__.update().where(WorkerUsage.id == 'comments:2026-11-14').values(used=0))
+    first = await auto.auto_collect(db, SimpleNamespace(), now)
+    assert first['status'] == 'collected' and calls == [(topic.id, 4)]   # the cap is smaller than a batch of 10
+    assert (await auto.auto_collect(db, SimpleNamespace(), now))['status'] == 'daily_limit' and len(calls) == 1
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider == 'comments').values(daily_limit=-1))
+    assert (await auto.auto_collect(db, SimpleNamespace(), now))['status'] == 'collected' and calls[-1] == (topic.id, 10)   # no daily cap: a full batch
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider == 'comments').values(daily_limit=0))
+    assert (await auto.auto_collect(db, SimpleNamespace(), now))['status'] == 'off' and len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_top_limit_only_fetches_the_most_commented_posts(db, monkeypatch):
+    from types import SimpleNamespace
+    from app.models.pulse import WatchTopic, SourceItem
+    topic = WatchTopic(label='Top komentar', query='top')
+    db.add(topic)
+    await db.flush()
+    for i, comments in enumerate((50, 40, 30)):
+        db.add(SourceItem(topic_id=topic.id, source='youtube', platform='youtube', url=f'https://www.youtube.com/watch?v=vid{i}', text='t', metrics={'comments': comments}))
+    await db.flush()
+    asked = []
+    async def fake(video, key, pages=3):
+        asked.append(video)
+        return {'status': 'success', 'items': []}
+    monkeypatch.setattr(service, 'fetch_all_comments', fake)
+    settings = SimpleNamespace(YOUTUBE_API_KEY='k', XPOZ_API_KEY='')
+    await service.collect_project_comments(db, topic.id, settings, max_posts=10, top=2)
+    assert asked == ['vid0', 'vid1']
+    assert (await service.collect_project_comments(db, topic.id, settings, max_posts=10, top=2))['posts'] == [] and len(asked) == 2

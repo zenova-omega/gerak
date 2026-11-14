@@ -282,6 +282,35 @@ async def fetch_xpoz_comments(platform, post_id, api_key, post_url, limit=PAGE_R
     return {'items': normalize_comments(platform, rows, post_url), 'has_more': len(rows) >= limit}
 
 
+def normalize_profiles(rows):
+    """Provider rows to {account id: {photo_url, followers}}. The small default picture is swapped for the 200px one."""
+    profiles = {}
+    for row in rows[:100]:
+        if not isinstance(row, dict) or not re.fullmatch(r'[0-9]{1,25}', str(row.get('id') or '')):
+            continue
+        photo = _public_image_url(row.get('profileImageUrl'))
+        if photo and urlsplit(photo).hostname == 'pbs.twimg.com':
+            photo = re.sub(r'_normal(\.[A-Za-z]{3,4})$', r'_200x200\1', photo)
+        followers = row.get('followersCount')
+        profiles[str(row['id'])] = {'photo_url': photo, 'followers': int(followers) if str(followers).isdigit() else None}
+    return profiles
+
+
+async def fetch_xpoz_profiles(ids, api_key):
+    """One call: picture and follower count for up to 100 X accounts, by account id. No paging or retry."""
+    ids = [str(value) for value in ids]
+    if not ids or len(ids) > 100 or not all(re.fullmatch(r'[0-9]{1,25}', value) for value in ids):
+        raise ValueError('Invalid bounded profile request')
+    async with asyncio.timeout(60):
+        async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
+            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+            await _initialize(client)
+            result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
+                'name':'getTwitterUsers', 'arguments':{'identifiers':ids, 'identifierType':'id',
+                'fields':['id','username','profileImageUrl','followersCount']}}})
+    return normalize_profiles(_stored_rows(_payload(result)))
+
+
 class XpozToolError(Exception):
     def __init__(self, code="provider_error"):
         self.code = code

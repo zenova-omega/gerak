@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useInRouterContext, useNavigate, useSearchParams } from 'react-router-dom';
 import { FolderOpen, SlidersHorizontal, Plus, Search, ArrowRight, CalendarDays, Layers, ChevronDown } from 'lucide-react';
 import { useTopics } from '../hooks/usePulse';
+import api from '../lib/api';
 import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import { buildProjectQuery, explainProjectQuery, projectSearch, parseProjectQuery } from './projectQuery';
 import KeywordChips from './KeywordChips';
@@ -19,7 +20,7 @@ import { PulseTag, PlatformTag } from '../components/ui/PulseTag';
 import InfoTip from './InfoTip';
 import {projectPlatformOptions} from '../lib/pulseProjectFilters';
 
-export function ProjectEditor({ topic, resource, onCreated, readOnly }) {
+export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly }) {
   const [label, setLabel] = useState(topic?.label || '');
   const [query, setQuery] = useState(topic?.query || '');
   const initial = parseProjectQuery(topic?.query || '');
@@ -34,6 +35,25 @@ export function ProjectEditor({ topic, resource, onCreated, readOnly }) {
   const [seedUrl, setSeedUrl] = useState(topic?.seed_post?.url || '');
   const [previewUrl, setPreviewUrl] = useState(topic?.seed_post?.url || '');
   const [sources, setSources] = useState(topic?.sources || ['rss']);
+  const routed = useInRouterContext();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  async function removeProject() {
+    if (deleting || deleteText.trim() !== (topic.label || '').trim()) return;
+    setDeleting(true);
+    try { await resource.deleteTopic(topic.id); onDeleted?.(); }
+    catch (error) { setNotice({ error: true, text: error.status === 409 ? 'Pengumpulan project ini sedang berjalan. Coba hapus lagi sebentar.' : 'Project belum berhasil dihapus. Periksa izin dan coba lagi.' }); setDeleting(false); }
+  }
+  const [lookback, setLookback] = useState(7);
+  const [savedLookback, setSavedLookback] = useState(null);
+  const [lookbackRun, setLookbackRun] = useState(null);
+  useEffect(() => {
+    if (!topic?.id) return;
+    let active = true;
+    api.get('/admin/pulse/topics/' + encodeURIComponent(topic.id) + '/lookback').then(data => { if (active) { setLookback(data.days); setSavedLookback(data.last_run ? data.days : null); setLookbackRun(data); } }).catch(() => {});
+    return () => { active = false; };
+  }, [topic?.id]);
   let builtQuery='',builderError='';
   try { builtQuery=buildProjectQuery(main,required,excluded,variations); } catch(error) { builderError=error.message; }
   const effectiveQuery=advanced?query:builtQuery;
@@ -57,14 +77,20 @@ export function ProjectEditor({ topic, resource, onCreated, readOnly }) {
       if (!payload.label || !payload.query.trim()) throw new Error('Nama project dan query wajib diisi.');
       if (!sources.length) throw new Error('Pilih minimal satu sumber.');
       if (projectMode === 'post' && !seedUrl.trim()) throw new Error('Masukkan URL posting acuan.');
+      let savedId = topic?.id;
       if (topic) await resource.updateTopic(topic.id, payload);
-      else { const created = await resource.createTopic(payload); onCreated(created.id); }
-      setNotice({ text: 'Pengaturan project tersimpan.' });
+      else { const created = await resource.createTopic(payload); savedId = created.id; onCreated(created.id); }
+      // Pull the chosen range once: for a new project, and whenever the range or the query changed.
+      const pull = !topic || savedLookback !== lookback || topic.query !== payload.query || String(topic.sources) !== String(payload.sources);
+      if (pull) { try { const state = await api.put('/admin/pulse/topics/' + encodeURIComponent(savedId) + '/lookback', { days: lookback }); setSavedLookback(lookback); setLookbackRun(state); } catch { /* the project is saved; the pull can be repeated from here */ } }
+      setNotice({ text: pull ? `Pengaturan tersimpan. Posting ${lookback} hari terakhir sedang ditarik; angka akan bertambah dalam beberapa menit.` : 'Pengaturan project tersimpan.' });
     } catch (error) { setNotice({ error: true, text: error.status ? 'Project gagal disimpan. Periksa izin dan coba lagi.' : error.message }); }
     finally { setBusy(false); }
   }
   return <form className="ps-project-editor" onSubmit={submit} aria-busy={busy}>
-    <fieldset disabled={busy || readOnly}><legend>{topic ? 'Keyword & pengaturan project' : 'Project baru'}</legend>
+    <fieldset disabled={busy || readOnly}><legend>{topic ? 'Pengaturan project' : 'Project baru'}</legend>
+      <section className="ps-set" aria-labelledby="ps-set-identity"><h3 id="ps-set-identity">Identitas</h3><p>Nama yang tampil di pemilih project dan di laporan.</p>
+      <label>Nama project<input value={label} onChange={e => setLabel(e.target.value)} maxLength={100} required /></label>
       <label>Mode project<select value={projectMode} onChange={e => setProjectMode(e.target.value)}><option value="issue">Pantau isu</option><option value="post">Telusuri posting</option></select></label>
       {projectMode === 'post' && <>
         <label>URL posting acuan<input type="url" required maxLength={2048} value={seedUrl} onChange={e=>{setSeedUrl(e.target.value);setPreviewUrl('');}} placeholder="https://x.com/akun/status/…" /></label>
@@ -72,7 +98,8 @@ export function ProjectEditor({ topic, resource, onCreated, readOnly }) {
         <PulseButton disabled={!seedUrl.trim()} onClick={()=>setPreviewUrl(seedUrl.trim())}>Periksa posting tersimpan</PulseButton>
         {previewUrl && <SeedPostPreview url={previewUrl} onUseCaption={value=>{setQuery(value);setAdvanced(true);}}/>}
       </>}
-      <label>Nama project<input value={label} onChange={e => setLabel(e.target.value)} maxLength={100} required /></label>
+      </section>
+      <section className="ps-set" aria-labelledby="ps-set-keyword"><h3 id="ps-set-keyword">Keyword</h3><p>Menentukan percakapan yang dikumpulkan. Mengubahnya tidak menghapus posting yang sudah tersimpan.</p>
       <div className="ps-keyword-mode"><PulseButton aria-pressed={!advanced} disabled={advanced && !currentFields} onClick={openBuilder}>Keyword builder</PulseButton><PulseButton aria-pressed={advanced} disabled={!advanced && Boolean(builderError)} onClick={()=>{if(!advanced) {setQuery(builtQuery);setAdvanced(true);}}}>Boolean lanjutan</PulseButton></div>
       {advanced && !currentFields && <p>Edit query ini dengan Boolean lanjutan.</p>}
       {!advanced ? <section className="ps-keyword-builder" aria-label="Susun keyword"><p>Pisahkan kata atau frasa dengan koma.</p>
@@ -86,11 +113,18 @@ export function ProjectEditor({ topic, resource, onCreated, readOnly }) {
         <div className="ps-query-preview" aria-live="polite" aria-atomic="true"><strong>Ringkasan pencarian</strong>{builtQuery ? <><p>{explainProjectQuery(main,required,excluded,variations)}</p><details><summary>Lihat query</summary><code>{builtQuery}</code></details></> : <p>{builderError}</p>}</div>
       </section> : <><label>Query yang dipantau<textarea value={query} onChange={e => setQuery(e.target.value)} rows={3} maxLength={500} required aria-describedby="ps-query-help" /></label>
         <SmartKeywords fields={{main:query.replace(/["()]/g,' ').replace(/\b(AND|OR|NOT)\b/g,',')}} topicId={topic?.id} onAdd={added=>setQuery(current=>appendToQuery(current,added))}/></>}
-      <p id="ps-query-help">Keyword menentukan percakapan yang akan dikumpulkan.</p>
+      </section>
+      <section className="ps-set" aria-labelledby="ps-set-sources"><h3 id="ps-set-sources">Sumber dan rentang</h3><p>Dari mana posting diambil dan seberapa jauh ke belakang.</p>
       <fieldset className="ps-source-options"><legend>Sumber pencarian</legend>{[['rss','Berita'],['xpoz','X'],['instagram','Instagram'],['tiktok','TikTok'],['youtube','YouTube']].map(([value,title])=><label key={value}><input type="checkbox" checked={sources.includes(value)} onChange={e=>setSources(e.target.checked?[...sources,value]:sources.filter(s=>s!==value))}/>{title}</label>)}</fieldset>
-      {effectiveQuery.length > 250 && <PulseNotice tone="warning">Query ini melebihi batas Xpoz. Pendekkan sebelum mengambil Instagram atau TikTok.</PulseNotice>}
-      <PulseButton type="submit" variant="primary" disabled={!advanced && Boolean(builderError)} busy={busy} busyLabel="Menyimpan…">{topic ? 'Simpan perubahan' : 'Buat project'}</PulseButton>
+      {effectiveQuery.length > 250 && <PulseNotice tone="warning">Query ini lebih dari 250 karakter. Pendekkan agar X, Instagram, dan TikTok bisa diambil.</PulseNotice>}
+      <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e => setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select><small>{lookbackRun?.running ? 'Penarikan sedang berjalan.' : lookbackRun?.last_run ? `Terakhir ditarik ${lookbackRun.last_run.days} hari: ${lookbackRun.last_run.results.reduce((sum, row) => sum + row.ingested, 0)} posting baru.` : 'Dijalankan sekali saat disimpan, untuk tiap sumber yang dicentang. Setelah itu jadwal hanya mengambil posting terbaru.'}</small></label>
+      </section>
+      {topic && routed && <section className="ps-set" aria-labelledby="ps-set-collect"><h3 id="ps-set-collect">Pengumpulan</h3><p>Jadwal per sumber, batas harian, dan komentar otomatis diatur di Monitor dan berlaku untuk project ini.</p><div className="ps-set-links"><Link to={'/pulse/monitor?' + new URLSearchParams({ topic: topic.id })}>Atur jadwal dan batas <ArrowRight size={14} aria-hidden="true" /></Link><Link to={'/pulse/sources?' + new URLSearchParams({ topic: topic.id })}>Lihat sumber dan cakupan <ArrowRight size={14} aria-hidden="true" /></Link></div></section>}
+      <div className="ps-set-save"><PulseButton type="submit" variant="primary" disabled={!advanced && Boolean(builderError)} busy={busy} busyLabel="Menyimpan…">{topic ? 'Simpan perubahan' : 'Buat project'}</PulseButton></div>
     </fieldset>
+    {topic && !readOnly && <section className="ps-set ps-set-danger" aria-labelledby="ps-set-danger"><h3 id="ps-set-danger">Hapus project</h3><p>Menghapus project ini beserta semua posting, komentar, analisis, alert, dan jadwalnya. Tidak bisa dibatalkan. Laporan PDF yang sudah diunduh tidak terpengaruh.</p>
+      {!confirmDelete ? <PulseButton onClick={() => { setConfirmDelete(true); setDeleteText(''); }}>Hapus project ini…</PulseButton> : <div className="ps-set-confirm" role="group" aria-label="Konfirmasi hapus project"><label>Ketik nama project untuk memastikan: <strong>{topic.label}</strong><input value={deleteText} onChange={event => setDeleteText(event.target.value)} autoComplete="off" autoFocus aria-describedby="ps-delete-note" /></label><p id="ps-delete-note">Semua data project ini hilang permanen setelah tombol di bawah ditekan.</p><div><PulseButton variant="reverse" disabled={deleteText.trim() !== (topic.label || '').trim()} busy={deleting} busyLabel="Menghapus…" onClick={removeProject}>Hapus permanen</PulseButton><PulseButton variant="quiet" disabled={deleting} onClick={() => setConfirmDelete(false)}>Batal</PulseButton></div></div>}
+    </section>}
     {readOnly && <p>Hanya pemilik atau admin yang dapat mengubah project.</p>}
     {notice && <PulseNotice role={notice.error ? 'alert' : 'status'} tone={notice.error ? 'warning' : 'neutral'}>{notice.text}</PulseNotice>}
   </form>;
@@ -99,12 +133,13 @@ export function ProjectEditor({ topic, resource, onCreated, readOnly }) {
 export default function ProjectBar({ readOnly = false }) {
   const resource = useTopics();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const [mode, setMode] = useState('');
   const [projectFilter, setProjectFilter] = useState('');
   const id = params.get('topic') || '';
   const [platforms,setPlatforms]=useProjectPlatforms(id);
   const topic = resource.topics.find(t => t.id === id);
-  function select(next) { setMode(''); const search=new URLSearchParams(projectSearch(params,next));for(const key of ['platforms','platform','author','sentiment','day'])search.delete(key);setParams(search); }
+  function select(next) { setMode(''); const search=new URLSearchParams(projectSearch(params,next));for(const key of ['platforms','platform','author','sentiment','day','find'])search.delete(key);setParams(search); }
   const platformChoices=[...new Set([...projectPlatformOptions,...(platforms||[])])];
   // From "Semua", one click narrows to that platform. Clearing the last one, or picking every one, returns to "Semua".
   function togglePlatform(platform){ const current=platforms||[]; const next=current.includes(platform)?current.filter(p=>p!==platform):[...current,platform]; setPlatforms(!next.length||platformChoices.every(p=>next.includes(p))?null:next); }
@@ -112,6 +147,13 @@ export default function ProjectBar({ readOnly = false }) {
   const [scopeOpen, setScopeOpen] = useState(false);
   const filtered = Boolean(period.from || period.to) || platforms !== null;
   const platformSummary = platforms === null ? 'Semua platform' : platforms.length <= 2 ? platforms.map(platform => platform === 'unknown' ? 'Lainnya' : platformLabel(platform)).join(', ') || 'Tanpa platform' : `${platforms.length} platform`;
+  function findInProject(event) {
+    event.preventDefault();
+    const text = new FormData(event.currentTarget).get('find').trim();
+    const next = new URLSearchParams({ topic: id });
+    if (text) next.set('find', text);
+    navigate('/pulse/posts?' + next);
+  }
   const available = resource.topics.filter(t => t.label.toLocaleLowerCase('id').includes(projectFilter.toLocaleLowerCase('id')));
   return <section className="ps-project-bar" aria-label="Project aktif" data-selected={Boolean(topic)}>
     <div className="ps-project-toolbar">
@@ -122,7 +164,10 @@ export default function ProjectBar({ readOnly = false }) {
         <span className="pu-sr">Cakupan: </span><span><CalendarDays size={16} aria-hidden="true" />{periodLabel(period)}</span><span><Layers size={16} aria-hidden="true" />{platformSummary}</span>
         <span className="ps-scope-toggle-action">{scopeOpen ? 'Tutup' : 'Ubah'}<ChevronDown size={16} aria-hidden="true" /></span>
       </button>}
-      <div className="ps-project-actions">{topic && <PulseButton aria-expanded={mode === 'edit'} onClick={() => setMode(mode === 'edit' ? '' : 'edit')}><SlidersHorizontal size={16} />Keyword</PulseButton>}{!topic && <Link className="ps-project-search-link" to={'/pulse/search' + (params.get('q') ? '?' + new URLSearchParams({q:params.get('q')}) : '')}><Search size={16} aria-hidden="true"/>Pencarian cepat</Link>}{!readOnly && <PulseButton aria-expanded={mode === 'new'} onClick={() => setMode(mode === 'new' ? '' : 'new')}><Plus size={16} />Project baru</PulseButton>}</div>
+      {topic && <form className="pu-search ps-global-search" role="search" aria-label="Cari posting atau akun di project ini" onSubmit={findInProject}>
+        <Search aria-hidden="true" /><input type="search" name="find" key={id + ':' + (params.get('find') || '')} defaultValue={params.get('find') || ''} maxLength={120} placeholder="Cari posting atau akun…" aria-label="Cari posting atau akun di project ini" />
+      </form>}
+      <div className="ps-project-actions">{topic && <PulseButton aria-expanded={mode === 'edit'} onClick={() => setMode(mode === 'edit' ? '' : 'edit')}><SlidersHorizontal size={16} />Pengaturan</PulseButton>}{!topic && <Link className="ps-project-search-link" to={'/pulse/search' + (params.get('q') ? '?' + new URLSearchParams({q:params.get('q')}) : '')}><Search size={16} aria-hidden="true"/>Pencarian cepat</Link>}{!readOnly && <PulseButton aria-expanded={mode === 'new'} onClick={() => setMode(mode === 'new' ? '' : 'new')}><Plus size={16} />Project baru</PulseButton>}</div>
     </div>
     {resource.error ? <PulseNotice role="alert" tone="warning">Daftar project gagal dimuat. <PulseButton onClick={resource.refetch}>Coba lagi</PulseButton></PulseNotice> : topic ? null : <div className="ps-project-start">
       <p className="ps-project-help">Pilih project atau mulai dengan keyword baru melalui Pencarian cepat.</p>
@@ -139,6 +184,6 @@ export default function ProjectBar({ readOnly = false }) {
       </section>
       <p className="ps-scope-query"><span>{topic.seed_post ? 'Telusuri posting · 1 acuan' : 'Pantau isu'}</span><code title={topic.query}>{topic.query}</code></p>
     </div>}
-    {mode && (mode === 'new' || topic) && <ProjectEditor key={mode + ':' + id} topic={mode === 'edit' ? topic : null} resource={resource} readOnly={readOnly} onCreated={select} />}
+    {mode && (mode === 'new' || topic) && <ProjectEditor key={mode + ':' + id} topic={mode === 'edit' ? topic : null} resource={resource} readOnly={readOnly} onCreated={select} onDeleted={() => { setMode(''); select(''); window.dispatchEvent(new Event('pulse-projects-changed')); }} />}
   </section>;
 }

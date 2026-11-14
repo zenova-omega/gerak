@@ -178,7 +178,7 @@ async def test_monitor_api_admin_validation_and_empty_state(client,admin_token,u
     assert (await client.get('/api/admin/pulse/monitor',headers={'Authorization':f'Bearer {user_token}'})).status_code==403
     h={'Authorization':f'Bearer {admin_token}'}
     state=await client.get('/api/admin/pulse/monitor',headers=h)
-    assert state.status_code==200 and len(state.json()['workers'])==3
+    assert state.status_code==200 and len(state.json()['workers'])==6   # three sources, automatic comments, and the two profile lanes
     # -1 is the "no daily cap" mode; anything below it is invalid.
     bad=await client.put('/api/admin/pulse/monitor/workers/xpoz',json={'daily_limit':-2},headers=h)
     assert bad.status_code==422

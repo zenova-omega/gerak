@@ -1,42 +1,43 @@
 import { PulseArrow } from '../components/ui/PulseArrow';
 import {Link} from 'react-router-dom';
-import {MessageSquareText,ExternalLink,Heart,Smile,Angry,Frown,Ghost,Annoyed,HelpCircle,Plus,Minus,Equal} from 'lucide-react';
+import {ExternalLink} from 'lucide-react';
 import {PulseSourceHeading} from '../components/ui/PulsePatterns';
 import PostCaption from '../components/admin/pulse/PostCaption';
-
 import {safeSourceUrl} from '../lib/pulseData';
 import {sourceText} from '../lib/pulseOverview';
-import {sentimentLabels} from '../lib/pulsePostFilters';
 import './sentiment-evidence.css';
 import {PreviewImage} from '../components/admin/pulse/PostMediaPreview';
 import {postMedia,safeMediaUrl} from '../lib/pulseMedia';
-import {postEmotion,emotionLabels} from '../lib/pulseEmotion';
-import {PulseEngagement} from '../components/ui/PulseEngagement';
-import {SentimentTag} from '../components/ui/PulseTag';
+import {postEmotion,emotionLabels,emotionFaces} from '../lib/pulseEmotion';
+import {PulseMetricRow} from '../components/ui/PulseMetricRow';
+import {PulseTag,SentimentTag} from '../components/ui/PulseTag';
+import {kindHints,kindLabels,neutralKind} from '../lib/pulseVoice';
 import InfoTip from './InfoTip';
 import AnalysisPending from './AnalysisPending';
 
-const emotionIcons={joy:Smile,anger:Angry,sadness:Frown,fear:Ghost,disgust:Annoyed,admiration:Heart,none:HelpCircle};
-const sentimentIcons={positive:Plus,negative:Minus,neutral:Equal,unknown:HelpCircle};
-
+/** One post as evidence for a sentiment reading. Compact by design: who, what was written, how it was
+ * read and why, then the numbers on one line. A source without metrics (news) shows no metric row. */
 export default function SentimentEvidenceCard({post,selectedLabel,accountLink}){
+ const kind=selectedLabel==='neutral'?neutralKind(post):null;   // what a neutral post is: a report, a question, a call, sarcasm
  const result=post.metrics?.sentiment,url=safeSourceUrl(post.url);
- const emotion=postEmotion(post),EmotionIcon=emotion?emotionIcons[emotion.label]:null,SentimentIcon=sentimentIcons[selectedLabel]||HelpCircle;
+ const emotion=postEmotion(post);
  const media=postMedia(post);
  const image=media.imageUrl||safeMediaUrl(post.metrics?.thumbnail_url)||safeMediaUrl(post.metrics?.media_url);
  const hasMedia=Boolean(image||media.videoUrl||media.embedUrl);
  const reason=result?.reason||(selectedLabel==='unknown'?'Belum tersedia. Menunggu analisis otomatis.':'Sumber label tidak menyertakan alasan.');
  const shortReason=reason.length>160?reason.slice(0,160).replace(/\s+\S*$/,'')+'…':reason;
+ const review=result?.review_needed||typeof result?.confidence==='number'&&result.confidence<.7;
  return <li className="pse-card">
-  <PulseSourceHeading post={post}><SentimentTag value={selectedLabel}/></PulseSourceHeading>
+  <PulseSourceHeading post={post}>
+   <SentimentTag value={selectedLabel}/>{kind&&kind!=='unsorted'&&<PulseTag variant="outline" title={kindHints[kind]}>{kindLabels[kind]}</PulseTag>}
+   {emotion&&<PulseTag variant="outline" title={emotion.reason} aria-label={'Emosi: '+emotionLabels[emotion.label]}><span aria-hidden="true">{emotionFaces[emotion.label]}</span> {emotionLabels[emotion.label]}</PulseTag>}
+   {url&&<a href={url} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting asli '+(post.author||'')}><ExternalLink size={16} aria-hidden="true"/></a>}
+  </PulseSourceHeading>
   <div className={'pse-story'+(hasMedia?' has-media':'')}>
    {hasMedia&&<div className="pse-thumbnail"><PreviewImage media={{...media,imageUrl:image}} author={post.author}/></div>}
    <div className="pse-content"><PostCaption post={{...post,text:sourceText(post)}}/></div>
   </div>
-  <div className="pse-insights"><div className="pse-signals"><div className={'pse-signal '+selectedLabel}><span className="pse-signal-icon"><SentimentIcon aria-hidden="true"/></span><div><small>Sentimen teks</small><strong>{sentimentLabels[selectedLabel]}</strong></div></div>{emotion&&<div className={'pse-signal emotion-'+emotion.label}><span className="pse-signal-icon"><EmotionIcon aria-hidden="true"/></span><div><small>Emosi teks</small><strong aria-label={'Emosi: '+emotionLabels[emotion.label]}>{emotionLabels[emotion.label]}</strong></div><InfoTip label="Alasan emosi">{emotion.reason}{emotion.review_needed||emotion.confidence<.7?' Perlu ditinjau.':''}</InfoTip></div>}</div>
-   {selectedLabel==='unknown'?<AnalysisPending post={post}/>:<section className="pse-analysis" aria-label="Analisis sentimen posting"><MessageSquareText size={16} aria-hidden="true"/><div><strong>Alasan AI {reason.length>160&&<InfoTip label="Lihat alasan lengkap">{reason}</InfoTip>}</strong><p>{shortReason}</p>{(result?.review_needed||typeof result?.confidence==='number'&&result.confidence<.7)&&<small>Perlu ditinjau</small>}</div></section>}
-  </div>
-  <div className="pse-interactions"><PulseEngagement metrics={post.metrics} platform={post.platform} compact label="Rincian interaksi posting"/></div>
-  <footer className="pse-footer"><div><Link to={accountLink}>Posting akun <PulseArrow decorative size={14}/></Link>{url&&<a href={url} target="_blank" rel="noopener noreferrer">Posting asli <ExternalLink size={14} aria-hidden="true"/></a>}</div></footer>
+  {selectedLabel==='unknown'?<AnalysisPending post={post}/>:<section className="pse-reading" aria-label="Analisis sentimen posting"><strong>Kenapa dinilai begitu</strong><p>{shortReason}{reason.length>160&&<InfoTip label="Lihat alasan lengkap">{reason}</InfoTip>}</p>{review&&<PulseTag tone="warning" dot size="sm">Perlu ditinjau</PulseTag>}</section>}
+  <footer className="pse-foot"><PulseMetricRow metrics={post.metrics} platform={post.platform} hideEmpty label="Rincian interaksi posting"/><Link to={accountLink}>Posting akun ini <PulseArrow decorative size={14}/></Link></footer>
  </li>;
 }

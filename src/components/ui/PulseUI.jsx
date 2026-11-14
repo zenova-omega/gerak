@@ -6,10 +6,12 @@ import { PulseArrow } from './PulseArrow';
 
 /** PULSE-scoped action. Defaults to a non-submitting button. Explicit type="submit" for forms.
  * `arrow` appends the PULSE arrow for actions that open evidence or another view.
- * @param {{variant?: 'primary'|'secondary'|'quiet', arrow?: boolean, busy?: boolean, busyLabel?: string, disabled?: boolean, type?: 'button'|'submit'|'reset', className?: string, children?: import('react').ReactNode}} props
+ * `reverse` is the ink-filled button for the one action that must stand out on a tinted or busy surface.
+ * `size="sm"` is for dense rows; `iconOnly` makes a square button and needs an `aria-label`.
+ * @param {{variant?: 'primary'|'secondary'|'quiet'|'reverse', size?: 'md'|'sm', iconOnly?: boolean, arrow?: boolean, busy?: boolean, busyLabel?: string, disabled?: boolean, type?: 'button'|'submit'|'reset', className?: string, children?: import('react').ReactNode}} props
  */
-export function PulseButton({ variant = 'secondary', busy = false, busyLabel, disabled, type = 'button', className = '', arrow = false, children, ...props }) {
-  return <Button {...props} type={type} variant={{primary:'default',secondary:'outline',quiet:'ghost'}[variant]} className={cn('pu-button',`pu-button-${variant}`,className)} disabled={disabled || busy} aria-busy={busy || undefined}>
+export function PulseButton({ variant = 'secondary', size = 'md', iconOnly = false, busy = false, busyLabel, disabled, type = 'button', className = '', arrow = false, children, ...props }) {
+  return <Button {...props} type={type} variant={{primary:'default',reverse:'default',secondary:'outline',quiet:'ghost'}[variant]} data-size={size === 'sm' ? 'sm' : undefined} data-icon-only={iconOnly ? '' : undefined} className={cn('pu-button',`pu-button-${variant}`,className)} disabled={disabled || busy} aria-busy={busy || undefined}>
     {busy && <LoaderCircle className="pu-spinner" data-icon="inline-start" aria-hidden="true" />}{busy && busyLabel ? busyLabel : children}{arrow && !busy && <PulseArrow decorative />}
   </Button>;
 }

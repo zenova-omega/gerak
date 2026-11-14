@@ -41,7 +41,7 @@ export default function SourceDisclosure({ source, budget, topicId, readOnly, bu
         <div><dt>Berhasil terakhir</dt><dd>{time(source.last_success_at)}</dd></div>
         {last && <><div><dt>Percobaan terakhir</dt><dd>{time(last.started_at)}</dd></div><div><dt>Diterima / baru tersimpan</dt><dd>{count(last.fetched)} / {count(last.ingested)}</dd></div></>}
       </dl><p className="sc-small">Konfigurasi dan ketersediaan alat bukan jaminan akses berhasil.</p>
-      {last?.error && <p className="sc-warning">Pengumpulan terkendala. Periksa status worker sebelum mencoba lagi.</p>}
+      {last?.error && <p className="sc-warning">Pengumpulan terkendala. Periksa status pengumpulan di Monitor sebelum mencoba lagi.</p>}
       {manual && <div className="sc-collection-action"><PulseButton variant="primary" disabled={Boolean(reason)} aria-describedby={`sc-reason-${source.platform}`} onClick={() => onCollect(source)}>Kumpulkan maks. 300 posting {names[source.platform]}</PulseButton><p className="sc-small" id={`sc-reason-${source.platform}`}>{reason || 'Permintaan manual memakai kredit Xpoz dan batas lokal. Tidak ada pengulangan otomatis.'}</p></div>}
       </div>
     </div>
