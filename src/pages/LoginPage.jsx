@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const forPulse = searchParams.get('returnTo') === 'pulse';
 
   const C = {
     primary: '#1B4332', accent: '#B8860B', bg: '#F5F3EE',
@@ -25,18 +27,9 @@ export default function LoginPage() {
     try {
       const data = await api.post('/auth/login', { nrp, password });
       login(data.user, data.access_token, data.refresh_token);
-      navigate(data.user.role === 'admin' ? '/admin' : '/app');
+      navigate(data.user.role === 'admin' ? (forPulse ? '/command-center/pulse' : '/admin') : '/app');
     } catch (err) {
-      // Fallback: demo mode (no backend)
-      if (nrp === 'ADMIN001' && password === 'admin2026') {
-        login({ id: 'admin-001', nrp: 'ADMIN001', name: 'Super Admin', role: 'admin', rank: 4, xp: 99999, tier: 'Gold' }, 'demo-token', 'demo-refresh');
-        navigate('/admin');
-      } else if (nrp && password === 'sinar2026') {
-        login({ id: 'usr-0', nrp, name: 'Mayor Arif Santoso', role: 'prajurit', account_type: 'prajurit', rank: 1, xp: 4820, tier: 'Silver' }, 'demo-token', 'demo-refresh');
-        navigate('/app');
-      } else {
-        setError(err.message || 'NRP atau password salah');
-      }
+      setError(err.message || 'Login API gagal. Periksa NRP, password, dan koneksi.');
     } finally {
       setLoading(false);
     }
@@ -66,6 +59,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleLogin}>
+          {forPulse && <p style={{ fontSize: 12, color: C.primary, marginBottom: 18 }}>Pulse live memerlukan akun admin asli. Formulir ini menggunakan API; tidak ada fallback login demo.</p>}
           <div style={{ marginBottom: 16 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.textMuted, display: 'block', marginBottom: 6 }}>NRP / ID Pengguna</label>
             <input
@@ -95,7 +89,7 @@ export default function LoginPage() {
 
         {/* Demo quick access */}
         <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
-          <p style={{ fontSize: 11, color: C.textMuted, marginBottom: 10 }}>Demo Mode (tanpa backend)</p>
+          <p style={{ fontSize: 11, color: C.textMuted, marginBottom: 10 }}>Demo Mode (tanpa backend) · tidak dapat mengakses analytics Pulse live.</p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => demoLogin('member')} style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
               Masuk sebagai Prajurit

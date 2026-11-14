@@ -18,7 +18,7 @@ export class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{
-          minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: '#F5F3EE', fontFamily: "'Inter', sans-serif", padding: 24,
         }}>
           <div style={{ textAlign: 'center', maxWidth: 400 }}>

@@ -1,13 +1,28 @@
 """Pulse core: ingest items, cluster into issues, crawl, enrich."""
 from datetime import datetime, timezone
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models.pulse import WatchTopic, Issue, SourceItem
+from ..models.pulse import WatchTopic, Issue, SourceItem, PulseCrawlRun
+from .ingest.common import observed_engagement, credential, count
+import httpx
 from .dedup import simhash, is_near_duplicate
-from .ranking import issue_score
 from .ai import get_ai_service
+from ..models.pulse_monitor import MetricSnapshot
 
 NEAR_DUP_THRESHOLD = 3
+
+
+def snapshot_metrics(raw):
+    values = raw or {}
+    # Current observations only. Omitted fields are unknown, never carried forward.
+    return {key: int(values[key]) if not isinstance(values.get(key), bool) and str(values.get(key, '')).isdigit() else None
+            for key in ('likes', 'comments', 'shares', 'views')}
+
+
+def _engagement(metrics):
+    if any(k in (metrics or {}) for k in ("likes", "comments", "shares")):
+        return observed_engagement(metrics) or 0
+    return count((metrics or {}).get("engagement"))
 
 
 async def _find_or_create_issue(db: AsyncSession, topic: WatchTopic, sh: str, title: str | None) -> Issue:
@@ -21,8 +36,11 @@ async def _find_or_create_issue(db: AsyncSession, topic: WatchTopic, sh: str, ti
     return issue
 
 
-async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict]) -> int:
+async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict], *, created_ids: set | None = None) -> int:
     """Insert new SourceItems, clustering each into an Issue. Returns count inserted."""
+    # Serialize ALL ingestion entry points for this topic, not only provider lanes.
+    # The no-op UPDATE acquires a transaction-scoped row lock (SQLite writer lock).
+    await db.execute(update(WatchTopic).where(WatchTopic.id == topic.id).values(id=WatchTopic.id))
     created = 0
     for raw in items:
         url = raw.get("url")
@@ -31,7 +49,23 @@ async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict]) -
         existing = await db.execute(
             select(SourceItem).where(SourceItem.topic_id == topic.id, SourceItem.url == url)
         )
-        if existing.scalar_one_or_none():
+        existing = existing.scalar_one_or_none()
+        if existing:
+            db.add(MetricSnapshot(item_id=existing.id, topic_id=topic.id, metrics=snapshot_metrics(raw.get('metrics'))))
+            previous = existing.metrics or {}
+            # Keep earlier observations if a later response omits a metric.
+            refreshed = {**previous, **{k: v for k, v in (raw.get("metrics") or {}).items() if v is not None}}
+            if any(k in refreshed for k in ("likes", "comments", "shares")):
+                refreshed["engagement"] = observed_engagement(refreshed)
+            issue = await db.get(Issue, existing.issue_id) if existing.issue_id else None
+            if issue:
+                issue.engagement_total = max(0, (issue.engagement_total or 0) + _engagement(refreshed) - _engagement(previous))
+                issue.reach_total = max(0, (issue.reach_total or 0) + count(refreshed.get("reach")) - count(previous.get("reach")))
+                issue.score = float(issue.engagement_total)
+            existing.metrics = refreshed or None
+            existing.crawled_at = datetime.utcnow()
+            if raw.get("author"):
+                existing.author = raw["author"]
             continue
         combined = f"{raw.get('title') or ''} {raw.get('text') or ''}".strip()
         sh = simhash(combined)
@@ -41,50 +75,187 @@ async def ingest_items(db: AsyncSession, topic: WatchTopic, items: list[dict]) -
             pub = pub.astimezone(timezone.utc).replace(tzinfo=None)
         seen_at = pub or datetime.utcnow()
         metrics = raw.get("metrics") or None
-        db.add(SourceItem(
+        item = SourceItem(
             topic_id=topic.id, issue_id=issue.id, source=raw["source"],
             platform=raw.get("platform"), url=url, title=raw.get("title"),
             text=raw.get("text", "") or "", author=raw.get("author"),
             published_at=pub, simhash=sh, metrics=metrics,
-        ))
+        )
+        db.add(item)
+        await db.flush()
+        if created_ids is not None:
+            created_ids.add(item.id)
+        db.add(MetricSnapshot(item_id=item.id, topic_id=topic.id, metrics=snapshot_metrics(raw.get('metrics'))))
         issue.item_count += 1
         if seen_at > issue.last_seen_at:
             issue.last_seen_at = seen_at
         # Aggregate metrics + platforms to the issue level for list-view triage.
-        issue.reach_total = (issue.reach_total or 0) + int((metrics or {}).get("reach") or 0)
-        issue.engagement_total = (issue.engagement_total or 0) + int((metrics or {}).get("engagement") or 0)
+        issue.reach_total = (issue.reach_total or 0) + count((metrics or {}).get("reach"))
+        issue.engagement_total = (issue.engagement_total or 0) + _engagement(metrics)
         if raw.get("platform"):
             issue.platforms = sorted(set(issue.platforms or []) | {raw["platform"]})
-        issue.score = issue_score(issue.item_count, issue.last_seen_at)
+        issue.score = float(issue.engagement_total)
         created += 1
     await db.flush()
     return created
 
 
 async def crawl_topic(db: AsyncSession, topic: WatchTopic, settings) -> int:
-    """Fetch from configured sources and ingest. Network-bound; failures are swallowed per source."""
+    """Backward-compatible scheduler entry point. Metered providers are manual only."""
+    return (await crawl_topic_run(db, topic, settings))["ingested"]
+
+
+def _provider_error(exc: Exception, provider: str) -> dict:
+    from .ingest.xpoz import XpozToolError
+    # Never serialize exceptions or remote bodies: URLs/bodies may contain secrets.
+    status, code, message = "error", "provider_error", "Provider request failed; no retry was attempted."
+    http_status = None
+    if isinstance(exc, XpozToolError):
+        code = exc.code
+        if code == "plan_restricted":
+            status, message = "plan_restricted", "Xpoz denied this query for the current plan or credit allowance. No upgrade or fallback was attempted."
+        elif code == "pending":
+            status, message = "pending", "Xpoz started a background operation. Automatic polling is disabled; no second query was issued."
+    elif isinstance(exc, httpx.HTTPStatusError):
+        http_status = exc.response.status_code
+        if http_status == 401:
+            code, message = "authentication_failed", "Provider credentials were rejected."
+        elif http_status in (402, 403):
+            status, code = "plan_restricted", "access_or_quota_restricted"
+            message = ("Xpoz access or credits are restricted. REST live search excludes trial keys; stored MCP search is the default. No upgrade or fallback was attempted."
+                       if provider == "xpoz" else "Provider access or quota is restricted. No retry was attempted.")
+        elif http_status == 429:
+            code, message = "rate_limited", "Provider rate or quota limit reached. No retry was attempted."
+        else:
+            code = "http_error"
+    elif isinstance(exc, (httpx.TimeoutException, TimeoutError)):
+        code, message = "timeout", "Provider timed out. No retry was attempted."
+    elif isinstance(exc, ValueError):
+        code, message = "invalid_response", "Provider returned an invalid response."
+    return {"status": status, "ingested": 0, "error": code, "message": message, "http_status": http_status}
+
+
+async def crawl_topic_run(db: AsyncSession, topic: WatchTopic, settings, *, manual: bool = False) -> dict:
+    """One bounded attempt per provider. A savepoint isolates each ingestion failure."""
     from .ingest.rss import fetch_rss_items
     from .ingest.browserless import scrape_content, is_allowed
+    from .ingest.xpoz import fetch_xpoz_items, fetch_xpoz_stored_items, fetch_xpoz_social_items, PAGE_ROWS
+    from .ingest.youtube import fetch_youtube_items
+    social = {"instagram", "tiktok", "reddit"}  # collected through the same provider account as X
+    run = PulseCrawlRun(topic_id=topic.id, manual=manual)
+    db.add(run)
+    await db.flush()
+    providers = {}
     total = 0
-    sources = topic.sources or ["rss"]
-    if "rss" in sources:
+    for source in dict.fromkeys(topic.sources or ["rss"]):
+        if source not in {"rss", "browserless", "xpoz", "youtube"} | social:
+            providers["unsupported"] = {"status": "unsupported", "ingested": 0}
+            continue
+        if source != "rss" and not manual:
+            providers[source] = {"status": "manual_only", "ingested": 0}
+            continue
+        key = credential(settings, f"{'XPOZ' if source in social else source.upper()}_API_KEY") if source != "rss" else ""
+        if source != "rss" and not key:
+            providers[source] = {"status": "not_configured", "ingested": 0}
+            continue
         try:
-            total += await ingest_items(db, topic, await fetch_rss_items(topic.query))
-        except Exception:
-            pass
-    if "browserless" in sources and settings.BROWSERLESS_API_KEY and topic.browserless_targets:
-        scraped = []
-        for url in topic.browserless_targets:
-            if not is_allowed(url, settings.BROWSERLESS_ALLOWLIST):
-                continue
-            try:
-                scraped.append(await scrape_content(url, settings.BROWSERLESS_API_KEY, settings.BROWSERLESS_BASE))
-            except Exception:
-                continue
-        if scraped:
-            total += await ingest_items(db, topic, scraped)
-    topic.last_crawled_at = datetime.utcnow()
-    return total
+            if source == "rss":
+                items = await fetch_rss_items(topic.query)
+            elif source == "xpoz":
+                fetch = fetch_xpoz_items if getattr(settings, "XPOZ_MODE", "mcp_stored") == "rest_live" else fetch_xpoz_stored_items
+                items = await fetch(topic.query, key)
+            elif source == "youtube":
+                items = await fetch_youtube_items(topic.query, key)
+            elif source in social:
+                items = await fetch_xpoz_social_items(topic.query, key, source, limit=PAGE_ROWS)
+            else:
+                items = []
+                for url in (topic.browserless_targets or [])[:10]:
+                    if is_allowed(url, settings.BROWSERLESS_ALLOWLIST):
+                        items.append(await scrape_content(url, key, settings.BROWSERLESS_BASE))
+            async with db.begin_nested():
+                count = await ingest_items(db, topic, items)
+            total += count
+            providers[source] = {"status": "success", "ingested": count, "fetched": len(items)}
+        except Exception as exc:
+            providers[source] = _provider_error(exc, source)
+    run.providers, run.ingested = providers, total
+    run.finished_at = datetime.utcnow()
+    topic.last_crawled_at = run.finished_at
+    await db.flush()
+    return {"topic_id": topic.id, "ingested": total, "run_id": run.id, "providers": providers}
+
+
+async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issue_id=None, start=None, end=None) -> dict:
+    from collections import Counter
+    query = select(SourceItem)
+    if topic_id:
+        query = query.where(SourceItem.topic_id == topic_id)
+    if issue_id:
+        query = query.where(SourceItem.issue_id == issue_id)
+    if start:
+        query = query.where(SourceItem.published_at >= start)
+    if end:
+        query = query.where(SourceItem.published_at <= end)
+    items = (await db.execute(query.order_by(SourceItem.crawled_at.desc(), SourceItem.id))).scalars().all()
+    comment_snapshots = {}
+    for item in items:
+        snapshot = (item.metrics or {}).get('comment_snapshot')
+        key = (item.platform or 'unknown', item.url)
+        if isinstance(snapshot, dict):
+            previous = comment_snapshots.get(key)
+            priority = lambda s: (s.get('status') == 'success', s.get('fetched_at') or '')
+            if previous is None or priority(snapshot) > priority(previous):
+                comment_snapshots[key] = snapshot
+    if not topic_id:
+        # Shared posts can match multiple topics. Use the latest observed snapshot once.
+        unique = {}
+        for item in items:
+            unique.setdefault((item.platform or "unknown", item.url), item)
+        items = list(unique.values())
+    from sqlalchemy import func
+    first_seen_query = select(MetricSnapshot.item_id, func.min(MetricSnapshot.observed_at)).join(
+        SourceItem, (SourceItem.id == MetricSnapshot.item_id) & (SourceItem.topic_id == MetricSnapshot.topic_id))
+    if topic_id:
+        first_seen_query = first_seen_query.where(SourceItem.topic_id == topic_id)
+    first_seen = dict((await db.execute(first_seen_query.group_by(MetricSnapshot.item_id))).all())
+    platforms, timeline, influencers = Counter(), Counter(), {}
+    for item in items:
+        platform = item.platform or "unknown"
+        platforms[platform] += 1
+        if item.published_at:
+            from datetime import timedelta
+            timeline[(item.published_at + timedelta(hours=7)).date().isoformat()] += 1
+        if item.author:
+            key = ((item.metrics or {}).get("author_id") or item.author, platform)
+            author = influencers.setdefault(key, {"author": item.author, "platform": platform,
+                                                  "mentions": 0, "engagement": None, "url": item.url})
+            author["mentions"] += 1
+            engagement = observed_engagement(item.metrics)
+            if engagement is not None:
+                author["engagement"] = (author["engagement"] or 0) + engagement
+    # No provider currently supplies verified point coordinates with provenance.
+    # In particular, profile locations and place centroids are NOT observed locations.
+    posts = [{"id": item.id, "issue_id": item.issue_id, "platform": item.platform or "unknown", "url": item.url,
+              "title": item.title, "text": item.text, "author": item.author,
+              "published_at": item.published_at, "crawled_at": item.crawled_at,
+              "first_observed_at": first_seen.get(item.id),
+              "metrics": {**(item.metrics or {}), "engagement": observed_engagement(item.metrics)}} for item in items]
+    for post in posts:
+        snapshot = comment_snapshots.get((post['platform'], post['url']))
+        if snapshot is not None:
+            post['metrics']['comment_snapshot'] = snapshot
+    totals = {}
+    for metric in ("likes", "comments", "shares", "views", "engagement"):
+        values = [p["metrics"].get(metric) for p in posts]
+        values = [count(v) for v in values if v is not None and str(v).isdigit()]
+        totals[metric] = {"value": sum(values) if values else None, "coverage": len(values)}
+    from .pulse_network import analyze_network
+    return {"total_mentions": len(items), "posts": posts, "metric_totals": totals, "network": analyze_network(posts),
+            "platforms": [{"platform": p, "count": n} for p, n in sorted(platforms.items())],
+            "timeline": [{"date": d, "count": n} for d, n in sorted(timeline.items())],
+            "influencers": sorted(influencers.values(), key=lambda a: (a["engagement"] is None, -(a["engagement"] or 0), -a["mentions"], a["author"], a["platform"])),
+            "locations": [], "unknown_location_count": len(items)}
 
 
 async def enrich_issue(db: AsyncSession, issue: Issue) -> Issue:

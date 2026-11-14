@@ -1,0 +1,17 @@
+.pulse-platform-label { display:inline-flex; align-items:center; gap:6px; vertical-align:middle; }
+.pulse-platform-icon { flex-shrink:0; }
+.pulse-standalone .pulse-platform-icon { color:inherit; }
+.pulse-platform-picker { border:0; padding:0; margin:16px 0; min-width:0; }
+.pulse-platform-picker legend { font-size:.8125rem; font-weight:600; }
+.pp-actions { display:flex; flex-wrap:wrap; gap:16px; margin:8px 0; }
+.pp-actions button { background:none; border:0; padding:8px 0; font:inherit; font-size:.75rem; color:var(--ps-ink); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.pp-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.pulse-platform-picker .pp-options label { display:flex; align-items:center; gap:10px; margin:0; padding:12px; min-height:46px; border:1px solid var(--ps-line); border-radius:var(--ps-radius-control, 8px); background:var(--ps-panel); color:var(--ps-ink); cursor:pointer; font-size:.8125rem; }
+.pulse-platform-picker .pp-options label:has(input:checked) { background:var(--ps-selected); border-color:var(--ps-line); color:var(--ps-ink); }
+.pulse-standalone .pulse-platform-picker .pp-options label:has(input:checked) :is(span,small,svg) { color:var(--ps-ink); }
+.pulse-platform-picker .pp-options label:focus-within { outline:2px solid var(--ps-accent); outline-offset:3px; }
+.pulse-platform-picker .pp-options label:hover { border-color:var(--ps-muted); }
+.pulse-platform-picker .pp-actions button:focus-visible { outline:2px solid var(--ps-accent); outline-offset:3px; }
+.pulse-standalone .pulse-platform-picker .pp-options input[type=checkbox] { width:17px; height:17px; min-height:17px; flex:0 0 17px; margin:0; padding:0; accent-color:var(--ps-accent); }
+.pp-options small { margin-left:auto; font-variant-numeric:tabular-nums; }
+.pulse-platform-picker > p { font-size:.75rem; color:var(--ps-muted); margin-top:10px; }

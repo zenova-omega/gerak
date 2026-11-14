@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
 
@@ -115,15 +115,27 @@ class PaginatedResponse(BaseModel):
     pages: int
 
 
+class SeedPostInput(BaseModel):
+    url: str = Field(max_length=2048)
+
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, value):
+        from ..services.pulse_seed import normalize_seed_url
+        return normalize_seed_url(value)
+
+
 class WatchTopicCreate(BaseModel):
     label: str
     query: str
     sources: list[str] = ["rss"]
+    seed_post: SeedPostInput | None = None
     browserless_targets: list[str] | None = None
     crawl_interval_minutes: int = 60
 
 
 class WatchTopicUpdate(BaseModel):
+    seed_post: SeedPostInput | None = None
     label: str | None = None
     query: str | None = None
     sources: list[str] | None = None

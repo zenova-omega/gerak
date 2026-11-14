@@ -1,0 +1,8 @@
+.pulse-standalone .ps-ai-progress{padding:16px 18px;margin:0 0 20px;border:1px solid var(--ps-line);border-radius:var(--ps-radius-panel);background:var(--ps-panel)}
+.ps-ai-progress-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:.875rem}
+.ps-ai-progress-heading strong{display:flex;align-items:center;gap:8px;font-weight:650}
+.pulse-standalone .ps-ai-progress progress{display:block;width:100%;height:8px;margin:12px 0;accent-color:var(--ps-accent);border:0;border-radius:var(--ps-radius-control, 8px);overflow:hidden}
+.ps-ai-progress progress::-webkit-progress-bar{background:var(--ps-soft)}
+.ps-ai-progress progress::-webkit-progress-value{background:var(--ps-accent)}
+.ps-ai-progress-counts{display:flex;gap:8px 20px;flex-wrap:wrap;font-size:.8125rem}
+.ps-ai-progress p,.ps-ai-progress-status{font-size:.75rem;line-height:1.6;color:var(--ps-muted);margin:8px 0 0}

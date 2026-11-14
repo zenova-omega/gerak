@@ -14,6 +14,10 @@ from ..middleware.auth import (
 router = APIRouter()
 
 
+def _enum_value(value):
+    return getattr(value, "value", value)
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(req: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
@@ -36,15 +40,15 @@ async def login(req: LoginRequest, request: Request, db: AsyncSession = Depends(
     # Audit successful login
     db.add(AuditLog(user_id=user.id, action="login_success", ip_address=client_ip))
 
-    access = create_access_token(user.id, user.role.value)
+    access = create_access_token(user.id, _enum_value(user.role))
     refresh = create_refresh_token(user.id)
     return TokenResponse(
         access_token=access,
         refresh_token=refresh,
         user={
             "id": user.id, "nrp": user.nrp, "name": user.name,
-            "role": user.role.value, "account_type": user.account_type.value,
-            "rank": user.rank, "xp": user.xp, "tier": user.tier.value,
+            "role": _enum_value(user.role), "account_type": _enum_value(user.account_type),
+            "rank": user.rank, "xp": user.xp, "tier": _enum_value(user.tier),
         },
     )
 
@@ -83,15 +87,15 @@ async def refresh_token(req: RefreshRequest, db: AsyncSession = Depends(get_db))
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="User tidak ditemukan")
 
-    access = create_access_token(user.id, user.role.value)
+    access = create_access_token(user.id, _enum_value(user.role))
     refresh = create_refresh_token(user.id)
     return TokenResponse(
         access_token=access,
         refresh_token=refresh,
         user={
             "id": user.id, "nrp": user.nrp, "name": user.name,
-            "role": user.role.value, "account_type": user.account_type.value,
-            "rank": user.rank, "xp": user.xp, "tier": user.tier.value,
+            "role": _enum_value(user.role), "account_type": _enum_value(user.account_type),
+            "rank": user.rank, "xp": user.xp, "tier": _enum_value(user.tier),
         },
     )
 

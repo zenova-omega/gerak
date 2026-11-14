@@ -1,0 +1,15 @@
+.pulse-standalone .pulse-post-ai{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;padding:12px 14px;margin-block:12px;border:1px solid var(--ps-line);border-radius:var(--ps-radius-control, 8px);background:var(--ps-soft);color:var(--ps-ink)}
+.pulse-post-ai-brand{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.pulse-post-ai-brand strong{font-size:12px;font-weight:650;letter-spacing:.01em}
+.pulse-post-ai-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;border-radius:var(--ps-radius-control, 8px);background:var(--ps-lavender);color:var(--ps-accent-ink)}
+.pulse-post-ai-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+.pulse-ai-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;font-size:12px;font-weight:600;line-height:1.4;background:var(--ps-panel);color:var(--ps-ink)}
+.pulse-ai-tag svg{flex-shrink:0}
+.pulse-ai-tag.positive,.pulse-ai-tag.emotion-joy{background:var(--ps-mint);color:var(--ps-success-ink)}
+.pulse-ai-tag.neutral,.pulse-ai-tag.emotion-admiration,.pulse-ai-tag.emotion-fear{background:var(--ps-lavender);color:var(--ps-accent-ink)}
+.pulse-ai-tag.negative,.pulse-ai-tag.emotion-anger{background:var(--ps-peach);color:var(--ps-warning-ink)}
+.pulse-ai-tag.emotion-sadness{background:var(--ps-info);color:var(--ps-info-ink)}
+.pulse-ai-tag.emotion-disgust{background:var(--ps-danger);color:var(--ps-danger-ink)}
+.pulse-ai-tag small{font-size:11px;font-weight:400;color:inherit}
+.pulse-post-ai-pending{font-size:12px;line-height:1.5;color:var(--ps-muted)}
+@media(max-width:480px){.pulse-standalone .pulse-post-ai{gap:8px;padding:10px 12px}.pulse-post-ai-tags{flex:1 1 100%;padding-left:39px}}

@@ -8,7 +8,7 @@ class ClaudeAIService(AIService):
         self.client = AsyncAnthropic(api_key=api_key)
         self.model = model
 
-    async def generate_text(self, prompt: str, system: str | None = None, max_tokens: int = 1024) -> str:
+    async def generate_text(self, prompt: str, system: str | None = None, max_tokens: int = 1024, context_tokens: int | None = None) -> str:
         msg = await self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,

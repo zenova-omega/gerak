@@ -1,0 +1,36 @@
+/* Size by the actual canvas, not the window behind the app sidebar. */
+.pulse-standalone .nx{container-type:inline-size;container-name:network;border-radius:var(--ps-radius-panel)}
+.pulse-standalone .nx .nx-heading{padding:20px 24px;border-bottom:1px solid var(--nx-line)}
+.pulse-standalone .nx .nx-heading h2{margin:0 0 8px;font-size:20px;font-weight:650;letter-spacing:-.015em}
+.pulse-standalone .nx .nx-heading p{max-width:75ch;font-size:13px;line-height:1.6}
+.pulse-standalone .nx .nx-period-controls{padding:16px 24px;gap:12px 16px;border:0}
+.pulse-standalone .nx .nx-period-controls strong{font-size:13px;font-variant-numeric:tabular-nums}
+.pulse-standalone .nx .nx-period-controls p{flex-basis:100%;margin:0;font-size:12px}
+.pulse-standalone .nx .nx-toolbar{padding:16px 24px;gap:16px;align-items:center}
+.pulse-standalone .nx .nx-toolbar>div{gap:8px}
+.pulse-standalone .nx .nx-toolbar label{margin-left:auto}
+.pulse-standalone .nx .nx-counts{padding:12px 24px;gap:12px 24px;align-items:center}
+.pulse-standalone .nx .nx-counts label{display:flex;gap:8px;align-items:center;min-height:44px}
+.pulse-standalone .nx .nx-counts label input{width:16px;height:16px;flex-shrink:0}
+.pulse-standalone .nx .nx-replay{padding:16px 24px;background:var(--nx-panel)}
+.pulse-standalone .nx .nx-replay-title strong{font-size:14px}
+.pulse-standalone .nx .nx-histogram{height:48px;margin:12px 0}
+.pulse-standalone .nx .nx-play-controls{display:flex;gap:12px;flex-wrap:wrap}
+.pulse-standalone .nx .nx-play-controls>input{min-width:120px;min-height:44px}
+.pulse-standalone .nx .nx-time-labels{font-size:12px;line-height:1.5}
+.pulse-standalone .nx .nx-method{margin-top:8px}
+.pulse-standalone .nx .nx-workspace{display:grid;grid-template-columns:minmax(0,1fr);align-items:start}
+.pulse-standalone .nx .nx-visual{min-width:0;width:100%}
+.pulse-standalone .nx .nx-graph{min-height:0;max-height:640px;aspect-ratio:7/5}
+.pulse-standalone .nx .nx-visual[data-empty=true]{background:none}
+.pulse-standalone .nx .nx-visual[data-empty=true] .nx-graph{display:none}
+.pulse-standalone .nx .nx-empty{display:flex;flex-direction:column;align-items:flex-start;gap:16px;min-height:200px;justify-content:center;padding:24px}
+.pulse-standalone .nx .nx-empty p{max-width:60ch;margin:0;line-height:1.6}
+.pulse-standalone .nx .nx-inspector{border-left:0;border-top:1px solid var(--nx-line);padding:24px;max-height:none;min-width:0;overflow:visible;position:static}
+.pulse-standalone .nx .nx-inspector h3{font-size:16px;font-weight:650}
+.pulse-standalone .nx .nx-inspector h4{font-size:20px;line-height:1.4}
+.pulse-standalone .nx .nx-inspector :is(p,small,summary){font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.pulse-standalone .nx .nx-legend{padding:16px 24px;gap:12px;line-height:1.6}
+.pulse-standalone .nx .nx-chronology-card{border:0;border-bottom:1px solid var(--nx-line);border-radius:0;background:transparent;padding:16px 0}
+@container network (min-width:900px){.pulse-standalone .nx .nx-workspace{grid-template-columns:minmax(0,1fr) 320px}.pulse-standalone .nx .nx-inspector{border-top:0;border-left:1px solid var(--nx-line);max-height:720px;overflow:auto;overscroll-behavior:contain}}
+@container network (max-width:540px){.pulse-standalone .nx :is(.nx-heading,.nx-period-controls,.nx-toolbar,.nx-counts,.nx-replay,.nx-inspector){padding:16px}.pulse-standalone .nx .nx-toolbar>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.pulse-standalone .nx .nx-toolbar>div button{white-space:normal;font-size:12px}.pulse-standalone .nx .nx-toolbar label{margin-left:0;width:100%;justify-content:space-between}.pulse-standalone .nx .nx-play-controls>input{flex-basis:100%;min-width:0}.pulse-standalone .nx .nx-period-controls>span{display:none}.pulse-standalone .nx .nx-period-controls>div{flex:1 1 140px}.pulse-standalone .nx .nx-time-labels{font-size:11px}}

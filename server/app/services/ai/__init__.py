@@ -9,4 +9,7 @@ def get_ai_service(settings=None) -> AIService | None:
         settings = get_settings()
     if settings.AI_PROVIDER == "claude" and settings.ANTHROPIC_API_KEY:
         return ClaudeAIService(api_key=settings.ANTHROPIC_API_KEY, model=settings.ANTHROPIC_MODEL)
+    if settings.AI_PROVIDER == 'ollama':
+        from .providers.ollama import OllamaAIService
+        return OllamaAIService(model=settings.OLLAMA_MODEL)
     return None

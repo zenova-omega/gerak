@@ -1,0 +1,22 @@
+/* Standalone PULSE loads utilities without GERAK globals or Tailwind preflight. */
+@tailwind utilities;
+.pulse-standalone {
+  --background: var(--ps-panel);
+  --foreground: var(--ps-ink);
+  --card: var(--ps-panel);
+  --card-foreground: var(--ps-ink);
+  --primary: var(--ps-lavender);
+  --primary-foreground: var(--ps-accent-ink);
+  --secondary: var(--ps-soft);
+  --secondary-foreground: var(--ps-ink);
+  --muted: var(--ps-soft);
+  --muted-foreground: var(--ps-muted);
+  --accent: var(--ps-soft);
+  --accent-foreground: var(--ps-ink);
+  --destructive: var(--ps-peach);
+  --destructive-foreground: var(--ps-warning-ink);
+  --border: var(--ps-line);
+  --input: var(--ps-line);
+  --ring: var(--ps-accent);
+}
+.po-panel-grid>[role=region]{border-style:solid}

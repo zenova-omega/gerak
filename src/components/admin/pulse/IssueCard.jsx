@@ -1,7 +1,9 @@
+import { PulseArrow } from '../../ui/PulseArrow';
 import React, { useState } from 'react';
 import { Eye, Activity, Heart } from 'lucide-react';
 import { fetchIssueDetail } from '../../../hooks/usePulse';
 import { PlatformIcon, platformLabel } from './PlatformIcon';
+import { allegationLabel, pulseError, safeSourceUrl } from '../../../lib/pulseData';
 
 function sentimentTag(s) {
   if (s === null || s === undefined) return null;
@@ -43,7 +45,8 @@ function fmt(n) {
   return String(n);
 }
 
-function Metric({ icon: Icon, value, title }) {
+function Metric({ icon, value, title }) {
+  const Icon = icon;
   const v = fmt(value);
   if (v === null) return null;
   return (
@@ -58,16 +61,18 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const toggle = async () => {
     const next = !open;
     setOpen(next);
     if (next && !detail) {
       setLoading(true);
+      setError(null);
       try {
         setDetail(await fetchIssueDetail(issue.id));
-      } catch {
-        setDetail({ source_items: [] });
+      } catch (err) {
+        setError(err);
       } finally {
         setLoading(false);
       }
@@ -79,19 +84,18 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
   const sources =
     platformFilter === 'all'
       ? allSources
-      : allSources.filter((s) => s.platform === platformFilter);
+      : allSources.filter((s) => Array.isArray(platformFilter) ? platformFilter.includes(s.platform) : s.platform === platformFilter);
 
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <button onClick={toggle} className="flex w-full items-start justify-between gap-3 text-left">
+      <button onClick={toggle} aria-expanded={open} className="flex w-full items-start justify-between gap-3 text-left">
         <div>
-          <div className="font-semibold text-[#2B2B2B]">{issue.title || '(tanpa judul)'}</div>
+          <div className="font-semibold text-[#2B2B2B]">{allegationLabel(issue.title || '(tanpa judul)')}</div>
           {issue.summary && <div className="mt-1 text-xs text-[#6B6555]">{issue.summary}</div>}
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6B6555]">
             <span>{issue.item_count} post</span>
-            <span>skor {Number(issue.score).toFixed(1)}</span>
-            <Metric icon={Eye} value={issue.reach_total} title="Total reach" />
-            <Metric icon={Activity} value={issue.engagement_total} title="Total engagement" />
+            <span>{issue.grouping?.authors ?? '—'} akun sumber</span>
+            <span>Lihat dasar kelompok & sumber</span>
             {headTag && <span className={`rounded-full px-2 py-0.5 ${headTag.cls}`}>{headTag.label}</span>}
           </div>
         </div>
@@ -100,7 +104,9 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
 
       {open && (
         <div className="mt-3 border-t border-[#EDEBE3] pt-3">
+          <p className="ps-help">Dasar kelompok: kemiripan judul dan teks dengan posting acuan pertama (SimHash 64-bit, selisih maksimal 3 bit). Ini bukan bukti akun saling membagikan, berkoordinasi, atau memiliki sikap yang sama. Teks pendek dan salinan kutipan bisa ikut tergabung.</p>
           {loading && <div className="text-xs text-[#6B6555]">Memuat sumber…</div>}
+          {error && <div role="alert" className="pulse-inline-error">{pulseError(error)} Tutup lalu buka kembali untuk mencoba lagi.</div>}
 
           {!loading && detail && (
             <>
@@ -117,12 +123,12 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
                 {sources.map((s) => {
                   const dom = domain(s.url);
                   const when = dateMode === 'absolute' ? absDate(s.published_at) : timeAgo(s.published_at);
-                  const tag = sentimentTag(s.sentiment ?? issue.sentiment);
+                  const tag = sentimentTag(s.sentiment);
                   const m = s.metrics || {};
                   return (
                     <li key={s.id}>
                       <a
-                        href={s.url}
+                        href={safeSourceUrl(s.url)}
                         target="_blank"
                         rel="noreferrer"
                         className="group flex items-start gap-2 rounded-lg px-2 py-2 transition hover:bg-[#F5F3EE]"
@@ -153,7 +159,7 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
                             <Metric icon={Heart} value={m.likes} title="Likes" />
                           </span>
                         </span>
-                        <span className="mt-0.5 shrink-0 text-[#C7C2B6] group-hover:text-[#2D6A4F]">↗</span>
+                        <span className="mt-0.5 shrink-0 text-[#C7C2B6] group-hover:text-[#2D6A4F]"><PulseArrow/></span>
                       </a>
                     </li>
                   );
@@ -162,7 +168,7 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
                   <li className="px-2 py-2 text-xs text-[#9A9486]">
                     {platformFilter === 'all'
                       ? 'Belum ada sumber.'
-                      : `Tidak ada sumber dari platform "${platformLabel(platformFilter)}".`}
+                      : `Tidak ada sumber dari platform "${Array.isArray(platformFilter) ? platformFilter.map(platformLabel).join(", ") : platformLabel(platformFilter)}".`}
                   </li>
                 )}
               </ul>

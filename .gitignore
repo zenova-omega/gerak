@@ -32,3 +32,13 @@ __pycache__/
 .pytest_cache/
 server/test.db
 server/.env
+server/.secrets/
+services/listening-api/.env
+.venv/
+server/pulse-prototype.db*
+server/.prototype-access
+deploy/pulse/tls/
+deploy/pulse/.env
+
+# Stray test database from running server tests at the repo root
+/test.db

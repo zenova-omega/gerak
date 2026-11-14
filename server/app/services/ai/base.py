@@ -2,7 +2,8 @@
 
 
 class AIService:
-    async def generate_text(self, prompt: str, system: str | None = None, max_tokens: int = 1024) -> str:
+    async def generate_text(self, prompt: str, system: str | None = None, max_tokens: int = 1024, context_tokens: int | None = None) -> str:
+        """`context_tokens` sizes the prompt window where the provider needs it stated; others ignore it."""
         raise NotImplementedError
 
     async def analyze_sentiment(self, text: str) -> float:

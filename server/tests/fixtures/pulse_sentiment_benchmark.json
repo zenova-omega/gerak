@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "provenance": "Agent-authored synthetic Indonesian examples for a small diagnostic benchmark. Not real project posts, not expert-validated ground truth, and not a representative accuracy estimate.",
+  "label_policy": "Classify the author's expressed emotional tone, not support for a person, bot likelihood, or claim truth. Quoted sentiment is not automatically the author's stance. Insufficient context or unresolved mixed tone has no gold label and needs human review.",
+  "cases": [
+    {"id":"informal-01","category":"informal","text":"gila sih, adminnya gercep bgt! masalah gue kelar 5 menit, makasih ya 🙌","target":"Service response","expected":"positive","needs_review":false,"rationale":"Informal intensifier accompanies explicit praise and gratitude."},
+    {"id":"informal-02","category":"informal","text":"duh aplikasinya ngehang mulu, udh nyoba 3x tetep gagal. kesel bgt.","target":"Application reliability","expected":"negative","needs_review":false,"rationale":"Repeated failure and explicit frustration; abbreviations do not alter the tone."},
+    {"id":"informal-03","category":"informal","text":"info aja gaes, loket buka jam 8, tutup jam 3 sore.","target":"Opening hours","expected":"neutral","needs_review":false,"rationale":"Informal factual announcement without expressed evaluation."},
+    {"id":"sarcasm-01","category":"sarcasm","text":"Wah hebat banget pelayanannya, nunggu tiga jam cuma buat disuruh balik besok 🙃","target":"Service delay","expected":"negative","needs_review":false,"rationale":"Praise conflicts with a concrete complaint; the author is sarcastic."},
+    {"id":"sarcasm-02","category":"sarcasm","text":"Mantap, update baru malah bikin semua draft hilang. Inovasi yang sangat membantu ya.","target":"Software update","expected":"negative","needs_review":false,"rationale":"Loss of drafts makes the ostensible praise ironic."},
+    {"id":"sarcasm-03","category":"sarcasm","text":"Katanya ribet, eh ternyata dua klik beres. Ribet banget ya sampai aku nggak sempat ngeluh 😂 makasih tim!","target":"Task completion","expected":"positive","needs_review":false,"rationale":"Ironic complaint is resolved by successful completion and explicit gratitude."},
+    {"id":"quotation-01","category":"quotation","text":"Dalam rapat, peserta berkata, 'Layanannya buruk.' Kalimat itu tercatat di halaman dua notulen.","target":"Report of a quotation","expected":"neutral","needs_review":false,"rationale":"The author reports a negative quote without adopting its judgment."},
+    {"id":"quotation-02","category":"quotation","text":"Iklannya bilang 'paling cepat'. Pengalaman saya justru lambat dan mengecewakan.","target":"Service experience","expected":"negative","needs_review":false,"rationale":"The author's explicit dissatisfaction overrides quoted promotional praise."},
+    {"id":"quotation-03","category":"quotation","text":"Ada yang bilang 'jelek', tapi saya puas sekali: hasilnya rapi dan sesuai pesanan.","target":"Delivered result","expected":"positive","needs_review":false,"rationale":"The author explicitly rejects the quoted criticism and expresses satisfaction."},
+    {"id":"mixedlang-01","category":"mixedlang","text":"Finally beres juga! The team was super helpful, beneran bikin lega.","target":"Team assistance","expected":"positive","needs_review":false,"rationale":"Indonesian and English both express praise and relief."},
+    {"id":"mixedlang-02","category":"mixedlang","text":"Not worth it sih, mahal tapi kualitasnya poor banget. Nyesel beli.","target":"Purchase quality","expected":"negative","needs_review":false,"rationale":"Both languages express negative evaluation and regret."},
+    {"id":"mixedlang-03","category":"mixedlang","text":"Meeting di-reschedule ke Friday jam 10. Link tetap sama.","target":"Meeting schedule","expected":"neutral","needs_review":false,"rationale":"Code-switching conveys scheduling facts, not emotional evaluation."},
+    {"id":"ambiguous-01","category":"ambiguous","text":"Mantap juga ya.","target":"Unspecified event","expected":null,"needs_review":true,"rationale":"Without context, this could be sincere praise or sarcasm."},
+    {"id":"ambiguous-02","category":"ambiguous","text":"Desainnya bagus, tapi sering error. Ya begitulah.","target":"Product overall","expected":null,"needs_review":true,"rationale":"Positive design and negative reliability are unresolved; no forced overall gold label."},
+    {"id":"ambiguous-03","category":"ambiguous","text":"'Bagus banget,' katanya. Hmm.","target":"Quoted assessment","expected":null,"needs_review":true,"rationale":"The author's response may be agreement, doubt, or irony; attribution alone does not resolve it."}
+  ]
+}

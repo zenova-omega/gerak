@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Integer, Text, DateTime, ForeignKey, Float, Boolean, JSON
+from sqlalchemy import String, Integer, Text, DateTime, ForeignKey, Float, Boolean, JSON, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
 
@@ -21,6 +21,30 @@ class WatchTopic(Base):
 
     issues = relationship("Issue", back_populates="topic", cascade="all, delete-orphan")
     items = relationship("SourceItem", back_populates="topic", cascade="all, delete-orphan")
+    crawl_runs = relationship("PulseCrawlRun", cascade="all, delete-orphan")
+    monitor_jobs = relationship("CrawlJob", cascade="all, delete-orphan")
+    monitor_schedules = relationship("MonitorSchedule", cascade="all, delete-orphan")
+    metric_snapshots = relationship("MetricSnapshot", cascade="all, delete-orphan")
+    alerts = relationship("PulseAlert", cascade="all, delete-orphan")
+    seed = relationship("PulseProjectSeed", uselist=False, lazy="selectin", cascade="all, delete-orphan")
+
+
+class PulseProjectSeed(Base):
+    __tablename__ = "pulse_project_seeds"
+    topic_id: Mapped[str] = mapped_column(String(36), ForeignKey("watch_topics.id"), primary_key=True)
+    data: Mapped[dict] = mapped_column(JSON)
+
+
+class PulseCrawlRun(Base):
+    __tablename__ = "pulse_crawl_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    topic_id: Mapped[str] = mapped_column(String(36), ForeignKey("watch_topics.id"))
+    manual: Mapped[bool] = mapped_column(Boolean, default=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    ingested: Mapped[int] = mapped_column(Integer, default=0)
+    providers: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class Issue(Base):
@@ -47,6 +71,7 @@ class Issue(Base):
 
 class SourceItem(Base):
     __tablename__ = "source_items"
+    __table_args__ = (Index('uq_pulse_topic_url', 'topic_id', 'url', unique=True),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     topic_id: Mapped[str] = mapped_column(String(36), ForeignKey("watch_topics.id"))
@@ -64,3 +89,4 @@ class SourceItem(Base):
 
     topic = relationship("WatchTopic", back_populates="items")
     issue = relationship("Issue", back_populates="source_items")
+    sentiment_job = relationship('SentimentJob', uselist=False, cascade='all, delete-orphan')

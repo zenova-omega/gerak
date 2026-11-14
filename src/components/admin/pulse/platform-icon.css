@@ -1,0 +1,3 @@
+.pulse-platform-icon{display:inline-block;flex-shrink:0;vertical-align:middle}
+.pulse-platform-label{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;line-height:1.5}
+.pulse-standalone .pulse-platform-icon{color:inherit}

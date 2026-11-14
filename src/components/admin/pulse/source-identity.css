@@ -1,0 +1,16 @@
+/* Source identity owns its geometry across feeds, reports and account lists.
+   Platform badges sit at the lower-right edge, outside the avatar centre. */
+.pulse-standalone :is(.po-rank,.pulse-rank){display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;width:26px;min-width:26px;height:26px;margin:0;padding:0;border:0;border-radius:var(--ps-radius-control, 8px);background:var(--ps-soft);color:var(--ps-ink);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.pulse-standalone .po-overview .po-leaders :is(button,a){padding-inline:12px;gap:10px}
+.pulse-standalone :is(.po-leaders>li:first-child .po-rank,.pulse-ranking tbody>tr:first-child .pulse-rank){background:var(--ps-lavender);color:var(--ps-accent-ink);border-color:var(--ps-lavender)}
+.pulse-standalone :is(.po-leaders>li:nth-child(2) .po-rank,.pulse-ranking tbody>tr:nth-child(2) .pulse-rank){background:var(--ps-mint);color:var(--ps-success-ink);border-color:var(--ps-mint)}
+.pulse-standalone :is(.po-leaders>li:nth-child(3) .po-rank,.pulse-ranking tbody>tr:nth-child(3) .pulse-rank){background:var(--ps-peach);color:var(--ps-warning-ink);border-color:var(--ps-peach)}
+.ps-profile-avatar.psi-avatar{display:inline-flex;position:relative;align-items:flex-start;justify-content:flex-start;flex:0 0 54px;width:54px;min-width:54px;height:50px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:var(--ps-ink);vertical-align:middle;line-height:1;overflow:visible}
+.ps-profile-avatar.psi-avatar>.psi-photo,.ps-profile-avatar.psi-avatar>.psi-fallback{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;min-width:44px;height:44px;margin:0;padding:0;border-radius:50%;border:1px solid var(--ps-line);background:var(--ps-soft);color:var(--ps-ink);object-fit:cover;font-size:13px;font-weight:600;line-height:1;letter-spacing:.02em;overflow:hidden}
+.ps-profile-avatar.psi-avatar>.psi-platform{display:inline-flex;position:absolute;right:0;bottom:0;align-items:center;justify-content:center;width:22px;min-width:22px;height:22px;box-sizing:border-box;margin:0;padding:3px;border-radius:50%;border:1px solid var(--ps-line);box-shadow:0 0 0 2px var(--ps-panel);background:var(--ps-panel);color:var(--ps-ink);line-height:1}
+.psi-platform>.pulse-platform-icon{display:block;width:14px;height:14px;flex:0 0 14px}
+.pulse-standalone :is(.pulse-account,.po-evidence-identity,.pea-identity,.pse-header,.ptp-identity){gap:12px;min-width:0;align-items:center}
+.pulse-standalone :is(.pulse-account,.po-evidence-identity,.pea-identity)>:not(.ps-profile-avatar):not(.pulse-rank):not(.ps-sentiment-badge){min-width:0;overflow-wrap:anywhere}
+.pulse-standalone .pulse-account>span:last-child{flex:1}
+.pulse-standalone :is(.pulse-account,.po-evidence-identity,.pea-identity) small{line-height:1.5}
+@media(max-width:600px){.pulse-standalone .po-evidence-identity{flex-wrap:wrap}.pulse-standalone .po-evidence-identity>.ps-sentiment-badge{margin-left:66px}.pulse-standalone .pse-header{flex-wrap:wrap}.pulse-standalone .pse-sentiment{margin-left:0}.pulse-standalone .po-leaders button{flex-wrap:wrap}.pulse-standalone .po-account-metric{margin-left:auto}}

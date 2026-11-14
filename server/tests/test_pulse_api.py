@@ -5,6 +5,33 @@ H = lambda tok: {"Authorization": f"Bearer {tok}"}
 
 
 @pytest.mark.asyncio
+async def test_analytics_posts_and_metric_coverage(client, admin_token):
+    topic = (await client.post('/api/admin/pulse/topics', json={'label': 'Metrics', 'query': 'metrics'}, headers=H(admin_token))).json()['id']
+    for index, metrics in enumerate([{'likes': 10, 'comments': 2, 'shares': 3, 'views': 100}, {}]):
+        await client.post('/api/admin/pulse/webhook/n8n', json={
+            'topic_id': topic, 'url': f'https://example.com/post/{index}',
+            'platform': 'x', 'author': 'Author', 'text': 'Sample post', 'metrics': metrics,
+        })
+    response = await client.get('/api/admin/pulse/analytics', params={'topic_id': topic}, headers=H(admin_token))
+    data = response.json()
+    assert len(data['posts']) == 2
+    assert data['metric_totals']['engagement'] == {'value': 15, 'coverage': 1}
+    assert data['metric_totals']['views'] == {'value': 100, 'coverage': 1}
+    assert data['metric_totals']['shares'] == {'value': 3, 'coverage': 1}
+    assert data['posts'][0]['text'] == 'Sample post'
+    assert data['influencers'][0]['mentions'] == 2
+    other = await client.get('/api/admin/pulse/analytics', params={'topic_id': 'absent'}, headers=H(admin_token))
+    assert other.json()['metric_totals']['views'] == {'value': None, 'coverage': 0}
+
+
+@pytest.fixture(autouse=True)
+async def configured_webhook(client, monkeypatch):
+    from app.config import get_settings
+    monkeypatch.setattr(get_settings(), "PULSE_WEBHOOK_SECRET", "test-webhook-only")
+    client.headers["X-Webhook-Secret"] = "test-webhook-only"
+
+
+@pytest.mark.asyncio
 async def test_create_and_list_topic(client, admin_token):
     res = await client.post("/api/admin/pulse/topics", json={
         "label": "Franchise X", "query": "franchise x",

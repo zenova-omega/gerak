@@ -1,0 +1,47 @@
+/* Cross-page visual contract. Domain filters and chart behaviour remain unchanged. */
+.pulse-standalone .pulse-header{padding-bottom:20px;margin-bottom:24px;border-bottom:1px solid var(--ps-line)}
+.pulse-standalone .pulse-brand h1{font-size:32px;line-height:1.2;font-weight:650;letter-spacing:-.025em}
+.pulse-standalone .ps-brand>span{letter-spacing:.08em}
+.pulse-standalone :is(.pulse-panel,.pi-panel,.pulse-post,.pm-worker,.pm-alerts>article,.po-evidence-list>li){background:var(--ps-panel);color:var(--ps-ink);border:1px solid var(--ps-line);border-radius:var(--ps-radius-panel);box-shadow:none;min-width:0}
+.pulse-standalone :is(.pulse-post,.pm-worker,.po-evidence-list>li){padding:var(--ps-card-padding)}
+.pulse-standalone .po-evidence-list{padding:0;list-style:none;display:grid;gap:16px}
+.pulse-standalone .psa-evidence{list-style:none;padding:0;gap:16px}
+.pulse-standalone .psa-evidence li.pse-card{padding:var(--ps-card-padding);border:1px solid var(--ps-line);border-radius:var(--ps-radius-panel);background:var(--ps-panel);gap:16px}
+.pulse-standalone .pse-card :is(.pse-content,.pse-analysis,.pse-footer){margin-left:0}
+.pulse-standalone .pse-card .pu-source-heading{margin-bottom:0}
+.pulse-standalone :is(.pulse-post,.pse-card,.po-evidence-list>li) .pu-source-excerpt{font-size:var(--ps-caption-size);line-height:1.65;font-weight:400;max-width:70ch;color:var(--ps-ink)}
+.pulse-standalone .pse-card .pse-content .pu-source-excerpt{color:var(--ps-ink)}
+.pulse-standalone .pulse-post-engagement{background:transparent;border:0;border-top:1px solid var(--ps-line);border-radius:0;padding:16px 0 8px;margin-top:16px}
+.pulse-standalone .pulse-post-engagement strong{font-size:24px;font-variant-numeric:tabular-nums;color:var(--ps-ink)}
+.pulse-standalone :is(.pulse-post-metrics,.pse-engagement){background:transparent;border:0;border-bottom:1px solid var(--ps-line);border-radius:0;padding:12px 0 16px;gap:12px}
+.pulse-standalone :is(.pulse-post-metrics,.pse-engagement)>div{background:transparent;border:0;border-radius:0;min-width:0}
+.pulse-standalone :is(.pse-footer,.po-evidence-list>li>footer){border-top:1px solid var(--ps-line);padding-top:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pulse-standalone .po-executive{background:var(--ps-panel);padding:24px;border:1px solid var(--ps-line);border-radius:var(--ps-radius-panel);box-shadow:none}
+.pulse-standalone .po-executive h2{font-size:24px;line-height:1.3;letter-spacing:-.02em}
+.pulse-standalone .po-summary{gap:0;padding:0;border-block:1px solid var(--ps-line);border-radius:0;background:transparent}
+.pulse-standalone .po-summary>div{padding:20px 16px;background:transparent;border:0;border-radius:0;box-shadow:none;min-width:0}
+.pulse-standalone .po-summary strong{font-size:24px;line-height:1.3;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pulse-standalone .po-summary small{font-size:12px;line-height:1.5;color:var(--ps-muted)}
+.pulse-standalone .po-section-links{gap:8px 20px;padding-block:12px;border-bottom:1px solid var(--ps-line)}
+.pulse-standalone .po-section-links a{background:transparent;border:0;border-radius:0;color:var(--ps-muted);padding:8px 0;text-underline-offset:4px}
+.pulse-standalone .po-section-links a:hover{color:var(--ps-accent);text-decoration:underline}
+.pulse-standalone .po-leaders :is(button,a){border-radius:var(--ps-radius-control, 8px);background:transparent;border:1px solid var(--ps-line);padding:14px 12px;min-height:72px}
+.pulse-standalone .po-leaders :is(button,a):hover{background:var(--ps-soft)}
+.pulse-standalone :is(.po-rank,.pulse-rank){background:transparent!important;color:var(--ps-muted)!important;border:0;border-radius:0;min-width:24px;margin-right:4px}
+.pulse-standalone .psa-totals{gap:0;background:var(--ps-panel);border:1px solid var(--ps-line);border-radius:var(--ps-radius-panel);overflow:hidden}
+.pulse-standalone .psa-totals>a{padding:20px;border:0;border-radius:0;background:transparent;min-width:0}
+.pulse-standalone .psa-totals>a:hover{background:var(--ps-soft)}
+.pulse-standalone .psa-totals strong{font-size:26px;font-variant-numeric:tabular-nums}
+.pulse-standalone .pm-room .pm-workers{gap:16px}
+.pulse-standalone .pm-room .pm-worker h3{font-size:16px;line-height:1.4;margin:0 0 16px}
+.pulse-standalone .pm-alerts>article{padding:20px;border-left:1px solid var(--ps-line)}
+.pulse-standalone .pm-alerts>article.is-read{background:var(--ps-soft)}
+.pulse-standalone .pm-room .pm-inbox-heading{padding-block:20px 12px;gap:12px;flex-wrap:wrap}
+.pulse-standalone .pm-room .pm-empty{background:transparent;border:1px dashed var(--ps-control-line);border-radius:var(--ps-radius-panel);padding:32px 24px}
+.pulse-standalone :is(.pm-settings,.pm-jobs){border:0;border-top:1px solid var(--ps-line);border-radius:0;background:transparent}
+.pulse-standalone :is(.pm-table,.psa-table,.pulse-table-wrap) th{background:var(--ps-soft);font-size:12px;color:var(--ps-muted)}
+.pulse-standalone :is(.pm-table,.psa-table,.pulse-table-wrap) td{font-size:13px;font-variant-numeric:tabular-nums;padding-block:14px}
+.pulse-standalone :is(.po-summary,.psa-totals,.pm-workers,.pulse-post-grid)>*{min-width:0}
+.pulse-standalone :is(.po-section-links,.po-leaders,.pm-room,.psa-totals) :is(a,button,summary):focus-visible{outline:2px solid var(--ps-accent);outline-offset:3px}
+@media(max-width:700px){.pulse-standalone{--ps-card-padding:16px}.pulse-standalone .pulse-brand h1{font-size:26px}.pulse-standalone .po-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.pulse-standalone .po-summary>div{padding:16px 12px}.pulse-standalone .po-summary strong{font-size:20px}.pulse-standalone .psa-totals{grid-template-columns:repeat(2,minmax(0,1fr))}.pulse-standalone .pse-story.has-media{grid-template-columns:1fr}.pulse-standalone .pse-insights{grid-template-columns:1fr}.pulse-standalone .pm-alerts>article{display:flex;flex-direction:column;gap:16px}}
+@media print{.pulse-standalone .pu-source-heading{margin-bottom:12px}.pulse-standalone .pr-evidence .pu-source-name strong{font-size:11pt}.pulse-standalone .pr-evidence .pu-source-name small{font-size:9pt}}

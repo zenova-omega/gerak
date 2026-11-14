@@ -12,6 +12,13 @@ from app.middleware.auth import hash_password, create_access_token
 TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
 
 
+@pytest.fixture(autouse=True)
+def isolate_ai_configuration(monkeypatch):
+    # Tests must not inherit a developer's active local/cloud model or spend quota.
+    from app.config import get_settings
+    monkeypatch.setattr(get_settings(), 'AI_PROVIDER', '')
+
+
 @pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.new_event_loop()

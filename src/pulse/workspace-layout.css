@@ -1,0 +1,63 @@
+/* Shared screen layout; report print styling remains owned by report-brand.css. */
+@media screen {
+  .pulse-standalone .ps-workspace { grid-template-columns: 216px minmax(0, 1fr); }
+  .pulse-standalone .ps-sidebar { padding: 24px 16px 16px; gap: 28px; }
+  .pulse-standalone .ps-sidebar-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .pulse-standalone .ps-navigation-body { display: flex; flex-direction: column; flex: 1; gap: 16px; min-height: 0; }
+  .pulse-standalone .ps-sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+  .pulse-standalone .ps-sidebar nav a { min-height: 44px; padding: 10px 12px; gap: 12px; }
+  .pulse-standalone .ps-sidebar nav a svg { flex-shrink: 0; }
+  .pulse-standalone .ps-sidebar-bottom { margin-top: auto; padding-top: 20px; }
+  .pulse-standalone .ps-user strong { overflow-wrap: anywhere; }
+  .pulse-standalone .ps-menu-toggle { display: none; }
+  .pulse-standalone .ps-content { width: 100%; max-width: 1680px; margin-inline: auto; padding: 0 clamp(20px, 2.5vw, 40px) 48px; }
+  .pulse-standalone .ps-topline { padding-block: 16px; margin-bottom: 0; }
+  .pulse-standalone .ps-project-bar { padding: 16px 0 20px; margin-bottom: 28px; background: transparent; border-radius: 0; border-inline: 0; border-top: 0; }
+  .pulse-standalone .ps-project-toolbar { gap: 12px 20px; }
+  .pulse-standalone .ps-project-bar select { font-size: 16px; }
+  .pulse-standalone .ps-project-context { margin-top: 12px; gap: 8px 16px; }
+  .pulse-standalone .pulse-header { display: flex; flex-direction: row; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .pulse-standalone .pulse-header .pulse-brand { flex: 1 1 260px; min-width: 0; }
+  .pulse-standalone .pulse-header-actions { width: auto; flex-shrink: 0; gap: 8px; }
+  .pulse-standalone :is(.pulse-main, .pulse-panel, .pi-panel, .sc-page, .pm-workspace, .psa-page, .po-workbench) { min-width: 0; }
+  .pulse-standalone :is(.pulse-chart-grid, .pulse-detail-grid, .pi-layout) { gap: 24px; align-items: start; }
+  .pulse-standalone :is(.pu-panel-heading, .pulse-panel-heading) { gap: 16px; flex-wrap: wrap; }
+  .pulse-standalone :is(.pu-panel-heading, .pulse-panel-heading) > div { min-width: 0; }
+  .pulse-standalone :is(.psa-controls, .pm-results-toolbar, .sc-controls) { gap: 12px; flex-wrap: wrap; }
+  .pulse-standalone .pm-workers { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+  .pulse-standalone .ps-settings { max-width: 1200px; margin-inline: auto; padding-top: 24px; }
+  .pulse-standalone .pqs-workspace { margin-inline: auto; }
+  .pulse-standalone .sc-page { max-width: none; }
+  .pulse-standalone :is(.pulse-table-wrap, .psa-table, .pm-table) { max-width: 100%; overscroll-behavior-inline: contain; }
+  .pulse-standalone :is(.pu-source-heading, .pu-source-name, .pu-source-copy) { min-width: 0; }
+  .pulse-standalone .pu-source-name strong { overflow-wrap: anywhere; }
+}
+@media screen and (max-width: 1000px) {
+  .pulse-standalone .ps-workspace { display: block; }
+  .pulse-standalone .ps-sidebar { position: relative; height: auto; padding: 12px 20px; border-right: 0; border-bottom: 1px solid var(--ps-line); gap: 0; overflow: visible; }
+  .pulse-standalone .ps-menu-toggle { display: inline-flex; min-height: 44px; max-width: 65%; }
+  .pulse-standalone .ps-menu-toggle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pulse-standalone .ps-sidebar[data-menu-open=false] .ps-navigation-body { display: none; }
+  .pulse-standalone .ps-navigation-body { padding-top: 20px; gap: 12px; }
+  .pulse-standalone .ps-sidebar nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pulse-standalone .ps-sidebar-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 12px; }
+  .pulse-standalone .ps-sidebar-bottom .ps-user { margin: 0; }
+  .pulse-standalone .ps-content { padding-inline: 20px; }
+  .pulse-standalone .ps-project-bar { margin-bottom: 24px; }
+  .pulse-standalone :is(.pulse-chart-grid, .pulse-detail-grid, .pi-layout) { grid-template-columns: minmax(0, 1fr); }
+}
+@media screen and (max-width: 600px) {
+  .pulse-standalone .ps-content { padding-inline: 16px; padding-bottom: 32px; }
+  .pulse-standalone .ps-sidebar { padding-inline: 16px; }
+  .pulse-standalone .ps-topline { font-size: 11px; gap: 12px; }
+  .pulse-standalone .ps-project-actions { width: 100%; gap: 8px; }
+  .pulse-standalone .ps-project-period form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pulse-standalone .ps-project-period input { max-width: none; width: 100%; }
+  .pulse-standalone .ps-project-period label { min-width: 0; }
+  .pulse-standalone .ps-project-period form button { grid-column: 1 / -1; }
+  .pulse-standalone :is(.po-executive, .pqs-builder) { padding: 16px; }
+  .pulse-standalone :is(.pulse-chart-grid, .pulse-detail-grid, .pi-layout) { gap: 20px; }
+  .pulse-standalone .sc-account-overview dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pulse-standalone .sc-account-overview dl > :last-child { grid-column: 1 / -1; }
+}
+@media print { .ps-menu-toggle { display: none !important; } }

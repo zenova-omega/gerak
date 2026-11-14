@@ -1,0 +1,13 @@
+import { chromium } from 'playwright-core';
+const b = await chromium.launch({ channel: 'chrome', headless: true });
+const p = await b.newPage({ viewport: { width: 402, height: 860 } });
+const errs=[]; p.on('pageerror',e=>errs.push(e.message.split('\n')[0]));
+await p.goto('http://localhost:5173/', { waitUntil:'domcontentloaded' }); await p.waitForTimeout(3800);
+await p.getByText(/^Misi$/).first().click(); await p.waitForTimeout(800);
+await p.locator('h3:has-text("Upacara HUT")').first().click(); await p.waitForTimeout(900);
+const hasPlat = await p.evaluate(()=>Array.from(document.querySelectorAll('[title]')).some(e=>/Platform:/.test(e.getAttribute('title'))));
+const q = await p.evaluate(()=>Array.from(document.querySelectorAll('span')).filter(s=>s.textContent==='?'&&!s.children.length).length);
+console.log('EVENT detail header shows platform row:', hasPlat, '| detail "?":', q);
+await p.screenshot({ path:'/tmp/scout-detail2.png' });
+console.log('pageerrors:', errs.length?errs.join(' / '):'(none)');
+await b.close();

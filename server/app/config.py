@@ -1,5 +1,18 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
+from pydantic import SecretStr
+from dotenv import dotenv_values
+from typing import Literal
+
+SERVER_DIR = Path(__file__).resolve().parents[1]
+LISTENING_ENV = SERVER_DIR.parent / "services" / "listening-api" / ".env"
+
+
+def listening_credentials():
+    # Import only provider credentials, never another service's database/auth config.
+    values = dotenv_values(LISTENING_ENV, interpolate=False)
+    return {key: values[key] for key in ("XPOZ_API_KEY", "YOUTUBE_API_KEY") if values.get(key)}
 
 
 class Settings(BaseSettings):
@@ -22,22 +35,35 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 50
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"]
 
     # AI (pluggable; opsional — Pulse jalan tanpa ini)
     AI_PROVIDER: str = "claude"
+    OLLAMA_MODEL: str = "qwen2.5:14b"
+    PULSE_SENTIMENT_ENABLED: bool = False
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
 
     # Pulse / listening
     BROWSERLESS_API_KEY: str = ""
+    XPOZ_API_KEY: SecretStr = SecretStr("")
+    XPOZ_MODE: Literal["mcp_stored", "rest_live"] = "mcp_stored"
+    YOUTUBE_API_KEY: SecretStr = SecretStr("")
+    THREADS_ACCESS_TOKEN: SecretStr = SecretStr("")
     BROWSERLESS_BASE: str = "https://chrome.browserless.io"
     PULSE_WEBHOOK_SECRET: str = ""
     ENABLE_SCHEDULER: bool = True
+    PULSE_MONITOR_ENABLED: bool = True
     BROWSERLESS_ALLOWLIST: list[str] = []
 
     class Config:
-        env_file = ".env"
+        env_file = SERVER_DIR / ".env"
+        secrets_dir = SERVER_DIR / ".secrets" if (SERVER_DIR / ".secrets").is_dir() else None
+        extra = "ignore"
+
+    @classmethod
+    def settings_customise_sources(cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings):
+        return init_settings, env_settings, dotenv_settings, listening_credentials, file_secret_settings
 
 
 @lru_cache

@@ -1,0 +1,11 @@
+{
+  "description": "Sanitized shape from the single authorized diagnostic; no post content retained.",
+  "content": {
+    "type": "list",
+    "length": 1,
+    "first": {
+      "type": "text",
+      "text": {"type": "string", "length": 24726, "valid_json": false}
+    }
+  }
+}

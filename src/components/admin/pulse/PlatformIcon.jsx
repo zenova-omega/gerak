@@ -1,5 +1,7 @@
 import React from 'react';
-import { Newspaper, Globe } from 'lucide-react';
+import { Newspaper, Globe, MessagesSquare } from 'lucide-react';
+import { ThreadsLogo } from '@phosphor-icons/react/dist/csr/ThreadsLogo';
+import './platform-icon.css';
 
 // Brand glyphs (simple-icons paths, 24x24 viewBox). lucide-react dropped most
 // brand icons, so we inline them here to guarantee they render.
@@ -24,7 +26,7 @@ const BRAND = {
 
 export const PLATFORM_LABEL = {
   news: 'Berita', instagram: 'Instagram', tiktok: 'TikTok', x: 'X',
-  youtube: 'YouTube', facebook: 'Facebook', web: 'Web',
+  youtube: 'YouTube', facebook: 'Facebook', web: 'Web', threads: 'Threads', reddit: 'Reddit',
 };
 
 export const PLATFORM_COLOR = {
@@ -33,12 +35,16 @@ export const PLATFORM_COLOR = {
 };
 
 export function PlatformIcon({ platform, size = 14, className = '' }) {
-  const cls = `${PLATFORM_COLOR[platform] || 'text-gray-500'} ${className}`;
-  if (platform === 'news') return <Newspaper size={size} className={cls} />;
+  const style = {width:size,height:size,flexShrink:0};
+  if(platform==='threads')return <ThreadsLogo size={size} style={style} className={`pulse-platform-icon ${className}`} aria-hidden="true"/>;
+  const cls = `pulse-platform-icon ${PLATFORM_COLOR[platform] || 'text-gray-500'} ${className}`;
+  if (platform === 'news') return <Newspaper size={size} style={style} className={cls} aria-hidden="true" />;
+  // No inlined Reddit mark: a generic forum glyph is better than a guessed logo path.
+  if (platform === 'reddit') return <MessagesSquare size={size} style={style} className={cls} aria-hidden="true" />;
   const b = BRAND[platform];
-  if (!b) return <Globe size={size} className={cls} />;
+  if (!b) return <Globe size={size} style={style} className={cls} aria-hidden="true" />;
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={cls} aria-hidden="true">
+    <svg width={size} height={size} style={style} viewBox="0 0 24 24" fill="currentColor" className={cls} aria-hidden="true">
       <path d={b.d} fillRule={b.evenOdd ? 'evenodd' : 'nonzero'} clipRule={b.evenOdd ? 'evenodd' : undefined} />
     </svg>
   );
@@ -46,4 +52,8 @@ export function PlatformIcon({ platform, size = 14, className = '' }) {
 
 export function platformLabel(p) {
   return PLATFORM_LABEL[p] || p || 'lainnya';
+}
+
+export function PlatformLabel({ platform }) {
+  return <span className="pulse-platform-label"><PlatformIcon platform={platform} />{platformLabel(platform)}</span>;
 }

@@ -1,0 +1,44 @@
+name: pulse
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/pulse/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////data/pulse.db
+      CORS_ORIGINS: '["${PULSE_ORIGIN:?Set the exact HTTPS PULSE origin}"]'
+      PULSE_MONITOR_ENABLED: "true"
+      XPOZ_API_KEY: ${XPOZ_API_KEY:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      PULSE_WEBHOOK_SECRET: ${PULSE_WEBHOOK_SECRET:-}
+      DEBUG: "false"
+      FORWARDED_ALLOW_IPS: ${PULSE_PROXY_IP:-172.30.82.2}
+    volumes:
+      - pulse_data:/data
+    networks:
+      - pulse_private
+    # No host port: accessible only through the TLS frontend.
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/pulse/Dockerfile.web
+      args:
+        PULSE_ORIGIN: ${PULSE_ORIGIN:?Set the exact HTTPS PULSE origin}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "443:443"
+    volumes:
+      - ./tls:/etc/pulse/tls:ro
+    networks:
+      pulse_private:
+        ipv4_address: ${PULSE_PROXY_IP:-172.30.82.2}
+volumes:
+  pulse_data:
+networks:
+  pulse_private:
+    ipam:
+      config:
+        - subnet: ${PULSE_NETWORK_CIDR:-172.30.82.0/24}
