@@ -35,7 +35,7 @@ test('a comment under a post is one compact row: who and when on one line, the w
   assert.doesNotMatch(rows[2], /<a /, 'a link that is not a web address is not offered');
   // The rules a post card keeps for its own header and footer must have nothing to grab inside a comment.
   for (const row of rows) assert.doesNotMatch(row, /<header|<footer/);
-  assert.match(html, /<p class="pcm-note">Teratas menurut jumlah suka dalam sampel\. Diambil 14 Nov 2026, 18\.18 WIB\.<\/p>/);
+  assert.match(html, /<p class="pcm-note">Diambil 14 Nov 2026, 18\.18 WIB\.<\/p>/);
 });
 
 test('the compact row is styled as a row, not as a card inside a card', () => {

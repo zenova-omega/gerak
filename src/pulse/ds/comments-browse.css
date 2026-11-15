@@ -112,8 +112,13 @@
    source line sit at the bottom so rows line up. ─────────────────────────── */
 .pulse-standalone .pcb-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 12px; }
 .pulse-standalone .pcb-list > .pcm-card { grid-template-rows: auto 1fr; align-content: stretch; }
-.pcb-more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.pcb-more { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .pulse-standalone .pcb-more > span { font-size: .8125rem; color: var(--ps-muted); }
+/* The watched mark that brings the next cards: no size and no place in the row, just the end of the list. */
+.pulse-standalone .pcb-more > .pcb-sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 1px; pointer-events: none; }
+/* How many comments were analysed, one plain line under the list. */
+.pulse-standalone .pcb-analysed { margin: 0; color: var(--ps-muted); font-size: .8125rem; line-height: 1.5; }
+.pulse-standalone .pcb-analysed > strong { color: var(--ps-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
 .pulse-standalone .pcb > .pulse-empty { margin: 0; }
 
 /* ── Collection status: an operational note under the reading, not beside it ──── */

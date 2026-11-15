@@ -85,7 +85,7 @@ export function PostComments({ post }) {
   const snapshot = post.metrics?.comment_snapshot;
   if (!snapshot && !['youtube','x','instagram','tiktok'].includes(post.platform)) return null;
   return <details className="pulse-post-comments"><summary><MessageCircle size={15} />Komentar {snapshot?.status === 'success' ? `(${snapshot.items.length} tersedia)` : 'belum tersedia'}</summary>
-    {!snapshot ? <p>Isi komentar belum diambil untuk posting ini. Ambil dari halaman Komentar; angka komentar di kartu adalah statistik posting.</p> : snapshot.status !== 'success' ? <p role="status">Komentar belum tersedia untuk posting ini.</p> : <><p className="pcm-note">Teratas menurut jumlah suka dalam sampel. Diambil {pulseDate(snapshot.fetched_at)}.</p><div className="pcm-rows">{snapshot.items.slice(0, limit).map(c => <CompactComment key={c.id} comment={c} platform={post.platform} />)}</div>{!snapshot.items.length && <p>Belum ada komentar yang tersedia.</p>}{snapshot.items.length > limit && <PulseButton size="sm" onClick={() => setLimit(limit + 10)}>Tampilkan {formatCount(Math.min(10, snapshot.items.length - limit))} komentar berikutnya</PulseButton>}</>}
+    {!snapshot ? <p>Komentar belum diambil.</p> : snapshot.status !== 'success' ? <p role="status">Komentar belum tersedia.</p> : <><p className="pcm-note">Diambil {pulseDate(snapshot.fetched_at)}.</p><div className="pcm-rows">{snapshot.items.slice(0, limit).map(c => <CompactComment key={c.id} comment={c} platform={post.platform} />)}</div>{!snapshot.items.length && <p>Belum ada komentar yang tersedia.</p>}{snapshot.items.length > limit && <PulseButton size="sm" onClick={() => setLimit(limit + 10)}>Tampilkan {formatCount(Math.min(10, snapshot.items.length - limit))} komentar berikutnya</PulseButton>}</>}
   </details>;
 }
 
@@ -94,6 +94,42 @@ const postTitle = post => (postCaption(post).slice(0, 70) || 'Tanpa teks');
 const PAGE = 12, MORE = 24;
 const tones = [['positive', 'Positif'], ['neutral', 'Netral'], ['negative', 'Negatif']];
 const percentText = value => formatCount(Math.round(value * 10) / 10) + '%';
+/** How many cards to show after one more step: the next MORE, never past the list. */
+export const nextShown = (shown, total) => Math.min(total, shown + MORE);
+/** Cards that scrolling alone brings in. Past them only the button adds more, so what sits under the list can be reached. */
+const SCROLL_UNTIL = PAGE + 4 * MORE;
+
+/**
+ * The end of the comment list. The comments are already on the page, so nothing is fetched: one more step adds the next
+ * cards under the ones shown, in the same click: there is nothing to wait for, so the button never turns busy. Up to
+ * SCROLL_UNTIL cards it also happens by itself when the end of the list comes near the screen (a watched mark); the
+ * button is for the keyboard, for wherever that cannot be watched, and for every step after that.
+ */
+export function MoreComments({ shown, total, analysedOnly = false, onMore }) {
+  const mark = useRef(null), latest = useRef(onMore);
+  latest.current = onMore;
+  const watched = shown < SCROLL_UNTIL;
+  // A new watcher after each step: if the end is still near (short cards, a tall screen), the next step follows.
+  useEffect(() => {
+    const node = mark.current;
+    if (!watched || !node || typeof IntersectionObserver === 'undefined') return undefined;
+    const watcher = new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) latest.current(); }, { rootMargin: '0px 0px 200px 0px' });
+    watcher.observe(node);
+    return () => watcher.disconnect();
+  }, [shown, watched]);
+  return <div className="pcb-more">
+    {watched && <span ref={mark} className="pcb-sentinel" aria-hidden="true" />}
+    <PulseButton onClick={() => latest.current()}>Tampilkan lebih banyak</PulseButton>
+    <span>{formatCount(shown)} dari {formatCount(total)} komentar{analysedOnly ? ' yang sudah dianalisis' : ''} ditampilkan</span>
+  </div>;
+}
+
+/** Under the list, in one line: how many of the comments in view the analysis has read. While its results load, it says so. */
+export function AnalysedLine({ analysed, total, reading }) {
+  if (reading === 'loading') return <p className="pcb-analysed" role="status">Memuat hasil analisis…</p>;
+  if (reading === 'failed') return <p className="pcb-analysed" role="status">Hasil analisis belum bisa dimuat.</p>;
+  return <p className="pcb-analysed" role="status"><strong>{formatCount(analysed)}</strong>{analysed < total ? <> dari <strong>{formatCount(total)}</strong></> : ''} komentar teranalisis.</p>;
+}
 
 /** The figures of the comments in view, on one strip. `reading` is 'loading' or 'failed' while the results of the
  * analysis have not arrived: that is said as it is, never as "nothing analysed yet". Shares are read over the analysed comments and the coverage
@@ -105,7 +141,7 @@ export function CommentSummary({ counts, emoji, reading }) {
     <div className="pcb-figures">
       <div className="pcb-coverage">
         <p>{reading ? <><strong>{formatCount(total)}</strong> komentar</> : !analysed ? <><strong>{formatCount(total)}</strong> komentar, belum ada yang dianalisis</> : waiting ? <><strong>{formatCount(analysed)}</strong> dari <strong>{formatCount(total)}</strong> komentar sudah dianalisis</> : <><strong>{formatCount(total)}</strong> komentar, semuanya sudah dianalisis</>}</p>
-        <small>{reading === 'loading' ? 'Memuat hasil analisis…' : reading === 'failed' ? 'Hasil analisis belum bisa dimuat. Dicoba lagi otomatis.' : !analysed ? 'Nada komentar tampil setelah analisis berjalan.' : waiting ? `Persentase dihitung dari yang sudah dianalisis. ${formatCount(waiting)} komentar menunggu giliran.` : 'Persentase dihitung dari seluruh komentar ini.'}</small>
+        <small>{reading === 'loading' ? 'Memuat…' : reading === 'failed' ? 'Belum bisa dimuat.' : !analysed ? '' : waiting ? `${formatCount(waiting)} menunggu analisis.` : ''}</small>
       </div>
       {analysed > 0 && <div className="pcb-tone">
         <ul className="pcb-shares" aria-label="Nada komentar yang sudah dianalisis">{tones.map(([key, label]) => <li key={key} data-tone={key} title={`${formatCount(counts[key])} dari ${formatCount(analysed)} komentar yang sudah dianalisis`}><span><i aria-hidden="true" />{label}</span> <span><strong>{shares.text(key) ?? percentText(shares.percent(key))}</strong> <small>{formatCount(counts[key])}<span className="pu-sr"> komentar</span></small></span></li>)}</ul>
@@ -143,10 +179,10 @@ export default function CommentsPanel({ posts = [], topicId }) {
       const result = await api.post('/admin/pulse/topics/' + encodeURIComponent(topicId) + '/comments/collect?max_posts=10');
       const done = result.posts.filter(row => row.status === 'success').length;
       setCoverage(result.coverage);
-      setCollect({ busy: false, error: '', note: result.posts.length ? `${formatCount(result.comments)} komentar dari ${done} posting ditambahkan.${result.stopped.length ? ' Pengambilan dihentikan karena batas penyedia data; coba lagi nanti.' : ''}` : 'Tidak ada posting lain yang menunggu komentar.' });
+      setCollect({ busy: false, error: '', note: result.posts.length ? `${formatCount(result.comments)} komentar dari ${done} posting ditambahkan.${result.stopped.length ? ' Dihentikan batas penyedia data.' : ''}` : 'Tidak ada posting lain.' });
       window.dispatchEvent(new Event('pulse-data-changed'));
     } catch (error) {
-      setCollect({ busy: false, note: '', error: error.status === 409 ? 'Pengambilan lain sedang berjalan untuk project ini. Coba lagi sebentar.' : 'Komentar belum berhasil diambil. Coba lagi.' });
+      setCollect({ busy: false, note: '', error: error.status === 409 ? 'Pengambilan lain sedang berjalan. Coba lagi sebentar.' : 'Komentar belum berhasil diambil. Coba lagi.' });
     }
   }
   const withComments = posts.filter(p => p.metrics?.comment_snapshot?.items?.length);
@@ -163,6 +199,7 @@ export default function CommentsPanel({ posts = [], topicId }) {
   // Comment cards differ in height; the list packs them (the owner, 15 Nov 2026).
   const commentGrid = useRef(null);
   useMasonry(commentGrid, true, [listed, limit]);
+  const showMore = () => setLimit(shown => nextShown(shown, listed.length));
   const emoji = topEmoji(comments.map(c => c.text), 8);
   const one = chosen !== 'all' ? withComments.find(p => p.id === chosen) : null;
   const pick = id => { setSelected(id); setLimit(PAGE); };
@@ -182,15 +219,15 @@ export default function CommentsPanel({ posts = [], topicId }) {
       </div>}
       {total > 0 && <CommentSummary counts={counts} emoji={emoji} reading={!analysis.loaded ? 'loading' : analysis.error ? 'failed' : null} />}
       {listed.length > 0 && <div ref={commentGrid} className="pcb-list">{listed.slice(0, limit).map(c => <Comment key={c.post_id + c.id} comment={c} video={one ? null : c.video} post={one ? null : c.post} platform={c.post.platform} />)}</div>}
-      {!total && <p className="pulse-empty">{withComments.length ? 'Belum ada komentar untuk pilihan ini. Pilih posting lain.' : 'Belum ada komentar tersimpan. Ambil komentar posting untuk mulai menganalisis.'}</p>}
-      {listed.length > limit && <div className="pcb-more"><PulseButton onClick={() => setLimit(limit + MORE)}>Tampilkan {formatCount(Math.min(MORE, listed.length - limit))} komentar berikutnya</PulseButton><span>{formatCount(limit)} dari {formatCount(listed.length)} komentar{listed.length < total ? ' yang sudah dianalisis' : ''} ditampilkan</span></div>}
-      <div className="pc-coverage" aria-live="polite">
-        <h3>Komentar otomatis</h3><p>{coverage ? (coverage.auto_target ? <><strong>{formatCount(coverage.auto_done)} dari {formatCount(coverage.auto_target)}</strong> posting teratas sudah punya komentar. {coverage.auto_done < coverage.auto_target ? 'Sisanya sedang diambil otomatis.' : 'Posting baru yang masuk 100 besar diambil otomatis.'}</> : 'Belum ada posting yang kolom komentarnya bisa diambil.') : 'Memeriksa cakupan komentar…'}</p>
-        {coverage?.auto_target > 0 && <div className="pcm-progress" role="progressbar" aria-label="Kemajuan komentar otomatis" aria-valuemin={0} aria-valuemax={coverage.auto_target} aria-valuenow={coverage.auto_done}><i style={{ width: `${coverage.auto_done / coverage.auto_target * 100}%` }} /></div>}
-        {coverage && coverage.waiting > 0 && <details className="pcm-more"><summary>Ambil di luar 100 besar</summary><p>{formatCount(coverage.waiting)} posting lain belum punya komentar.{coverage.not_requestable > 0 ? ` ${formatCount(coverage.not_requestable)} posting (misalnya berita) tidak punya kolom komentar.` : ''}</p><PulseButton size="sm" onClick={collectNext} busy={collect.busy} busyLabel="Mengambil komentar…">Ambil 10 posting berikutnya</PulseButton></details>}
+      {!total && <p className="pulse-empty">{withComments.length ? 'Belum ada komentar untuk pilihan ini.' : 'Belum ada komentar tersimpan.'}</p>}
+      {listed.length > limit && <MoreComments shown={limit} total={listed.length} analysedOnly={listed.length < total} onMore={showMore} />}
+      {/* One line under the list instead of the progress of the automatic lane (the owner, 15 Nov 2026). */}
+      {total > 0 && <AnalysedLine analysed={labelled} total={total} reading={!analysis.loaded ? 'loading' : analysis.error ? 'failed' : null} />}
+      {(coverage?.waiting > 0 || collect.note || collect.error) && <div className="pc-coverage" aria-live="polite">
+        {coverage && coverage.waiting > 0 && <details className="pcm-more"><summary>Ambil di luar 100 besar</summary><p>{formatCount(coverage.waiting)} posting lain belum punya komentar.{coverage.not_requestable > 0 ? ` ${formatCount(coverage.not_requestable)} posting tanpa kolom komentar.` : ''}</p><PulseButton size="sm" onClick={collectNext} busy={collect.busy} busyLabel="Mengambil komentar…">Ambil 10 posting berikutnya</PulseButton></details>}
         {collect.note && <p className="pc-coverage-note" role="status">{collect.note}</p>}
         {collect.error && <p className="pc-coverage-note pc-coverage-error" role="alert">{collect.error}</p>}
-      </div>
+      </div>}
     </div>
   </section>;
 }
