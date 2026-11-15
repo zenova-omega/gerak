@@ -29,6 +29,7 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
   const initial = parseProjectQuery(topic?.query || '');
   const [main, setMain] = useState(initial?.main || '');
   const [variations, setVariations] = useState('');
+  const [accounts, setAccounts] = useState('');
   const [required, setRequired] = useState(initial?.required || '');
   const [excluded, setExcluded] = useState(initial?.excluded || '');
   const [advanced,setAdvanced] = useState(!initial);
@@ -58,7 +59,7 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
     return () => { active = false; };
   }, [topic?.id]);
   let builtQuery='',builderError='';
-  try { builtQuery=buildProjectQuery(main,required,excluded,variations); } catch(error) { builderError=error.message; }
+  try { builtQuery=buildProjectQuery(main,required,excluded,variations,accounts); } catch(error) { builderError=error.message; }
   const effectiveQuery=advanced?query:builtQuery;
   const currentFields = advanced ? parseProjectQuery(query) : null;
   function openBuilder() {
@@ -68,6 +69,7 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
     setRequired(currentFields.required);
     setExcluded(currentFields.excluded);
     setVariations('');
+    setAccounts('');
     setAdvanced(false);
   }
   async function submit(event) {
@@ -110,11 +112,12 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
         <div className="ps-keyword-fields">
           <KeywordChips label="Istilah utama" value={main} onChange={setMain} placeholder="transportasi publik" help="Wajib diisi. OR: cukup salah satu istilah utama atau variasinya cocok."/>
           <KeywordChips label="Variasi istilah" value={variations} onChange={setVariations} placeholder="angkutan umum, transportasi umum" help="Tambahkan singkatan, ejaan lain, atau sinonim."/>
+          <KeywordChips label="Akun personal publik (opsional)" value={accounts} onChange={setAccounts} placeholder="@namatokoh, https://x.com/namatokoh" help="Akun tokoh, partai, atau lembaga yang ingin dipantau sebutannya, termasuk serangan. Hanya akun publik; warga biasa tidak ditambahkan."/>
           <KeywordChips label="Konteks wajib" value={required} onChange={setRequired} placeholder="Jakarta" help="Opsional. AND: semua kata atau frasa di sini wajib muncul, bukan salah satunya."/>
           <KeywordChips label="Istilah yang dikecualikan" value={excluded} onChange={setExcluded} placeholder="iklan, lowongan" help="Opsional. NOT: abaikan posting yang mengandung salah satu istilah ini."/>
         </div>
         <SmartKeywords fields={{main,variations,required,excluded}} topicId={topic?.id} onAdd={added=>{setVariations(value=>mergeTerms(value,added.variation));setRequired(value=>mergeTerms(value,added.context));setExcluded(value=>mergeTerms(value,added.exclude));}}/>
-        <div className="ps-query-preview" aria-live="polite" aria-atomic="true"><strong>Ringkasan pencarian</strong>{builtQuery ? <><p>{explainProjectQuery(main,required,excluded,variations)}</p><details><summary>Lihat query</summary><code>{builtQuery}</code></details></> : <p>{builderError}</p>}</div>
+        <div className="ps-query-preview" aria-live="polite" aria-atomic="true"><strong>Ringkasan pencarian</strong>{builtQuery ? <><p>{explainProjectQuery(main,required,excluded,variations,accounts)}</p><details><summary>Lihat query</summary><code>{builtQuery}</code></details></> : <p>{builderError}</p>}</div>
       </section> : <><label>Query yang dipantau<textarea value={query} onChange={e => setQuery(e.target.value)} rows={3} maxLength={500} required aria-describedby="ps-query-help" /></label>
         <SmartKeywords fields={{main:query.replace(/["()]/g,' ').replace(/\b(AND|OR|NOT)\b/g,',')}} topicId={topic?.id} onAdd={added=>setQuery(current=>appendToQuery(current,added))}/></>}
       </section>

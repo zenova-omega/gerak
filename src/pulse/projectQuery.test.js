@@ -20,3 +20,12 @@ test('a standalone post search opens real search instead of all project posts', 
   assert.equal(quickSearchDestination('/pulse/monitor', '?q=gibran'), null);
   assert.equal(quickSearchDestination('/pulse/posts', '?q=%20'), null);
 });
+test('public accounts typed as a handle or a profile link become @ terms in the query\'s OR group', async () => {
+  const { accountTerms, explainProjectQuery } = await import('./projectQuery.js');
+  assert.equal(accountTerms('@tokoh, tokoh, https://x.com/tokoh_resmi, instagram.com/tokoh.id/, https://www.tiktok.com/@tokoh'), '@tokoh, @tokoh_resmi, @tokoh.id');
+  assert.equal(buildProjectQuery('Nama Tokoh', '', '', '', '@tokoh, https://x.com/tokoh_resmi'), '("Nama Tokoh" OR "@tokoh" OR "@tokoh_resmi")');
+  assert.equal(buildProjectQuery('Nama Tokoh', 'Jakarta', '', '', ''), '"Nama Tokoh" AND "Jakarta"');
+  assert.throws(() => accountTerms('bukan akun!'), /tidak dikenali/);
+  assert.throws(() => buildProjectQuery('Nama Tokoh', '', '', '', 'a b c'), /tidak dikenali/);
+  assert.match(explainProjectQuery('Nama Tokoh', '', '', '', '@tokoh'), /“@tokoh”.*sebutan di teks posting/);
+});

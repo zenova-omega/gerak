@@ -28,6 +28,9 @@ not a new dashboard surface. Chip removal targets are at least 44px tall.
 | Variasi istilah | Additional alternatives in the same main `any` group |
 | Konteks wajib | `all`: each term appended with AND |
 | Istilah yang dikecualikan | `exclude`: each term appended with NOT |
+| Akun personal publik (opsional) | `@nama` terms in the same main `any` group. Accepts `@nama`, `nama` or a profile link (X, Instagram, TikTok, Threads); anything else is refused. |
+
+Accounts are searched as mentions in post text (replies and tags), not as the account's whole timeline, and an account joins the OR group, so a required AND context still applies to it. Only public accounts of figures, parties or institutions are meant here. They reopen under main terms, like variations. Added 15 Nov 2026 for reputation work on a public figure.
 
 Example: main `transportasi`, variations `angkutan`, required `Jakarta, publik`,
 excluded `iklan` saves:
