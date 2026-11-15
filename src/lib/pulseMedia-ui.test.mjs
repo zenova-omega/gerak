@@ -16,7 +16,7 @@ test('feed exposes inline media, original caption, safe links and truthful legac
     assert.match(embedded,/<iframe[^>]*title="Pemutar Video account"/);
     assert.match(embedded,/Lihat thumbnail/);
     const videoFeed=renderToStaticMarkup(React.createElement(PostFeed,{posts:[{id:'video',platform:'tiktok',url:'https://www.tiktok.com/@example/video/123',author:'Video account',metrics:{}}]}));
-    assert.match(videoFeed,/Buka video dari Video account/);
+    assert.match(videoFeed,/Putar video dari Video account/);
     assert.doesNotMatch(videoFeed,/<iframe|<video/);
     const { default: ProjectPeriod } = await server.ssrLoadModule('/src/pulse/ProjectPeriod.jsx');
     const periodHtml = renderToStaticMarkup(React.createElement(ProjectPeriod,{topicId:'test'}));

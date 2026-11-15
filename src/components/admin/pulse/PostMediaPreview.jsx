@@ -13,9 +13,9 @@ export function PreviewImage({ media, author }) {
   const [failed, setFailed] = useState(false);
   const [container, setContainer] = useState(null);
   return <figure className="pulse-media-figure"><Dialog>
-    <DialogTrigger asChild><button type="button" className="pulse-media-trigger" aria-label={(playable?'Buka video dari ':'Buka foto besar dari ')+(author||'akun sumber')} onClick={event=>setContainer(event.currentTarget.closest('.pulse-standalone'))}>
+    <DialogTrigger asChild><button type="button" className="pulse-media-trigger" aria-label={(playable?'Putar video dari ':'Buka foto besar dari ')+(author||'akun sumber')} onClick={event=>setContainer(event.currentTarget.closest('.pulse-standalone'))}>
     {url&&!failed?<img src={url} alt={isPhoto ? 'Foto dari posting sumber' : 'Pratinjau media dari posting sumber'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />:<span className="pulse-media-placeholder"><ImageOff size={22} aria-hidden="true"/><span>Thumbnail tidak tersedia</span><small>{playable?'Video masih dapat dicoba':'Periksa media pada sumber asli'}</small></span>}
-    {playable&&<span className="pulse-media-play-label"><Play size={16} aria-hidden="true"/>Buka pemutar</span>}
+    {playable&&<span className="pulse-media-play-label"><Play size={16} aria-hidden="true"/>Putar video</span>}
     </button></DialogTrigger>
     <DialogContent container={container} className="pulse-media-modal">
       <DialogHeader><DialogTitle>Media dari {author||'akun sumber'}</DialogTitle><DialogDescription>{playable?'Video sumber · pemutaran mengikuti ketersediaan sumber':isPhoto?'Foto sumber · pratinjau diperbesar':'Thumbnail sumber'}</DialogDescription></DialogHeader>

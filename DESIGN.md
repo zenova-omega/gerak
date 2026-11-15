@@ -499,7 +499,7 @@ Shows who is behind the selection, by kind of account and by where X accounts sa
 "Posting di balik angka" offers two views, chosen with the `Daftar | Grid` switch in the summary strip and remembered in the browser.
 
 - **Daftar** (default, five cards). On a panel 860px or wider a card is two columns, 3:2: the caption in a reading column on the left, and on the right the reading ("Kenapa dinilai begitu"), the metric row on one line and the account link. No half of a card is left empty. Narrower panels stack the same parts.
-- **Grid** (nine cards). `repeat(auto-fill, minmax(320px, 1fr))`, three across on a laptop. Each card is stacked and trimmed: name on one line, tags on the next, caption cut at 200 characters with "Baca selengkapnya", reading cut at 110 with the full text behind the info mark. Cards in a row share a height and the numbers sit at the bottom.
+- **Grid** (nine cards). `repeat(auto-fill, minmax(320px, 1fr))`, three across on a laptop. Each card is stacked and trimmed: name on one line, tags on the next, caption cut at 200 characters with "Baca selengkapnya", reading cut at 110 with the full text behind the info mark. Cards keep their own heights and are packed by them (`useMasonry`: small grid rows, each card spanning what its height needs, reading order kept), so a short card leaves no empty space (the owner, 15 Nov 2026).
 - The switch is hidden under 700px, where both views are one column.
 
 Use this pair wherever a panel lists more than three evidence cards.

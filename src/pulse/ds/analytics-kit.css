@@ -1962,8 +1962,11 @@ div.pu-hover-label { margin-bottom: 2px; }
   .pulse-standalone .psa-evidence[data-layout=list] > .pse-card > .pse-foot { grid-column: 2; grid-row: 3; align-self: start; padding-top: 0; border-top: 0; }
   .pulse-standalone .psa-evidence[data-layout=list] > .pse-card .pse-story.has-media { grid-template-columns: 148px minmax(0, 1fr); }
 }
-.pulse-standalone .psa-evidence[data-layout=grid] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: stretch; }
-.pulse-standalone .psa-evidence[data-layout=grid] > .pse-card { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto auto; gap: 12px; align-content: start; padding: var(--ps-surface-pad-sm); }
+/* Cards keep their own heights (the owner, 15 Nov 2026): a short card no longer stretches to the tallest in its row.
+   With the script (useMasonry) the grid is packed: small rows, each card spanning what its height needs. */
+.pulse-standalone .psa-evidence[data-layout=grid] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; }
+.pulse-standalone .psa-evidence[data-layout=grid][data-masonry] { grid-auto-rows: 4px; row-gap: 0; }
+.pulse-standalone .psa-evidence[data-layout=grid] > .pse-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-content: start; padding: var(--ps-surface-pad-sm); }
 .pulse-standalone .psa-evidence[data-layout=grid] .pu-source-heading { flex-wrap: wrap; gap: 8px 12px; }
 .pulse-standalone .psa-evidence[data-layout=grid] .pu-source-name { flex: 1 1 0; min-width: 0; }
 .pulse-standalone .psa-evidence[data-layout=grid] .pu-source-name :is(strong, small) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }

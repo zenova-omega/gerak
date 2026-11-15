@@ -1,10 +1,11 @@
 import { PulseArrow } from '../components/ui/PulseArrow';
-import {useMemo,useState} from 'react';
+import {useMemo,useRef,useState} from 'react';
 import {LayoutGrid,List} from 'lucide-react';
 import {PulseButton} from '../components/ui/PulseUI';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
 import {BarChart,Bar,CartesianGrid,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import AnalyticsPanel from './AnalyticsPanel';
+import useMasonry from './useMasonry';
 import {sentimentCounts,sentimentLabels,postSentiment} from '../lib/pulsePostFilters';
 import {topEmoji} from '../lib/pulseEmoji';
 import EmojiCloud from './EmojiCloud';
@@ -66,10 +67,13 @@ export default function SentimentAnalytics({data,topicId}) {
   const [layout,setLayoutState]=useState(()=>{try{return localStorage.getItem('pulse-evidence-layout')==='grid'?'grid':'list';}catch{return 'list';}});
   const setLayout=value=>{setLayoutState(value);try{localStorage.setItem('pulse-evidence-layout',value);}catch{/* stays for this view only */}};
   const evidenceLimit=layout==='grid'?9:5;
+  // The grid packs its cards by their own heights (the owner, 15 Nov 2026: "tinggi grid disini engga usah sama semua").
+  const evidenceList=useRef(null);
   const ranged=sentimentRangeEvidence(posts,active.from,active.to,selectedLabel);
   const rangedKinds=selectedLabel==='neutral'?neutralBreakdown(ranged.posts):null;
   const kindFilter=selectedLabel==='neutral'&&rangedKinds[selectedKind]>0?selectedKind:'';
   const evidence=kindFilter?{...ranged,posts:ranged.posts.filter(post=>neutralKind(post)===kindFilter)}:ranged;
+  useMasonry(evidenceList,layout==='grid',[evidence.posts,evidenceLimit]);
   const oneDay=active.from===active.to;
   const dated=days.reduce((sum,row)=>sum+row.total,0);
   // Links open exactly the posts a number counts: the chosen voice travels as its list of platforms.
@@ -117,7 +121,7 @@ export default function SentimentAnalytics({data,topicId}) {
         {rangedKinds&&ranged.posts.length>0&&<div className="pu-tag-group psa-kinds" role="group" aria-label="Pilih bentuk posting netral"><PulseTag size="lg" tone="neutral-sentiment" pressed={!kindFilter} onClick={()=>setSelectedKind('')} count={ranged.posts.length}>Semua netral</PulseTag>{kindOrder.filter(key=>rangedKinds[key]>0).map(key=><PulseTag key={key} size="lg" tone="neutral-sentiment" pressed={kindFilter===key} onClick={()=>setSelectedKind(key)} count={rangedKinds[key]} title={kindHints[key]}>{kindLabels[key]}</PulseTag>)}</div>}
       </div>
       <div className="psa-change"><span className="psa-dot lg" data-tone={selectedLabel} aria-hidden="true"/><div><strong>{formatCount(kindFilter?evidence.posts.length:evidence.count)} posting {sentimentLabels[selectedLabel].toLowerCase()}{kindFilter?`, ${kindLabels[kindFilter].toLowerCase()}`:''} · {oneDay?dayLabel(active.from):`${dayLabel(active.from)} sampai ${dayLabel(active.to)}`}</strong><p>{kindFilter?`Bagian dari ${formatCount(ranged.count)} posting netral pada rentang ini. ${kindHints[kindFilter]}`:evidence.delta===null?(evidence.previous===null?`Belum dapat dibandingkan: tidak ada data ${evidence.days===1?dayLabel(evidence.previousTo):`${evidence.days} hari sebelumnya`} dalam cakupan terpilih.`:'Belum dapat dibandingkan: salah satu rentang belum memiliki hasil analisis sentimen.'):`${evidence.delta>0?'Naik ':evidence.delta<0?'Turun ':'Sama dengan '}${evidence.delta?formatCount(Math.abs(evidence.delta))+' posting dari ':''}${evidence.days===1?dayLabel(evidence.previousTo):`${evidence.days} hari sebelumnya`} (${formatCount(evidence.previous)} posting).`}</p></div><div className="pm-view-switch" role="group" aria-label="Tampilan bukti"><PulseButton aria-pressed={layout==='list'} onClick={()=>setLayout('list')}><List size={16}/>Daftar</PulseButton><PulseButton aria-pressed={layout==='grid'} onClick={()=>setLayout('grid')}><LayoutGrid size={16}/>Grid</PulseButton></div><Link to={link(oneDay?{day:active.from,sentiment:selectedLabel}:{sentiment:selectedLabel})}>Lihat {formatCount(evidence.posts.length)} posting <PulseArrow/></Link></div>
-      <ol className="psa-evidence" data-layout={layout}>{evidence.posts.slice(0,evidenceLimit).map(post=><SentimentEvidenceCard key={post.id} post={post} compact={layout==='grid'} selectedLabel={selectedLabel} accountLink={link({...(oneDay?{day:active.from}:{}),sentiment:selectedLabel,author:post.author,platform:post.platform})}/>)}</ol>{evidence.posts.length>evidenceLimit&&<p className="po-panel-note">{evidenceLimit} posting dengan interaksi tertinggi dari {formatCount(evidence.posts.length)}.</p>}{!evidence.posts.length&&<p className="po-empty">Tidak ada posting dengan sentimen ini pada rentang terpilih. Pilih kategori atau rentang lain.</p>}</>:<p className="po-empty">Perbandingan akan tersedia setelah ada posting bertanggal.</p>}
+      <ol ref={evidenceList} className="psa-evidence" data-layout={layout}>{evidence.posts.slice(0,evidenceLimit).map(post=><SentimentEvidenceCard key={post.id} post={post} compact={layout==='grid'} selectedLabel={selectedLabel} accountLink={link({...(oneDay?{day:active.from}:{}),sentiment:selectedLabel,author:post.author,platform:post.platform})}/>)}</ol>{evidence.posts.length>evidenceLimit&&<p className="po-panel-note">{evidenceLimit} posting dengan interaksi tertinggi dari {formatCount(evidence.posts.length)}.</p>}{!evidence.posts.length&&<p className="po-empty">Tidak ada posting dengan sentimen ini pada rentang terpilih. Pilih kategori atau rentang lain.</p>}</>:<p className="po-empty">Perbandingan akan tersedia setelah ada posting bertanggal.</p>}
     </AnalyticsPanel>
     <AnalyticsPanel title="Emotikon menurut sentimen" description="Emotikon di posting dan komentarnya, dikelompokkan menurut sentimen postingnya." footer="Ukuran mengikuti jumlah posting dan komentar yang memakainya. Emotikon menunjukkan reaksi yang tertulis, bukan hasil analisis sentimen tersendiri.">
       {emojiBySentiment.some(group=>group.emoji.length)?<div className="psa-emoji-groups">{emojiBySentiment.map(group=><section key={group.key} aria-label={`Emotikon di sekitar posting ${sentimentLabels[group.key].toLowerCase()}`}>
