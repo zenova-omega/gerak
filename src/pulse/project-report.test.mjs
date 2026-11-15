@@ -69,7 +69,7 @@ test('the report is a stack of A4 pages, each with the period, the brand mark an
     assert.equal((html.match(/role="switch"/g) || []).length, 10);
     assert.match(html, /aria-label="Naikkan Ringkasan eksekutif"/);
     assert.match(html, /aria-label="Turunkan Ringkasan eksekutif"/);
-    assert.match(html, /10 halaman dari 10 bagian/);
+    assert.match(html, /10 bagian dicetak, 10 halaman/);
     for (const field of [/type="file"[^>]*accept="image\/png,image\/jpeg,image\/webp"/, /id="rb-accent" type="color"[^>]*value="#544380"/, /id="rb-organisation"[^>]*maxLength="80"/, /<textarea id="rb-description"[^>]*maxLength="600"/]) assert.match(html, field);
   } finally { await server.close(); }
 });
