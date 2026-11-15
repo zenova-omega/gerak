@@ -119,6 +119,42 @@ async def test_summary_route_stores_the_latest_version_and_never_calls_the_model
     assert (await client.post(f'/api/admin/pulse/topics/{topic.id}/summary', json={'format': 'lain'}, headers=headers)).status_code == 422
 
 
+@pytest.mark.asyncio
+async def test_the_summary_card_always_reads_the_whole_project_whatever_the_bar_chooses(client, admin_token, db, monkeypatch):
+    """The owner, 15 Nov 2026: a summary must not be lost when the date or platform choice changes, so the card's
+    formats always read every stored post of the project. AI Insights keeps its period (see the test below)."""
+    from app.services import ai
+    async def keep():
+        return None
+    monkeypatch.setattr(db, 'commit', keep)
+    topic = WatchTopic(label='Seluruh periode', query='semua')
+    db.add(topic)
+    await db.flush()
+    db.add_all([
+        SourceItem(topic_id=topic.id, source='x', platform='x', url='https://x.com/a/status/31', author='akun_lama', text='Kabar lama',
+                   published_at=datetime(2026, 10, 2, 2), metrics={'likes': 3}),
+        SourceItem(topic_id=topic.id, source='news', platform='news', url='https://berita.example/31', author='Portal', text='Berita baru',
+                   published_at=datetime(2026, 11, 12, 2), metrics={}),
+    ])
+    await db.flush()
+    seen = []
+    class Fake:
+        async def generate_text(self, prompt, system=None, max_tokens=None, context_tokens=None):
+            seen.append(prompt)
+            return '### Awal\nMuncul 2 Okt oleh akun_lama [A1].'
+    monkeypatch.setattr(ai, 'get_ai_service', lambda: Fake())
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    made = await client.post(f'/api/admin/pulse/topics/{topic.id}/summary', headers=headers,
+                             json={'format': 'brief', 'from': '2026-11-10', 'to': '2026-11-14', 'platforms': ['news']})
+    assert made.status_code == 200
+    scope = made.json()['scope']
+    assert (scope['from'], scope['to'], scope['platforms'], scope['posts']) == (None, None, None, 2), "the bar's choice is not applied"
+    assert scope['span'] == {'from': '2026-10-02', 'to': '2026-11-12'}, 'the first and last day the summary read'
+    assert '- A1 akun_lama' in seen[0], 'the oldest post is read, outside the chosen days and platforms'
+    stored = (await client.get(f'/api/admin/pulse/topics/{topic.id}/summary', headers=headers)).json()['summaries']['brief']['scope']
+    assert stored['from'] is None and stored['span'] == {'from': '2026-10-02', 'to': '2026-11-12'}
+
+
 def test_quoted_shares_are_whole_numbers_that_add_up_to_one_hundred():
     from app.services.pulse_summary import whole_shares
     assert whole_shares({'negative': 267, 'neutral': 757, 'positive': 16}) == {'negative': 26, 'neutral': 73, 'positive': 1}   # rounding each gave 101

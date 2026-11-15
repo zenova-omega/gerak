@@ -79,7 +79,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
     {extra.loaded&&!extra.reviews&&<small>Status koreksi analis belum tersedia; hasil belum disaring berdasarkan koreksi.</small>}
    </footer>
   </section>
-  <AiSummaryCard key={params.get('topic')||''} topicId={params.get('topic')||''} period={period} platforms={platforms} posts={total}/>
+  <AiSummaryCard key={params.get('topic')||''} topicId={params.get('topic')||''}/>
   <EvidenceSheet selection={selection} onClose={()=>setSelection(null)}/>
   <section id="overview-development" className="lay-grid">
    <div className="lay-12">

@@ -17,7 +17,7 @@ from ..config import get_settings
 from ..database import get_db
 from ..models.pulse import WatchTopic
 from ..models.pulse_chat import PulseChatConversation
-from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, system_prompt, build_context, build_prompt, cited, data_block, shape_answer
+from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, answer_tokens, system_prompt, build_context, build_prompt, cited, data_block, shape_answer
 from ..services.ai.priority import interactive
 from ..services.pulse_identity import require_pulse_access
 from ..services.pulse_measures import period_closed_bounds
@@ -47,6 +47,7 @@ class ChatRequest(BaseModel):
     platforms: list[str] | None = Field(default=None, max_length=12)
     post_id: str | None = Field(default=None, max_length=36)
     conversation_id: str | None = Field(default=None, min_length=1, max_length=36)
+    mode: Literal['answer', 'respons'] = 'answer'
 
 
 def configured(settings):
@@ -210,7 +211,7 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db), user=Depend
         async with interactive():
             answer = await asyncio.wait_for(ai.generate_text(
                 build_prompt(built['context'], question, [turn.model_dump() for turn in req.history]),
-                system=system_prompt(), max_tokens=ANSWER_TOKENS, context_tokens=CONTEXT_TOKENS), timeout=115)
+                system=system_prompt(req.mode), max_tokens=answer_tokens(req.mode), context_tokens=CONTEXT_TOKENS), timeout=115)
     except Exception:
         # Never relay provider errors: they can carry request content or credentials.
         raise HTTPException(502, 'Model AI tidak menjawab. Coba lagi; tidak ada data yang berubah.')
@@ -222,7 +223,7 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db), user=Depend
                               'groups': shaped['groups'], 'charts': shaped['charts'],
                               'scope': {'posts': scope['posts'], 'from': req.date_from, 'to': req.date_to,
                                         'platforms': req.platforms or None, 'truncated': scope['truncated']},
-                              'answered_at': _when(now)})
+                              'mode': req.mode, 'answered_at': _when(now)})
     try:
         row = await remember(db, user, req.topic_id, req.conversation_id, {'question': question, **shown}, now)
         kept = _listed(row.id, row.title, row.updated_at, len(row.turns))
@@ -304,8 +305,13 @@ async def make_summary(topic_id: str, req: SummaryRequest, db: AsyncSession = De
     from ..services import pulse_summary as service
     if req.date_from and req.date_to and req.date_from > req.date_to:
         raise HTTPException(422, 'Tanggal akhir harus sama atau setelah tanggal mulai.')
-    start, end = _bounds(req.date_from, req.date_to)
-    built = await service.build_summary_input(db, topic_id, datetime.utcnow(), start=start, end=end, platforms=req.platforms or None)
+    # The summary card's formats always read the whole project, whatever the project bar chooses: a summary is never
+    # narrowed by a filter, so changing the dates or platforms never loses what it covered (the owner, 15 Nov 2026).
+    # AI Insights is written for the chosen period and platforms, as its page says.
+    whole = req.format in service.WHOLE_PROJECT_FORMATS
+    date_from, date_to, platforms = (None, None, None) if whole else (req.date_from, req.date_to, req.platforms or None)
+    start, end = _bounds(date_from, date_to)
+    built = await service.build_summary_input(db, topic_id, datetime.utcnow(), start=start, end=end, platforms=platforms)
     if built is None:
         raise HTTPException(404, 'Project tidak ditemukan.')
     if not built['posts']:
@@ -328,8 +334,8 @@ async def make_summary(topic_id: str, req: SummaryRequest, db: AsyncSession = De
             'sources': [{**source, 'published_at': source['published_at'].isoformat() + 'Z' if source.get('published_at') else None}
                         for source in service.cited(text, built['sources'])],
             'scope': {'posts': built['posts'], 'comments': built['comments'], 'truncated': built['truncated'],
-                      'from': req.date_from.isoformat() if req.date_from else None, 'to': req.date_to.isoformat() if req.date_to else None,
-                      'platforms': req.platforms or None}}
+                      'from': date_from.isoformat() if date_from else None, 'to': date_to.isoformat() if date_to else None,
+                      'platforms': platforms, 'span': built['span']}}
     row = await db.get(PulseSummary, (topic_id, req.format))
     if row is None:
         db.add(PulseSummary(topic_id=topic_id, format=req.format, created_at=now, data=data))

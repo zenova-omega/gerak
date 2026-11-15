@@ -97,7 +97,7 @@ test('the summary card on Ikhtisar never opens on a format it does not list', ()
   assert.equal(openingFormat({ formats, summaries: {} }), 'brief');
   assert.equal(openingFormat({ summaries: { timeline: {} } }), 'timeline');                  // an older server that sent no list
   const card = readFileSync(new URL('./AiSummaryCard.jsx', import.meta.url), 'utf8');
-  assert.match(card, /setFormat\(openingFormat\(data\)\)/);
+  assert.match(card, /setFormat\(openingFormat\(merged\)\)/);           // what the server sent, with answers kept since
   assert.doesNotMatch(card, /insights/);
 });
 
@@ -260,4 +260,42 @@ test('each piece of evidence shows the account picture the server sends, and ini
     assert.doesNotMatch(without, /<img/);
     assert.match(without, />SA</, 'initials stand in when no picture is known');
   } finally { await server.close(); }
+});
+
+test('the summary card says it read the whole project, and names an older summary that read only part of it', async () => {
+  const { cardScope } = await import('./summaryModel.js');
+  assert.deepEqual(cardScope({ posts: 7875, from: null, to: null, platforms: null, span: { from: '2026-05-22', to: '2026-11-15' } }, 7875),
+    { whole: true, text: 'Seluruh periode project (22 Mei 2026 – 15 Nov 2026), semua platform', newer: 0 });
+  assert.equal(cardScope({ posts: 7000, from: null, to: null, platforms: null, span: null }, 7875).newer, 875, 'posts stored since it was written');
+  assert.equal(cardScope({ posts: 7000, span: null }, 7875).text, 'Seluruh periode project, semua platform');
+  const narrow = cardScope({ posts: 7163, from: '2026-11-08', to: '2026-11-14', platforms: null }, 7875);
+  assert.deepEqual([narrow.whole, narrow.newer], [false, 0]);
+  assert.equal(narrow.text, 'Hanya 8 Nov 2026 – 14 Nov 2026, semua platform');
+  assert.equal(cardScope({ posts: 9, from: null, to: null, platforms: ['x', 'news'] }, 20).text, 'Hanya seluruh periode tersimpan, 2 platform');
+});
+
+test('a summary being written or already read outlives the card when the page reloads for another filter', async () => {
+  const store = await import('./summaryStore.js');
+  store.forget('t1');
+  assert.equal(store.stored('t1'), null);
+  store.keep('t1', { posts_now: 5, summaries: {} });
+  let finish;
+  const writing = store.write('t1', 'brief', () => new Promise(resolve => { finish = resolve; }));
+  assert.equal(store.writing('t1', 'brief'), writing, 'a card mounted again finds the request still running');
+  finish({ sections: [], scope: { posts: 5 } });
+  await writing;
+  assert.equal(store.writing('t1', 'brief'), null);
+  assert.deepEqual(store.stored('t1').summaries.brief, { sections: [], scope: { posts: 5 } }, 'the answer is kept even when no card was there to take it');
+  const failed = store.write('t1', 'timeline', () => Promise.reject(new Error('down')));
+  await assert.rejects(failed);
+  assert.equal(store.writing('t1', 'timeline'), null);
+  assert.equal(store.stored('t1').summaries.timeline, undefined);
+});
+
+test('the summary card asks for the whole project and counts against the whole project', () => {
+  const card = readFileSync(new URL('./AiSummaryCard.jsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(card, /period\.(from|to)|body\.platforms|body\.from|body\.to/, 'the bar\'s period and platforms are never sent');
+  assert.match(card, /posts_now/, 'stale and thin are measured against every stored post');
+  const overview = readFileSync(new URL('./ProjectOverview.jsx', import.meta.url), 'utf8');
+  assert.match(overview, /<AiSummaryCard key=\{params\.get\('topic'\)\|\|''\} topicId=\{params\.get\('topic'\)\|\|''\}\/>/);
 });

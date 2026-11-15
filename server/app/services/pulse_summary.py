@@ -66,6 +66,11 @@ def whole_shares(counts: dict) -> dict:
     return shares
 
 
+# The formats of the summary card on Ikhtisar (every format without a page of its own). They always read every stored
+# post of the project (routers/pulse_chat.py); a format with a page of its own follows that page's period.
+WHOLE_PROJECT_FORMATS = tuple(key for key in FORMATS if key not in PAGE_FORMATS)
+
+
 def _said(value):
     """interactions_v1 in a line of the data: a number, or \"interaksi tidak diketahui\" when the source reports none."""
     return 'interaksi tidak diketahui' if value is None else f'interaksi {value}'
@@ -207,7 +212,10 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
     }
     data = f"DATA (satu-satunya sumber fakta, waktu dalam WIB):\n{render_context(built['context'])}\n" + '\n'.join(lines) + '\n\n'
     scope = built['context']['scope']
-    return {'data': data, 'sources': sources, 'facts': facts, 'posts': scope['posts'], 'comments': len(comments), 'truncated': scope['truncated']}
+    # The first and last day the posts read were published, in the installation's zone: what "seluruh periode" covered.
+    span = {'from': min(by_day), 'to': max(by_day)} if by_day else None
+    return {'data': data, 'sources': sources, 'facts': facts, 'posts': scope['posts'], 'comments': len(comments), 'truncated': scope['truncated'],
+            'span': span}
 
 
 def build_prompt(data, fmt):

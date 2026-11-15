@@ -1,6 +1,8 @@
 // How a stored AI summary is read by the pages that show it. Pure functions: no React, no requests.
 // The server parses the model's text into sections and lists the cited sources; nothing here trusts raw model output as markup.
 
+import { rangeText } from './projectPeriodPresets.js';
+
 const CODE = /\[([PANKIT]\d{1,2})\]/;
 const CODES = /\s*\[([PANKIT]\d{1,2})\]/g;
 
@@ -20,6 +22,26 @@ export function openingFormat(data) {
 export function periodBadge(from, to) {
   const days = from && to ? Math.round((Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 86400000) + 1 : NaN;
   return days === 7 ? 'Mingguan' : days >= 28 && days <= 31 ? 'Bulanan' : 'Periode pilihan';
+}
+
+/**
+ * What a summary of the card on Ikhtisar read. The card's formats always read the whole project (the owner, 15 Nov 2026:
+ * a summary must not be lost when the filter changes), so `whole` is true and `text` names the days it covered; a
+ * summary stored before that rule may have read a narrower period or fewer platforms, and its text starts "Hanya".
+ * `newer` counts the posts stored since a whole-project summary was written; it is 0 for a narrower one, which
+ * cannot be compared with the project.
+ * @param {{posts?: number, from?: string|null, to?: string|null, platforms?: string[]|null, span?: {from: string, to: string}|null}} scope
+ * @param {number} postsNow every stored post of the project
+ * @returns {{whole: boolean, text: string, newer: number}}
+ */
+export function cardScope(scope = {}, postsNow = 0) {
+  const platforms = Array.isArray(scope.platforms) && scope.platforms.length ? `${scope.platforms.length} platform` : 'semua platform';
+  if (scope.from || scope.to || (Array.isArray(scope.platforms) && scope.platforms.length)) {
+    const range = rangeText({ from: scope.from || '', to: scope.to || '' });
+    return { whole: false, text: `Hanya ${range.replace(/^Seluruh/, 'seluruh')}, ${platforms}`, newer: 0 };
+  }
+  const span = scope.span?.from && scope.span?.to ? ` (${rangeText(scope.span)})` : '';
+  return { whole: true, text: `Seluruh periode project${span}, semua platform`, newer: Math.max(0, postsNow - (scope.posts || 0)) };
 }
 
 const platformKey = value => (Array.isArray(value) && value.length ? [...value].sort().join(',') : '');
