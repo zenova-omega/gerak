@@ -1,0 +1,60 @@
+/* Ringkasan project on Ikhtisar (ProjectOverview.jsx): one card with one inset, one rhythm and one kind of divider.
+   Scoped to .po-brief so the shared stat strip, pie and signal styles stay as they are on every other page.
+   Colour comes from --ps-* tokens only. Loaded after analytics-kit.css; the doubled class wins its older rules. */
+.pulse-standalone.pulse-standalone .po-brief { --po-inset: 24px; overflow: hidden; }
+
+/* Heading: the number is the headline, the sentence under it is quiet, the report is the one filled action. */
+.pulse-standalone.pulse-standalone .po-brief .po-brief-head { padding: 28px var(--po-inset) 24px; gap: 16px 40px; }
+.pulse-standalone .po-brief .po-eyebrow { color: var(--ps-muted); }
+.pulse-standalone .po-brief .po-brief-text h2 { margin: 6px 0 10px; font-size: 1.75rem; line-height: 1.2; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.pulse-standalone .po-brief .po-brief-text p { max-width: 64ch; font-size: .9375rem; line-height: 1.6; }
+.pulse-standalone.pulse-standalone .po-brief .po-report-link { background: var(--ps-lavender); border-color: var(--ps-lavender); color: var(--ps-accent-ink); transition: background-color var(--ps-motion) var(--ps-ease), border-color var(--ps-motion) var(--ps-ease); }
+.pulse-standalone.pulse-standalone .po-brief .po-report-link:hover { background: color-mix(in oklch, var(--ps-lavender) 88%, var(--ps-ink)); border-color: transparent; }
+.pulse-standalone .po-brief .po-report-link:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+
+/* Figures: no frame of its own (the card is the frame). One hairline divides the cells, and every cell reads in the
+   same order: label, figure, change or share, then the note. Notes start under the figure instead of sinking to the bottom. */
+/* The dividers are drawn by the cells (inset right and bottom edges), not by a coloured gap, so a short last row stays the panel colour. */
+.pulse-standalone.pulse-standalone .po-brief > .pu-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 0; border-top: 1px solid var(--ps-line); border-radius: 0; background: var(--ps-panel); }
+.pulse-standalone.pulse-standalone .po-brief > .pu-stat-grid > .pu-stat { min-height: 0; padding: 20px 20px 22px; gap: 8px 12px; box-shadow: inset -1px 0 0 var(--ps-line), inset 0 -1px 0 var(--ps-line); }
+@media (min-width: 1280px) { .pulse-standalone.pulse-standalone .po-brief > .pu-stat-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .pulse-standalone.pulse-standalone .po-brief > .pu-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pulse-standalone .po-brief .pu-stat-label { font-weight: var(--ps-weight-label); }
+.pulse-standalone .po-brief .pu-stat-value > strong:not([data-kind=text]) { font-size: 1.875rem; line-height: 1.1; letter-spacing: -.015em; }
+.pulse-standalone .po-brief .pu-stat-note { align-self: start; line-height: 1.55; }
+/* The share meter keeps its label whole: bar and percentage on one line, the words under them. */
+.pulse-standalone .po-brief .pu-stat-meter { flex-wrap: wrap; gap: 2px 8px; }
+.pulse-standalone .po-brief .pu-stat-meter-track { flex: 1 1 56px; max-width: 120px; }
+.pulse-standalone .po-brief .pu-stat-meter > small { display: block; flex-basis: 100%; overflow: visible; white-space: normal; text-overflow: clip; color: var(--ps-muted); }
+
+/* Things to look at: figure first, then one quiet action. The action is accent text, underlined only on hover. */
+.pulse-standalone.pulse-standalone .po-brief .po-signals { gap: 0; border-bottom: 0; background: var(--ps-panel); }
+.pulse-standalone .po-brief .po-signals > li { box-shadow: inset -1px 0 0 var(--ps-line), inset 0 -1px 0 var(--ps-line); }
+.pulse-standalone.pulse-standalone .po-brief .po-signals button { grid-template-rows: auto auto 1fr auto; gap: 6px; padding: 20px var(--po-inset) 20px; }
+.pulse-standalone .po-brief .po-signals strong { font-size: 1.125rem; line-height: 1.35; letter-spacing: -.005em; -webkit-line-clamp: 3; }
+.pulse-standalone .po-brief .po-signals small { line-height: 1.55; }
+.pulse-standalone.pulse-standalone .po-brief .po-signal-action { margin-top: 10px; color: var(--ps-accent); text-decoration: none; }
+.pulse-standalone .po-brief .po-signals button:hover .po-signal-action { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Platform share: a larger pie, and keys laid on a grid so names, shares and counts line up in columns. */
+.pulse-standalone.pulse-standalone .po-brief .ppie { gap: 28px; padding: 22px var(--po-inset); border-top: 1px solid var(--ps-line); border-bottom: 0; }
+.pulse-standalone .po-brief .ppie-chart { width: 88px; height: 88px; }
+.pulse-standalone .po-brief .ppie-body { flex: 1 1 auto; }
+.pulse-standalone .po-brief .ppie-title { font-weight: var(--ps-weight-label); }
+.pulse-standalone .po-brief .ppie-keys { display: grid; grid-template-columns: repeat(3, minmax(0, 240px)); gap: 2px 28px; }
+@media (max-width: 960px) { .pulse-standalone .po-brief .ppie-keys { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .pulse-standalone .po-brief .ppie-keys { grid-template-columns: minmax(0, 1fr); } }
+.pulse-standalone.pulse-standalone .po-brief .ppie-keys :is(button, li > span) { display: grid; grid-template-columns: 8px 16px minmax(0, 1fr) 3.5ch 6ch; align-items: center; gap: 0 8px; width: 100%; padding: 0 8px; text-align: left; }
+.pulse-standalone .po-brief .ppie-keys b, .pulse-standalone .po-brief .ppie-keys small { text-align: right; font-variant-numeric: tabular-nums; }
+
+.pulse-standalone .po-brief .po-brief-foot { padding: 10px var(--po-inset); border-top: 1px solid var(--ps-line); }
+
+@media (max-width: 700px) {
+  .pulse-standalone.pulse-standalone .po-brief { --po-inset: 16px; }
+  .pulse-standalone.pulse-standalone .po-brief .po-brief-head { padding-block: 20px 16px; }
+  .pulse-standalone .po-brief .po-brief-text h2 { font-size: 1.375rem; }
+  .pulse-standalone .po-brief .pu-stat-meter > small { display: block; }
+  .pulse-standalone .po-brief .ppie { align-items: center; gap: 16px; }
+  .pulse-standalone .po-brief .ppie-chart { width: 64px; height: 64px; }
+}
+@media print { .pulse-standalone .po-brief .po-report-link { display: none; } }

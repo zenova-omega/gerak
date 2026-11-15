@@ -16,6 +16,7 @@ import useOverviewEvidence from './useOverviewEvidence';
 import InfoTip from './InfoTip';
 import './overview-analytics.css';
 import './project-overview.css';
+import './ds/overview-brief.css';
 import TopMentions from './TopMentions';
 import {Activity,Copy,MessagesSquare,Users,HeartPulse,Gauge} from 'lucide-react';
 import {PulseStat,PulseStatGrid} from '../components/ui/PulseAnalytics';
