@@ -1,36 +1,37 @@
 /* "Siapa yang bicara" (WhoIsSpeaking.jsx), the first block of Akun & sumber. One grid of rows, not cards: the group
    with its top accounts, then accounts, the share of posts, the share of interactions and the tone. The two shares are
-   two chart series (set inline from pulseChartTheme, with the key above the grid); the tone bar takes the sentiment
-   colours of the Sentimen page. Every bar has its figure in words beside it. Each row is one button that opens its
-   posts; the hover is painted on the row. The origin of X accounts below uses the same columns, set apart by a rule.
+   two chart series (set inline from pulseChartTheme); the column heads carry their swatches, so there is no key line.
+   The tone bar takes the sentiment colours of the Sentimen page. Every bar has its figure in words beside it. Each row
+   is one button that opens its posts; the hover is painted on the row. What the figures are over is said in the tips.
+   The origin of X accounts below is a row of tiles per level (countries, then provinces), each a donut and its figures.
    Colours, radii and weights come from the --ps-* tokens, so both themes follow without a rule here. On a phone each
-   row becomes one block with its figures stacked under the group, and nothing scrolls sideways. */
-.pws { --pws-columns: minmax(0, 1.3fr) 4.5rem minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); display: grid; gap: 14px; min-width: 0; color: var(--ps-ink); }
+   row becomes one block with its figures stacked under the group, tiles go two across, and nothing scrolls sideways. */
+.pws { --pws-columns: minmax(0, 1.3fr) 4.5rem minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); display: grid; gap: 16px; min-width: 0; color: var(--ps-ink); }
 .pws:not([data-tone]) { --pws-columns: minmax(0, 1.3fr) 4.5rem minmax(0, 1fr) minmax(0, 1fr); }
 .pws p { margin: 0; max-width: none; }
+.pulse-standalone .pu-analytics-panel[aria-label="Siapa yang bicara"] .pu-panel-heading h2 > span { display: inline-flex; align-items: center; gap: 4px; }
 
-/* The answer first: the sentences of group_lead_v1, the percentages in ink. */
-.pws-lead { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: .875rem; line-height: 1.5; color: var(--ps-ink); text-wrap: pretty; }
-.pws-lead > li:first-child { font-size: 1rem; }
-.pws-lead b { font-weight: var(--ps-weight-strong); font-variant-numeric: tabular-nums; }
+/* The answer first: the sentences of group_lead_v1, the percentages in ink. The first sentence at full size, the rest
+   smaller and close together, so the whole answer stays a short paragraph. */
+.pws-lead { display: grid; gap: 2px; max-width: 110ch; margin: 0; padding: 0; list-style: none; font-size: 1rem; line-height: 1.5; color: var(--ps-ink); text-wrap: pretty; }
+.pws-lead > li + li { font-size: .8125rem; line-height: 1.45; color: var(--ps-muted); }
+.pws-lead > li:nth-child(2) { margin-top: 4px; }
+.pws-lead b { font-weight: var(--ps-weight-strong); color: var(--ps-ink); font-variant-numeric: tabular-nums; }
 .pws-note { font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
-
-/* The key: one swatch per share series and the three tone dots, each with the base its share is over. */
-.pws-keys { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
-.pws-keys > li { display: inline-flex; align-items: center; gap: 6px; }
 .pws-dots { display: inline-flex; gap: 3px; }
 
 /* ---------- The grid ---------- */
 .pws-grid { display: grid; min-width: 0; }
 .pws-head { display: grid; grid-template-columns: var(--pws-columns); column-gap: 16px; padding: 0 8px 6px; border-bottom: 1px solid var(--ps-line); font-size: .75rem; font-weight: var(--ps-weight-label); line-height: 1.4; color: var(--ps-muted); }
+.pws-head > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .pws-rows { display: grid; margin: 0; padding: 0; list-style: none; }
 .pws-rows > li + li { border-top: 1px solid var(--ps-line); }
 
-/* Page styles give every button a frame, a fill and padding; a row takes none of them. */
-.pulse-standalone .pws button:is(.pws-row, .pws-place) { display: grid; grid-template-columns: var(--pws-columns); column-gap: 16px; row-gap: 4px; align-items: start; width: 100%; min-height: 44px; margin: 0; padding: 10px 8px; border: 0; border-radius: var(--ps-radius-control); background: transparent; box-shadow: none; color: var(--ps-ink); font: inherit; font-size: .8125rem; line-height: 1.4; text-align: left; cursor: pointer; }
+/* Page styles give every button a frame, a fill and padding; a row and a tile take none of them. */
+.pulse-standalone .pws button:is(.pws-row, .pws-place) { width: 100%; min-height: 44px; margin: 0; border: 0; border-radius: var(--ps-radius-control); background: transparent; box-shadow: none; color: var(--ps-ink); font: inherit; font-size: .8125rem; line-height: 1.4; text-align: left; cursor: pointer; }
 .pulse-standalone .pws button:is(.pws-row, .pws-place):hover { background: var(--ps-soft); }
 .pulse-standalone .pws button:is(.pws-row, .pws-place):focus-visible { outline: var(--ps-control-focus); outline-offset: 0; }
-.pulse-standalone .pws button.pws-place > [data-cell=accounts] { grid-column: 2 / 5; }
+.pulse-standalone .pws button.pws-row { display: grid; grid-template-columns: var(--pws-columns); column-gap: 16px; row-gap: 4px; align-items: start; padding: 10px 8px; }
 
 .pws-cell { display: grid; gap: 3px; align-content: start; min-width: 0; }
 .pws-cell > small { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
@@ -39,10 +40,11 @@
 .pws-cell > strong { font-size: .875rem; font-weight: var(--ps-weight-strong); line-height: 1.4; overflow-wrap: anywhere; }
 .pws-cell[data-cell=accounts] > b { font-size: .875rem; line-height: 1.4; }
 
-/* A group's top accounts, drawn the one way accounts are drawn: picture or initials with the platform mark, then the name. */
-.pws-top { display: flex; flex-wrap: wrap; gap: 4px 12px; min-width: 0; font-size: .75rem; color: var(--ps-muted); }
-.pws-who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
-.pws-name { min-width: 0; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A group's top accounts on one line: their pictures side by side (each with its platform mark), then the names, cut
+   with an ellipsis when they do not fit. Every name is in the row's name and in the hover title. */
+.pws-top { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: .75rem; color: var(--ps-muted); }
+.pws-avatars { display: inline-flex; flex: none; gap: 2px; }
+.pws-names { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* A share: a bar on a track of the whole, its percent beside it. A share nobody can state is a dash, without a track. */
 .pws-meter { display: grid; grid-template-columns: minmax(0, 1fr) 2.75rem; align-items: center; column-gap: 8px; min-height: 20px; }
@@ -55,24 +57,46 @@
 .pws-tone-bar > i { flex-basis: 0; min-width: 4px; }
 .pws-tone-text { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
 
-/* ---------- Where the X accounts are ---------- */
-.pws-origin { display: grid; gap: 10px; min-width: 0; padding-top: 16px; border-top: 1px solid var(--ps-line); }
+/* ---------- Where the X accounts are: tiles side by side ---------- */
+.pws-origin { display: grid; gap: 8px; min-width: 0; padding-top: 16px; border-top: 1px solid var(--ps-line); }
+.pws-origin-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 4px; }
 .pws-origin h3 { margin: 0; font-size: .875rem; font-weight: var(--ps-weight-strong); line-height: 1.4; }
-.pws-origin .pws-sub { margin: 6px 0 0; font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1.4; color: var(--ps-ink); }
-.pws-map { justify-self: start; display: inline-flex; align-items: center; min-height: 32px; border-radius: var(--ps-radius-mark); color: var(--ps-accent); font-size: .8125rem; font-weight: var(--ps-weight-label); text-decoration: underline; text-underline-offset: 3px; }
+.pws-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 0 auto; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
+.pws-legend > li { display: inline-flex; align-items: center; gap: 6px; }
+.pws-origin .pws-sub { margin: 8px 0 0; font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1.4; color: var(--ps-muted); }
+
+.pws-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 4px 16px; margin: 0; padding: 0; list-style: none; }
+.pws-tiles > li { display: flex; min-width: 0; }
+.pulse-standalone .pws button.pws-place { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; column-gap: 14px; height: 100%; padding: 10px 8px; }
+.pws-donut { display: block; width: 72px; height: 72px; overflow: visible; }
+.pws-donut circle { fill: none; stroke-width: 9; }
+.pws-donut .pws-donut-track { stroke: var(--ps-soft); }
+.pws-tile-text { display: grid; gap: 2px; min-width: 0; }
+.pws-tile-text > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8125rem; font-weight: var(--ps-weight-strong); line-height: 1.35; }
+.pws-tile-share { color: var(--ps-muted); font-size: .75rem; line-height: 1.3; }
+.pws-tile-share > b { margin-right: 2px; color: var(--ps-ink); font-size: 1.25rem; font-weight: var(--ps-weight-strong); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.pws-tile-counts, .pws-tile-base { color: var(--ps-muted); font-size: .75rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.pws-tile-tone { display: flex; flex-wrap: wrap; gap: 2px 10px; color: var(--ps-ink); font-size: .75rem; font-weight: var(--ps-weight-label); line-height: 1.4; font-variant-numeric: tabular-nums; }
+.pws-tile-tone > span { display: inline-flex; align-items: center; gap: 4px; }
+.pws-tile-tone .psa-dot { width: 8px; height: 8px; }
+
+.pws-map { justify-self: start; display: inline-flex; align-items: center; min-height: 32px; margin-top: 4px; border-radius: var(--ps-radius-mark); color: var(--ps-accent); font-size: .8125rem; font-weight: var(--ps-weight-label); text-decoration: underline; text-underline-offset: 3px; }
 .pws-map:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
 
-/* ---------- Phones: one block per group, its figures stacked, each with its name ---------- */
+/* ---------- Phones: one block per group, its figures stacked, each with its name; tiles two across ---------- */
 @media (max-width: 700px) {
   .pws-head { display: none; }
-  .pulse-standalone .pws button:is(.pws-row, .pws-place) { grid-template-columns: minmax(0, 1fr); row-gap: 8px; padding: 12px 4px; }
-  .pulse-standalone .pws button.pws-place > [data-cell=accounts] { grid-column: auto; }
-  .pws-cell:not([data-cell=group], [data-cell=place]) { grid-template-columns: 5rem minmax(0, 1fr); column-gap: 12px; row-gap: 2px; }
-  .pws-cell:not([data-cell=group], [data-cell=place]) > .pws-label { display: block; grid-column: 1; }
-  .pws-cell:not([data-cell=group], [data-cell=place]) > :not(.pws-label) { grid-column: 2; }
+  .pulse-standalone .pws button.pws-row { grid-template-columns: minmax(0, 1fr); row-gap: 8px; padding: 12px 4px; }
+  .pws-cell:not([data-cell=group]) { grid-template-columns: 5rem minmax(0, 1fr); column-gap: 12px; row-gap: 2px; }
+  .pws-cell:not([data-cell=group]) > .pws-label { display: block; grid-column: 1; }
+  .pws-cell:not([data-cell=group]) > :not(.pws-label) { grid-column: 2; }
+  .pws-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 8px; }
+  .pulse-standalone .pws button.pws-place { grid-template-columns: minmax(0, 1fr); align-content: start; justify-items: start; row-gap: 8px; padding: 10px 4px; }
+  .pws-donut { width: 60px; height: 60px; }
+  .pws-legend { margin-left: 0; flex-basis: 100%; }
   .pws-map { min-height: 44px; }
 }
 @media print {
   .pws-map { display: none; }
-  .pws-track > i, .pws-tone-bar > i, .pws-keys .pu-swatch { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pws-track > i, .pws-tone-bar > i, .pws-head .pu-swatch, .pws-donut circle, .psa-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

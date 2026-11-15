@@ -1,5 +1,7 @@
+import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import AnalyticsPanel from './AnalyticsPanel';
+import InfoTip from './InfoTip';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 import { platformLabel } from '../components/admin/pulse/PlatformIcon';
 import { PulseArrow } from '../components/ui/PulseArrow';
@@ -27,7 +29,7 @@ const titleOf = row => TITLES[row.key] || `Akun dengan ${row.label} pengikut`;
 const emphasise = sentence => sentence.split(/(<1%|\d+%)/).map((part, index) => (index % 2 ? <b key={index}>{part}</b> : part));
 const toneWords = tone => TONES.map(key => `${sentimentLabels[key].toLowerCase()} ${tone.text[key]}`).join(', ');
 /** A tone with its base, for the name a row is read by. */
-const toneSaid = tone => (tone.analysed ? `Nada ${toneWords(tone)}, dari ${formatCount(tone.analysed)} posting yang dianalisis.` : 'Nada belum dianalisis.');
+const toneSaid = tone => (tone.analysed ? `Nada ${toneWords(tone)}, dari ${formatCount(tone.analysed)} dianalisis.` : 'Nada belum dianalisis.');
 
 // The readings of one list of posts, kept with that list: opening the drawer redraws the page, not the readings.
 const readings = new WeakMap();
@@ -91,7 +93,10 @@ function tierRow(row, { showTone, onOpen, members }) {
   ].join(' ');
   return <li key={row.key}><button type="button" className="pws-row" aria-label={said} onClick={() => onOpen(title, members().get(row.key))}>
     <span className="pws-cell" data-cell="group"><strong>{row.label}</strong>
-      {row.top.length > 0 && <span className="pws-top">{row.top.map((account, index) => <span className="pws-who" key={account.account}><AccountAvatar author={account.name || ''} platform={account.platform} size="xs" /><span className="pws-name" title={names[index]}>{names[index]}</span></span>)}</span>}
+      {row.top.length > 0 && <span className="pws-top">
+        <span className="pws-avatars">{row.top.map(account => <AccountAvatar key={account.account} author={account.name || ''} platform={account.platform} size="xs" />)}</span>
+        <span className="pws-names" title={names.join(', ')}>{names.map((name, index) => <Fragment key={index}>{index > 0 && ', '}<span className="pws-name">{name}</span></Fragment>)}</span>
+      </span>}
     </span>
     <span className="pws-cell" data-cell="accounts"><span className="pws-label">Akun</span><b>{formatCount(row.accounts)}</b></span>
     <span className="pws-cell" data-cell="posts"><span className="pws-label">Posting</span>{meter(row.post_share, SERIES.posts)}<small>{formatCount(row.posts)} posting</small></span>
@@ -100,40 +105,75 @@ function tierRow(row, { showTone, onOpen, members }) {
   </button></li>;
 }
 
-/** One place in the origin block: a country group or a province, its share of every X account, its accounts and posts,
- * and its tone. Read, like a tier row, by one name that starts with its visible label. */
-function placeRow({ key, label, standing, origin, showTone, open }) {
-  const share = accountShare(standing, origin);
+/** The donut of a place tile, a picture of what the tile's name already says (so hidden from assistive technology).
+ * With tone: one arc per tone that has posts, in the order negative, neutral, positive, sized by tone_share_v1's own
+ * percents, a 2px gap of surface between arcs. Without tone (the page shows one sentiment, or nothing is analysed yet):
+ * one ring of the accounts series, as long as the place's share of every X account. The arcs start at twelve o'clock. */
+const RING = 31.5, GAP = 1.2;
+function donut(tone, share) {
+  const parts = tone ? TONES.filter(key => tone.text[key] !== '0%').map(key => ({ key, value: tone.percent[key], color: sentimentColor[key] })) : [];
+  const gap = parts.length > 1 ? GAP : 0;
+  let start = 0;
+  return <svg className="pws-donut" viewBox="0 0 72 72" aria-hidden="true" focusable="false">
+    <circle className="pws-donut-track" cx="36" cy="36" r={RING} />
+    <g transform="rotate(-90 36 36)">
+      {tone ? parts.map(part => {
+        const length = Math.max(part.value, 1) - gap, offset = start;
+        start += Math.max(part.value, 1);
+        return <circle className="pws-arc" data-tone={part.key} data-share={part.value} key={part.key} cx="36" cy="36" r={RING} pathLength="100"
+          strokeDasharray={`${Math.max(length, .5)} ${100 - Math.max(length, .5)}`} strokeDashoffset={-offset} style={{ stroke: part.color }} />;
+      }) : share > 0 && <circle className="pws-arc" data-ring="accounts" data-share={Math.round(share * 1000) / 10} cx="36" cy="36" r={RING} pathLength="100"
+        strokeDasharray={`${Math.max(share * 100, 1)} ${100 - Math.max(share * 100, 1)}`} style={{ stroke: SERIES.accounts }} />}
+    </g>
+  </svg>;
+}
+
+/** One place in the origin block as a tile: a country group or a province, its share of every X account (the large
+ * figure), its accounts and posts, and its tone as a donut with the three shares in figures beside it. Read, like a tier
+ * row, by one name that starts with its visible label. */
+function placeTile({ key, label, standing, origin, showTone, open }) {
+  const share = accountShare(standing, origin), tone = standing.tone, toned = showTone && tone.analysed > 0;
   const said = [`${label}.`, `${formatCount(standing.accounts)} akun X, ${shareText(share)} dari semua akun X.`, `${formatCount(standing.posts)} posting.`,
-    ...(showTone ? [toneSaid(standing.tone)] : []), 'Lihat postingnya.'].join(' ');
+    ...(showTone ? [toneSaid(tone)] : []), 'Lihat postingnya.'].join(' ');
   return <li key={key}><button type="button" className="pws-place" aria-label={said} onClick={open}>
-    <span className="pws-cell" data-cell="place"><strong>{label}</strong></span>
-    <span className="pws-cell" data-cell="accounts"><span className="pws-label">Akun X</span>{meter(share, SERIES.accounts)}<small>{formatCount(standing.accounts)} akun · {formatCount(standing.posts)} posting</small></span>
-    {showTone && toneCell(standing.tone)}
+    {donut(toned ? tone : null, share)}
+    <span className="pws-tile-text">
+      <strong>{label}</strong>
+      <span className="pws-tile-share"><b>{shareText(share)}</b> akun X</span>
+      <small className="pws-tile-counts">{formatCount(standing.accounts)} akun · {formatCount(standing.posts)} posting</small>
+      {toned && <span className="pws-tile-tone">{TONES.map(key => <span key={key}><i className="psa-dot" data-tone={key} aria-hidden="true" />{tone.text[key]}</span>)}</span>}
+      {toned && tone.unknown > 0 && <small className="pws-tile-base">dari {formatCount(tone.analysed)} posting yang dianalisis</small>}
+    </span>
   </button></li>;
 }
 
-/** Where the X accounts are, by account_origin_v1: the country X names for them, then the province their owners wrote. */
+/** Where the X accounts are, by account_origin_v1: the country X names for them, then the province their owners wrote,
+ * each as a row of tiles. What the figures are over, and why only X, is said in the tip beside the heading. */
 function originBlock({ origin, posts, showTone, onOpen, mapLink }) {
   const keysWhere = test => origin.rows.filter(test).map(row => row.key);
   const countries = COUNTRIES.filter(([key]) => origin.country[key].accounts > 0);
   const known = countries.some(([key]) => key !== 'unknown');
   const parts = [['Menulis lokasi', origin.with_location], ['Tanpa lokasi', origin.no_location], ['Profil belum diambil', origin.unasked]].filter(([, count]) => count > 0);
+  const tip = <InfoTip label="Tentang asal akun X">
+    <p>Lokasi dan negara akun hanya tersedia dari profil X; profil TikTok, Instagram, dan YouTube tidak memberikannya.</p>
+    <p>Angka besar: bagian dari {formatCount(origin.accounts)} akun X dalam pilihan ini. {showTone ? 'Lingkaran: nada negatif, netral, positif, dari posting yang dianalisis.' : 'Lingkaran: bagian yang sama, dari semua akun X.'}</p>
+    <p>Negara menurut X: negara yang dicantumkan X pada akun.{origin.country.region_only.accounts > 0 && ' Hanya wilayah: X menyebut kawasan, misalnya Asia Tenggara, yang bisa mencakup Indonesia.'}</p>
+    <p>Provinsi menurut lokasi profil: dari lokasi yang ditulis pemilik akun, provinsi terbaca pada {formatCount(origin.province_read)} dari {formatCount(origin.accounts)} akun X ({shareText(provinceReadShare(origin))}).
+      {parts.map(([name, count]) => ` ${name}: ${formatCount(count)} akun.`).join('')}</p>
+  </InfoTip>;
   // One "Siapa yang bicara" per page, so the heading's id is fixed.
   return <section className="pws-origin" aria-labelledby="pws-origin-heading">
-    <h3 id="pws-origin-heading">Asal akun X</h3>
-    <ul className="pws-keys"><li><i className="pu-swatch" style={{ '--swatch': SERIES.accounts }} aria-hidden="true" />Akun X: bagian dari {formatCount(origin.accounts)} akun X dalam pilihan ini</li></ul>
+    <div className="pws-origin-head"><h3 id="pws-origin-heading">Asal akun X</h3>{tip}
+      {showTone && <ul className="pws-legend">{TONES.map(key => <li key={key}><i className="psa-dot" data-tone={key} aria-hidden="true" />{sentimentLabels[key].toLowerCase()}</li>)}</ul>}
+    </div>
     <h4 className="pws-sub">Negara menurut X</h4>
-    {known ? <>
-      <ul className="pws-rows" role="list">{countries.map(([key, label, title]) => placeRow({ key, label, standing: origin.country[key], origin, showTone,
-        open: () => onOpen(title, postsOf(posts, keysWhere(row => countryOf(row.based_in) === key))) }))}</ul>
-      {origin.country.region_only.accounts > 0 && <p className="pws-note">Hanya wilayah: X menyebut kawasan, misalnya Asia Tenggara, yang bisa mencakup Indonesia.</p>}
-    </> : <p className="pws-note">Negara menurut X belum tercatat pada akun dalam pilihan ini.</p>}
+    {known ? <ul className="pws-tiles" role="list">{countries.map(([key, label, title]) => placeTile({ key, label, standing: origin.country[key], origin, showTone,
+      open: () => onOpen(title, postsOf(posts, keysWhere(row => countryOf(row.based_in) === key))) }))}</ul>
+      : <p className="pws-note">Negara belum tercatat.</p>}
     <h4 className="pws-sub">Provinsi menurut lokasi profil</h4>
-    <p className="pws-note">Dari lokasi yang ditulis pemilik akun, provinsi terbaca pada {formatCount(origin.province_read)} dari {formatCount(origin.accounts)} akun X ({shareText(provinceReadShare(origin))}).
-      {parts.map(([name, count]) => ` ${name}: ${formatCount(count)} akun.`).join('')}</p>
-    {origin.provinces.length > 0 && <ul className="pws-rows" role="list">{origin.provinces.map(province => placeRow({ key: province.code, label: province.name, standing: province, origin, showTone,
-      open: () => onOpen(`Akun X di ${province.name}`, postsOf(posts, keysWhere(row => row.province?.code === province.code))) }))}</ul>}
+    {origin.provinces.length > 0 ? <ul className="pws-tiles" role="list">{origin.provinces.map(province => placeTile({ key: province.code, label: province.name, standing: province, origin, showTone,
+      open: () => onOpen(`Akun X di ${province.name}`, postsOf(posts, keysWhere(row => row.province?.code === province.code))) }))}</ul>
+      : <p className="pws-note">Provinsi belum terbaca.</p>}
     {mapLink && <Link className="pws-map" to={mapLink}>Buka peta lokasi akun X <PulseArrow /></Link>}
   </section>;
 }
@@ -154,22 +194,26 @@ export default function WhoIsSpeaking({ posts, onOpen, sentimentFiltered = false
   const sentences = leadSentences(reading.lead, tiers, origin, { sentimentFiltered, platformName: platformLabel });
   const postsKnown = followersKnownShare(tiers), interactionsKnown = followersKnownInteractionShare(tiers);
   const members = () => (reading.members ??= tierMembers(posts));
-  return <AnalyticsPanel title="Siapa yang bicara" description="Golongan akun menurut jumlah pengikut dan asal akun X. Pilih baris untuk melihat postingnya."
-    footer="Pengikut adalah angka terakhir yang tercatat pada posting akun. Posting berita membentuk baris Pemberitaan. Usia, jenis kelamin, dan pekerjaan tidak dilaporkan sumber, jadi tidak ditampilkan.">
+  // Everything that explains the figures sits behind the title's tip, so the panel opens on its answer.
+  const tip = <InfoTip label="Tentang siapa yang bicara">
+    <p>Golongan akun menurut jumlah pengikut, dan asal akun X. Pilih baris atau kotak untuk melihat postingnya.</p>
+    <p>Posting: bagian dari semua posting. Interaksi: bagian dari interaksi yang tercatat.{showTone && ' Nada: negatif, netral, positif, dari posting yang dianalisis.'}</p>
+    {postsKnown !== null && <p>Pengikut diketahui pada {shareText(postsKnown)} posting media sosial
+      {interactionsKnown !== null && ` dan ${shareText(interactionsKnown)} interaksi media sosial yang tercatat`}.</p>}
+    <p>Pengikut adalah angka terakhir yang tercatat pada posting akun. Posting berita membentuk baris Pemberitaan. Usia, jenis kelamin, dan pekerjaan tidak dilaporkan sumber.</p>
+  </InfoTip>;
+  return <AnalyticsPanel title={<span>Siapa yang bicara {tip}</span>} label="Siapa yang bicara">
     <div className="pws" data-tone={showTone ? '' : undefined}>
       {sentences.length > 0 && <ul className="pws-lead">{sentences.map(sentence => <li key={sentence}>{emphasise(sentence)}</li>)}</ul>}
-      {sentimentFiltered && <p className="pws-note">Nada per kelompok perlu semua sentimen; pilihan sentimen di halaman ini sedang aktif.</p>}
-      <ul className="pws-keys">
-        <li><i className="pu-swatch" style={{ '--swatch': SERIES.posts }} aria-hidden="true" />Posting: bagian dari semua posting</li>
-        <li><i className="pu-swatch" style={{ '--swatch': SERIES.interactions }} aria-hidden="true" />Interaksi: bagian dari interaksi yang tercatat</li>
-        {showTone && <li><span className="pws-dots" aria-hidden="true">{TONES.map(key => <i key={key} className="psa-dot" data-tone={key} />)}</span>Nada: negatif, netral, positif, dari posting yang dianalisis</li>}
-      </ul>
+      {sentimentFiltered && <p className="pws-note">Nada per kelompok butuh semua sentimen.</p>}
       <div className="pws-grid">
-        <div className="pws-head" aria-hidden="true"><span>Kelompok</span><span>Akun</span><span>Posting</span><span>Interaksi</span>{showTone && <span>Nada</span>}</div>
+        {/* The column heads are the key: a swatch beside each share, the three tone dots beside Nada. */}
+        <div className="pws-head" aria-hidden="true"><span>Kelompok</span><span>Akun</span>
+          <span><i className="pu-swatch" style={{ '--swatch': SERIES.posts }} />Posting</span>
+          <span><i className="pu-swatch" style={{ '--swatch': SERIES.interactions }} />Interaksi</span>
+          {showTone && <span><span className="pws-dots">{TONES.map(key => <i key={key} className="psa-dot" data-tone={key} />)}</span>Nada</span>}</div>
         <ul className="pws-rows" role="list">{tiers.rows.map(row => tierRow(row, { showTone, onOpen, members }))}</ul>
       </div>
-      {postsKnown !== null && <p className="pws-note">Pengikut diketahui pada {shareText(postsKnown)} posting media sosial
-        {interactionsKnown !== null && ` dan ${shareText(interactionsKnown)} interaksi media sosial yang tercatat`}.</p>}
       {origin.accounts > 0 && originBlock({ origin, posts, showTone, onOpen, mapLink })}
     </div>
   </AnalyticsPanel>;
