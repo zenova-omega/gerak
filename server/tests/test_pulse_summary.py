@@ -62,10 +62,26 @@ async def test_summary_input_reads_unknown_interactions_as_unknown_never_zero(db
     assert 'interaksi 0' not in data
     # The post with known interactions comes first among the negative ones, however small its number.
     assert data.index('- N1 akun_kecil') < data.index('- N2 Portal')
-    assert facts['totals']['interactions'] == 4
+    assert (facts['totals']['interactions'], facts['totals']['interaction_posts']) == (4, 1)
     assert [row['interactions'] for row in facts['triggers']] == [4, None]
-    assert [(row['author'], row['interactions']) for row in facts['accounts']] == [('akun_kecil', 4), ('Portal', None)]
+    assert [(row['author'], row['interactions'], row['interaction_posts']) for row in facts['accounts']] == [('akun_kecil', 4, 1), ('Portal', None, 0)]
     assert 'Portal (news) 1 posting, interaksi tidak diketahui' in data
+
+
+@pytest.mark.asyncio
+async def test_an_account_total_says_over_how_many_of_its_posts_it_is_known(db):
+    topic = WatchTopic(label='Akun campuran', query='campur')
+    db.add(topic)
+    await db.flush()
+    db.add_all([
+        SourceItem(topic_id=topic.id, source='x', platform='x', url=f'https://x.com/a/status/{n}', author='akun_campur', text='Kabar',
+                   published_at=datetime(2026, 11, 1, n), metrics=metrics)
+        for n, metrics in ((1, {'likes': 5}), (2, {}), (3, {'likes': 0}))
+    ])
+    await db.flush()
+    built = await service.build_summary_input(db, topic.id, datetime(2026, 11, 5))
+    assert [(row['interactions'], row['interaction_posts']) for row in built['facts']['accounts']] == [(5, 2)]
+    assert 'akun_campur (x) 3 posting, 5 interaksi dari 2 posting yang interaksinya diketahui' in built['data']
 
     nothing = WatchTopic(label='Tanpa interaksi', query='kosong')
     db.add(nothing)
@@ -73,7 +89,8 @@ async def test_summary_input_reads_unknown_interactions_as_unknown_never_zero(db
     db.add(SourceItem(topic_id=nothing.id, source='news', platform='news', url='https://berita.example/z', author='Portal', text='Berita',
                       published_at=datetime(2026, 11, 1, 2), metrics={}))
     await db.flush()
-    assert (await service.build_summary_input(db, nothing.id, datetime(2026, 11, 5)))['facts']['totals']['interactions'] is None
+    totals = (await service.build_summary_input(db, nothing.id, datetime(2026, 11, 5)))['facts']['totals']
+    assert (totals['interactions'], totals['interaction_posts']) == (None, 0)
 
 
 @pytest.mark.asyncio

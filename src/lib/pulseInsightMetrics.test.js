@@ -91,3 +91,15 @@ test('concentration counts accounts by the one account rule and orders the top p
   assert.equal(result.interactions, 24);
   assert.equal(result.reading.posts.reach80.accounts, 3, 'the reading it was taken from comes with it');
 });
+
+test('a bubble says over how many posts its interactions are known, by the one total rule', () => {
+  const group = { id: 'n', title: 'Dua', posts: [
+    { id: '1', platform: 'x', author: 'a', metrics: { sentiment: 'negative', likes: 7 } },
+    { id: '2', platform: 'news', author: 'b', metrics: { sentiment: 'negative' } },
+    { id: '3', platform: 'x', author: 'c', metrics: { sentiment: 'negative', likes: 0 } },
+  ] };
+  const [point] = narrativeBubbles([group]).points;
+  assert.deepEqual([point.interactions, point.interaction_posts], [7, 2], 'the news post reports nothing and is not counted; a reported 0 is');
+  const [none] = narrativeBubbles([{ ...group, posts: [group.posts[1]] }]).points;
+  assert.deepEqual([none.interactions, none.interaction_posts], [null, 0], 'unknown, never 0');
+});

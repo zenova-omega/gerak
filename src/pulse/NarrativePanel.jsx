@@ -44,7 +44,7 @@ export function NarrativeTip({active,payload}){
    <li>Posting<b>{formatCount(point.count)}</b></li>
    <li>Akun<b>{formatCount(point.accounts)}</b></li>
    <li>Sentimen bersih<small>{toneWords[tone(point.net)]}</small><b>{signed(point.net)}</b></li>
-   <li>Interaksi{point.interactions==null?<em>tidak dilaporkan sumber</em>:<b>{formatCount(point.interactions)}</b>}</li>
+   <li>Interaksi{point.interactions==null?<em>tidak dilaporkan sumber</em>:<>{point.interaction_posts!=null&&<small>dari {formatCount(point.interaction_posts)} posting</small>}<b>{formatCount(point.interactions)}</b></>}</li>
   </ul>
  </div>;
 }

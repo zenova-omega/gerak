@@ -3,7 +3,7 @@
 // A figure nobody observed is null and never read as zero.
 // A post's tone, interactions and account are read through pulseMeasures.js, the one home of those rules; how
 // concentrated the accounts are is the reading `concentration_v1` of pulseReadings.js.
-import { byInteractions, postMeasures, reported, toneShares } from './pulseMeasures.js';
+import { byInteractions, interactionsTotal, postMeasures, reported, toneShares } from './pulseMeasures.js';
 import { concentration } from './pulseReadings.js';
 import { recentShareChange } from './pulseTrend.js';
 
@@ -24,25 +24,25 @@ export function netSentimentChange(rows, window = 7) {
 }
 
 /** One bubble per narrative (a group of posts that carry the same issue or the same text).
- * x = posts, y = net sentiment, size = interactions the sources reported (null when none reported any).
+ * x = posts, y = net sentiment, size = interactions the sources reported (interactions_v1 over the narrative's posts: null when
+ * none reported any), with `interaction_posts`, the posts that total rests on.
  * A narrative with no analysed post has no y: it is counted in `unrated`, not drawn at zero.
  * @param {{id: string, title: string, posts: object[]}[]} narratives
- * @returns {{points: {id: string, title: string, posts: object[], count: number, accounts: number, net: number, interactions: number|null}[], unrated: number}} */
+ * @returns {{points: {id: string, title: string, posts: object[], count: number, accounts: number, net: number, interactions: number|null, interaction_posts: number}[], unrated: number}} */
 export function narrativeBubbles(narratives = [], limit = 12) {
   const points = [];
   let unrated = 0;
   for (const group of narratives.slice(0, limit)) {
     const counts = { positive: 0, neutral: 0, negative: 0, unknown: 0 }, accounts = new Set();
-    let interactions = null;
     for (const post of group.posts) {
       const own = postMeasures(post);
       counts[own.tone in counts ? own.tone : 'unknown']++;
-      if (own.interactions != null) interactions = (interactions ?? 0) + own.interactions;
       if (own.account) accounts.add(own.account);
     }
     const net = netSentiment(counts);
     if (net === null) { unrated++; continue; }
-    points.push({ id: group.id, title: group.title, posts: group.posts, count: group.posts.length, net, interactions, accounts: accounts.size });
+    const total = interactionsTotal(group.posts);
+    points.push({ id: group.id, title: group.title, posts: group.posts, count: group.posts.length, net, interactions: total.value, interaction_posts: total.posts, accounts: accounts.size });
   }
   return { points, unrated };
 }

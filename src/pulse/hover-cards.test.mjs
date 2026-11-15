@@ -81,6 +81,12 @@ test('narrative: interactions the sources did not report are said so, not shown 
   assert.match(markup, /<p class="pu-hover-title">2\. x{90}…<\/p>/);
 });
 
+test('narrative: the interactions say over how many posts they are known', async () => {
+  const { NarrativeTip } = await load('/src/pulse/NarrativePanel.jsx');
+  const markup = html(React.createElement(NarrativeTip, { active: true, payload: [{ payload: bubble({ interaction_posts: 1100 }) }] }));
+  assert.match(markup, /<li>Interaksi<small>dari 1\.100 posting<\/small><b>2\.400\.000<\/b><\/li>/);
+});
+
 test('trend: the shared tooltip of the line charts takes the same frame and names its parts', () => {
   const source = read('../components/ui/shadcn/chart.jsx');
   const content = source.slice(source.indexOf('const ChartTooltipContent'), source.indexOf('ChartTooltipContent.displayName'));

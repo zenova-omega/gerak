@@ -9,8 +9,8 @@ import re
 from collections import Counter, defaultdict
 from sqlalchemy import select
 from ..models.pulse import SourceItem
-from .pulse_chat import _engagement, _known_interactions, _sentiment, _wib, _wib_day, build_context, render_context
-from .pulse_measures import interaction_sort_key
+from .pulse_chat import _engagement, _sentiment, _wib, _wib_day, build_context, render_context
+from .pulse_measures import interaction_sort_key, interactions_total
 from .pulse_places import post_places
 
 CONTEXT_TOKENS = 8192
@@ -107,16 +107,21 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
     if not earliest:
         lines.append('- tidak ada posting bertanggal')
 
-    # An account's interactions are the sum over its posts whose interactions are known; None when none of them is.
-    accounts = defaultdict(lambda: [0, None])
+    # An account's interactions are interactions_v1 totalled over its posts (pulse_measures.interactions_total): the
+    # sum over the posts whose interactions are known, with how many those are; unknown (None) when none is.
+    posts_of = defaultdict(list)
     for item in items:
         if item.author:
-            row, own = accounts[(item.author, item.platform or 'unknown')], _engagement(item.metrics)
-            row[0] += 1
-            if own is not None:
-                row[1] = (row[1] or 0) + own
-    by_interactions = sorted(accounts.items(), key=lambda pair: (pair[1][1] is None, -(pair[1][1] or 0)))
-    lines.append('AKUN DENGAN INTERAKSI TERBESAR: ' + ('; '.join(f'{author} ({platform}) {posts} posting, ' + ('interaksi tidak diketahui' if total is None else f'{total} interaksi')
+            posts_of[(item.author, item.platform or 'unknown')].append(item.metrics)
+    accounts = {key: (len(rows), interactions_total(rows)) for key, rows in posts_of.items()}
+    by_interactions = sorted(accounts.items(), key=lambda pair: (pair[1][1]['value'] is None, -(pair[1][1]['value'] or 0)))
+
+    def account_line(author, platform, posts, total):
+        if total['value'] is None:
+            return f'{author} ({platform}) {posts} posting, interaksi tidak diketahui'
+        known = '' if total['posts'] == posts else f" dari {total['posts']} posting yang interaksinya diketahui"
+        return f"{author} ({platform}) {posts} posting, {total['value']} interaksi{known}"
+    lines.append('AKUN DENGAN INTERAKSI TERBESAR: ' + ('; '.join(account_line(author, platform, posts, total)
                  for (author, platform), (posts, total) in by_interactions[:6]) or '-'))
 
     emotions = Counter(((item.metrics or {}).get('emotion') or {}).get('label') for item in items if isinstance((item.metrics or {}).get('emotion'), dict))
@@ -175,8 +180,9 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
     spike_days = context['spikes']['days']
     surges = [post for post in context['evidence_posts'] if post['observed_growth']['fastest_interval']]
     surge = max(surges, key=lambda post: post['observed_growth']['fastest_interval']['rate_per_hour']) if surges else None
+    overall = interactions_total([item.metrics for item in items])
     facts = {
-        'totals': {'posts': len(items), 'accounts': len(accounts), 'interactions': _known_interactions(items)[0],
+        'totals': {'posts': len(items), 'accounts': len(accounts), 'interactions': overall['value'], 'interaction_posts': overall['posts'],
                    'comments': len(comments), 'days': len(by_day)},
         'sentiment': {'positive': tone['positive'], 'neutral': tone['neutral'], 'negative': tone['negative'], 'unknown': tone['unknown'], 'analysed': labelled},
         'platforms': [{'platform': platform, 'posts': count} for platform, count in Counter(item.platform or 'unknown' for item in items).most_common(6)],
@@ -190,7 +196,7 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
                   'to': surge['observed_growth']['fastest_interval']['to'], 'interactions': surge['interactions']} if surge else None,
         'top_post': {'code': context['evidence_posts'][0]['code'], 'author': context['evidence_posts'][0]['author'], 'platform': context['evidence_posts'][0]['platform'],
                      'interactions': context['evidence_posts'][0]['interactions']} if context['evidence_posts'] else None,
-        'accounts': [{'author': author, 'platform': platform, 'posts': posts, 'interactions': total}
+        'accounts': [{'author': author, 'platform': platform, 'posts': posts, 'interactions': total['value'], 'interaction_posts': total['posts']}
                      for (author, platform), (posts, total) in by_interactions[:4]],
         'groups': [{'code': row['code'], 'title': row['title'][:90], 'posts': row['posts'], 'accounts': row['accounts']} for row in context['conversation_groups_in_scope'][:4]],
         'quotes': [{'code': f'K{index}', 'text': _clean(comment['text'], 160), 'author': comment.get('author'), 'likes': likes} for index, (likes, comment, item) in enumerate(comments[:3], 1)],

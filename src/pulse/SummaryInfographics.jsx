@@ -31,7 +31,7 @@ function Viral({ facts }) {
 
 function Figures({ facts }) {
   const t = facts.totals;
-  return <div className="sig sig-figures"><Figure value={formatCount(t.posts)} label="posting" /><Figure value={formatCount(t.accounts)} label="akun" /><Figure value={formatCount(t.interactions)} label="interaksi" /><Figure value={formatCount(t.days)} label="hari" />{facts.days.length > 1 && <span className="sig-spark" title="Posting per hari"><Sparkline values={facts.days.map(row => row.posts)} width={140} height={40} /></span>}</div>;
+  return <div className="sig sig-figures"><Figure value={formatCount(t.posts)} label="posting" /><Figure value={formatCount(t.accounts)} label="akun" /><Figure value={formatCount(t.interactions)} label={t.interactions != null && t.interaction_posts != null && t.interaction_posts < t.posts ? `interaksi dari ${formatCount(t.interaction_posts)} posting` : 'interaksi'} /><Figure value={formatCount(t.days)} label="hari" />{facts.days.length > 1 && <span className="sig-spark" title="Posting per hari"><Sparkline values={facts.days.map(row => row.posts)} width={140} height={40} /></span>}</div>;
 }
 
 function Talk({ facts }) {
