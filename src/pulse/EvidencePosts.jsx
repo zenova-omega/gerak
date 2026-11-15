@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {Copy} from 'lucide-react';
 import {PulseArrow} from '../components/ui/PulseArrow';
 import {PulseSourceHeading} from '../components/ui/PulsePatterns';
-import {PulseButton} from '../components/ui/PulseUI';
+import {PulseButton,PulseButtonLink} from '../components/ui/PulseUI';
 import {SentimentTag} from '../components/ui/PulseTag';
 import {PulseMetricRow} from '../components/ui/PulseMetricRow';
 import {sentimentColor} from '../lib/pulseChartTheme';
@@ -68,7 +68,7 @@ function EvidenceComments({post}){
 function EvidencePost({post:p}){
  const [expanded,setExpanded]=useState(false);
  const caption=sourceText(p)||'Teks belum tersedia';
- return <li><PulseSourceHeading post={p}><SentimentTag value={postSentiment(p)}/>{safeSourceUrl(p.url)&&<a href={safeSourceUrl(p.url)} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting '+(p.author||'')+' di sumbernya'}><PulseArrow/></a>}</PulseSourceHeading>
+ return <li><PulseSourceHeading post={p}><SentimentTag value={postSentiment(p)}/>{safeSourceUrl(p.url)&&<PulseButtonLink iconOnly href={safeSourceUrl(p.url)} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting '+(p.author||'')+' di sumbernya'}><PulseArrow decorative/></PulseButtonLink>}</PulseSourceHeading>
   <p className="ped-text">{expanded?caption:caption.slice(0,420)}{!expanded&&caption.length>420?'…':''}</p>
   {caption.length>420&&<PulseButton size="sm" variant="quiet" aria-expanded={expanded} onClick={()=>setExpanded(value=>!value)}>{expanded?'Ringkas':'Baca selengkapnya'}</PulseButton>}
   <PostMediaPreview post={p} links={false}/>

@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { build } from 'esbuild';
 import { chromium } from 'playwright-core';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Link, MemoryRouter } from 'react-router-dom';
+import { createServer } from 'vite';
 
 test('the relevance button on the card marks and unmarks a post without opening it; the review under the details keeps the full choice and the gold label; failed writes do not announce success', async () => {
   // The card shows the toggle in its header and the review under its details, both on one saved review, as PostCard does.
@@ -55,7 +59,7 @@ test('the relevance button on the card marks and unmarks a post without opening 
 
 test('on the Posting card the relevance button sits in the header beside Tanya AI, and an irrelevant post says so in words', () => {
   const card = readFileSync(new URL('../components/admin/pulse/PostFeed.jsx', import.meta.url), 'utf8');
-  assert.match(card, /<RelevanceToggle postId=\{post\.id\} topicId=\{topicId\} review=\{review\} disabled=\{!reviewsReady\} onSaved=\{onReviewSaved\}\/>/);
+  assert.match(card, /<RelevanceToggle size=\{size\} postId=\{post\.id\} topicId=\{topicId\} review=\{review\} disabled=\{!reviewsReady\} onSaved=\{onReviewSaved\}\/>/);
   assert.match(card, /review\?\.relevance==='irrelevant'&&<PulseTag[^>]*>Tidak relevan<\/PulseTag>/);
   const css = readFileSync(new URL('./ds/analytics-kit.css', import.meta.url), 'utf8');
   assert.doesNotMatch(css, /\.pulse-post\[data-open\] \{ grid-column: 1 \/ -1; \}/, 'an opened card stays in its column');
@@ -65,4 +69,38 @@ test('an opened card in a narrow column lays its interaction breakdown out by th
   const css = readFileSync(new URL('./ds/analytics-kit.css', import.meta.url), 'utf8');
   assert.match(css, /\.pm-post-detail \{ container-type: inline-size; container-name: post-detail; \}/);
   assert.match(css, /@container post-detail \(max-width: 560px\) \{[\s\S]*?\.pu-eng-metrics \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+});
+
+test('the card actions are one component family at one size, so Tanya AI, the relevance button and the source link are equally tall', async () => {
+  const card = readFileSync(new URL('../components/admin/pulse/PostFeed.jsx', import.meta.url), 'utf8');
+  assert.match(card, /compact=\{layout==='grid'\}/, 'a grid tile is compact');
+  assert.match(card, /const size = compact \? 'sm' : 'md';/);
+  assert.match(card, /<PulseButtonLink className="pm-ask-ai" size=\{size\} iconOnly=\{compact\}><Link to=/);
+  assert.match(card, /<RelevanceToggle size=\{size\} /);
+  assert.match(card, /<PulseButtonLink size=\{size\} iconOnly href=\{media\.postUrl\}/);
+  for (const file of ['../pulse/SentimentEvidenceCard.jsx', '../pulse/EvidencePosts.jsx'].map(path => new URL(path, new URL('../components/', import.meta.url))))
+    assert.match(readFileSync(file, 'utf8'), /<PulseButtonLink [^>]*iconOnly href=/, `${file.pathname} uses the component too`);
+  const kit = readFileSync(new URL('./ds/analytics-kit.css', import.meta.url), 'utf8');
+  const patterns = readFileSync(new URL('../components/ui/pulse-patterns.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(kit, /pu-source-actions > a[^{]*\{[^}]*min-(?:height|width)/, 'no stylesheet sizes the card links from outside');
+  assert.doesNotMatch(kit, /pm-(?:relevance|ask-ai)[^{]*\{[^}]*(?:min-(?:height|width)|padding)/);
+  assert.match(patterns, /\.pu-source-actions>a:not\(\.pu-button\)\{/, 'only a plain link keeps the fallback size');
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { PulseButton, PulseButtonLink } = await server.ssrLoadModule('/src/components/ui/PulseUI.jsx');
+    assert.doesNotMatch(readFileSync(new URL('../components/ui/PulseUI.jsx', import.meta.url), 'utf8'), /react-router/, 'the shared UI module stays free of the router');
+    const html = element => renderToStaticMarkup(React.createElement(MemoryRouter, null, element));
+    const button = html(React.createElement(PulseButton, { size: 'sm', iconOnly: true, 'aria-label': 'Tombol' }, 'x'));
+    const route = html(React.createElement(PulseButtonLink, { size: 'sm', iconOnly: true }, React.createElement(Link, { to: '/pulse/chat', 'aria-label': 'Rute' }, 'x')));
+    const away = html(React.createElement(PulseButtonLink, { size: 'sm', iconOnly: true, href: 'https://example.com', target: '_blank', 'aria-label': 'Sumber' }, 'x'));
+    const classes = markup => markup.match(/class="([^"]*)"/)[1].split(' ').sort().join(' ');
+    assert.match(button, /^<button /);
+    assert.match(route, /^<a [^>]*href="\/pulse\/chat"/);
+    assert.match(away, /^<a [^>]*href="https:\/\/example\.com"[^>]*target="_blank"/);
+    for (const link of [route, away]) {
+      assert.equal(classes(link), classes(button), 'the link wears exactly the button\'s classes');
+      assert.match(link, /data-size="sm"/);
+      assert.match(link, /data-icon-only=""/);
+    }
+  } finally { await server.close(); }
 });

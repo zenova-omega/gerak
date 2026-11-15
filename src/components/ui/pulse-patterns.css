@@ -6,7 +6,8 @@
 .pulse-standalone .pu-source-name strong a:hover{text-decoration:underline;text-underline-offset:3px}
 .pulse-standalone .pu-source-heading .pu-source-name small{display:block;font-size:12px;line-height:1.5;color:var(--ps-muted);margin-top:4px;overflow-wrap:anywhere}
 .pulse-standalone .pu-source-actions{display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0}
-.pulse-standalone .pu-source-actions>a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:1px solid var(--ps-control-line);border-radius:var(--ps-radius-control);color:var(--ps-ink)}
+/* A plain link in a card's actions; PulseButton and PulseButtonLink size themselves. */
+.pulse-standalone .pu-source-actions>a:not(.pu-button){display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:1px solid var(--ps-control-line);border-radius:var(--ps-radius-control);color:var(--ps-ink)}
 .pulse-standalone .pu-rank{font-size:13px;font-weight:650;color:var(--ps-muted);font-variant-numeric:tabular-nums;flex:0 0 24px;align-self:flex-start;padding-top:12px}
 .pulse-standalone .pu-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px;border-bottom:1px solid var(--ps-line);margin-bottom:20px}
 .pulse-standalone .pu-panel-heading>div:first-child{min-width:0;flex:1}

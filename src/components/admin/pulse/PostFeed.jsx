@@ -14,7 +14,7 @@ import { postMedia } from '../../../lib/pulseMedia';
 import PostMediaPreview from './PostMediaPreview';
 import { platformLabel } from './PlatformIcon';
 import {PulseSourceHeading,PulsePanelHeading} from '../../ui/PulsePatterns';
-import { PulseButton } from '../../ui/PulseUI';
+import { PulseButton, PulseButtonLink } from '../../ui/PulseUI';
 import { PulseTag, SentimentTag } from '../../ui/PulseTag';
 import PostCaption from './PostCaption';
 import SentimentAction from './SentimentAction';
@@ -36,12 +36,14 @@ const date = pulseDate;
 const summaryParts=[['likes','Suka',PulseLike],['comments','Komentar',PulseComment],['shares','Bagikan',PulseShare],['views','Tayangan',PulseView]];
 /** One post. Collapsed it answers "who, what, how much, what tone" in a few lines so a list can be
  * scanned; the interaction breakdown, review tools, comments and history open on demand. */
-function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
+function PostCard({ post, topicId, review, reviewsReady, onReviewSaved, compact = false }) {
   const [open, setOpen] = useState(false);
+  const size = compact ? 'sm' : 'md';
   const media = postMedia(post), total = postInteractions(post.metrics), detailId = 'pm-detail-' + post.id;
   const names = { x: { comments: 'Balasan', shares: 'Repost' }, threads: { comments: 'Balasan', shares: 'Repost' } }[post.platform] || {};
   return <article className="pulse-post" data-open={open ? '' : undefined}>
-    <PulseSourceHeading post={post} linkProfile><SentimentTag value={postSentiment(post)}/>{review?.relevance==='irrelevant'&&<PulseTag tone="warning">Tidak relevan</PulseTag>}{topicId&&<Link className="pm-ask-ai" to={'/pulse/chat?'+new URLSearchParams({topic:topicId,post:post.id})} aria-label={'Tanya AI tentang posting '+(post.author||'')}><Sparkles size={16} aria-hidden="true"/><span>Tanya AI</span></Link>}{topicId&&<RelevanceToggle postId={post.id} topicId={topicId} review={review} disabled={!reviewsReady} onSaved={onReviewSaved}/>}{media.postUrl&&<a href={media.postUrl} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting '+(post.author||'')}><ExternalLink size={18}/></a>}</PulseSourceHeading>
+    {/* The card's three actions are one component family at one size: compact (sm) on a grid tile, md in the list. */}
+    <PulseSourceHeading post={post} linkProfile><SentimentTag value={postSentiment(post)}/>{review?.relevance==='irrelevant'&&<PulseTag tone="warning">Tidak relevan</PulseTag>}{topicId&&<PulseButtonLink className="pm-ask-ai" size={size} iconOnly={compact}><Link to={'/pulse/chat?'+new URLSearchParams({topic:topicId,post:post.id})} aria-label={'Tanya AI tentang posting '+(post.author||'')}><Sparkles aria-hidden="true"/>{!compact&&<span>Tanya AI</span>}</Link></PulseButtonLink>}{topicId&&<RelevanceToggle size={size} postId={post.id} topicId={topicId} review={review} disabled={!reviewsReady} onSaved={onReviewSaved}/>}{media.postUrl&&<PulseButtonLink size={size} iconOnly href={media.postUrl} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting '+(post.author||'')}><ExternalLink aria-hidden="true"/></PulseButtonLink>}</PulseSourceHeading>
     <div className={'pm-post-body'+(['instagram','tiktok'].includes(post.platform)&&(media.imageUrl||media.videoUrl||media.embedUrl)?' has-media':'')}>
       <PostMediaPreview post={post} links={false} />
       <PostCaption post={post}/>
@@ -103,7 +105,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
     <div className="ps-active-filters" aria-label="Filter aktif">{Object.entries(filters).filter(([k,v])=>k!=='sort' && v!==defaultPostFilters[k]).map(([key,value])=><PulseTag key={key} size="lg" variant="outline" onRemove={()=>{setFilters({...filters,[key]:defaultPostFilters[key]});setPage(0);}} removeLabel={'Hapus filter '+key}>{({query:'Teks',author:'Akun',exactAuthor:'Akun terpilih',account:'Akun terpilih',province:'Menyebut tempat di',sentiments:'Sentimen',platforms:'Platform',minEngagement:'Min. interaksi',media:'Media',from:'Mulai',to:'Selesai'})[key]}: {Array.isArray(value)?value.map(v=>sentimentLabels[v]||platformLabel(v)).join(', ')||'Tidak ada':key==='province'?provinceNames[value]:key==='account'?accountName(posts.filter(p=>postAccount(p)===value))||'Nama tidak tersedia':value}</PulseTag>)}</div>
     <div className="pm-results-toolbar"><p role="status"><strong>{formatCount(rows.length)}</strong> posting cocok <span>· {rows.length ? current * 12 + 1 : 0}–{Math.min((current+1)*12,rows.length)} ditampilkan</span></p><div className="pm-view-switch" role="group" aria-label="Tampilan posting"><PulseButton aria-pressed={layout==='list'} onClick={()=>setLayout('list')}><List size={16}/>Daftar</PulseButton><PulseButton aria-pressed={layout==='grid'} onClick={()=>setLayout('grid')}><LayoutGrid size={16}/>Grid media</PulseButton></div></div>
     <div className="pm-results-layout"><div className="pm-results-main">
-    <div ref={postGrid} className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}
+    <div ref={postGrid} className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} compact={layout==='grid'} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}
       onReviewSaved={review=>setReviewState(state=>state.topicId===topicId ? {...state,rows:[...state.rows.filter(row=>row.post_id!==review.post_id),review]} : state)}/>)}</div>
     {!rows.length && <div className="pulse-empty"><h3>Tidak ada posting yang cocok</h3><p>Coba hapus filter atau kata pencarian.</p><PulseButton onClick={()=>applyFilters({...defaultPostFilters})}>Hapus filter posting</PulseButton></div>}
     <div className="pulse-pagination"><PulseButton disabled={current === 0} onClick={() => setPage(current - 1)}>Sebelumnya</PulseButton><span>Halaman {current + 1} / {pages}</span><PulseButton disabled={current + 1 >= pages} onClick={() => setPage(current + 1)}>Berikutnya</PulseButton></div>

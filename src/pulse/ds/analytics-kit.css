@@ -84,6 +84,8 @@
 .pulse-standalone .pu-button:not([aria-pressed]):is(.pu-button-primary, .pu-button-secondary, .pu-button-reverse):not(:disabled):active { transform: translateY(2px); box-shadow: 0 0 0 var(--edge); }
 .pulse-standalone .pu-button.pu-button:is(:disabled, [aria-busy=true]) { box-shadow: none; }
 .pulse-standalone :is(.pm-quick-filters, .pm-view-switch, .ps-sidebar, .pu-source-actions) .pu-button { box-shadow: none; }
+/* A card's actions mix links and a toggle (aria-pressed, never raised): none of them is raised, so the row reads as one. */
+.pulse-standalone.pulse-standalone .pu-source-actions .pu-button { box-shadow: none; }
 .pulse-standalone .pu-button > .pu-arrow { margin-left: 0; }
 
 /* ---------- Tag ---------- */
@@ -644,20 +646,16 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .pc-composer textarea:disabled { opacity: .6; }
 .pc-error { margin: 0; font-size: .8125rem; color: var(--ps-danger-ink); }
 .pc-note { margin: 0; max-width: 78ch; font-size: .75rem; line-height: 1.6; color: var(--ps-muted); }
-.pulse-standalone .pu-source-actions > a.pm-ask-ai { gap: 6px; padding: 0 12px; font-size: .8125rem; font-weight: 600; text-decoration: none; }
-/* The card's relevance button (RelevanceToggle): one symbol beside Tanya AI and the source link, the same size as both.
-   Pressed, it takes the warning tint, and the card carries the words "Tidak relevan" beside the tone. */
-.pulse-standalone .pu-source-actions > button.pm-relevance { display: inline-flex; align-items: center; justify-content: center; min-width: var(--ps-control-md); min-height: var(--ps-control-md); padding: 0; border: 1px solid var(--ps-control-line); border-radius: var(--ps-radius-control); background: transparent; color: var(--ps-muted); box-shadow: none; cursor: pointer; }
-.pulse-standalone .pu-source-actions > button.pm-relevance:hover { background: var(--ps-soft); color: var(--ps-ink); }
-.pulse-standalone .pu-source-actions > button.pm-relevance[aria-pressed=true] { background: var(--ps-peach); border-color: var(--ps-warning-ink); color: var(--ps-warning-ink); }
-.pulse-standalone .pu-source-actions > button.pm-relevance[data-error] { border-color: var(--ps-danger); }
-.pulse-standalone .pu-source-actions > button.pm-relevance:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
-.pulse-standalone .pu-source-actions > button.pm-relevance:disabled { opacity: .5; cursor: default; }
+/* The card's actions (Tanya AI, RelevanceToggle, the source link) are PulseButton / PulseButtonLink at one size, so
+   their height comes from the component, never from here. Only the relevance button's pressed state is drawn here: the
+   warning tint, while the card carries the words "Tidak relevan" beside the tone. */
+.pulse-standalone.pulse-standalone .pu-button.pm-relevance[aria-pressed=true] { background: var(--ps-peach); border-color: var(--ps-warning-ink); color: var(--ps-warning-ink); }
+.pulse-standalone.pulse-standalone .pu-button.pm-relevance[data-error] { border-color: var(--ps-danger); }
 @media (max-width: 600px) {
   .pc-composer-row { grid-template-columns: minmax(0, 1fr); }
   .pc-answer { padding: 16px; }
   .pc-question { max-width: 100%; }
-  .pulse-standalone .pu-source-actions > a.pm-ask-ai > span { display: none; }
+  .pulse-standalone .pu-source-actions > .pm-ask-ai > span { display: none; }
 }
 @media print { .pc-composer, .pc-starters, .pc-head-meta { display: none; } }
 
@@ -908,9 +906,7 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-name { flex: 1 1 0; min-width: 0; }
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-name :is(strong, small) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-actions { flex: 1 1 100%; margin-left: 0; justify-content: flex-start; }
-.pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-actions > a.pm-ask-ai { margin-left: auto; padding: 0; }
-.pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-actions > a.pm-ask-ai > span { display: none; }
-.pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-actions > a { min-width: 40px; min-height: 40px; }
+.pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-actions > .pm-ask-ai { margin-left: auto; }
 /* What: a short excerpt. The full text is in the list view and in the opened tile. */
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post:not([data-open]) .pulse-post-copy { padding: 12px 16px 0; }
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post:not([data-open]) .pulse-post-copy > .pu-eyebrow { display: none; }
@@ -979,15 +975,14 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone.pulse-standalone .pm-view-switch .pu-button { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
 
 /* Button-like links and toggles that are not PulseButton. */
-.pulse-standalone.pulse-standalone :is(.ps-scope-toggle, .pu-source-actions > a, a.pm-ask-ai, .ps-project-search-link) { min-height: var(--ps-control-md); border-radius: var(--ps-radius-control); font-size: var(--ps-control-font-md); font-weight: var(--ps-control-weight); }
-.pulse-standalone.pulse-standalone .pu-source-actions > a:not(.pm-ask-ai) { min-width: var(--ps-control-md); }
-.pulse-standalone.pulse-standalone .pm-workspace[data-layout=grid] .pulse-post > header > .pu-source-actions > a { min-width: var(--ps-control-sm); min-height: var(--ps-control-sm); }
+.pulse-standalone.pulse-standalone :is(.ps-scope-toggle, .ps-project-search-link) { min-height: var(--ps-control-md); border-radius: var(--ps-radius-control); font-size: var(--ps-control-font-md); font-weight: var(--ps-control-weight); }
 .pulse-standalone .ps-info-trigger { width: var(--ps-control-xs); height: var(--ps-control-xs); }
 .pulse-standalone.pulse-standalone .pm-quick-filters .pp-actions .pu-button, .pulse-standalone.pulse-standalone .pulse-platform-picker .pp-actions .pu-button { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
 /* One type size per control size, whatever panel the button sits in. Page CSS must not restyle buttons. */
 .pulse-standalone.pulse-standalone.pulse-standalone .pu-button { min-height: var(--ps-control-md); padding: 0 var(--ps-control-pad-md); font-size: var(--ps-control-font-md); border-radius: var(--ps-radius-control); }
 .pulse-standalone.pulse-standalone.pulse-standalone .pu-button[data-icon-only] { padding: 0; }
 .pulse-standalone.pulse-standalone.pulse-standalone :is(.pu-button[data-size=sm], .pm-view-switch .pu-button, .pp-actions .pu-button) { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
+.pulse-standalone.pulse-standalone.pulse-standalone .pu-button[data-icon-only][data-size=sm] { padding: 0; }   /* the sm padding above must not widen a square icon button */
 @media (max-width: 700px) { .pulse-standalone.pulse-standalone.pulse-standalone .pp-actions .pu-button { min-height: var(--ps-control-md); } }
 .pu-control-specimen { display: grid; gap: 16px; }
 .pu-control-specimen .pu-example-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
@@ -1609,7 +1604,6 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .pse-card { display: grid; gap: 12px; padding: var(--ps-surface-pad-sm) var(--ps-surface-pad); }
 .pulse-standalone .pse-card > .pu-source-heading { margin: 0; }
 .pulse-standalone .pse-card .pu-source-actions { flex-wrap: wrap; justify-content: flex-end; }
-.pulse-standalone .pse-card .pu-source-actions > a { min-width: var(--ps-control-sm); min-height: var(--ps-control-sm); }
 .pulse-standalone .pse-card .pse-story { margin: 0; }
 .pulse-standalone .pse-card .pu-source-copy { padding: 0; }
 .pulse-standalone .pse-card .pu-source-copy h3 { margin: 4px 0 2px; font-size: 1rem; line-height: 1.4; }

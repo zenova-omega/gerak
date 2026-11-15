@@ -11,8 +11,21 @@ import { PulseArrow } from './PulseArrow';
  * @param {{variant?: 'primary'|'secondary'|'quiet'|'reverse', size?: 'md'|'sm', iconOnly?: boolean, arrow?: boolean, busy?: boolean, busyLabel?: string, disabled?: boolean, type?: 'button'|'submit'|'reset', className?: string, children?: import('react').ReactNode}} props
  */
 export function PulseButton({ variant = 'secondary', size = 'md', iconOnly = false, busy = false, busyLabel, disabled, type = 'button', className = '', arrow = false, children, ...props }) {
-  return <Button {...props} type={type} variant={{primary:'default',reverse:'default',secondary:'outline',quiet:'ghost'}[variant]} data-size={size === 'sm' ? 'sm' : undefined} data-icon-only={iconOnly ? '' : undefined} className={cn('pu-button',`pu-button-${variant}`,className)} disabled={disabled || busy} aria-busy={busy || undefined}>
+  return <Button {...props} type={type} variant={VARIANTS[variant]} data-size={size === 'sm' ? 'sm' : undefined} data-icon-only={iconOnly ? '' : undefined} className={cn('pu-button',`pu-button-${variant}`,className)} disabled={disabled || busy} aria-busy={busy || undefined}>
     {busy && <LoaderCircle className="pu-spinner" data-icon="inline-start" aria-hidden="true" />}{busy && busyLabel ? busyLabel : children}{arrow && !busy && <PulseArrow decorative />}
+  </Button>;
+}
+const VARIANTS = {primary:'default',reverse:'default',secondary:'outline',quiet:'ghost'};
+
+/** An action that goes somewhere, drawn by the same Button as PulseButton (rendered as the link), so links and buttons
+ * in one row keep one height, one width when `iconOnly`, and one look. With `href` it is a link to a page elsewhere
+ * (pass `target` and `rel` as usual); for a page inside PULSE, wrap exactly one router `<Link>` (this module stays free
+ * of the router). Same `variant`, `size` and `iconOnly` as PulseButton.
+ * @param {{variant?: 'primary'|'secondary'|'quiet'|'reverse', size?: 'md'|'sm', iconOnly?: boolean, href?: string, className?: string, children?: import('react').ReactNode}} props
+ */
+export function PulseButtonLink({ variant = 'secondary', size = 'md', iconOnly = false, href, className = '', children, ...props }) {
+  return <Button asChild variant={VARIANTS[variant]} data-size={size === 'sm' ? 'sm' : undefined} data-icon-only={iconOnly ? '' : undefined} className={cn('pu-button',`pu-button-${variant}`,className)}>
+    {href != null ? <a href={href} {...props}>{children}</a> : children}
   </Button>;
 }
 

@@ -193,6 +193,8 @@ Import langsung dari `src/components/ui/PulseUI.jsx` agar bundle PULSE tidak men
 
 `PulseButton`: primary, secondary, quiet; default `type=button`, explicit submit untuk form. Busy menonaktifkan tombol dan menyampaikan `aria-busy`. Tombol ikon saja harus memiliki nama aksesibel. Hover, active, focus, disabled dan busy berbagi bahasa visual yang sama.
 
+`PulseButtonLink`: aksi yang membuka halaman (`href` ke sumber, atau satu `<Link>` router yang dibungkus untuk halaman di dalam PULSE) memakai Button yang sama dengan `PulseButton`, dengan `variant`, `size` dan `iconOnly` yang sama. Satu baris aksi (mis. Tanya AI, Tidak relevan, buka sumber di kartu posting) memakai satu `size`, jadi tingginya sama; tidak ada aturan CSS halaman yang mengatur tinggi atau lebar tombol dari luar.
+
 `PulseBadge`: neutral, success, warning, accent. Noninteraktif, selalu dengan label. “Dikonfigurasi” bukan “Berhasil”.
 
 `PulseNotice`: neutral atau warning. Gunakan `role=alert` untuk kegagalan tindakan, bukan catatan statis. Tindakan perbaikan tetap berupa tombol eksplisit.

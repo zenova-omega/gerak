@@ -2,6 +2,7 @@ import { PulseArrow } from '../components/ui/PulseArrow';
 import {Link} from 'react-router-dom';
 import {ExternalLink} from 'lucide-react';
 import {PulseSourceHeading} from '../components/ui/PulsePatterns';
+import {PulseButtonLink} from '../components/ui/PulseUI';
 import PostCaption from '../components/admin/pulse/PostCaption';
 import {safeSourceUrl} from '../lib/pulseData';
 import {sourceText} from '../lib/pulseOverview';
@@ -33,7 +34,7 @@ export default function SentimentEvidenceCard({post,selectedLabel,accountLink,co
   <PulseSourceHeading post={post}>
    <SentimentTag value={selectedLabel}/>{kind&&kind!=='unsorted'&&<PulseTag variant="outline" title={kindHints[kind]}>{kindLabels[kind]}</PulseTag>}
    {emotion&&<PulseTag variant="outline" title={emotion.reason} aria-label={'Emosi: '+emotionLabels[emotion.label]}><span aria-hidden="true">{emotionFaces[emotion.label]}</span> {emotionLabels[emotion.label]}</PulseTag>}
-   {url&&<a href={url} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting asli '+(post.author||'')}><ExternalLink size={16} aria-hidden="true"/></a>}
+   {url&&<PulseButtonLink size="sm" iconOnly href={url} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting asli '+(post.author||'')}><ExternalLink aria-hidden="true"/></PulseButtonLink>}
   </PulseSourceHeading>
   <div className={'pse-story'+(hasMedia?' has-media':'')}>
    {hasMedia&&<div className="pse-thumbnail"><PreviewImage media={{...media,imageUrl:image}} author={post.author}/></div>}

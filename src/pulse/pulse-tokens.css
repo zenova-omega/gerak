@@ -152,6 +152,12 @@
 .pulse-standalone .pu-button[data-size=sm] { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
 .pulse-standalone .pu-button[data-icon-only] { min-width: var(--ps-control-md); padding: 0; }
 .pulse-standalone .pu-button[data-icon-only][data-size=sm] { min-width: var(--ps-control-sm); }
+/* PulseButtonLink: the border every PULSE button gets from pulse-app.css (each variant sets only its colour), no underline. */
+.pulse-standalone a.pu-button { border-width: 1px; border-style: solid; text-decoration: none; }
+/* ...and its variant's ink: page rules such as `.pulse-dashboard a` colour plain links, never a PulseButtonLink. */
+.pulse-standalone.pulse-standalone :is(a.pu-button-secondary, a.pu-button-quiet) { color: var(--ps-ink); }
+.pulse-standalone.pulse-standalone a.pu-button-primary { color: var(--ps-accent-ink); }
+.pulse-standalone.pulse-standalone a.pu-button-reverse { color: var(--ps-btn-reverse-ink); }
 .pulse-standalone .pu-button-primary { background: var(--ps-lavender); color: var(--ps-accent-ink); border-color: var(--ps-lavender); }
 .pulse-standalone .pu-button-secondary { background: var(--ps-panel); color: var(--ps-ink); border-color: var(--ps-control-line); }
 .pulse-standalone .pu-button-quiet { background: transparent; color: var(--ps-ink); border-color: transparent; }

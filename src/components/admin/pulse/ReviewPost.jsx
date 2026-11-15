@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Ban } from 'lucide-react';
 import api from '../../../lib/api';
+import { PulseButton } from '../../ui/PulseUI';
 
 /** Saving one post's review, shared by the card's relevance button and the review under its details. A saved review
  * is announced to the page (`pulse-reviews-changed`); a failed write announces nothing and says why. */
@@ -28,7 +29,7 @@ function useReviewSave({ postId, topicId, onSaved }) {
  * relevance was before. Its name stays "Tidak relevan" and `aria-pressed` carries the state; the title says what a
  * press does. A failed write leaves the state as it was and is announced.
  */
-export function RelevanceToggle({ postId, topicId, review, onSaved, disabled = false }) {
+export function RelevanceToggle({ postId, topicId, review, onSaved, disabled = false, size = 'md' }) {
   const { save, busy, error } = useReviewSave({ postId, topicId, onSaved });
   const [before, setBefore] = useState('unreviewed');
   const relevance = review?.relevance || 'unreviewed', marked = relevance === 'irrelevant';
@@ -38,9 +39,9 @@ export function RelevanceToggle({ postId, topicId, review, onSaved, disabled = f
     if (saved) setBefore(relevance);
   }
   return <>
-    <button type="button" className="pm-relevance" aria-pressed={marked} aria-label="Tidak relevan" data-error={error ? '' : undefined}
+    <PulseButton className="pm-relevance" size={size} iconOnly aria-pressed={marked} aria-label="Tidak relevan" data-error={error ? '' : undefined}
       title={marked ? 'Ditandai tidak relevan (tetap tersimpan). Klik untuk mengurungkan.' : 'Tandai tidak relevan. Posting tetap tersimpan.'}
-      disabled={busy || disabled || !topicId} onClick={press}><Ban size={16} aria-hidden="true"/></button>
+      disabled={busy || disabled || !topicId} onClick={press}><Ban aria-hidden="true"/></PulseButton>
     {error && <span role="alert" className="pu-sr">Relevansi gagal disimpan: {error}</span>}
   </>;
 }
