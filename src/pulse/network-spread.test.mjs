@@ -56,3 +56,17 @@ test('Ikhtisar opens its largest narrative as one piece of content, like Jaringa
   assert.match(source, /const open=\(title,posts,options\)=>\{?setSelection\(\{title,posts,\.\.\.options\}\);?\}?;/, 'the drawer keeps what the caller says about the posts');
   assert.match(source, /open\('Kelompok percakapan',topNarrative\.posts,\{oneContent:true\}\)/, 'a narrative is one piece of content, so its shares follow content_shares_v1');
 });
+
+test('choosing another project drops the chosen account with the other per-project filters', async () => {
+  // A link from Akun & sumber carries `account=<key>`; it belongs to one project and must not follow the analyst to another.
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('./ProjectBar.jsx', import.meta.url), 'utf8');
+  const cleared = source.match(/for\(const key of \[([^\]]*)\]\)search\.delete\(key\)/)?.[1] || '';
+  for (const key of ['account', 'author', 'platform', 'day', 'day_to', 'post']) assert.ok(cleared.includes(`'${key}'`), `${key} is cleared`);
+});
+
+test('the overview sentence names an account without a name in words, never "null"', async () => {
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('./ProjectOverview.jsx', import.meta.url), 'utf8');
+  assert.match(source, /\$\{r\.accounts\[0\]\.author\|\|'Akun tanpa nama'\} mencatat interaksi tertinggi/);
+});

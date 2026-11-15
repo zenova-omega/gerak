@@ -16,6 +16,7 @@ import useOverviewEvidence from './useOverviewEvidence';
 import InfoTip from './InfoTip';
 import './overview-analytics.css';
 import './project-overview.css';
+import TopMentions from './TopMentions';
 import {Activity,Copy,MessagesSquare,Users,HeartPulse,Gauge} from 'lucide-react';
 import {PulseStat,PulseStatGrid} from '../components/ui/PulseAnalytics';
 import {recentChange,deltaIntent} from '../lib/pulseTrend';
@@ -58,7 +59,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
  return <div className="po-overview po-workbench">
   <section className="po-brief" aria-label="Ringkasan eksekutif">
    <header className="po-brief-head">
-    <div className="po-brief-text"><span className="po-eyebrow">RINGKASAN PROJECT</span><h2>{total?`${formatCount(total)} posting dalam cakupan terpilih`:'Belum ada posting dalam cakupan ini'}</h2><p>{change&&change.previous>0?`Volume posting ${change.delta>0?'meningkat':change.delta<0?'menurun':'tetap'} dibanding periode sebelumnya (${formatCount(change.previous)} posting). `:''}{r.platforms[0]?`Percakapan paling banyak ditemukan di ${platformLabel(r.platforms[0].platform)} (${formatCount(r.platforms[0].count)} posting). `:''}{r.accounts[0]?.engagement!=null?`${r.accounts[0].author} mencatat interaksi tertinggi: ${formatCount(r.accounts[0].engagement)}. `:''}{!total?'Ubah periode atau pilihan platform untuk melihat hasil.':''}</p></div>
+    <div className="po-brief-text"><span className="po-eyebrow">RINGKASAN PROJECT</span><h2>{total?`${formatCount(total)} posting dalam cakupan terpilih`:'Belum ada posting dalam cakupan ini'}</h2><p>{change&&change.previous>0?`Volume posting ${change.delta>0?'meningkat':change.delta<0?'menurun':'tetap'} dibanding periode sebelumnya (${formatCount(change.previous)} posting). `:''}{r.platforms[0]?`Percakapan paling banyak ditemukan di ${platformLabel(r.platforms[0].platform)} (${formatCount(r.platforms[0].count)} posting). `:''}{r.accounts[0]?.engagement!=null?`${r.accounts[0].author||'Akun tanpa nama'} mencatat interaksi tertinggi: ${formatCount(r.accounts[0].engagement)}. `:''}{!total?'Ubah periode atau pilihan platform untuk melihat hasil.':''}</p></div>
     <div className="po-context"><Link className="po-report-link" to={page('reports')}>Buat laporan <PulseArrow/></Link><span>Diperbarui {r.updatedAt?pulseDate(r.updatedAt):'belum tersedia'}</span></div>
    </header>
    <PulseStatGrid label="Ringkasan periode project">
@@ -80,6 +81,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
    </footer>
   </section>
   <AiSummaryCard key={params.get('topic')||''} topicId={params.get('topic')||''}/>
+  <TopMentions posts={r.posts} onOpen={(title,posts)=>open(title,posts)}/>
   <EvidenceSheet selection={selection} onClose={()=>setSelection(null)}/>
   <section id="overview-development" className="lay-grid">
    <div className="lay-12">

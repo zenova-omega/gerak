@@ -146,7 +146,7 @@ export default function ProjectBar({ readOnly = false }) {
   const id = params.get('topic') || '';
   const [platforms,setPlatforms]=useProjectPlatforms(id);
   const topic = resource.topics.find(t => t.id === id);
-  function select(next) { setMode(''); const search=new URLSearchParams(projectSearch(params,next));for(const key of ['platforms','platform','author','sentiment','province','day','day_to','find','post','acc_platforms','acc_find','c'])search.delete(key);setParams(search); }
+  function select(next) { setMode(''); const search=new URLSearchParams(projectSearch(params,next));for(const key of ['platforms','platform','author','account','sentiment','province','day','day_to','find','post','acc_platforms','acc_find','c'])search.delete(key);setParams(search); }
   const platformChoices=[...new Set([...projectPlatformOptions,...(platforms||[])])];
   // From "Semua", one click narrows to that platform. Clearing the last one, or picking every one, returns to "Semua".
   function togglePlatform(platform){ const current=platforms||[]; const next=current.includes(platform)?current.filter(p=>p!==platform):[...current,platform]; setPlatforms(!next.length||platformChoices.every(p=>next.includes(p))?null:next); }
