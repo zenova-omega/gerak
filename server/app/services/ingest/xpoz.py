@@ -5,9 +5,11 @@ Live search requires a compatible plan (trial keys are not supported).
 """
 import httpx
 import asyncio
+import itertools
 import time
 import json
 import re
+from contextlib import asynccontextmanager
 from urllib.parse import urlsplit, urlunsplit
 from datetime import datetime, timedelta, timezone
 from .common import mark_repost, observed_metrics, published
@@ -422,6 +424,36 @@ async def fetch_xpoz_profiles_by_username(usernames, api_key):
     return normalize_profiles(_stored_rows(_payload(result)), by='username')
 
 
+_call_ids = itertools.count(10)      # calls that share a session each carry their own id
+
+
+@asynccontextmanager
+async def open_session(api_key):
+    """One supplier session for several calls in a row. Opening a session costs two requests, and the supplier
+    refuses after about 35 requests in half a minute (HTTP 429, measured 15 Nov 2026), so a batch of single-account
+    lookups shares one instead of opening one each."""
+    async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
+            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+        await _initialize(client)
+        yield client
+
+
+def is_rate_limit(error):
+    """The supplier's request limit, whichever way it is said: as an HTTP 429 or as a tool error."""
+    return (isinstance(error, httpx.HTTPStatusError) and error.response.status_code == 429) or (isinstance(error, XpozToolError) and str(error) == 'rate_limited')
+
+
+async def _account_call(tool, username, fields, api_key, client):
+    """One single-account tool call, on the caller's session when it has one, on a session of its own otherwise."""
+    message = {'jsonrpc':'2.0','id':next(_call_ids),'method':'tools/call','params':{
+        'name':tool, 'arguments':{'identifier':username, 'identifierType':'username', 'fields':fields}}}
+    async with asyncio.timeout(60):
+        if client is not None:
+            return await _rpc(client, message)
+        async with open_session(api_key) as own:
+            return await _rpc(own, message)
+
+
 # The supplier's status for an account it cannot find (renamed, deleted, or never an account). It is an answer, not a
 # failure: read as a failure, the account is never noted as looked up and the lane asks for it again at every step.
 NO_ACCOUNT = 'no_data'
@@ -436,18 +468,13 @@ def normalize_instagram_user(payload):
     return {'photo_url': _public_image_url(data.get('profilePicUrl')), 'followers': int(followers) if str(followers).isdigit() else None}
 
 
-async def fetch_xpoz_instagram_user(username, api_key):
+async def fetch_xpoz_instagram_user(username, api_key, client=None):
     """One call for one Instagram account, by username: its current picture link and follower count. No retry.
-    Measured 14 Nov 2026: 12 credits a call, against about 2 an account for X, so this lane has its own switch."""
+    Measured 14 Nov 2026: 12 credits a call, against about 2 an account for X, so this lane has its own switch.
+    `client` is a session from `open_session` shared by a batch; without one the call opens its own."""
     if not isinstance(username, str) or not re.fullmatch(r'[A-Za-z0-9_.]{1,30}', username):
         raise ValueError('Invalid Instagram username')
-    async with asyncio.timeout(60):
-        async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
-            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
-            await _initialize(client)
-            result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
-                'name':'getInstagramUser', 'arguments':{'identifier':username, 'identifierType':'username',
-                'fields':['id','username','profilePicUrl','followerCount']}}})
+    result = await _account_call('getInstagramUser', username, ['id','username','profilePicUrl','followerCount'], api_key, client)
     payload = _payload(result, account=True)
     if isinstance(payload, dict) and (payload.get('status') not in (None, 'success', NO_ACCOUNT) or payload.get('error')):
         _tool_error(payload)
@@ -463,18 +490,12 @@ def normalize_tiktok_user(payload):
     return {'photo_url': _public_image_url(data.get('avatar')), 'followers': int(followers) if str(followers).isdigit() else None}
 
 
-async def fetch_xpoz_tiktok_user(username, api_key):
+async def fetch_xpoz_tiktok_user(username, api_key, client=None):
     """One call for one TikTok account, by username: its current picture link and follower count. No retry.
-    Measured 14 Nov 2026: 5 credits a call."""
+    Measured 14 Nov 2026: 5 credits a call. `client` is a shared session, as for Instagram."""
     if not isinstance(username, str) or not re.fullmatch(r'[A-Za-z0-9_.]{1,24}', username):
         raise ValueError('Invalid TikTok username')
-    async with asyncio.timeout(60):
-        async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
-            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
-            await _initialize(client)
-            result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
-                'name':'getTiktokUser', 'arguments':{'identifier':username, 'identifierType':'username',
-                'fields':['id','username','avatar','followerCount']}}})
+    result = await _account_call('getTiktokUser', username, ['id','username','avatar','followerCount'], api_key, client)
     payload = _payload(result, account=True)
     if isinstance(payload, dict) and (payload.get('status') not in (None, 'success', NO_ACCOUNT) or payload.get('error')):
         _tool_error(payload)

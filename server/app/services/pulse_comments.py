@@ -12,6 +12,7 @@ import httpx
 from sqlalchemy import select
 from ..models.pulse import SourceItem
 from .ingest.common import count, observed_engagement
+from .pulse_measures import interaction_sort_key, reported
 from .ingest.xpoz import _public_image_url
 from .pulse_network import timestamp
 
@@ -100,7 +101,10 @@ def comment_target(item):
 
 
 def comment_rank(row):
-    return (-((row.metrics or {}).get('comments') or 0), -(observed_engagement(row.metrics) or 0), row.id)
+    """Posts whose comments are worth reading first: a known comment count before an unknown one, largest first, then
+    the shared interaction order. A count that is not reported is never read as 0 (interactions_v1)."""
+    comments = reported((row.metrics or {}).get('comments'))
+    return (comments is None, -(comments or 0)) + interaction_sort_key(observed_engagement(row.metrics), row.published_at, row.id)
 
 
 def comment_coverage(rows):
@@ -194,7 +198,7 @@ async def fetch_comments(video_id, api_key):
 
 async def collect_top_comments(db, topic_id, api_key):
     rows = (await db.execute(select(SourceItem).where(SourceItem.topic_id == topic_id, SourceItem.platform == 'youtube'))).scalars().all()
-    rows.sort(key=lambda p: (-(observed_engagement(p.metrics) or 0), p.id))
+    rows.sort(key=lambda p: interaction_sort_key(observed_engagement(p.metrics), p.published_at, p.id))
     selected, seen = [], set()
     for row in rows:
         url = urlparse(row.url)

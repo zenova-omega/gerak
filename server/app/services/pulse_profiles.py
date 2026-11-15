@@ -17,9 +17,11 @@ from ..models.pulse import SourceItem
 from ..models.pulse_monitor import MonitorSchedule, WorkerPolicy, WorkerUsage
 from ..models.pulse_profiles import PulseAccountProfile
 import re
+
+import httpx
 from urllib.parse import parse_qs, quote, urlsplit
 from .ingest.site_icon import fetch_image, fetch_site_icon, public_site
-from .ingest.xpoz import XpozToolError, fetch_xpoz_instagram_user, fetch_xpoz_profiles, fetch_xpoz_profiles_by_username, fetch_xpoz_tiktok_user
+from .ingest.xpoz import XpozToolError, fetch_xpoz_instagram_user, fetch_xpoz_profiles, fetch_xpoz_profiles_by_username, fetch_xpoz_tiktok_user, is_rate_limit, open_session
 from .pulse_comments import STOP_STATUSES, YOUTUBE_PAGES, comment_target, fetch_all_comments
 from .ingest.youtube import fetch_youtube_channels
 from .pulse_monitor import UNLIMITED, insert_once
@@ -79,6 +81,12 @@ def _shared(accounts, commenters, size):
 
 
 _no_pictures = set()      # posts whose comments were read again and carried no picture at all, in this process
+_unanswered = {}          # (lane, account) -> single-account lookups that ended without an answer, in this process
+
+
+def _untried_first(lane, accounts):
+    """The same order, with accounts whose lookup got no answer moved behind the ones not yet tried."""
+    return sorted(accounts, key=lambda account: _unanswered.get((lane, account), 0))
 
 
 async def comment_photo_targets(db, limit=COMMENT_PHOTO_POSTS):
@@ -340,9 +348,11 @@ async def plan_lookups(db, settings, now):
         plan['instagram'] = waiting['instagram'][:IG_BATCH]
     # The paid lanes serve post accounts and commenters alike: a batch is shared between them.
     if ig_room > 0 and _secret(settings, 'XPOZ_API_KEY'):
-        plan['instagram_lookup'] = _shared(waiting['instagram_lookup'], waiting['instagram_commenters'], min(IG_LOOKUP_BATCH, ig_room))
+        plan['instagram_lookup'] = _shared(_untried_first('instagram_lookup', waiting['instagram_lookup']), _untried_first('instagram_lookup', waiting['instagram_commenters']),
+                                           min(IG_LOOKUP_BATCH, ig_room))
     if tt_room > 0 and _secret(settings, 'XPOZ_API_KEY'):
-        plan['tiktok_lookup'] = _shared(waiting['tiktok_lookup'], waiting['tiktok_commenters'], min(TT_LOOKUP_BATCH, tt_room))
+        plan['tiktok_lookup'] = _shared(_untried_first('tiktok_lookup', waiting['tiktok_lookup']), _untried_first('tiktok_lookup', waiting['tiktok_commenters']),
+                                        min(TT_LOOKUP_BATCH, tt_room))
     if x_room > 0 and _secret(settings, 'XPOZ_API_KEY'):
         plan['x'] = [key for key in waiting['x'] if key.isdigit()][:X_BATCH]
         if x_room > bool(plan['x']):
@@ -359,15 +369,19 @@ async def plan_lookups(db, settings, now):
 
 async def run_lookups(plan, settings):
     """The network part of a step. No database session is open while this runs."""
-    found, stopped = {'x': None, 'x_commenters': None, 'youtube': None, 'news': {}, 'instagram': {}, 'instagram_lookup': {}, 'tiktok_lookup': {}, 'comment_photos': {}}, []
+    found, stopped = {'x': None, 'x_commenters': None, 'youtube': None, 'news': {}, 'instagram': {}, 'instagram_lookup': {}, 'tiktok_lookup': {}, 'comment_photos': {},
+                      'failures': []}, []
+
+    def failed(lane, error):
+        found['failures'].append((lane, type(error).__name__))
+        return failure_reason(error)
+
     for name, lookup in (('x', fetch_xpoz_profiles), ('x_commenters', fetch_xpoz_profiles_by_username)):
-        if plan.get(name) and not stopped:      # a refused call is not followed by a second paid one in the same step
+        if plan.get(name) and not stopped:      # a failed call is not followed by a second paid one in the same step
             try:
                 found[name] = await lookup(plan[name], _secret(settings, 'XPOZ_API_KEY'))
-            except XpozToolError as exc:
-                stopped.append(str(exc))
-            except Exception:
-                stopped.append('provider_error')
+            except Exception as exc:
+                stopped.append(failed(name, exc))
     if plan['youtube']:
         try:
             found['youtube'] = await fetch_youtube_channels(plan['youtube'], _secret(settings, 'YOUTUBE_API_KEY'))
@@ -377,17 +391,41 @@ async def run_lookups(plan, settings):
         found['news'][key] = (await fetch_site_icon(address), address)
     for key, url in plan.get('instagram', []):
         found['instagram'][key] = await fetch_image(url)
-    for name, lookup in (('instagram_lookup', fetch_xpoz_instagram_user), ('tiktok_lookup', fetch_xpoz_tiktok_user)):
-        for key in plan.get(name, []):
-            try:
-                profile = await lookup(key, _secret(settings, 'XPOZ_API_KEY'))
-            except XpozToolError as exc:
-                stopped.append(str(exc))
-                break   # refused: do not pay for the rest of the batch
-            except Exception:
-                stopped.append('provider_error')
-                break
-            found[name][key] = (profile, await fetch_image(profile['photo_url']) if profile.get('photo_url') else None)
+    singles = [(name, lookup, key) for name, lookup in (('instagram_lookup', fetch_xpoz_instagram_user), ('tiktok_lookup', fetch_xpoz_tiktok_user))
+               for key in plan.get(name, [])]
+    if singles and 'rate_limited' not in stopped:
+        secret, ended, misses = _secret(settings, 'XPOZ_API_KEY'), set(), {}
+        try:
+            # One session for the whole batch: a session of its own for every account spent three of the supplier's
+            # requests an account, and a step of ten went over its request limit.
+            async with open_session(secret) as client:
+                for name, lookup, key in singles:
+                    if name in ended:
+                        continue
+                    try:
+                        profile = await lookup(key, secret, client)
+                    except Exception as exc:
+                        reason = failed(name, exc)
+                        if reason == 'rate_limited':
+                            stopped.append(reason)      # nobody's fault and not charged: the step ends here and is taken up again in minutes
+                            break
+                        if reason != 'unreachable':
+                            stopped.append(reason)
+                            ended.add(name)             # refused: do not pay for the rest of this lane's batch
+                            continue
+                        # No answer for this one account: the supplier can take longer than we wait when it has to
+                        # look for an account. Not a refusal, so the batch carries on and the account is tried last
+                        # next time. Two in a row look like the supplier being unreachable, and end the lane's batch.
+                        _unanswered[(name, key)] = _unanswered.get((name, key), 0) + 1
+                        misses[name] = misses.get(name, 0) + 1
+                        if misses[name] == 2:
+                            stopped.append('unreachable')
+                            ended.add(name)
+                        continue
+                    misses[name] = 0
+                    found[name][key] = (profile, await fetch_image(profile['photo_url']) if profile.get('photo_url') else None)
+        except Exception as exc:      # the session itself could not be opened
+            stopped.append(failed('session', exc))
     for target in plan.get('comment_photos', []):
         # Free: the comments of a video are read again only for the pictures beside them.
         answer = await fetch_all_comments(target['video'], _secret(settings, 'YOUTUBE_API_KEY'), target['pages'])
@@ -445,7 +483,8 @@ async def store_lookups(db, plan, found, stopped, now):
         if row_id and count:
             await db.execute(update(WorkerUsage).where(WorkerUsage.id == row_id).values(used=WorkerUsage.used + count))
     return {'status': 'provider_stopped' if stopped and not any(done.values()) and not comment_photos else 'collected', 'accounts': done,
-            'comment_photos': comment_photos, 'lookups': lookups, 'x_lookups': x_lookups, 'stopped': stopped}
+            'comment_photos': comment_photos, 'lookups': lookups, 'x_lookups': x_lookups, 'stopped': stopped,
+            'failures': found.get('failures', [])}
 
 
 async def collect_profiles(db, settings, now):
@@ -469,6 +508,40 @@ async def ensure_profile_policy(db):
 
 
 _paused_until = 0.0
+RATE_PAUSE, REFUSED_PAUSE = 180, 1800
+SHORT_WAITS = ('rate_limited', 'unreachable')      # clear by themselves within minutes
+
+
+def failure_reason(error):
+    """Our name for a failed supplier call. A refusal (credentials, plan, quota) is not asked again for half an hour;
+    the request limit and a network failure (a connection that does not open or an answer that does not come, seen
+    15 Nov 2026 after the machine woke from sleep) clear by themselves."""
+    if is_rate_limit(error):
+        return 'rate_limited'
+    if isinstance(error, XpozToolError):
+        return str(error)
+    if isinstance(error, httpx.HTTPStatusError):
+        code = error.response.status_code
+        return 'authentication_failed' if code == 401 else 'access_or_quota_restricted' if code in (402, 403) else 'unreachable' if code >= 500 else 'provider_error'
+    if isinstance(error, (httpx.TransportError, TimeoutError, OSError)):
+        return 'unreachable'
+    return 'provider_error'
+
+
+def stop_notice(result):
+    """The log line for a stopped step: how long the job waits, why, and which lookup ended how (class names only:
+    the supplier's own words never reach a log)."""
+    stopped = result['stopped']
+    where = '; '.join(f'{lane}: {kind}' for lane, kind in result.get('failures') or [])
+    return f"waiting {pause_seconds(stopped)} s after {sorted(set(stopped))}" + (f' ({where})' if where else '')
+
+
+def pause_seconds(stopped):
+    """How long the job waits after a step that was stopped. The supplier's request limit clears by itself within
+    minutes, and so does a network failure; a refusal (quota, plan, credentials) is not asked again for half an hour."""
+    if not stopped:
+        return 0
+    return RATE_PAUSE if all(reason in SHORT_WAITS for reason in stopped) else REFUSED_PAUSE
 
 
 async def profiles_tick():
@@ -491,7 +564,9 @@ async def profiles_tick():
         if result['status'] == 'collected':
             logger.info('Pulse profiles: %s', result['accounts'])
         if result['stopped']:
-            # Quota, plan or credential problem: wait before asking again instead of repeating the failure every tick.
-            _paused_until = datetime.utcnow().timestamp() + 1800
-    except Exception:
-        logger.error('Pulse profile lookup failed internally; the next tick retries')
+            # Wait before asking again instead of repeating the failure every tick. Only our own names for the reason
+            # are written: the supplier's words never reach a log.
+            _paused_until = datetime.utcnow().timestamp() + pause_seconds(result['stopped'])
+            logger.warning('Pulse profiles: %s', stop_notice(result))
+    except Exception as exc:
+        logger.error('Pulse profile lookup failed internally (%s); the next tick retries', type(exc).__name__)

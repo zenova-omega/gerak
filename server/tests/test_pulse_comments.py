@@ -208,3 +208,36 @@ async def test_top_limit_only_fetches_the_most_commented_posts(db, monkeypatch):
     await service.collect_project_comments(db, topic.id, settings, max_posts=10, top=2)
     assert asked == ['vid0', 'vid1']
     assert (await service.collect_project_comments(db, topic.id, settings, max_posts=10, top=2))['posts'] == [] and len(asked) == 2
+
+
+def test_posts_are_ranked_for_comments_with_unknown_counts_after_known_ones_never_as_zero():
+    """interactions_v1: a count that is not reported is not 0. Known comment counts first, largest first; then the shared
+    interaction order (known before unknown, larger first, earlier publication, id)."""
+    from types import SimpleNamespace
+    rows = [SimpleNamespace(id='b', metrics={'views': 100}, published_at=None),          # comments and interactions unknown
+            SimpleNamespace(id='d', metrics={'likes': 0}, published_at=None),            # comments unknown, interactions 0
+            SimpleNamespace(id='a', metrics={'comments': None, 'likes': 7}, published_at=None),
+            SimpleNamespace(id='c', metrics={'comments': 2}, published_at=None)]
+    assert [row.id for row in sorted(rows, key=service.comment_rank)] == ['c', 'a', 'd', 'b']
+
+
+@pytest.mark.asyncio
+async def test_top_comment_collection_asks_known_interactions_first_and_earlier_posts_on_a_tie(db, monkeypatch):
+    from datetime import datetime
+    from app.models.pulse import WatchTopic, SourceItem
+    topic = WatchTopic(label='urutan', query='urutan')
+    db.add(topic)
+    await db.flush()
+    # Ids in the opposite order on purpose: the ranking may not fall back to them before the rule has spoken.
+    for row_id, video, metrics, day in (('a1', 'unknownviews', {'views': 50}, 1), ('a2', 'zero', {'likes': 0}, 1), ('b1', 'late', {'likes': 4}, 9), ('b2', 'early', {'likes': 4}, 2)):
+        db.add(SourceItem(id=f'{topic.id}-{row_id}', topic_id=topic.id, source='youtube', platform='youtube', url=f'https://www.youtube.com/watch?v={video}', metrics=metrics,
+                          published_at=datetime(2026, 11, day, 8, 0)))
+    await db.flush()
+    calls = []
+
+    async def fake(video, key):
+        calls.append(video)
+        return {'status': 'success', 'items': [], 'has_more': False}
+    monkeypatch.setattr(service, 'fetch_comments', fake)
+    await service.collect_top_comments(db, topic.id, 'test-key')
+    assert calls == ['early', 'late', 'zero', 'unknownviews']

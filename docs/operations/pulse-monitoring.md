@@ -108,6 +108,45 @@ time it was asked. Accounts whose picture was fetched before 15 Nov 2026 have no
 busiest first, which is a one-time cost of about 2 credits for each of them. The spread map on Jaringan, the card on
 Ikhtisar and the report page read the text; an account that was asked and wrote none is sent as an empty text.
 
+## Pictures of the people who comment (15 Nov 2026)
+
+A comment card shows the commenter's own picture, sent with each comment as `profile_image_url`.
+
+- **YouTube** hands the picture in the same answer as the comment, so it is stored with the comment when it is
+  collected (`pulse_comments._keep_picture`, link only, checked as a plain public link). Comments stored before this
+  date get theirs from one more read of the same video: three posts a step of the profile job, one quota unit a page,
+  no supplier credit. A post that was asked carries `comment_snapshot.photos_at` and is not asked again; a stored
+  comment that is no longer among the video's 300 most relevant keeps its initials.
+- **X, TikTok and Instagram** comment lists carry no picture. Commenters are looked up through the paid lanes that
+  serve post accounts, the most liked comments first, a batch shared half and half with post accounts: `profiles_x`
+  by handle (25 a call, about 2 credits each, stored under `u:<handle>`), `profiles_tt` (6 a step, 5 credits each),
+  `profiles_ig` (4 a step, 12 credits each). Measured 15 Nov on eight accounts: 42 credits. The pictures are attached
+  when posts are read (`pulse_profiles._attach_commenters`), not written into the stored comments. A commenter who also
+  posts in the project already had a picture and is not bought again.
+- **An account the supplier cannot find is charged like any other and is an answer, not a failure.** The supplier
+  says `no_data` for a renamed or deleted account. It used to be read as a failure, so the account was never noted as
+  looked up, stayed first in line and stopped the Instagram and TikTok lanes at every step. It is now stored as looked
+  up without a picture.
+- **One slow account does not stop a batch.** A single-account lookup that ends without an answer sends that account
+  to the back of the line for this process and the batch carries on; two in a row end that lane's batch and the job
+  waits 30 minutes, as it does after a refusal.
+- **The supplier limits requests, not only credits.** Measured 15 Nov with the free balance call: HTTP 429 after about
+  35 requests in half a minute, shared by every lane that uses the key. A session of its own for every account spent
+  three requests an account, 36 a step, and the second step in a row was refused; read as an unreachable supplier, that
+  paused the whole profile job for 30 minutes each time. The Instagram and TikTok lookups of a step now share one
+  session (`xpoz.open_session`, about 18 requests a step). Meeting the limit ends the step without blaming an account,
+  and the job waits 3 minutes (`pause_seconds`), not 30. The reason for a wait is written to the log in our own words
+  ("Pulse profiles: waiting … s after ['rate_limited']").
+- **A network failure is not a refusal.** `failure_reason` names a connection that does not open, an answer that does
+  not come, or a 5xx `unreachable`, and the job waits 3 minutes after it; credentials, plan and quota refusals still
+  wait 30. The log line says which lookup ended how, by error class only, for example
+  "Pulse profiles: waiting 180 s after ['unreachable'] (x: ConnectTimeout)".
+- **After the machine slept, restart the API if the job keeps stopping.** On 15 Nov the laptop hibernated from 12.50 to
+  14.54; afterwards the running process failed every profile step for four hours (the radar failed every run too),
+  while a fresh process on the same machine reached the supplier at once. A restart at 17.20 brought the job back. The
+  cause inside the old process was not found: its event loop was idle, DNS threads were free and file handles were
+  few. The log now names the failing call, so the next time it shows.
+
 ## Issue radar for Beranda (15 Nov 2026)
 
 Beranda's list of issues is made by its own job, outside any project: every 30 minutes, while the switch "Radar isu Indonesia" in Monitor is on, it reads national news, trending searches for the country and the 34 provinces, and the most popular videos, and asks the hosted AI once to group them. The switch is off after installation. What a refresh costs, how to measure it and how to read the page's states are in [pulse-radar.md](pulse-radar.md).

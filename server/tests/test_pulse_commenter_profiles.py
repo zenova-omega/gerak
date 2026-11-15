@@ -5,9 +5,11 @@ the paid profile lanes that already serve post accounts, the most-liked comments
 to each comment as `profile_image_url` when comments are read. (A YouTube comment gets it when it is collected:
 see test_pulse_comment_photos.py. Here only the fill-in for comments that were already stored.)
 """
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
+import httpx
 import pytest
 
 from app.models.pulse import SourceItem, WatchTopic
@@ -17,6 +19,20 @@ from app.services import pulse_profiles as service
 from app.services.ingest import xpoz
 
 NOW = datetime(2026, 11, 17, 3, 0)
+
+
+@pytest.fixture(autouse=True)
+def no_supplier(monkeypatch):
+    """No test opens a real supplier session: a step gets a stand-in, and `opened` counts how many it asked for."""
+    opened = []
+
+    @asynccontextmanager
+    async def session(api_key):
+        opened.append(api_key)
+        yield 'session-%d' % len(opened)
+    monkeypatch.setattr(service, 'open_session', session)
+    service._unanswered.clear()
+    return opened
 
 
 async def project(db, label):
@@ -121,7 +137,7 @@ async def test_a_step_looks_commenters_up_beside_post_accounts_stores_them_and_c
         asked['names'] = names
         return {'warga_dua': {'photo_url': 'https://pbs.twimg.com/dua_200x200.jpg', 'followers': 3, 'location': None, 'based_in': None}}
 
-    async def tiktok(username, key):
+    async def tiktok(username, key, client=None):
         asked.setdefault('tiktok', []).append(username)
         return {'photo_url': 'https://cdn.example.com/' + username + '.jpg', 'followers': 1}
 
@@ -228,7 +244,7 @@ async def test_a_lane_moves_past_an_account_that_does_not_exist_and_does_not_ask
     await db.flush()
     asked = []
 
-    async def tiktok(username, key):
+    async def tiktok(username, key, client=None):
         asked.append(username)
         return {} if username == 'hilang' else {'photo_url': 'https://cdn.example.com/' + username + '.jpg', 'followers': 1}
 
@@ -263,11 +279,11 @@ async def test_one_account_without_an_answer_does_not_stop_the_batch_and_goes_to
     topic = await project(db, 'Lambat')
     db.add_all([post(topic, 'tiktok', str(220 + n), name, [], metrics={'author_username': name, 'likes': 100 - n}) for n, name in enumerate(('lambat', 'kedua', 'ketiga'))])
     await db.flush()
-    asked = []
+    asked, slow = [], []
 
-    async def tiktok(username, key):
+    async def tiktok(username, key, client=None):
         asked.append(username)
-        if username == 'lambat':
+        if username == slow[0]:
             raise TimeoutError()
         return {'photo_url': 'https://cdn.example.com/' + username + '.jpg', 'followers': 1}
 
@@ -277,15 +293,16 @@ async def test_one_account_without_an_answer_does_not_stop_the_batch_and_goes_to
     monkeypatch.setattr(service, 'fetch_image', picture)
     await tiktok_only(db)
     first = (await service.waiting_accounts(db, NOW))['tiktok_lookup']
-    assert first[0] == 'lambat' and sorted(first) == ['kedua', 'ketiga', 'lambat']
+    assert sorted(first) == ['kedua', 'ketiga', 'lambat']
+    slow.append(first[0])      # the account at the head of the line is the one that gets no answer
     result = await service.collect_profiles(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
     assert asked == first and result['status'] == 'collected' and result['stopped'] == [], 'no pause for one slow account'
-    assert await db.get(PulseAccountProfile, ('tiktok', 'lambat')) is None, 'nothing was learned about it, so it still waits'
+    assert await db.get(PulseAccountProfile, ('tiktok', slow[0])) is None, 'nothing was learned about it, so it still waits'
     assert (await db.get(WorkerUsage, 'profiles_tt:2026-11-17', populate_existing=True)).used == 2, 'only answered calls are counted'
     db.add(post(topic, 'tiktok', '229', 'baru', [], metrics={'author_username': 'baru'}))
     await db.flush()
     plan = await service.plan_lookups(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
-    assert plan['tiktok_lookup'] == ['baru', 'lambat'], 'accounts not yet tried come first'
+    assert plan['tiktok_lookup'] == ['baru', slow[0]], 'accounts not yet tried come first'
     service._unanswered.clear()
 
 
@@ -296,11 +313,169 @@ async def test_two_accounts_in_a_row_without_an_answer_end_the_batch_as_the_supp
     await db.flush()
     asked = []
 
-    async def tiktok(username, key):
+    async def tiktok(username, key, client=None):
         asked.append(username)
         raise TimeoutError()
     monkeypatch.setattr(service, 'fetch_xpoz_tiktok_user', tiktok)
     await tiktok_only(db)
     result = await service.collect_profiles(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
-    assert len(asked) == 2 and result['status'] == 'provider_stopped' and result['stopped'] == ['provider_error']
+    assert len(asked) == 2 and result['status'] == 'provider_stopped' and result['stopped'] == ['unreachable']
+    assert result['failures'] == [('tiktok_lookup', 'TimeoutError')] * 2
     service._unanswered.clear()
+
+
+def too_many():
+    request = httpx.Request('POST', 'https://supplier.example/mcp')
+    return httpx.HTTPStatusError('429 Too Many Requests', request=request, response=httpx.Response(429, request=request))
+
+
+@pytest.mark.asyncio
+async def test_the_single_account_lookups_of_a_step_share_one_supplier_session(db, monkeypatch, no_supplier):
+    """Measured 15 Nov 2026: the supplier refuses after about 35 requests in half a minute, and a session of its own
+    for every account spent three requests an account (36 a step). One session for the step spends about half."""
+    topic = await project(db, 'Satu sesi')
+    db.add_all([post(topic, 'tiktok', '241', 'kreator', [stored('6', 'tt.satu', 7)], metrics={'author_username': 'kreator'}),
+                post(topic, 'instagram', '242', 'akun_ig', [stored('8', 'ig.satu', 1)], metrics={'author_username': 'akun_ig'})])
+    db.add(PulseAccountProfile(platform='instagram', key='akun_ig', photo_url='https://dead.example.com/a.jpg'))      # its link died: it needs the paid lookup
+    await db.flush()
+    used = []
+
+    async def lookup(username, key, client=None):
+        used.append((username, client))
+        return {'photo_url': None, 'followers': 1}
+    monkeypatch.setattr(service, 'fetch_xpoz_tiktok_user', lookup)
+    monkeypatch.setattr(service, 'fetch_xpoz_instagram_user', lookup)
+    await service.ensure_profile_policy(db)
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider.in_(('profiles', 'profiles_x'))).values(daily_limit=0, blocked_reason=None))
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider.in_(('profiles_ig', 'profiles_tt'))).values(daily_limit=40, blocked_reason=None))
+    await db.execute(WorkerUsage.__table__.delete().where(WorkerUsage.day == '2026-11-17'))
+    result = await service.collect_profiles(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
+    assert result['stopped'] == [] and sorted(name for name, _ in used) == ['akun_ig', 'ig.satu', 'kreator', 'tt.satu']
+    assert no_supplier == ['k'] and {client for _, client in used} == {'session-1'}, 'one session, handed to every lookup'
+
+
+@pytest.mark.asyncio
+async def test_the_request_limit_ends_the_step_without_blaming_an_account_and_the_job_waits_minutes(db, monkeypatch, no_supplier):
+    topic = await project(db, 'Batas laju')
+    db.add_all([post(topic, 'tiktok', str(250 + n), name, [], metrics={'author_username': name}) for n, name in enumerate(('satu', 'dua', 'tiga'))])
+    db.add(post(topic, 'instagram', '259', 'akun_ig', [stored('8', 'ig.satu', 1)], metrics={'author_username': 'akun_ig'}))
+    await db.flush()
+    asked = []
+
+    async def instagram(username, key, client=None):
+        asked.append(username)
+        return {'photo_url': None, 'followers': 1}
+
+    async def tiktok(username, key, client=None):
+        asked.append(username)
+        if len([name for name in asked if name in ('satu', 'dua', 'tiga')]) == 2:
+            raise too_many()
+        return {'photo_url': None, 'followers': 1}
+    monkeypatch.setattr(service, 'fetch_xpoz_instagram_user', instagram)
+    monkeypatch.setattr(service, 'fetch_xpoz_tiktok_user', tiktok)
+    await service.ensure_profile_policy(db)
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider.in_(('profiles', 'profiles_x'))).values(daily_limit=0, blocked_reason=None))
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider.in_(('profiles_ig', 'profiles_tt'))).values(daily_limit=40, blocked_reason=None))
+    await db.execute(WorkerUsage.__table__.delete().where(WorkerUsage.day == '2026-11-17'))
+    result = await service.collect_profiles(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
+    assert result['stopped'] == ['rate_limited']
+    assert sorted(asked[:2]) == ['akun_ig', 'ig.satu'] and len(asked) == 4, 'Instagram first, then one TikTok account that answered and the one that met the limit: nothing after it'
+    assert service._unanswered == {}, 'the limit is not that account\'s fault: it keeps its place in line'
+    assert (await db.get(WorkerUsage, 'profiles_tt:2026-11-17', populate_existing=True)).used == 1, 'what was answered before the limit is kept'
+    assert service.pause_seconds(['rate_limited']) == service.RATE_PAUSE < 600, 'the limit clears by itself in minutes'
+    assert service.pause_seconds(['plan_restricted']) == service.pause_seconds(['rate_limited', 'provider_error']) == 1800
+    assert service.pause_seconds([]) == 0
+
+
+@pytest.mark.asyncio
+async def test_a_session_the_supplier_will_not_open_asks_for_no_account(db, monkeypatch):
+    topic = await project(db, 'Sesi ditolak')
+    db.add(post(topic, 'tiktok', '261', 'kreator', [], metrics={'author_username': 'kreator'}))
+    await db.flush()
+    asked = []
+
+    @asynccontextmanager
+    async def refused(api_key):
+        raise too_many()
+        yield
+
+    async def tiktok(username, key, client=None):
+        asked.append(username)
+        return {}
+    monkeypatch.setattr(service, 'open_session', refused)
+    monkeypatch.setattr(service, 'fetch_xpoz_tiktok_user', tiktok)
+    await tiktok_only(db)
+    result = await service.collect_profiles(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
+    assert asked == [] and result['stopped'] == ['rate_limited'] and result['status'] == 'provider_stopped'
+
+
+@pytest.mark.asyncio
+async def test_a_lookup_on_a_shared_session_opens_none_of_its_own(monkeypatch):
+    calls = []
+
+    async def ready(client):
+        calls.append('open')
+
+    async def answer(client, message):
+        calls.append((client, message['params']['name'], message['id']))
+        return {'structuredContent': {'status': 'success', 'data': {'username': 'a', 'followerCount': 5}}}
+    monkeypatch.setattr(xpoz, '_initialize', ready)
+    monkeypatch.setattr(xpoz, '_rpc', answer)
+    assert await xpoz.fetch_xpoz_tiktok_user('akun.satu', 'k', 'shared') == {'photo_url': None, 'followers': 5}
+    assert await xpoz.fetch_xpoz_instagram_user('akun_dua', 'k', 'shared') == {'photo_url': None, 'followers': 5}
+    assert [call[:2] for call in calls] == [('shared', 'getTiktokUser'), ('shared', 'getInstagramUser')], 'no session was opened'
+    assert calls[0][2] != calls[1][2], 'calls on one session carry different ids'
+    calls.clear()
+    assert await xpoz.fetch_xpoz_tiktok_user('akun.satu', 'k') == {'photo_url': None, 'followers': 5}
+    assert calls[0] == 'open' and calls[1][1] == 'getTiktokUser', 'alone, it still opens its own'
+
+
+def status_error(code):
+    request = httpx.Request('POST', 'https://supplier.example/mcp')
+    return httpx.HTTPStatusError(str(code), request=request, response=httpx.Response(code, request=request))
+
+
+@pytest.mark.parametrize('error,reason', [
+    (httpx.ConnectTimeout(''), 'unreachable'), (httpx.ReadTimeout(''), 'unreachable'), (httpx.ConnectError(''), 'unreachable'),
+    (TimeoutError(), 'unreachable'), (OSError('network is down'), 'unreachable'), (status_error(503), 'unreachable'),
+    (status_error(429), 'rate_limited'), (xpoz.XpozToolError('rate_limited'), 'rate_limited'),
+    (status_error(401), 'authentication_failed'), (status_error(403), 'access_or_quota_restricted'),
+    (xpoz.XpozToolError('plan_restricted'), 'plan_restricted'), (ValueError('Invalid MCP response'), 'provider_error'),
+])
+def test_a_supplier_that_cannot_be_reached_is_told_apart_from_one_that_refuses(error, reason):
+    """Seen 15 Nov 2026: a single connection that took longer than 45 s to open was named like a refusal and paused
+    the whole picture job for 30 minutes, again and again. A network failure clears by itself: it waits minutes."""
+    assert service.failure_reason(error) == reason
+
+
+def test_how_long_the_job_waits_after_each_kind_of_stop():
+    assert service.pause_seconds(['unreachable']) == service.pause_seconds(['unreachable', 'rate_limited']) == service.RATE_PAUSE
+    assert service.pause_seconds(['unreachable', 'plan_restricted']) == service.pause_seconds(['authentication_failed']) == 1800
+
+
+@pytest.mark.asyncio
+async def test_a_stopped_step_says_which_lookup_stopped_and_why_in_our_own_words(db, monkeypatch):
+    """The log used to say only "provider_error", so four hours of failed steps could not be told apart."""
+    topic = await project(db, 'Alasan')
+    db.add(post(topic, 'x', '111', 'penulis_x', [stored('1', 'warga_satu', 5)], metrics={'author_id': '900'}))
+    await db.flush()
+    asked = []
+
+    async def cannot_connect(ids, key):
+        asked.append('ids')
+        raise httpx.ConnectTimeout('supplier words that must not be logged')
+
+    async def by_name(names, key):
+        asked.append('names')
+        return {}
+    monkeypatch.setattr(service, 'fetch_xpoz_profiles', cannot_connect)
+    monkeypatch.setattr(service, 'fetch_xpoz_profiles_by_username', by_name)
+    await service.ensure_profile_policy(db)
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider.in_(('profiles', 'profiles_ig', 'profiles_tt'))).values(daily_limit=0, blocked_reason=None))
+    await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider == 'profiles_x').values(daily_limit=40, blocked_reason=None))
+    await db.execute(WorkerUsage.__table__.delete().where(WorkerUsage.day == '2026-11-17'))
+    result = await service.collect_profiles(db, SimpleNamespace(XPOZ_API_KEY='k', YOUTUBE_API_KEY=''), NOW)
+    assert asked == ['ids'] and result['stopped'] == ['unreachable'] and result['failures'] == [('x', 'ConnectTimeout')]
+    notice = service.stop_notice(result)
+    assert notice == "waiting 180 s after ['unreachable'] (x: ConnectTimeout)"
+    assert 'supplier words' not in notice
