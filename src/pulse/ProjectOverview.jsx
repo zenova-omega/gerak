@@ -24,6 +24,7 @@ import {recentChange,deltaIntent} from '../lib/pulseTrend';
 import {netSentiment,netSentimentChange,accountConcentration} from '../lib/pulseInsightMetrics';
 import {percentLabel} from '../lib/pulseEngagement';
 import {sharePercent} from '../lib/pulseChartTheme';
+import ProjectHighlight from './ProjectHighlight';
 
 /** Where each detail now lives: the overview answers "what is happening", the pages below answer "show me more". */
 const detailPages=[['sentiment','Sentimen','Nada, platform, dan posting di balik angka'],['network','Jaringan','Narasi utama, penyebaran, kata, dan waktu terbit'],['accounts','Akun & sumber','Siapa yang bicara dan seberapa terpusat'],['posts','Posting','Semua posting, disaring dan diurutkan']];
@@ -58,6 +59,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
  ].filter(Boolean);
  const netText=net===null?null:`${net>0?'+':net<0?'−':''}${Math.abs(Math.round(net))}`;
  return <div className="po-overview po-workbench">
+  <ProjectHighlight posts={data.posts||[]} topic={{...topic,id:topic.id||params.get('topic')||''}} period={period}/>
   <section className="po-brief" aria-label="Ringkasan eksekutif">
    <header className="po-brief-head">
     <div className="po-brief-text"><span className="po-eyebrow">RINGKASAN PROJECT</span><h2>{total?`${formatCount(total)} posting dalam cakupan terpilih`:'Belum ada posting dalam cakupan ini'}</h2><p>{change&&change.previous>0?`Volume posting ${change.delta>0?'meningkat':change.delta<0?'menurun':'tetap'} dibanding periode sebelumnya (${formatCount(change.previous)} posting). `:''}{r.platforms[0]?`Percakapan paling banyak ditemukan di ${platformLabel(r.platforms[0].platform)} (${formatCount(r.platforms[0].count)} posting). `:''}{r.accounts[0]?.engagement!=null?`${r.accounts[0].author||'Akun tanpa nama'} mencatat interaksi tertinggi: ${formatCount(r.accounts[0].engagement)}. `:''}{!total?'Ubah periode atau pilihan platform untuk melihat hasil.':''}</p></div>
