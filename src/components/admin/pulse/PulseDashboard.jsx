@@ -19,7 +19,11 @@ import AccountSignal from './AccountSignal';
 import MonitorRoom from './MonitorRoom';
 import InfographicsPanel from './InfographicsPanel';
 import './pulse.css';
+import '../../../pulse/pulse-tokens.css';
+import '../../../pulse/ds/analytics-kit.css';
+import '../../ui/pulse-patterns.css';
 import { PulseButton } from '../../ui/PulseUI';
+import { PulseCard } from '../../ui/PulseSurface';
 import { pageMeta } from '../../../pulse/pageMeta';
 import { sentimentLabels } from '../../../lib/pulsePostFilters';
 import { PulsePageHead, PulseSkeleton } from '../../ui/PulsePatterns';
@@ -56,7 +60,7 @@ const skeletonShape = { overview: { stats: 6, panels: 2, rows: 3 }, sentiment: {
 // Pages that narrow to the sentiment carried in the URL. Ikhtisar, Sentimen and Laporan always show the whole picture; Posting has its own filter chips.
 const sentimentScoped = ['comments', 'accounts', 'network'];
 function Panel({ title, note, children, className = '' }) {
-  return <section className={'pulse-panel ' + className}><div className="pulse-panel-heading"><div><h2>{title}</h2>{note && <p>{note}</p>}</div></div>{children}</section>;
+  return <PulseCard className={'pulse-panel ' + className} padding="none" level={2} title={title} description={note}>{children}</PulseCard>;
 }
 // Sort choices of the account ranking: key, button label, how the figure is named in a sentence, unit under a leader tile.
 const accountSortChoices = [['engagement', 'Interaksi', 'interaksi', 'interaksi, angka terakhir'], ['mentions', 'Posting', 'jumlah posting', 'posting'], ['followers', 'Pengikut', 'pengikut', 'pengikut']];
@@ -102,7 +106,7 @@ function AccountRanking({ accounts, posts }) {
   const followersKnown = ranking.rows.filter(row => row.followers !== null).length;
   const sortColumn = key => sort === key ? 'descending' : undefined;
   const drilldown = withoutAccountFilters(params).toString();
-  return <Panel className="pa-ranking" title="Akun & sumber teratas" note="Ranking dihitung ulang dari posting dalam periode project. Interaksi adalah angka terakhir yang tercatat, bukan pertambahan selama periode.">
+  return <Panel className="pa-ranking" title="Akun & sumber teratas">
     {ranking.total > 0 && <div className="pa-filter" role="search" aria-label="Saring akun dan sumber">
       <div className="pa-filter-row">
         <label className="pu-search pa-filter-search"><Search aria-hidden="true" /><span className="pu-sr">Cari akun atau sumber</span><input type="search" value={query} maxLength={80} onChange={event => setQuery(event.target.value)} placeholder="Cari nama akun atau sumber" /></label>
@@ -113,14 +117,13 @@ function AccountRanking({ accounts, posts }) {
         {social.length > 1 && social.length < available.length && <><PulseTag size="lg" tone="accent" pressed={socialOn} count={formatCount(matchCount(social))} onClick={() => write({ query, platforms: socialOn ? null : social })}>Media sosial</PulseTag><span className="pa-filter-divider" aria-hidden="true" /></>}
         {facets.map(({ platform, count }) => <PlatformTag key={platform} size="lg" platform={platform} count={formatCount(count)} pressed={platforms !== null && platforms.includes(platform)} onClick={() => write({ query, platforms: togglePlatform(platforms, platform, available) })}>{platform === 'unknown' ? 'Lainnya' : undefined}</PlatformTag>)}
       </div></div>}
-      <div className="pa-filter-result"><p ref={resultStatus} tabIndex={-1} role="status"><strong>{formatCount(ranking.rows.length)}</strong> dari {formatCount(ranking.total)} akun{sort === 'followers' && ranking.rows.length > 0 && <span>{followersKnown ? ` · pengikut tercatat pada ${formatCount(followersKnown)} akun, sisanya di urutan akhir` : ' · belum ada data pengikut, urutan mengikuti interaksi'}</span>}</p>{filtered && <PulseButton variant="quiet" size="sm" onClick={clear}><X aria-hidden="true" />Hapus semua filter</PulseButton>}</div>
+      <div className="pa-filter-result"><p ref={resultStatus} tabIndex={-1} role="status"><strong>{formatCount(ranking.rows.length)}</strong> dari {formatCount(ranking.total)} akun{sort === 'followers' && ranking.rows.length > 0 && <span>{followersKnown ? ` · pengikut tercatat pada ${formatCount(followersKnown)} akun` : ' · belum ada data pengikut'}</span>}</p><InfoTip label="Tentang angka ranking">Interaksi dan pengikut adalah angka terakhir tercatat, bukan jangkauan atau skor pengaruh. “—” berarti tidak tersedia, bukan nol.</InfoTip>{filtered && <PulseButton variant="quiet" size="sm" onClick={clear}><X aria-hidden="true" />Hapus semua filter</PulseButton>}</div>
     </div>}
     {leaders.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + sortName}>{leaders.map(row => <PulseStat key={row.rank} media={<AccountAvatar author={row.author} platform={row.platform} />} label={`#${formatCount(row.rank)} · ${platformLabel(row.platform)}`} value={row[sort]} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {sortUnit}</>} />)}</PulseStatGrid></div>}
     {ranking.rows.length ? <>
       <div className="pulse-table-wrap"><table className="pulse-ranking pa-table"><thead><tr><th scope="col">Akun / sumber</th><th scope="col" aria-sort={sortColumn('mentions')}>Posting <PulseArrow/></th><th scope="col" aria-sort={sortColumn('engagement')}>Interaksi</th><th scope="col" aria-sort={sortColumn('followers')}>Pengikut</th><th scope="col"><span className="sr-only">Bukti</span></th></tr></thead><tbody>{page.visible.map((row, index) => <AccountRankingRow key={row.key + ':' + index} row={row} sort={sort} search={drilldown} />)}</tbody></table></div>
-      {ranking.rows.length > accountPageSize && <div className="pa-more">{page.remaining > 0 && <PulseButton onClick={showMore}>Tampilkan {formatCount(page.next)} lagi</PulseButton>}<p ref={moreStatus} tabIndex={-1} role="status">{page.remaining > 0 ? `${formatCount(page.visible.length)} dari ${formatCount(ranking.rows.length)} akun ditampilkan, ${formatCount(page.remaining)} lagi belum.` : `Semua ${formatCount(ranking.rows.length)} akun sudah ditampilkan.`}</p></div>}
-    </> : ranking.total > 0 ? <div className="pa-empty"><PulsePanelEmpty title="Tidak ada akun yang cocok">Ubah kata pencarian, pilih platform lain, atau hapus semua filter.</PulsePanelEmpty></div> : <Empty>Belum ada akun untuk diperingkat. Metrik yang tidak tersedia bukan nol.</Empty>}
-    <p className="pulse-footnote">Nomor peringkat dihitung di antara platform yang dipilih dan tidak berubah saat nama dicari. Pengikut adalah angka terakhir yang tercatat pada posting akun. Angka di sini bukan jangkauan maupun skor pengaruh. “—” berarti angka tidak tersedia, bukan nol.</p>
+      {ranking.rows.length > accountPageSize && <div className="pa-more">{page.remaining > 0 && <PulseButton onClick={showMore}>Tampilkan {formatCount(page.next)} lagi</PulseButton>}<p ref={moreStatus} tabIndex={-1} role="status">{page.remaining > 0 ? `${formatCount(page.visible.length)} dari ${formatCount(ranking.rows.length)} akun` : `Semua ${formatCount(ranking.rows.length)} akun`}</p></div>}
+    </> : ranking.total > 0 ? <div className="pa-empty"><PulsePanelEmpty title="Tidak ada akun yang cocok">Ubah pencarian atau filter.</PulsePanelEmpty></div> : <Empty>Belum ada akun.</Empty>}
   </Panel>;
 }
 function Analytics({ data, view = 'all', period, onPeriodChange, topic, selectedPlatforms=null, onPlatformsChange, availablePlatforms=projectPlatformOptions }) {
@@ -150,7 +153,7 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     { label: 'Akun / sumber unik', value: allAccounts.length, note: 'Per platform, termasuk penerbit berita', Icon: Users },
     { label: 'Interaksi teramati', value: totals.engagement?.value, note: coverage('engagement'), Icon: Activity },
     { label: 'Share / repost', value: totals.shares?.value, note: coverage('shares'), Icon: RefreshCw },
-    { label: 'Views teramati', value: totals.views?.value, note: 'Tayangan, bukan audiens unik · ' + coverage('views'), Icon: Layers },
+    { label: 'Views teramati', value: totals.views?.value, note: coverage('views'), Icon: Layers },
   ];
   const responsePanel=<ResponseAnalysisPanel posts={data.posts||[]} topicId={topic?.id||analysisParams.get('topic')}/>;
   const responseSummary=<ResponseAnalysisSummary posts={data.posts||[]} topicId={topic?.id||analysisParams.get('topic')}/>;
@@ -162,7 +165,7 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     {['all', 'overview'].includes(view) && <>
     <div className="pulse-kpis">{metrics.map(({ label, value, note, Icon: icon }) => <section className="pulse-kpi" key={label}><div><span>{label}</span>{React.createElement(icon, { size: 18 })}</div><strong>{formatCount(value)}</strong><small>{note}</small></section>)}</div>
     <div className="pulse-chart-grid">
-      <Panel title="Dinamika percakapan" note="Hanya posting dengan waktu terbit tersedia; tanggal pengambilan bukan tanggal publikasi" className="pulse-timeline">
+      <Panel title="Dinamika percakapan" className="pulse-timeline">
         {timeline.length ? <>
           <div className="pulse-chart" role="img" aria-label={'Grafik mention untuk ' + timeline.length + ' tanggal. Data tersedia pada tabel di bawah.'}>
             <ResponsiveContainer width="100%" height="100%">
@@ -177,20 +180,19 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
             </ResponsiveContainer>
           </div>
           <details className="pulse-data-table"><summary>Lihat data timeline</summary><table><thead><tr><th>Tanggal</th><th>Mention</th></tr></thead><tbody>{timeline.map(row => <tr key={row.date}><td>{row.date}</td><td>{formatCount(row.count)}</td></tr>)}</tbody></table></details>
-          <p className="pulse-footnote">Tanggal tanpa data tidak diisi dengan estimasi.</p>
-        </> : <Empty>Belum ada timeline. Jalankan crawl manual pada topik untuk mengumpulkan sumber.</Empty>}
+        </> : <Empty>Belum ada timeline.</Empty>}
       </Panel>
-      <Panel title="Distribusi platform" note="Jumlah mention, bukan jangkauan audiens">
+      <Panel title="Distribusi platform">
         {platforms.length ? <div className="pulse-platforms">{platforms.map(row => <div key={row.platform} className="pulse-platform-row"><div><span><PlatformIcon platform={row.platform} size={17} />{platformLabel(row.platform)}</span><strong>{formatCount(row.count)}</strong></div><div className="pulse-bar-track"><span style={{ width: (row.count / maximum * 100) + '%' }} /></div></div>)}</div> : <Empty>Belum ada sumber platform yang terkumpul.</Empty>}
       </Panel>
     </div>
     <SentimentSummary posts={data.posts||[]} onSelect={openSentiment}/>
     </>}
-    {view === 'accounts' && <PulseStatGrid label="Ringkasan akun dan sumber"><PulseStat label="Akun / sumber unik" icon={Users} value={allAccounts.length} note="Per platform, termasuk penerbit berita" /><PulseStat label="Posting terkumpul" icon={Radio} value={data.total_mentions} note={allAccounts.length ? `${(data.total_mentions / allAccounts.length).toLocaleString('id-ID', { maximumFractionDigits: 1 })} posting per akun · ${platforms.length} platform` : `${platforms.length} platform`} /><PulseStat label="Interaksi teramati" icon={Activity} value={totals.engagement?.value ?? null} share={data.total_mentions ? (totals.engagement?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting bermetrik" /><PulseStat label="Tayangan teramati" icon={Layers} value={totals.views?.value ?? null} share={data.total_mentions ? (totals.views?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting punya tayangan" note="Bukan audiens unik" /></PulseStatGrid>}
+    {view === 'accounts' && <PulseStatGrid label="Ringkasan akun dan sumber"><PulseStat label="Akun / sumber unik" icon={Users} value={allAccounts.length} note="Per platform" /><PulseStat label="Posting terkumpul" icon={Radio} value={data.total_mentions} note={allAccounts.length ? `${(data.total_mentions / allAccounts.length).toLocaleString('id-ID', { maximumFractionDigits: 1 })} posting per akun · ${platforms.length} platform` : `${platforms.length} platform`} /><PulseStat label="Interaksi teramati" icon={Activity} value={totals.engagement?.value ?? null} share={data.total_mentions ? (totals.engagement?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting bermetrik" /><PulseStat label="Tayangan teramati" icon={Layers} value={totals.views?.value ?? null} share={data.total_mentions ? (totals.views?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting punya tayangan" note="Bukan audiens unik" /></PulseStatGrid>}
     {view === 'accounts' && <AccountsInsights posts={data.posts || []} topic={topic} period={period} />}
     {['all', 'accounts'].includes(view) && <div className="pulse-detail-grid">
       <AccountRanking accounts={data.influencers} posts={data.posts} />
-      {view === 'all' && <Panel title="Cakupan geografis" note="Lokasi hanya ditampilkan jika tersedia dari sumber">
+      {view === 'all' && <Panel title="Cakupan geografis">
         <GeographicView locations={data.locations} unknownCount={data.unknown_location_count} />
       </Panel>}
     </div>}
@@ -243,12 +245,13 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const token = standalone ? null : localStorage.getItem('sinar_token');
   const needsLogin = !standalone && (!token || token === 'demo-token');
   const refresh = () => Promise.all([topics.refetch(), issues.refetch(), analytics.refetch()]);
-  // Panels that add stored data (for example collected comments) ask for a reload without owning the fetch.
+  // Panels that add stored data (for example collected comments) ask for a reload without owning the fetch. It runs in the
+  // background: the page keeps what it shows (the cards opened on Komentar too) until the new data arrives.
   const refetchAnalytics = analytics.refetch;
-  useEffect(() => { const reload = () => refetchAnalytics(); window.addEventListener('pulse-data-changed', reload); return () => window.removeEventListener('pulse-data-changed', reload); }, [refetchAnalytics]);
+  useEffect(() => { const reload = () => refetchAnalytics({ background: true }); window.addEventListener('pulse-data-changed', reload); return () => window.removeEventListener('pulse-data-changed', reload); }, [refetchAnalytics]);
   const run = async (kind) => {
     if (action || needsLogin) return;
-    if (kind === 'crawl' && !window.confirm('Mulai crawl untuk topik ini? Provider yang dikonfigurasi dapat memakai kuota atau biaya.')) return;
+    if (kind === 'crawl' && !window.confirm('Mulai crawl untuk topik ini? Dapat memakai kuota atau biaya.')) return;
     setAction(kind);
     setActionError(null);
     setResult(null);
@@ -256,7 +259,7 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
     try {
       if (kind === 'bootstrap') {
         await topics.bootstrap();
-        setNotice('Topik GERAK dan Isu Penyadapan Presiden siap. Bootstrap tidak menjalankan crawl.');
+        setNotice('Topik awal siap.');
       } else {
         const response = await topics.crawlNow(topicId);
         setResult({ ...response, label: selected?.label });
@@ -279,47 +282,46 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const descriptions = { sentiment: 'Pahami nada percakapan, perubahan harian, dan posting di baliknya.', overview: 'Ringkasan aktivitas dan cakupan percakapan project.', monitor: 'Pantau alert, jadwal pengambilan, dan kesehatan antrean.', network: 'Telusuri hubungan akun dan kronologi berdasarkan bukti sumber.', accounts: 'Temukan akun penyebar dan bandingkan interaksi dalam sampel.', posts: 'Periksa konten asli, preview media, dan riwayat metrik.', comments: 'Baca respons publik dari komentar posting yang tersimpan.' };
   titles.reports='Laporan';
   descriptions.reports='Ringkasan eksekutif dan bukti sumber sesuai periode project, siap dicetak sebagai PDF.';
-  if (standalone && !topicId) return <div className="pulse-empty"><Database size={28} /><h1>Pilih project untuk mulai memantau</h1><p>Pilih salah satu project di atas. Setiap project menyimpan satu topik beserta keyword, posting, dan alert-nya.</p></div>;
-  if (standalone && !topics.loading && !topics.error && !selected) return <div className="pulse-empty"><h1>Project tidak tersedia</h1><p>Pilih project lain melalui picker di atas.</p></div>;
+  if (standalone && !topicId) return <div className="pulse-empty"><Database size={28} /><h1>Pilih project untuk mulai memantau</h1><p>Pilih salah satu project di atas.</p></div>;
+  if (standalone && !topics.loading && !topics.error && !selected) return <div className="pulse-empty"><h1>Project tidak tersedia</h1><p>Pilih project lain di atas.</p></div>;
   return <ProjectPostsContext.Provider value={scopedData?.posts || null}><div className="pulse-dashboard" id="pulse-dashboard" data-view={view}>
     {standalone ? <PulsePageHead icon={pageMeta[view]?.icon} title={pageMeta[view]?.title || titles[view] || 'Pulse'} tagline={pageMeta[view]?.tagline} guide={pageMeta[view]?.guide}><PulseButton variant="secondary" className="pulse-button" disabled={!!action || analytics.loading || issues.loading || topics.loading} onClick={refresh}><RefreshCw size={15} />Muat ulang</PulseButton></PulsePageHead> : <header className="pulse-header">
       <div className="pulse-brand"><span className="pulse-brand-icon"><Activity size={25} /></span><div><h1>{standalone ? titles[view] || 'Pulse' : 'Pulse'}</h1><p>{standalone ? descriptions[view] : 'Pantau percakapan. Telusuri buktinya.'}</p></div></div>
       <div className="pulse-header-actions"><span className="pulse-data-badge"><ShieldCheck size={14} />Sumber publik</span><PulseButton variant="secondary" className="pulse-button" disabled={!!action || analytics.loading || issues.loading || topics.loading} onClick={refresh}><RefreshCw size={15} />Muat ulang</PulseButton></div>
     </header>}
-    {carriedSentiment && <div className="pu-carried" role="status"><span>Filter dari halaman sebelumnya</span><SentimentTag value={carriedSentiment} /><PulseTag size="lg" variant="outline" onRemove={dropSentiment} removeLabel="Lepas filter sentimen">Lepas filter</PulseTag><small>Halaman ini hanya menghitung posting bersentimen {sentimentLabels[carriedSentiment].toLowerCase()}.</small></div>}
+    {carriedSentiment && <div className="pu-carried" role="status"><span>Filter dari halaman sebelumnya</span><SentimentTag value={carriedSentiment} /><PulseTag size="lg" variant="outline" onRemove={dropSentiment} removeLabel="Lepas filter sentimen">Lepas filter</PulseTag><small>Hanya posting bersentimen {sentimentLabels[carriedSentiment].toLowerCase()}.</small></div>}
     {standalone && flagged.ids.length > 0 && view !== 'monitor' && (view === 'posts'
-      ? <p className="po-relevance-note">Menampilkan semua posting, termasuk {formatCount(flagged.ids.length)} yang ditandai tidak relevan. Halaman analisis tidak menghitungnya kecuali disertakan.</p>
-      : <label className="po-relevance po-relevance-bar"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeFlagged} onChange={event => toggleFlagged(event.target.checked)} /> Sertakan {formatCount(flagged.ids.length)} posting yang ditandai tidak relevan<InfoTip label="Tentang posting tidak relevan">Berlaku di Ikhtisar, Sentimen, Akun & sumber, Jaringan, Komentar dan Laporan. Halaman Posting selalu menampilkan semuanya agar tandanya bisa dibatalkan.</InfoTip></label>)}
-    {standalone && loadedAt && view !== 'monitor' && <p className="po-data-stamp">Angka dimuat pukul {new Date(localTime(loadedAt)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).replace(':', '.')} {zone().name}. Selama pengumpulan berjalan, halaman yang dibuka lebih lambat bisa menunjukkan angka lebih besar.</p>}
+      ? <p className="po-relevance-note">Semua posting, termasuk {formatCount(flagged.ids.length)} yang ditandai tidak relevan.</p>
+      : <label className="po-relevance po-relevance-bar"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeFlagged} onChange={event => toggleFlagged(event.target.checked)} /> Sertakan {formatCount(flagged.ids.length)} posting yang ditandai tidak relevan<InfoTip label="Tentang posting tidak relevan">Berlaku di semua halaman analisis; Posting selalu menampilkan semuanya.</InfoTip></label>)}
+    {standalone && loadedAt && view !== 'monitor' && <p className="po-data-stamp">Dimuat pukul {new Date(localTime(loadedAt)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).replace(':', '.')} {zone().name}</p>}
     {standalone && <SentimentProgress key={topicId} topicId={topicId} posts={analytics.loading?undefined:scopedData?.posts} onChange={analytics.refetch} quiet/>}
-    {needsLogin && <div className="pulse-auth-note"><ShieldCheck size={21} /><div><strong>Analytics live memerlukan login admin asli.</strong><p>Login demo tidak memberi akses API. Gunakan kredensial admin pada formulir login; data contoh tidak ditampilkan di Pulse.</p></div><Link className="pulse-button primary" to="/login?returnTo=pulse">Masuk dengan akun admin</Link></div>}
+    {needsLogin && <div className="pulse-auth-note"><ShieldCheck size={21} /><div><strong>Analytics live memerlukan login admin asli.</strong><p>Login demo tidak memberi akses API.</p></div><Link className="pulse-button primary" to="/login?returnTo=pulse">Masuk dengan akun admin</Link></div>}
     <div className="pulse-layout">
       {!standalone && <div><TopicManager resource={topics} onSelectTopic={selectTopic} selectedTopicId={topicId} disabled={!!action || needsLogin} onChanged={refresh} />
-        {!standalone && <div className="pulse-bootstrap"><Database size={20} /><strong>Mulai dari topik awal</strong><p>Siapkan GERAK dan Isu Penyadapan Presiden tanpa duplikasi.</p><PulseButton variant="secondary" className="pulse-button" disabled={!!action || needsLogin || topics.loading} onClick={() => run('bootstrap')}>{action === 'bootstrap' ? 'Menyiapkan…' : 'Siapkan topik awal'}</PulseButton><small>Tidak menjalankan crawl.</small></div>}
+        {!standalone && <div className="pulse-bootstrap"><Database size={20} /><strong>Mulai dari topik awal</strong><PulseButton variant="secondary" className="pulse-button" disabled={!!action || needsLogin || topics.loading} onClick={() => run('bootstrap')}>{action === 'bootstrap' ? 'Menyiapkan…' : 'Siapkan topik awal'}</PulseButton></div>}
       </div>}
       <main className="pulse-main">
         {view === 'posts' && <div className="ps-content-switch" role="group" aria-label="Jenis konten"><PulseButton aria-pressed={contentMode === 'posts'} onClick={()=>setContentMode('posts')}>Posting individual</PulseButton><PulseButton aria-pressed={contentMode === 'issues'} onClick={()=>setContentMode('issues')}>Kelompok percakapan</PulseButton></div>}
         {!standalone && <details className="ps-data-tools"><summary>Pengaturan pengumpulan</summary>
-        <div className="pulse-scope"><div><h2>{selected ? selected.label : 'Ikhtisar semua topik'}</h2><p>Pengumpulan mengikuti query project, bukan filter tanggal analisis.</p></div><PulseButton variant="primary" className="pulse-button primary" disabled={!topicId || !!action || needsLogin || topics.loading} onClick={() => run('crawl')}><Download size={15} />{action === 'crawl' ? 'Mengumpulkan sumber…' : 'Crawl manual'}</PulseButton></div>
-        <p className="pulse-crawl-hint">{selected ? 'Crawl hanya berjalan setelah konfirmasi Anda. Provider berbayar dapat memakai kuota.' : 'Pilih satu topik untuk menjalankan crawl manual.'}</p>
-        <details className="pulse-methodology"><summary>Metodologi & cakupan data</summary><p>Pulse mengamati percakapan publik, bukan memverifikasi klaim dalam konten. Interaksi = likes + komentar + share yang tersedia; views tidak termasuk. Akun dihitung per platform, bukan identitas orang unik. Metrik kosong bukan nol; hubungan mention/kemiripan bukan rantai repost terverifikasi.</p></details>
+        <div className="pulse-scope"><div><h2>{selected ? selected.label : 'Ikhtisar semua topik'}</h2></div><PulseButton variant="primary" className="pulse-button primary" disabled={!topicId || !!action || needsLogin || topics.loading} onClick={() => run('crawl')}><Download size={15} />{action === 'crawl' ? 'Mengumpulkan sumber…' : 'Crawl manual'}</PulseButton></div>
+        {!selected && <p className="pulse-crawl-hint">Pilih satu topik.</p>}
         {standalone && <Link to={'/pulse/sources?' + new URLSearchParams({ topic: topicId })}>Periksa sumber & cakupan →</Link>}
         </details>}
         {['all', 'monitor'].includes(view) && <MonitorRoom key={topicId || 'all'} topicId={topicId} topics={topics.topics} onOpenAlert={openAlert} disabled={needsLogin} />}
-        {alertId && <div className="pm-alert-scope"><strong>Analisis dari alert</strong><p>{analytics.data?.alert?.title || 'Memuat konteks alert…'}</p><p>Grafik, akun, komentar, dan posting di bawah dibatasi ke isu dan rentang publikasi alert. Daftar isu di bagian paling bawah tetap mencakup topik.</p><PulseButton variant="secondary" className="pulse-button" onClick={() => selectTopic(topicId)}>Kembali ke seluruh topik</PulseButton></div>}
+        {alertId && <div className="pm-alert-scope"><strong>Analisis dari alert</strong><p>{analytics.data?.alert?.title || 'Memuat konteks alert…'}</p><PulseButton variant="secondary" className="pulse-button" onClick={() => selectTopic(topicId)}>Kembali ke seluruh topik</PulseButton></div>}
         {topics.error && <ErrorNotice standalone={standalone} error={topics.error} retry={topics.refetch} />}
         {actionError && <ErrorNotice standalone={standalone} error={actionError} />}
         {notice && <p className="pulse-notice" role="status">{notice}</p>}
-        {action === 'crawl' && <p className="pulse-notice" role="status">Crawl sedang berjalan. Hasil dan status provider akan ditampilkan setelah respons API diterima.</p>}
-        {result && <section className="pulse-crawl-result" aria-label="Hasil crawl" role="status"><strong>Respons crawl diterima · {allegationLabel(result.label)}</strong><p>{formatCount(result.ingested)} item diingest. Periksa status tiap provider; respons selesai tidak berarti semua provider berhasil.</p><div className="pulse-provider-list">{providers.map((row, index) => <div key={row.provider || index}><strong>{row.provider || row.source || 'Provider'}</strong><span>{row.status || 'Status tidak tersedia'}</span>{row.ingested != null && <span>{formatCount(row.ingested)} item</span>}<small>{row.reason || row.error || row.message}</small></div>)}</div>{!providers.length && <p>Status provider tidak disertakan oleh API.</p>}</section>}
+        {action === 'crawl' && <p className="pulse-notice" role="status">Crawl berjalan…</p>}
+        {result && <section className="pulse-crawl-result" aria-label="Hasil crawl" role="status"><strong>Respons crawl diterima · {allegationLabel(result.label)}</strong><p>{formatCount(result.ingested)} item diingest.</p><div className="pulse-provider-list">{providers.map((row, index) => <div key={row.provider || index}><strong>{row.provider || row.source || 'Provider'}</strong><span>{row.status || 'Status tidak tersedia'}</span>{row.ingested != null && <span>{formatCount(row.ingested)} item</span>}<small>{row.reason || row.error || row.message}</small></div>)}</div>{!providers.length && <p>Status provider tidak disertakan oleh API.</p>}</section>}
         {view !== 'monitor' && !(view === 'posts' && contentMode === 'issues') && (analytics.loading ? (standalone ? <PulseSkeleton label={`Memuat ${(pageMeta[view]?.title || 'analisis').toLowerCase()}…`} {...skeletonShape[view]} /> : <div className="pulse-loading" role="status"><Activity size={22} /><span>Memuat analisis…</span></div>) : analytics.error ? <ErrorNotice standalone={standalone} error={analytics.error} retry={analytics.refetch} /> : scopedData && <Analytics key={topicId+':'+period.from+':'+period.to+':'+platformKey} data={scopedData} view={view} topic={selected} period={standalone?period:null} onPeriodChange={standalone?setPeriod:null} selectedPlatforms={standalone?selectedPlatforms:null} onPlatformsChange={setSelectedPlatforms} availablePlatforms={availablePlatforms} />)}
         {standalone && view === 'posts' && contentMode === 'issues' && (analytics.loading ? <PulseSkeleton label="Memuat kelompok percakapan…" stats={0} panels={0} rows={5} /> : analytics.error ? <ErrorNotice standalone error={analytics.error} retry={analytics.refetch}/> : scopedData && <ConversationGroups key={topicId+':'+period.from+':'+period.to+':'+platformKey} posts={scopedData.posts||[]} period={period} platforms={selectedPlatforms}/>)}
         {!standalone && (view === 'all' || (view === 'posts' && contentMode === 'issues')) && <section className="pulse-issues">
-          <div className="pulse-issues-heading"><div><h2>Kelompok percakapan</h2><p>Dikelompokkan berdasarkan kemiripan teks, bukan hubungan antar akun. Maksimal 50 kelompok; cakupan seluruh data project, tidak mengikuti rentang tanggal posting. Buka kelompok untuk melihat metode dan sumber.</p></div><span>{issues.loading || issues.error ? '—' : filtered.length} kelompok ditampilkan</span></div>
-          <div className="pulse-filters"><PlatformCheckboxes platforms={issuePlatforms} value={platform} onChange={setPlatform} /><label>Urutkan<select value={sort} onChange={e => setSort(e.target.value)}><option value="score">Skor isu</option><option value="recent">Terbaru</option></select></label><span>Filter ini hanya berlaku untuk daftar isu.</span></div>
-          {issues.loading ? <p className="pulse-loading" role="status">Memuat isu…</p> : issues.error ? <ErrorNotice standalone={standalone} error={issues.error} retry={issues.refetch} /> : filtered.length ? <div className="pulse-issue-list">{filtered.map(issue => <IssueCard key={issue.id + ':' + issue.last_seen_at + ':' + issue.item_count} issue={issue} platformFilter={platform ?? "all"} dateMode="absolute" />)}</div> : <Empty>{issues.issues.length ? 'Tidak ada isu yang cocok dengan filter platform.' : 'Belum ada isu tersimpan. Siapkan topik lalu jalankan crawl manual.'}</Empty>}
+          <div className="pulse-issues-heading"><div><h2>Kelompok percakapan</h2></div><span>{issues.loading || issues.error ? '—' : filtered.length} kelompok ditampilkan</span></div>
+          <div className="pulse-filters"><PlatformCheckboxes platforms={issuePlatforms} value={platform} onChange={setPlatform} /><label>Urutkan<select value={sort} onChange={e => setSort(e.target.value)}><option value="score">Skor isu</option><option value="recent">Terbaru</option></select></label></div>
+          {issues.loading ? <p className="pulse-loading" role="status">Memuat isu…</p> : issues.error ? <ErrorNotice standalone={standalone} error={issues.error} retry={issues.refetch} /> : filtered.length ? <div className="pulse-issue-list">{filtered.map(issue => <IssueCard key={issue.id + ':' + issue.last_seen_at + ':' + issue.item_count} issue={issue} platformFilter={platform ?? "all"} dateMode="absolute" />)}</div> : <Empty>{issues.issues.length ? 'Tidak ada isu yang cocok dengan filter platform.' : 'Belum ada isu.'}</Empty>}
         </section>}
-        <footer className="pulse-footer"><ShieldCheck size={14} />Sampel percakapan publik · bukan keseluruhan aktivitas media sosial</footer>
+        <footer className="pulse-footer"><ShieldCheck size={14} />Sampel percakapan publik</footer>
       </main>
     </div>
   </div></ProjectPostsContext.Provider>;

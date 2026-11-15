@@ -9,3 +9,16 @@
 .pu-arrow-specimen{display:inline-grid;place-items:center;width:64px;height:64px;border:1px solid var(--ps-line);border-radius:var(--ps-radius-panel);color:var(--ps-accent);background:var(--ps-panel)}.pu-arrow-specimen .pu-arrow{margin:0}.pu-gallery a{color:var(--ps-accent);font-weight:600}
 .pu-mark-specimen{display:inline-grid;justify-items:center;gap:6px;width:76px;padding:12px 8px;border:1px solid var(--ps-line);border-radius:var(--ps-radius-control);background:var(--ps-panel);color:var(--ps-accent)}.pu-mark-specimen small{color:var(--ps-muted);font-size:12px}
 .pu-range-specimen{display:flex;align-items:flex-end;gap:4px;height:72px;margin-bottom:12px}.pu-range-specimen>i{flex:1 1 0;min-width:0;border-radius:var(--ps-radius-mark) var(--ps-radius-mark) 0 0;background:var(--ps-line)}.pu-range-specimen>i[data-drawn]{background:var(--ps-chart-1)}
+/* Colour guide (ColorGuide.jsx): swatches drawn from live tokens. */
+.pu-color-guide { display: grid; gap: var(--ps-space-6); }
+.pu-color-intro { max-width: 70ch; color: var(--ps-muted); }
+.pu-color-group { display: grid; gap: var(--ps-space-3); padding: var(--ps-surface-pad); border: 1px solid var(--ps-line); border-radius: var(--ps-surface-radius); background: var(--ps-panel); }
+.pu-color-group h4 { margin: 0; font-size: var(--ps-title-block); font-weight: var(--ps-title-weight); }
+.pu-color-group header p { margin: var(--ps-space-1) 0 0; max-width: 70ch; color: var(--ps-muted); }
+.pu-color-tokens { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--ps-space-3); margin: 0; padding: 0; list-style: none; }
+.pu-color-tokens li { display: flex; gap: var(--ps-space-3); align-items: flex-start; min-width: 0; }
+.pu-color-swatch { flex: none; width: 40px; height: 40px; border-radius: var(--ps-radius-control); border: 1px solid var(--ps-control-line); }
+.pu-color-tokens li > div { display: grid; gap: 2px; min-width: 0; }
+.pu-color-tokens code { font-size: var(--ps-text-small); color: var(--ps-muted); overflow-wrap: anywhere; }
+.pu-color-tokens small { color: var(--ps-muted); line-height: 1.4; }
+.pu-color-rule { margin: 0; max-width: 70ch; font-size: var(--ps-text-body); }

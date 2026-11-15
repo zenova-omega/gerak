@@ -1,4 +1,4 @@
-.pi-panel{--pi-panel:var(--ps-panel,#fff);--pi-soft:var(--ps-soft,#efefec);--pi-ink:var(--ps-ink,#292a30);--pi-muted:var(--ps-muted,#666770);--pi-line:var(--ps-line,#dedee2);--pi-accent:var(--ps-accent,#625080);color:var(--pi-ink);font-family:inherit;margin-block:28px}
+.pi-panel{--pi-panel:var(--ps-panel);--pi-soft:var(--ps-soft);--pi-ink:var(--ps-ink);--pi-muted:var(--ps-muted);--pi-line:var(--ps-line);--pi-accent:var(--ps-accent);color:var(--pi-ink);font-family:inherit;margin-block:28px}
 .pi-panel *{box-sizing:border-box}
 .pi-panel .pi-heading{margin-bottom:20px}
 .pi-panel h2{font-size:24px;font-weight:650;letter-spacing:-.5px;margin:0}

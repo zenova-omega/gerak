@@ -1,0 +1,42 @@
+/* PulseCard, PulseCardGrid and the filter components (PulseSurface.jsx). Colour comes only from --ps-* tokens, so every
+   card and filter follows the theme. Selectors are doubled where older page sheets restyle plain buttons or selects. */
+.pu-card { display: flex; flex-direction: column; gap: var(--ps-surface-gap); min-width: 0; background: var(--ps-surface-bg); color: var(--ps-ink); border: 1px solid var(--ps-surface-line); border-radius: var(--ps-surface-radius); box-shadow: none; }
+.pu-card[data-pad=md] { padding: var(--ps-surface-pad); }
+.pu-card[data-pad=sm] { padding: var(--ps-surface-pad-sm); }
+.pu-card[data-pad=none] { padding: 0; overflow: hidden; }
+.pu-card[data-tone=soft] { background: var(--ps-soft); }
+.pu-card[data-tone=selected] { background: var(--ps-selected); border-color: var(--ps-accent); }
+.pu-card[data-tone=success] { background: var(--ps-mint); color: var(--ps-success-ink); border-color: transparent; }
+.pu-card[data-tone=warning] { background: var(--ps-peach); color: var(--ps-warning-ink); border-color: transparent; }
+.pu-card[data-tone=danger] { background: var(--ps-danger); color: var(--ps-danger-ink); border-color: transparent; }
+.pu-card[data-tone=info] { background: var(--ps-info); color: var(--ps-info-ink); border-color: transparent; }
+.pu-card[data-interactive] { cursor: pointer; transition: background-color var(--ps-motion) var(--ps-ease), border-color var(--ps-motion) var(--ps-ease); }
+.pu-card[data-interactive]:hover { background: var(--ps-selected); border-color: var(--ps-control-line); }
+.pu-card[data-interactive]:focus-visible, .pu-card:has(a:focus-visible, button:focus-visible) { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pu-card-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ps-space-2) var(--ps-space-4); min-width: 0; }
+.pu-card-heading { flex: 1 1 240px; min-width: 0; }
+.pu-card-title { margin: 0; font-size: var(--ps-title-block); line-height: 1.3; font-weight: var(--ps-title-weight); color: inherit; }
+h2.pu-card-title { font-size: var(--ps-title-panel); }
+.pu-card-description { margin: var(--ps-space-1) 0 0; max-width: 70ch; font-size: var(--ps-text-body); line-height: 1.5; color: var(--ps-muted); }
+.pu-card[data-tone=success] .pu-card-description, .pu-card[data-tone=warning] .pu-card-description, .pu-card[data-tone=danger] .pu-card-description, .pu-card[data-tone=info] .pu-card-description { color: inherit; }
+.pu-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ps-space-2); min-width: 0; }
+.pu-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ps-space-3); padding-top: var(--ps-space-3); border-top: 1px solid var(--ps-line); font-size: var(--ps-text-small); color: var(--ps-muted); }
+.pu-card[data-pad=none] > .pu-card-head, .pu-card[data-pad=none] > .pu-card-foot { padding-inline: var(--ps-surface-pad); }
+.pu-card[data-pad=none] > .pu-card-head { padding-top: var(--ps-surface-pad); }
+.pu-card[data-pad=none] > .pu-card-foot { padding-bottom: var(--ps-surface-pad); }
+@media (max-width: 700px) { .pu-card[data-pad=md] { padding: var(--ps-surface-pad-sm); } }
+
+.pu-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--pu-card-min, 280px)), 1fr)); gap: var(--ps-surface-gap); align-items: stretch; min-width: 0; }
+.pu-card-grid > * { min-width: 0; }
+
+/* Filters. The strip is quiet: a soft line below, no fill, so the data stays the loudest thing on the page. */
+.pu-filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--ps-space-3) var(--ps-space-6); min-width: 0; padding-block: var(--ps-space-3); border-bottom: 1px solid var(--ps-line); }
+.pu-filter-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--ps-space-3) var(--ps-space-6); flex: 1 1 auto; min-width: 0; }
+.pu-filter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ps-space-2); }
+.pu-filter-group { display: grid; gap: var(--ps-space-2); min-width: 0; }
+.pu-filter-label { font-size: var(--ps-text-small); font-weight: var(--ps-weight-label); color: var(--ps-muted); line-height: 1.3; }
+.pu-filter-label[data-visually-hidden] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pu-filter-select { display: grid; gap: var(--ps-space-2); min-width: 0; }
+/* The select itself is styled by the shared dropdown rule in ds/analytics-kit.css (44px, keycap edge, caret). */
+.pu-filter-select > select { min-width: 160px; max-width: 100%; }
+@media (max-width: 700px) { .pu-filter-select > select { width: 100%; } .pu-filter-bar, .pu-filter-controls { align-items: stretch; } .pu-filter-select { flex: 1 1 100%; } }

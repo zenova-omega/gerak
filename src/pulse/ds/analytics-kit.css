@@ -1,7 +1,7 @@
 /* PULSE analytics kit: data tokens, tags, stat strip, chart card parts.
    Token rule: status tokens (mint/peach/info/danger) describe collection and system state.
    Data tokens below describe what was measured. Never borrow one for the other. */
-.pulse-standalone {
+:is(.pulse-standalone, .pulse-dashboard:not(.pulse-standalone *)) {
   /* Sentiment: solid marks charts, soft + ink build tags. */
   --ps-sent-positive: oklch(60% 0.13 155);
   --ps-sent-positive-soft: oklch(94% 0.04 155);
@@ -68,7 +68,7 @@
 }
 
 /* ---------- Arrow: the PULSE "open the evidence" mark ---------- */
-.pulse-standalone { --ps-arrow-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13 6.2 9.8 8.1 9.7 7 6.2 9.4 6.6 13 3'/%3E%3Cpath d='M8.2 3H13v4.8'/%3E%3C/svg%3E"); --ps-button-edge: oklch(62% 0.11 295); --ps-button-edge-quiet: var(--ps-control-line); }
+:is(.pulse-standalone, .pulse-dashboard:not(.pulse-standalone *)) { --ps-arrow-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13 6.2 9.8 8.1 9.7 7 6.2 9.4 6.6 13 3'/%3E%3Cpath d='M8.2 3H13v4.8'/%3E%3C/svg%3E"); --ps-button-edge: oklch(62% 0.11 295); --ps-button-edge-quiet: var(--ps-control-line); }
 .pulse-standalone[data-theme=dark] { --ps-button-edge: oklch(58% 0.1 295); }
 .pu-arrow { display: inline-flex; vertical-align: -0.14em; margin-left: .15em; flex: 0 0 auto; }
 .pu-arrow > svg { display: block; transition: transform var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
@@ -292,7 +292,7 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .pm-quota-bars progress::-moz-progress-bar { background: var(--ps-chart-1); }
 
 /* ---------- Interaction detail ---------- */
-.pulse-standalone { --ps-eng-likes: var(--ps-chart-4); --ps-eng-comments: var(--ps-chart-5); --ps-eng-shares: var(--ps-chart-2); }
+:is(.pulse-standalone, .pulse-dashboard:not(.pulse-standalone *)) { --ps-eng-likes: var(--ps-chart-4); --ps-eng-comments: var(--ps-chart-5); --ps-eng-shares: var(--ps-chart-2); }
 .pu-mark { display: inline-block; flex: 0 0 auto; vertical-align: -0.16em; }
 .pu-eng { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 32px; align-items: start; min-width: 0; color: var(--ps-ink); }
 .pu-eng-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
@@ -1751,23 +1751,42 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone.pulse-standalone.pulse-standalone .ps-set-danger .pu-button-reverse { background: var(--ps-sent-negative-ink); border-color: var(--ps-sent-negative-ink); color: var(--ps-panel); --edge: color-mix(in oklch, var(--ps-sent-negative-ink) 70%, black); }
 .pulse-standalone.pulse-standalone.pulse-standalone .ps-set-danger .pu-button-reverse:disabled { opacity: .45; box-shadow: none; }
 
-/* ── Sidebar polish: three labelled groups, one active row ── */
+/* ── Sidebar: every page visible at once ──
+   Compact 34px rows two pixels apart, group labels close to their rows, Pengaturan last among the pages, and one short
+   frozen row at the bottom: who is signed in, with the theme and sign-out as icon buttons. The page that is open is
+   filled with the accent tint; a hovered row only gets the soft surface. */
+@media screen and (min-width: 1001px) {
+  .pulse-standalone.pulse-standalone .ps-sidebar { gap: 20px; padding-top: 20px; padding-bottom: 12px; }
+  .pulse-standalone .ps-navigation-body { gap: 12px; }
+}
 .pulse-standalone .ps-sidebar nav { gap: 2px; }
-.pulse-standalone .ps-nav-group { display: grid; gap: 2px; margin-top: 14px; }
-.pulse-standalone .ps-nav-group-label { padding: 0 var(--ps-nav-item-pad) 4px; font-size:.75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ps-muted); }
+.pulse-standalone .ps-nav-group { display: grid; gap: 2px; margin-top: 10px; }
+.pulse-standalone .ps-nav-group-label { padding: 0 var(--ps-nav-item-pad) 2px; font-size: .75rem; font-weight: 700; line-height: 1.4; letter-spacing: .06em; text-transform: uppercase; color: var(--ps-muted); }
+.pulse-standalone .ps-nav-utility { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--ps-line); }
 .pulse-standalone .ps-sidebar .ps-workspace-label { display: none; }
-.pulse-standalone.pulse-standalone .ps-sidebar nav a { min-height: 40px; color: var(--ps-ink); }
+.pulse-standalone.pulse-standalone .ps-sidebar nav a { color: var(--ps-ink); font-weight: 500; line-height: 1.25; }
 .pulse-standalone.pulse-standalone .ps-sidebar nav a > svg { color: var(--ps-muted); flex: 0 0 auto; }
+.pulse-standalone.pulse-standalone .ps-sidebar nav a:hover > svg { color: var(--ps-ink); }
+.pulse-standalone.pulse-standalone .ps-sidebar nav a[aria-current] { font-weight: 650; }
 .pulse-standalone.pulse-standalone .ps-sidebar nav a[aria-current] > svg { color: var(--ps-nav-active-ink); }
-.pulse-standalone .ps-sidebar-bottom { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--ps-line); }
-.pulse-standalone .ps-sidebar-bottom > a { display: flex; align-items: center; gap: var(--ps-nav-item-gap); min-height: 40px; padding: 0 var(--ps-nav-item-pad); border-radius: var(--ps-nav-item-radius); font-size: var(--ps-nav-item-font); color: var(--ps-ink); text-decoration: none; }
-.pulse-standalone .ps-sidebar-bottom > a[aria-current] { background: var(--ps-nav-active-bg); color: var(--ps-nav-active-ink); font-weight: 600; }
-.pulse-standalone .ps-sidebar-bottom .ps-user { display: grid; gap: 0; padding: 10px var(--ps-nav-item-pad); border: 0; border-radius: var(--ps-nav-item-radius); background: var(--ps-soft); min-width: 0; }
-.pulse-standalone .ps-sidebar-bottom .ps-user strong { font-size: .8125rem; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pulse-standalone .ps-sidebar-bottom .ps-user span { font-size:.75rem; text-transform: capitalize; }
-.pulse-standalone.pulse-standalone.pulse-standalone .ps-sidebar-bottom .pu-button { justify-content: flex-start; min-height: 40px; padding: 0 var(--ps-nav-item-pad); box-shadow: none; border-color: transparent; background: transparent; font-weight: 500; }
-.pulse-standalone.pulse-standalone.pulse-standalone .ps-sidebar-bottom .pu-button:hover { background: var(--ps-nav-hover-bg); }
-@media (max-width: 700px) { .pulse-standalone .ps-nav-group { display: contents; } .pulse-standalone .ps-nav-group-label { display: none; } }
+.pulse-standalone .ps-sidebar-bottom { display: grid; gap: 8px; margin: 0; padding-top: 10px; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .ps-sidebar-bottom .ps-user { display: grid; grid-template-columns: 28px minmax(0, 1fr) 32px 32px; align-items: center; gap: 0; margin: 0; padding: 0; border: 0; background: none; overflow-wrap: normal; }
+.pulse-standalone .ps-sidebar-bottom .ps-user-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background: var(--ps-lavender); color: var(--ps-accent-ink); font-size: .75rem; font-weight: 700; letter-spacing: .02em; }
+.pulse-standalone .ps-sidebar-bottom .ps-user-text { display: grid; min-width: 0; margin: 0 4px 0 8px; line-height: 1.3; }
+.pulse-standalone .ps-sidebar-bottom .ps-user-text > :is(strong, span) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .ps-sidebar-bottom .ps-user-text > strong { font-size: .8125rem; font-weight: 650; color: var(--ps-ink); }
+.pulse-standalone .ps-sidebar-bottom .ps-user-role { font-size: .75rem; color: var(--ps-muted); text-transform: capitalize; }
+.pulse-standalone.pulse-standalone.pulse-standalone .ps-sidebar-bottom .ps-user-action { width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; justify-content: center; border-color: transparent; background: transparent; box-shadow: none; color: var(--ps-muted); }
+.pulse-standalone.pulse-standalone.pulse-standalone .ps-sidebar-bottom .ps-user-action:hover:not(:disabled) { background: var(--ps-nav-hover-bg); color: var(--ps-ink); }
+.pulse-standalone.pulse-standalone.pulse-standalone .ps-sidebar-bottom .ps-user-action:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .ps-sidebar-bottom > .ps-error { margin: 0 !important; padding: 8px 10px; font-size: .75rem; }
+/* The menu on a narrow screen: rows are touch targets again. */
+@media screen and (max-width: 1000px) {
+  .pulse-standalone.pulse-standalone .ps-sidebar nav a { min-height: 44px; }
+  .pulse-standalone.pulse-standalone.pulse-standalone .ps-sidebar-bottom .ps-user-action { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
+  .pulse-standalone .ps-sidebar-bottom .ps-user { flex: 1 1 100%; grid-template-columns: 28px minmax(0, 1fr) 44px 44px; }
+}
+@media (max-width: 700px) { .pulse-standalone .ps-nav-group { display: contents; } .pulse-standalone .ps-nav-group-label { display: none; } .pulse-standalone .ps-nav-utility { border-top: 0; } }
 /* Top bar fits on one row from 1280px: the picker and the scope give way before the actions wrap. */
 .pulse-standalone .ps-project-toolbar > .ps-project-pick { flex: 0 1 280px; }
 .pulse-standalone .ps-project-toolbar > .ps-scope-toggle { flex: 0 1 auto; min-width: 0; }
@@ -2081,3 +2100,37 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .po-relevance-bar { margin: 0 0 var(--ps-surface-gap); }
 .pulse-standalone .po-relevance-note { margin: 0 0 var(--ps-surface-gap); color: var(--ps-muted); font-size: .8125rem; max-width: 75ch; }
 .pulse-standalone .po-data-stamp { margin: 0 0 8px; color: var(--ps-muted); font-size: .75rem; max-width: 75ch; }
+
+/* ── Page rhythm (15 Nov 2026). A panel set straight in a page's main column used to touch the one above it (the main
+   column is a plain block and the cards carry no margin): it now keeps the gap between sibling cards. Sections that
+   carry their own larger margin (the Jaringan analysis, the footer) keep it; margins collapse to the larger one. */
+.pulse-standalone .pulse-main > * + :is(.pu-analytics-panel, #network-spread, .pulse-evaluation-disclosure) { margin-top: var(--ps-surface-gap); }
+
+/* The Jaringan analysis opens with its own heading: its figures come from the analysed sample, not every post. */
+.pulse-standalone .pn-section-head { display: grid; gap: 4px; }
+.pulse-standalone .pn-section-head > h2 { margin: 0; font-size: var(--ps-title-panel, 1.25rem); font-weight: 650; line-height: 1.3; color: var(--ps-ink); }
+.pulse-standalone .pn-section-head > p { margin: 0; max-width: 75ch; font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+
+/* Penyebaran percakapan: one platform a row on a wide panel (name, first published, first found, its posts). */
+.pulse-standalone .pu-analytics-panel .po-spread li { grid-template-columns: 20px minmax(96px, .7fr) minmax(0, 1.3fr) minmax(0, 1.3fr) auto; grid-template-areas: "icon name first seen action"; gap: 4px 16px; align-items: center; padding: 10px 0; }
+.pulse-standalone .pu-analytics-panel .po-spread li > :first-child { grid-area: icon; align-self: center; margin-top: 0; }
+.pulse-standalone .pu-analytics-panel .po-spread li > strong { grid-area: name; }
+.pulse-standalone .pu-analytics-panel .po-spread li > span { grid-area: first; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .pu-analytics-panel .po-spread li > small { grid-area: seen; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .pu-analytics-panel .po-spread li > button { grid-area: action; justify-self: end; min-height: 36px; padding: 0 12px; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+@media (max-width: 700px) {
+  .pulse-standalone .pu-analytics-panel .po-spread li { grid-template-columns: 20px minmax(0, 1fr) auto; grid-template-areas: "icon name action" "icon first first" "icon seen seen"; gap: 2px 12px; }
+  .pulse-standalone .pu-analytics-panel .po-spread li > :first-child { align-self: start; margin-top: 2px; }
+  .pulse-standalone .pu-analytics-panel .po-spread li > button { min-height: 44px; }
+}
+
+/* Project bar: compact and frozen at the top so the chosen project stays in view while scrolling. */
+.pulse-standalone .ps-project-bar { position: sticky; top: 0; z-index: 20; margin: 0 0 12px; padding: 8px 0 6px; background: var(--ps-bg); border-bottom: 1px solid var(--ps-line); max-height: 100dvh; overflow-y: auto; }
+.pulse-standalone .ps-project-bar .ps-project-pick select,
+.pulse-standalone .ps-project-bar .ps-scope-toggle,
+.pulse-standalone .ps-project-bar .ps-global-search input { min-height: 36px; padding-block: 4px; }
+.pulse-standalone .ps-project-bar .ps-project-actions button,
+.pulse-standalone .ps-project-bar .ps-project-actions a { min-height: 36px; }
+.pulse-standalone .ps-project-bar .pcv-band { margin-top: 4px; font-size: 12px; line-height: 1.3; }
+.pulse-standalone .ps-project-bar .pcv-band :is(svg) { width: 14px; height: 14px; }
+@media (max-width: 700px) { .pulse-standalone .ps-project-bar { position: static; } }

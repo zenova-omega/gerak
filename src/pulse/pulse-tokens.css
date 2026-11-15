@@ -5,7 +5,9 @@
 .pulse-standalone .pulse-dashboard .pulse-kpi > strong { font-size: 1.75rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pulse-standalone .ps-sidebar nav a[aria-current]:hover { background: var(--ps-lavender); color: var(--ps-accent-ink); }
 @media (max-width: 600px) { .pulse-standalone .pulse-dashboard .pulse-kpi > strong { font-size: 1.25rem; } }
-.pulse-standalone {
+/* Outside PULSE (the GERAK admin Command Center) the dashboard has no .pulse-standalone parent, so it carries the same tokens itself. */
+.pulse-standalone,
+.pulse-dashboard:not(.pulse-standalone *) {
   --ps-bg: oklch(97% 0.006 285);
   --ps-panel: oklch(99% 0.003 285);
   --ps-soft: oklch(94% 0.009 285);
@@ -83,10 +85,10 @@
   --ps-title-weight: 650;
   /* Sidebar and its navigation rows. */
   --ps-sidebar-width: 216px;
-  --ps-sidebar-pad: 16px;
-  --ps-nav-item-height: var(--ps-control-md);
-  --ps-nav-item-pad: 12px;
-  --ps-nav-item-gap: 12px;
+  --ps-sidebar-pad: 12px;
+  --ps-nav-item-height: 34px;
+  --ps-nav-item-pad: 10px;
+  --ps-nav-item-gap: 10px;
   --ps-nav-item-radius: var(--ps-radius-control);
   --ps-nav-item-font: .875rem;
   --ps-nav-hover-bg: var(--ps-soft);
@@ -174,7 +176,7 @@
 @media(prefers-reduced-motion:reduce) { .pu-spinner { animation: none; } .pulse-standalone .pu-button { transition:none; } }
 
 /* The sign-in panel is a fixed dark brand surface in both themes (DESIGN.md), so it has its own tokens that do not flip. */
-.pulse-standalone { --ps-brand-surface: oklch(27% 0.009 285); --ps-brand-ink: oklch(97% 0.004 285); --ps-brand-muted: oklch(79% 0.01 285); }
+.pulse-standalone, .pulse-dashboard:not(.pulse-standalone *) { --ps-brand-surface: oklch(27% 0.009 285); --ps-brand-ink: oklch(97% 0.004 285); --ps-brand-muted: oklch(79% 0.01 285); }
 /* Text on a --ps-accent fill: light on the dark violet of the light theme, dark on the pale lavender of the dark theme. */
-.pulse-standalone { --ps-on-accent: oklch(99% 0.003 285); }
+.pulse-standalone, .pulse-dashboard:not(.pulse-standalone *) { --ps-on-accent: oklch(99% 0.003 285); }
 .pulse-standalone[data-theme=dark] { --ps-on-accent: oklch(22% 0.02 295); }
