@@ -141,7 +141,8 @@ async def test_project_collection_is_bounded_ordered_and_stops_on_quota(db, monk
     monkeypatch.setattr(settings, 'YOUTUBE_API_KEY', type(settings.YOUTUBE_API_KEY)(''))
     calls = []
 
-    async def fake(platform, post_id, key, url, limit=300):
+    async def fake(platform, post_id, key, url, limit=300, complete=False):
+        assert complete  # a collected post gets every comment the provider can give, not the first 300
         calls.append((platform, post_id))
         if platform == 'tiktok':
             raise xpoz.XpozToolError('rate_limited')

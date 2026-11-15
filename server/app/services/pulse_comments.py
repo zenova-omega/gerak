@@ -1,10 +1,10 @@
-"""Bounded, explicit comment snapshots.
+"""Explicit comment snapshots, every comment a post has.
 
-YouTube comes from the Data API (up to three pages per video). X, Instagram and TikTok come from the
-provider's comment tools (one call, up to 300 comments per post). Each post costs provider quota, so
-collection is always a counted batch: on request from the Comments page, or the capped automatic
-trickle in pulse_comments_auto.
+YouTube comes from the Data API (every page of the video). X, Instagram and TikTok come from the provider's
+comment tools in paging mode (100 a page, a cost per page). Collection is a counted batch of posts: on request
+from the Comments page, or the automatic lane in pulse_comments_auto for the top posts.
 """
+import itertools
 import re
 from datetime import datetime, timezone
 from urllib.parse import urlparse, parse_qs, urlencode
@@ -32,14 +32,15 @@ def _keep_picture(comment, snippet):
     return comment
 
 
-async def fetch_all_comments(video_id, api_key, pages=YOUTUBE_PAGES):
-    """Up to `pages` pages of 100 top-level comments, most relevant first. Stops at the first failed page."""
+async def fetch_all_comments(video_id, api_key, pages=None):
+    """Pages of 100 top-level comments, most relevant first: every page the video has, or at most `pages` when given.
+    Stops at the first failed page and keeps what it has."""
     if not re.fullmatch(r'[A-Za-z0-9_-]+', video_id):
         return {'status': 'invalid_video', 'items': []}
     comments, token, more = {}, None, False
     try:
         async with httpx.AsyncClient(timeout=25, follow_redirects=False, headers={'X-Goog-Api-Key': api_key}) as client:
-            for _ in range(pages):
+            for _ in (range(pages) if pages else itertools.count()):
                 params = {'part': 'snippet', 'videoId': video_id, 'maxResults': 100, 'order': 'relevance', 'textFormat': 'plainText'}
                 if token:
                     params['pageToken'] = token
@@ -143,7 +144,7 @@ async def collect_project_comments(db, topic_id, settings, max_posts=10, top=Non
             snapshot = await fetch_all_comments(post_id, keys[lane])
         else:
             try:
-                snapshot = {'status': 'success', **await fetch_xpoz_comments(platform, post_id, keys[lane], row.url)}
+                snapshot = {'status': 'success', **await fetch_xpoz_comments(platform, post_id, keys[lane], row.url, complete=True)}
             except XpozToolError as exc:
                 snapshot = {'status': exc.code, 'items': []}
             except Exception:
@@ -152,7 +153,7 @@ async def collect_project_comments(db, topic_id, settings, max_posts=10, top=Non
             stopped.add(lane)  # quota, plan or credential problem: stop this provider, keep the post for a later batch
             results.append({'post_id': row.id, 'platform': platform, 'status': snapshot['status'], 'count': 0})
             continue
-        snapshot = {**snapshot, 'fetched_at': datetime.now(timezone.utc).isoformat(), 'order': 'relevance', 'limit': 300}
+        snapshot = {**snapshot, 'fetched_at': datetime.now(timezone.utc).isoformat(), 'order': 'relevance', 'limit': None}
         row.metrics = {**(row.metrics or {}), 'comment_snapshot': snapshot}
         results.append({'post_id': row.id, 'platform': platform, 'status': snapshot['status'], 'count': len(snapshot.get('items', []))})
     await db.flush()

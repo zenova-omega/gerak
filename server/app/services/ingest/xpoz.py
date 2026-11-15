@@ -346,17 +346,26 @@ def normalize_comments(platform, rows, post_url):
     return sorted(comments.values(), key=lambda c: -(c['likes'] if c['likes'] is not None else -1))
 
 
-async def fetch_xpoz_comments(platform, post_id, api_key, post_url, limit=PAGE_ROWS):
-    """One fast call: up to 300 comments of one post. No paging, polling or retry."""
+async def fetch_xpoz_comments(platform, post_id, api_key, post_url, limit=PAGE_ROWS, complete=False):
+    """Comments of one post. The default is one fast call of at most `limit` (300) comments, no paging, polling or retry.
+    `complete` reads every comment the provider can deliver through its paging mode (100 a page, fresh from the platform)."""
     if platform not in COMMENT_TOOLS or not re.fullmatch(r'[0-9]+(_[0-9]+)?', post_id or '') or not 1 <= limit <= PAGE_ROWS:
         raise ValueError('Invalid bounded comment request')
+    fields = COMMENT_FIELDS[platform].split(',')
+    if complete:
+        async with asyncio.timeout(COMPLETE_TIMEOUT):
+            async with httpx.AsyncClient(timeout=60, follow_redirects=False, headers={
+                'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+                await _initialize(client)
+                rows = await _complete_rows(client, COMMENT_TOOLS[platform], {'postId': post_id, 'forceLatest': True, 'fields': fields}, key='postId')
+        return {'items': normalize_comments(platform, rows, post_url), 'has_more': False}
     async with asyncio.timeout(60):
         async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
             'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
             await _initialize(client)
             result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
                 'name':COMMENT_TOOLS[platform], 'arguments':{'postId':post_id, 'responseType':'fast',
-                'limit':limit, 'forceLatest':False, 'fields':COMMENT_FIELDS[platform].split(',')}}})
+                'limit':limit, 'forceLatest':False, 'fields':fields}}})
     rows = _stored_rows(_payload(result))
     return {'items': normalize_comments(platform, rows, post_url), 'has_more': len(rows) >= limit}
 
@@ -651,7 +660,7 @@ def _page_rows(text):
     return _stored_rows(parse_tool_text(text))
 
 
-async def _complete_rows(client, tool, arguments):
+async def _complete_rows(client, tool, arguments, key='query'):
     """Every row a search matched, not only the first direct answer (100 to 300 rows).
     The search runs once in the provider's paging mode; the remaining pages are read from its result table, one
     page a request (measured 14 Nov 2026: 2 credits a page of 100 rows). No row limit of ours is sent."""
@@ -661,7 +670,7 @@ async def _complete_rows(client, tool, arguments):
     pages = re.search(r'^\s*totalPages: *(\d+)', text, re.M)
     table = re.search(r'^\s*tableName: *"?([A-Za-z0-9_\-]+)', text, re.M)
     for number in range(2, (int(pages.group(1)) if pages and table else 1) + 1):
-        text = await _finished(client, tool, {'query': arguments['query'], 'responseType': 'paging', 'tableName': table.group(1),
+        text = await _finished(client, tool, {key: arguments[key], 'responseType': 'paging', 'tableName': table.group(1),
                                               'pageNumber': number, 'fields': arguments['fields']}, ids)
         rows.extend(_page_rows(text))
     return rows
