@@ -2062,3 +2062,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 
 .pulse-standalone .psa-scope-caption { margin: 0 0 8px; color: var(--ps-muted); font-size: .8125rem; }
 .pulse-standalone .psa-scope-caption strong { color: var(--ps-ink); font-weight: var(--ps-weight-label, 600); }
+
+.pulse-standalone .po-relevance-bar { margin: 0 0 var(--ps-surface-gap); }
+.pulse-standalone .po-relevance-note { margin: 0 0 var(--ps-surface-gap); color: var(--ps-muted); font-size: .8125rem; max-width: 75ch; }
+.pulse-standalone .po-data-stamp { margin: 0 0 8px; color: var(--ps-muted); font-size: .75rem; max-width: 75ch; }

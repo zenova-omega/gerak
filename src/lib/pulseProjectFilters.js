@@ -45,8 +45,9 @@ function scopeNetwork(network, posts, platforms) {
   return {...network,nodes,edges,accounts,narratives,earliest:filterPosts(posts,{}).filter(p=>p.published_at).slice(0,10),total_posts:posts.length,analyzed_posts:posts.filter(p=>sampleIds.has(p.id)).length};
 }
 
-export function scopeProjectData(data,{platforms=null,from='',to='',sentiments=null}={}) {
-  const posts=filterPosts(data.posts||[],{platforms,from,to,sentiments});
+export function scopeProjectData(data,{platforms=null,from='',to='',sentiments=null,excludedIds=null}={}) {
+  const all=data.posts||[],kept=excludedIds?.size?all.filter(p=>!excludedIds.has(p.id)):all;
+  const posts=filterPosts(kept,{platforms,from,to,sentiments});
   const sources=new Map(),authors=new Map();
   for(const p of posts){
     sources.set(p.platform,(sources.get(p.platform)||0)+1);
@@ -64,7 +65,7 @@ export function scopeProjectData(data,{platforms=null,from='',to='',sentiments=n
   }));
   // Location aggregates without post provenance cannot safely survive a narrowed scope.
   const ids=new Set(posts.map(p=>p.id));
-  const unchanged=posts.length===(data.posts||[]).length;
+  const unchanged=posts.length===all.length;
   const locations=unchanged?(data.locations||[]):(data.locations||[]).filter(row=>ids.has(row.post_id));
   return {...data,posts,total_mentions:posts.length,metric_totals,timeline:dailyPostCounts(posts),
     platforms:[...sources].map(([platform,count])=>({platform,count})),influencers:[...authors.values()],

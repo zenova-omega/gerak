@@ -175,3 +175,6 @@
 
 /* The sign-in panel is a fixed dark brand surface in both themes (DESIGN.md), so it has its own tokens that do not flip. */
 .pulse-standalone { --ps-brand-surface: oklch(27% 0.009 285); --ps-brand-ink: oklch(97% 0.004 285); --ps-brand-muted: oklch(79% 0.01 285); }
+/* Text on a --ps-accent fill: light on the dark violet of the light theme, dark on the pale lavender of the dark theme. */
+.pulse-standalone { --ps-on-accent: oklch(99% 0.003 285); }
+.pulse-standalone[data-theme=dark] { --ps-on-accent: oklch(22% 0.02 295); }

@@ -21,7 +21,6 @@ import './pulse.css';
 import { PulseButton } from '../../ui/PulseUI';
 import { pageMeta } from '../../../pulse/pageMeta';
 import { sentimentLabels } from '../../../lib/pulsePostFilters';
-import { setZone } from '../../../lib/pulseMeasures';
 import { PulsePageHead, PulseSkeleton } from '../../ui/PulsePatterns';
 import useProjectPeriod from '../../../pulse/useProjectPeriod';
 import SentimentSummary from './SentimentSummary';
@@ -29,6 +28,8 @@ import SentimentProgress from '../../../pulse/SentimentProgress';
 import SentimentEvaluation from '../../../pulse/SentimentEvaluation';
 import AccountRankingRow from './AccountRankingRow';
 import OverviewAnalytics from '../../../pulse/ProjectOverview';
+import useFlaggedPosts from '../../../pulse/useFlaggedPosts';
+import InfoTip from '../../../pulse/InfoTip';
 import SentimentAnalytics from '../../../pulse/SentimentAnalytics';
 import TrendChart from '../../../pulse/TrendChart';
 import ProjectReport from '../../../pulse/ProjectReport';
@@ -218,10 +219,14 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const topics = useTopics();
   const issues = useIssues({ topicId });
   const analytics = usePulseAnalytics(topicId, alertId, standalone?period:{});
-  // day_v1: the installation's zone comes with the payload; set it before any day is counted below.
-  if (analytics.data?.measures?.zone) setZone(analytics.data.measures.zone);
   const carriedSentiment = sentimentLabels[searchParams.get('sentiment')] && sentimentScoped.includes(view) ? searchParams.get('sentiment') : null;
-  const scopedData=useMemo(()=>analytics.data&&standalone?scopeProjectData(analytics.data,{from:period.from,to:period.to,platforms:JSON.parse(platformKey),sentiments:carriedSentiment?[carriedSentiment]:null}):analytics.data,[analytics.data,standalone,period.from,period.to,platformKey,carriedSentiment]);
+  const loadedAt = useMemo(() => analytics.data ? new Date() : null, [analytics.data]);
+  const flagged = useFlaggedPosts(standalone ? topicId : '');
+  const includeFlagged = searchParams.get('tidakrelevan') === '1';
+  // One rule for every analysis page: posts an analyst marked "tidak relevan" are not counted, unless asked. Posting lists everything.
+  const flaggedSet = useMemo(() => view === 'posts' || includeFlagged || !flagged.ids.length ? null : new Set(flagged.ids), [view, includeFlagged, flagged.ids]);
+  const toggleFlagged = on => { const next = new URLSearchParams(searchParams); if (on) next.set('tidakrelevan', '1'); else next.delete('tidakrelevan'); setSearchParams(next, { replace: true }); };
+  const scopedData=useMemo(()=>analytics.data&&standalone?scopeProjectData(analytics.data,{from:period.from,to:period.to,platforms:JSON.parse(platformKey),sentiments:carriedSentiment?[carriedSentiment]:null,excludedIds:flaggedSet}):analytics.data,[analytics.data,standalone,period.from,period.to,platformKey,carriedSentiment,flaggedSet]);
   const dropSentiment = () => { const next = new URLSearchParams(searchParams); next.delete('sentiment'); setSearchParams(next); };
   const availablePlatforms=[...new Set([...projectPlatformOptions,...(analytics.data?.posts||[]).map(p=>p.platform),...(selectedPlatforms||[])])];
   useEffect(() => {
@@ -277,6 +282,10 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
       <div className="pulse-header-actions"><span className="pulse-data-badge"><ShieldCheck size={14} />Sumber publik</span><PulseButton variant="secondary" className="pulse-button" disabled={!!action || analytics.loading || issues.loading || topics.loading} onClick={refresh}><RefreshCw size={15} />Muat ulang</PulseButton></div>
     </header>}
     {carriedSentiment && <div className="pu-carried" role="status"><span>Filter dari halaman sebelumnya</span><SentimentTag value={carriedSentiment} /><PulseTag size="lg" variant="outline" onRemove={dropSentiment} removeLabel="Lepas filter sentimen">Lepas filter</PulseTag><small>Halaman ini hanya menghitung posting bersentimen {sentimentLabels[carriedSentiment].toLowerCase()}.</small></div>}
+    {standalone && flagged.ids.length > 0 && view !== 'monitor' && (view === 'posts'
+      ? <p className="po-relevance-note">Menampilkan semua posting, termasuk {formatCount(flagged.ids.length)} yang ditandai tidak relevan. Halaman analisis tidak menghitungnya kecuali disertakan.</p>
+      : <label className="po-relevance po-relevance-bar"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeFlagged} onChange={event => toggleFlagged(event.target.checked)} /> Sertakan {formatCount(flagged.ids.length)} posting yang ditandai tidak relevan<InfoTip label="Tentang posting tidak relevan">Berlaku di Ikhtisar, Sentimen, Akun & sumber, Jaringan, Komentar dan Laporan. Halaman Posting selalu menampilkan semuanya agar tandanya bisa dibatalkan.</InfoTip></label>)}
+    {standalone && loadedAt && view !== 'monitor' && <p className="po-data-stamp">Angka dimuat pukul {loadedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(':', '.')} WIB. Selama pengumpulan berjalan, halaman yang dibuka lebih lambat bisa menunjukkan angka lebih besar.</p>}
     {standalone && <SentimentProgress key={topicId} topicId={topicId} posts={analytics.loading?undefined:scopedData?.posts} onChange={analytics.refetch} quiet/>}
     {needsLogin && <div className="pulse-auth-note"><ShieldCheck size={21} /><div><strong>Analytics live memerlukan login admin asli.</strong><p>Login demo tidak memberi akses API. Gunakan kredensial admin pada formulir login; data contoh tidak ditampilkan di Pulse.</p></div><Link className="pulse-button primary" to="/login?returnTo=pulse">Masuk dengan akun admin</Link></div>}
     <div className="pulse-layout">
