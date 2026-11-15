@@ -17,7 +17,7 @@ from ..config import get_settings
 from ..database import get_db
 from ..models.pulse import WatchTopic
 from ..models.pulse_chat import PulseChatConversation
-from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, answer_tokens, system_prompt, build_context, build_prompt, cited, data_block, shape_answer
+from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, system_prompt, build_context, build_prompt, cited, data_block, shape_answer
 from ..services.ai.priority import interactive
 from ..services.pulse_identity import require_pulse_access
 from ..services.pulse_measures import period_closed_bounds
@@ -47,7 +47,6 @@ class ChatRequest(BaseModel):
     platforms: list[str] | None = Field(default=None, max_length=12)
     post_id: str | None = Field(default=None, max_length=36)
     conversation_id: str | None = Field(default=None, min_length=1, max_length=36)
-    mode: Literal['answer', 'respons'] = 'answer'
 
 
 def configured(settings):
@@ -211,7 +210,7 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db), user=Depend
         async with interactive():
             answer = await asyncio.wait_for(ai.generate_text(
                 build_prompt(built['context'], question, [turn.model_dump() for turn in req.history]),
-                system=system_prompt(req.mode), max_tokens=answer_tokens(req.mode), context_tokens=CONTEXT_TOKENS), timeout=115)
+                system=system_prompt(), max_tokens=ANSWER_TOKENS, context_tokens=CONTEXT_TOKENS), timeout=115)
     except Exception:
         # Never relay provider errors: they can carry request content or credentials.
         raise HTTPException(502, 'Model AI tidak menjawab. Coba lagi; tidak ada data yang berubah.')
@@ -223,7 +222,7 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db), user=Depend
                               'groups': shaped['groups'], 'charts': shaped['charts'],
                               'scope': {'posts': scope['posts'], 'from': req.date_from, 'to': req.date_to,
                                         'platforms': req.platforms or None, 'truncated': scope['truncated']},
-                              'mode': req.mode, 'answered_at': _when(now)})
+                              'answered_at': _when(now)})
     try:
         row = await remember(db, user, req.topic_id, req.conversation_id, {'question': question, **shown}, now)
         kept = _listed(row.id, row.title, row.updated_at, len(row.turns))
