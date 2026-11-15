@@ -19,8 +19,8 @@ export default function MediaPlayer({media,author}) {
   },[showPlayer,media.videoUrl,media.embedUrl]);
   return <div className="pulse-media-player">
     {available&&<div className="pulse-media-player-actions"><Button variant="outline" onClick={()=>{setPreview(showPlayer);setFailed(false);}}>{showPlayer?'Lihat thumbnail':'Coba pemutar video'}</Button></div>}
-    {failed&&<p role="status">Pemutar tidak dapat dimuat. Gunakan thumbnail atau buka posting asli.</p>}
+    {failed&&<p role="status">Pemutar tidak dapat dimuat.</p>}
     {showPlayer ? media.videoUrl ? <video controls playsInline preload="none" poster={media.imageUrl||undefined} className="pulse-media-video" onError={()=>setFailed(true)} src={media.videoUrl}>Browser ini tidak mendukung pemutar video.</video> : <iframe ref={frame} className="pulse-media-embed" title={'Pemutar '+(author||'posting sumber')} src={media.embedUrl} allow="fullscreen; picture-in-picture" allowFullScreen referrerPolicy="no-referrer" onError={()=>setFailed(true)}/> : media.imageUrl&&!imageFailed ? <img className="pulse-media-large" src={media.imageUrl} alt={'Pratinjau besar dari '+(author||'akun sumber')} referrerPolicy="no-referrer" onError={()=>setImageFailed(true)}/> : <p role="status">Pratinjau tidak tersedia. Silakan buka posting asli.</p>}
-    {showPlayer&&<p className="pulse-media-player-note">Tekan Play untuk memutar. Media dimuat dari sumber eksternal; login, izin embed, atau ketersediaan posting dapat membatasi pemutaran. Jika kosong atau diblokir, pilih “Lihat thumbnail” atau “Buka posting asli”.</p>}
+    
   </div>;
 }

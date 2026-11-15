@@ -54,10 +54,10 @@ function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
       <div className="pulse-post-interactions"><PulseEngagement metrics={post.metrics} platform={post.platform} compact label="Rincian interaksi posting"/></div>
       <SentimentAction post={post}/>
       {topicId && <ReviewPost key={`${topicId}:${post.id}`} postId={post.id} topicId={topicId} review={review} disabled={!reviewsReady} onSaved={onReviewSaved}/>}
-      <details className="ps-account-preview"><summary>Detail akun & sumber</summary><p>{post.author || 'Nama tidak tersedia'} · {platformLabel(post.platform)}</p><p>Followers: {formatCount(post.metrics?.followers)}. Foto dan metrik hanya dari data tersimpan.</p>{media.profileUrl && <a href={media.profileUrl} target="_blank" rel="noopener noreferrer">Buka profil asli <PulseArrow/></a>}<p>Label sentimen bukan verifikasi kebenaran konten.</p></details>
+      <details className="ps-account-preview"><summary>Detail akun & sumber</summary><p>{post.author || 'Nama tidak tersedia'} · {platformLabel(post.platform)}</p><p>Followers: {formatCount(post.metrics?.followers)}</p>{media.profileUrl && <a href={media.profileUrl} target="_blank" rel="noopener noreferrer">Buka profil asli <PulseArrow/></a>}</details>
       <PostComments post={post} />
       <MetricHistory itemId={post.id} />
-      <footer>Data diamati {date(post.crawled_at)} · “—” berarti tidak tersedia, bukan nol.</footer>
+      <footer>Data diamati {date(post.crawled_at)}</footer>
     </div>}
   </article>;
 }
@@ -93,7 +93,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
   const postGrid = useRef(null);
   useMasonry(postGrid, layout==='grid', [rows, current]);
   return <section id="pulse-posts" className="pulse-post-feed pm-workspace" data-layout={layout} aria-label="Posting terkumpul">
-    <PulsePanelHeading title="Posting terkumpul" description="Konten asli, interaksi, dan analisis per posting."><PulseTag>{formatCount(rows.length)} dari {formatCount(posts.length)} posting</PulseTag></PulsePanelHeading>
+    <PulsePanelHeading title="Posting terkumpul"><PulseTag>{formatCount(rows.length)} dari {formatCount(posts.length)} posting</PulseTag></PulsePanelHeading>
     {reviewState.topicId===topicId && reviewState.error && <p role="alert">Review belum dapat dimuat: {reviewState.error}</p>}
     <div className="pm-mentions-search"><label>Cari dalam posting<input type="search" placeholder="Keyword, caption atau nama akun" value={filters.query} onChange={e=>{setFilters({...filters,query:e.target.value});setPage(0);}}/></label><label>Urutan posting<select value={filters.sort} onChange={e=>{setFilters({...filters,sort:e.target.value});setPage(0);}}><option value="engagement">Interaksi tertinggi</option><option value="recent">Terbaru dahulu</option><option value="oldest">Terlama dahulu · kronologis</option><option value="shares">Repost terbanyak</option><option value="views">Tayangan tertinggi</option></select></label></div>
     <div className="pm-tools-row">
@@ -105,7 +105,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
     <div className="pm-results-layout"><div className="pm-results-main">
     <div ref={postGrid} className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}
       onReviewSaved={review=>setReviewState(state=>state.topicId===topicId ? {...state,rows:[...state.rows.filter(row=>row.post_id!==review.post_id),review]} : state)}/>)}</div>
-    {!rows.length && <div className="pulse-empty"><h3>Tidak ada posting yang cocok</h3><p>Coba hapus filter platform, sentimen, atau kata pencarian. Hanya data tersimpan yang diperiksa.</p><PulseButton onClick={()=>applyFilters({...defaultPostFilters})}>Hapus filter posting</PulseButton></div>}
+    {!rows.length && <div className="pulse-empty"><h3>Tidak ada posting yang cocok</h3><p>Coba hapus filter atau kata pencarian.</p><PulseButton onClick={()=>applyFilters({...defaultPostFilters})}>Hapus filter posting</PulseButton></div>}
     <div className="pulse-pagination"><PulseButton disabled={current === 0} onClick={() => setPage(current - 1)}>Sebelumnya</PulseButton><span>Halaman {current + 1} / {pages}</span><PulseButton disabled={current + 1 >= pages} onClick={() => setPage(current + 1)}>Berikutnya</PulseButton></div>
     </div><PostQuickFilters posts={effectivePosts} filters={filters} onApply={applyFilters}/></div>
   </section>;

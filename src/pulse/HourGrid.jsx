@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { hourGrid, postsInCell } from '../lib/pulseReadings';
 import { zone } from '../lib/pulseMeasures';
 import { formatCount } from '../lib/pulseData';
-import { rangeLabel } from '../lib/pulseRange';
 import './ds/hour-grid.css';
 
 const WEEKDAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -35,8 +34,8 @@ export default function HourGrid({ posts = [], onOpen }) {
   const left = [grid.date_only > 0 && `${formatCount(grid.date_only)} posting hanya bertanggal`, grid.undated > 0 && `${formatCount(grid.undated)} tanpa tanggal`].filter(Boolean).join(' dan ');
   if (!grid.mode) {
     return <div className="phg"><p className="phg-empty">{grid.total
-      ? `Tidak ada posting yang membawa jam terbit pada pilihan ini: ${left}. Sumber seperti Instagram dan TikTok sering hanya memberi tanggal.`
-      : 'Belum ada posting pada pilihan ini.'}</p></div>;
+      ? `Tidak ada posting dengan jam terbit: ${left}.`
+      : 'Belum ada posting.'}</p></div>;
   }
   const scale = steps(grid.max), byDay = grid.mode === 'days';
   const peaks = grid.rows.flatMap((row, index) => row.cells.map((count, hour) => ({ row, index, hour, count }))).filter(cell => cell.count === grid.max);
@@ -53,8 +52,7 @@ export default function HourGrid({ posts = [], onOpen }) {
     event.currentTarget.querySelector(`[data-at="${next[0]}-${next[1]}"]`)?.focus();
   }
   return <div className="phg">
-    <p className="phg-says">Paling ramai: <b>{rowName(peak.row)} pukul {two(peak.hour)}.00 {name}</b>, <b>{formatCount(peak.count)}</b> posting{peaks.length > 1 && `, sama dengan ${formatCount(peaks.length - 1)} waktu lain`}.
-      {byDay ? ' Tiap baris satu tanggal.' : ` Tiap baris menggabungkan hari yang sama dari ${rangeLabel(grid.from, grid.to)}.`}{onOpen && ' Pilih sel untuk melihat postingnya.'}</p>
+    <p className="phg-says">Paling ramai: <b>{rowName(peak.row)} pukul {two(peak.hour)}.00 {name}</b>, <b>{formatCount(peak.count)}</b> posting{peaks.length > 1 && `, sama dengan ${formatCount(peaks.length - 1)} waktu lain`}.</p>
     <div className="phg-scroll" tabIndex={onOpen ? undefined : 0} role="group" aria-label="Kisi hari dan jam terbit. Dapat digulir ke samping.">
       <table className="phg-grid" onKeyDown={onOpen ? move : undefined}>
         <caption className="pu-sr">Jumlah posting per {byDay ? 'tanggal' : 'hari'} dan jam terbit ({name})</caption>
@@ -80,7 +78,7 @@ export default function HourGrid({ posts = [], onOpen }) {
           <li><i data-level="0" aria-hidden="true" />0</li>
           {scale.ranges.map(([from, to], index) => <li key={from}><i data-level={index + 1} aria-hidden="true" />{from === to ? formatCount(from) : `${formatCount(from)}–${formatCount(to)}`}</li>)}
         </ul></div>
-      <p className="phg-note">{formatCount(grid.clocked)} dari {formatCount(grid.total)} posting membawa jam terbit.{left && ` ${left} tidak masuk kisi.`} Jam terbit, bukan jam pengambilan data.</p>
+      <p className="phg-note">{formatCount(grid.clocked)} dari {formatCount(grid.total)} posting punya jam terbit.{left && ` ${left} tidak masuk.`}</p>
     </div>
   </div>;
 }

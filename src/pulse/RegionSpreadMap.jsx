@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useInRouterContext } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPinned, Minus, Pause, Play, Plus } from 'lucide-react';
 import AnalyticsPanel from './AnalyticsPanel';
+import InfoTip from './InfoTip';
 import { Button } from '../components/ui/shadcn/button';
 import { PulseRange } from '../components/ui/PulseRange';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
@@ -28,22 +29,20 @@ const PAGE = 5;
 const LAYERS = {
   named: {
     label: 'Tempat disebut', noun: 'posting',
-    description: 'Provinsi yang disebut dalam judul dan teks posting, hari demi hari. Yang digambar adalah tempat yang dibicarakan, bukan lokasi penulis.',
-    footer: 'Dibaca dari judul dan teks posting memakai daftar nama provinsi, kota dan kabupaten. Posting yang tidak menyebut tempat tidak digambar, dan satu posting bisa menyebut lebih dari satu provinsi. Nama media, alamat situs, nama akun dan kalimat ajakan berlangganan tidak dihitung.',
+    tip: 'Tempat yang disebut dalam posting, bukan lokasi penulis.',
     status: frame => `${formatCount(frame.named)} dari ${formatCount(frame.posts)} posting menyebut tempat`,
     summary: 'provinsi disebut', bars: 'posting yang menyebut tempat per hari',
     columns: ['Pertama disebut', day => `Sampai ${short(day)}`, 'Nama yang disebut'],
   },
   accounts: {
     label: 'Lokasi akun X', noun: 'akun',
-    description: 'Provinsi yang ditulis pemilik akun X di profilnya, untuk akun yang ikut dalam percakapan ini. Ini keterangan pemilik akun, bukan posisi saat memposting. Perbesar peta untuk melihat foto akun di tiap kota.',
-    footer: 'Lokasi profil adalah teks bebas yang ditulis pemilik akun X, misalnya "Jakarta Selatan" atau "Bumi". Yang digambar hanya teks yang menyebut provinsi, kota atau kabupaten. Lokasi itu bisa kosong, lama atau tidak sungguhan, dan bukan posisi saat memposting. Akun dihitung sejak posting pertamanya pada rentang ini; sumber lain tidak menyediakan lokasi profil.',
+    tip: 'Lokasi profil adalah teks bebas pemilik akun X; bisa kosong atau tidak sungguhan.',
     status: frame => `${formatCount(frame.named)} dari ${formatCount(frame.posts)} akun X menulis lokasi profil yang bisa dipetakan`,
     summary: 'provinsi punya akun X berlokasi profil', bars: 'akun X berlokasi profil yang bergabung per hari',
     columns: ['Pertama muncul', day => `Akun sampai ${short(day)}`, 'Lokasi yang ditulis'],
   },
 };
-const OUTLINES = ' Garis batas 34 provinsi (2017): provinsi hasil pemekaran Papua digambar di dalam Papua dan Papua Barat. Peta dasar © kontributor OpenStreetMap lewat geoBoundaries, lisensi ODbL.';
+const OUTLINES = ' Peta dasar © kontributor OpenStreetMap lewat geoBoundaries, ODbL.';
 
 function Switch({ label, value, onChange, options }) {
   return <div className="pu-segmented" role="group" aria-label={label}>{options.map(([key, text]) =>
@@ -158,20 +157,20 @@ export default function RegionSpreadMap({ posts = [], title = 'Peta sebaran temp
     {hasMap && <Switch label="Tampilan peta" value={preset ? preset[0] : ''} onChange={key => setBox(mapViews[key].box)} options={VIEWS.map(([key, item]) => [key, item.label])} />}
     {bounds && <PulseRange chart={title} bounds={bounds} value={choice} onChange={next => { setChoice(next); setPicked(''); setPlaying(false); }} />}
   </>;
-  const panel = body => <AnalyticsPanel className="rm-panel" icon={MapPinned} title={title} actions={actions} description={kind.description} footer={kind.footer + OUTLINES}>{body}</AnalyticsPanel>;
+  const panel = body => <AnalyticsPanel className="rm-panel" icon={MapPinned} title={<span>{title} <InfoTip label="Tentang peta">{kind.tip + OUTLINES}</InfoTip></span>} label={title} actions={actions}>{body}</AnalyticsPanel>;
 
-  if (!bounds) return panel(<p className="tc-empty">Belum ada posting bertanggal pada periode ini, jadi belum ada garis waktu yang bisa digambar.</p>);
+  if (!bounds) return panel(<p className="tc-empty">Belum ada posting bertanggal.</p>);
   // What the view could not place, in words.
   const vague = people ? spread.located - spread.named : 0;
-  const gaps = people ? [spread.unasked > 0 && `${formatCount(spread.unasked)} akun X belum diperiksa lokasinya (pemeriksaan berjalan sendiri di latar, akun tersibuk lebih dulu)`,
+  const gaps = people ? [spread.unasked > 0 && `${formatCount(spread.unasked)} akun X belum diperiksa lokasinya`,
     vague > 0 && `${formatCount(vague)} akun menulis lokasi yang tidak menyebut provinsi`].filter(Boolean)
     : [spread.undatedNamed > 0 && `${formatCount(spread.undatedNamed)} posting yang menyebut tempat tidak bertanggal dan tidak masuk garis waktu`].filter(Boolean);
   const note = gaps.length > 0 && <p className="tc-note">{gaps.join('; ')}.</p>;
   if (!hasMap) {
-    const why = !people ? 'Belum ada posting yang menyebut provinsi, kota atau kabupaten pada rentang ini. Peta hanya membaca judul dan teks posting.'
-      : !spread.total ? 'Belum ada akun X pada rentang ini. Lokasi profil hanya tersedia untuk akun X.'
-      : spread.unasked === spread.total ? `Lokasi profil ${formatCount(spread.total)} akun X pada rentang ini belum diperiksa. Pemeriksaan berjalan sendiri di latar, akun tersibuk lebih dulu; peta terisi begitu hasilnya masuk.`
-      : 'Belum ada akun X yang menulis lokasi profil yang menyebut provinsi, kota atau kabupaten pada rentang ini.';
+    const why = !people ? 'Belum ada tempat yang disebut.'
+      : !spread.total ? 'Belum ada akun X.'
+      : spread.unasked === spread.total ? `Memeriksa lokasi ${formatCount(spread.total)} akun X…`
+      : 'Belum ada lokasi profil yang bisa dipetakan.';
     return panel(<><p className="tc-empty">{why}</p>{spread.unasked !== spread.total && note}</>);
   }
 
@@ -272,7 +271,7 @@ export default function RegionSpreadMap({ posts = [], title = 'Peta sebaran temp
           <li className="rm-ramp"><span>Makin gelap, makin banyak {kind.noun}:</span>{shadeRanges(most).map(step => <span key={step.step}><i data-shade={step.step} aria-hidden="true" />{span(step)}</span>)}</li>
           <li><i data-state="fresh" aria-hidden="true" />Baru hari ini</li>
           <li><i data-state="none" aria-hidden="true" />{people ? 'Belum ada akun' : 'Belum disebut'}</li>
-          {people ? <li><span className="rm-pin rm-pin-key" aria-hidden="true"><span className="rm-face" data-empty="">A</span><b className="rm-pin-count">12</b></span>Foto: akun dengan interaksi terbanyak di tempat itu. Angka: jumlah akun. Perbesar untuk memisahkan kota</li>
+          {people ? <li><span className="rm-pin rm-pin-key" aria-hidden="true"><span className="rm-face" data-empty="">A</span><b className="rm-pin-count">12</b></span>Foto: akun dengan interaksi terbanyak. Angka: jumlah akun.</li>
             : <li><svg viewBox="0 0 34 18" width="34" height="18" aria-hidden="true"><circle className="rm-legend-dot" cx="6" cy="12" r="4" /><circle className="rm-legend-dot" cx="22" cy="9" r="8" /></svg>Lingkaran: jumlah posting yang menyebut provinsi itu</li>}
           <li><i data-state="bar" aria-hidden="true" />Batang di garis waktu: {kind.bars}</li>
         </ul>
@@ -288,7 +287,7 @@ export default function RegionSpreadMap({ posts = [], title = 'Peta sebaran temp
     </div>
 
     <section className="rm-detail" aria-label={people ? 'Akun X di provinsi terpilih' : 'Posting yang menyebut provinsi terpilih'}>
-      {!detail ? <p className="rm-hint">Pilih provinsi di peta atau di daftar untuk melihat {people ? 'akun dan lokasi yang mereka tulis' : 'nama tempat dan posting di baliknya'}.</p>
+      {!detail ? <p className="rm-hint">Pilih provinsi.</p>
         : people ? <Accounts detail={detail} day={day} shown={shown} onMore={() => setShown(shown + PAGE)} /> : <Posts detail={detail} day={day} shown={shown} onMore={() => setShown(shown + PAGE)} />}
     </section>
     {note}

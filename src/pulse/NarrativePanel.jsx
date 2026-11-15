@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 import {CartesianGrid,ReferenceLine,Scatter,ScatterChart,XAxis,YAxis,ZAxis} from 'recharts';
 import {ChartContainer,ChartTooltip} from '../components/ui/shadcn/chart';
 import AnalyticsPanel from './AnalyticsPanel';
+import InfoTip from './InfoTip';
 import {PulseArrow} from '../components/ui/PulseArrow';
 import {PulsePanelEmpty} from '../components/ui/PulseAnalytics';
 import {SentimentTag} from '../components/ui/PulseTag';
@@ -57,8 +58,7 @@ export default function NarrativePanel({narratives=[],onOpen,postsLink}){
  const ranked=points.map(point=>({...point,rank:narratives.findIndex(group=>group.id===point.id)+1,size:point.interactions>0?point.interactions:1}));
  const open=point=>onOpen('Kelompok percakapan',point.posts,{oneContent:true});
  const maxCount=Math.max(2,...ranked.map(point=>point.count));
- return <AnalyticsPanel title="Narasi utama" description="Kelompok percakapan serupa: seberapa besar, bernada apa, dan seberapa jauh menyebar."
-  footer="Sentimen bersih = (positif − negatif) ÷ posting yang dianalisis, dari −100 sampai +100. Ukuran gelembung mengikuti interaksi yang dilaporkan sumber; narasi tanpa angka interaksi digambar kecil. Dibagikan dan tayangan hanya dihitung dari posting yang membawa angkanya. Pada repost, angka dibagikan milik posting aslinya: dihitung sekali per narasi dan tidak masuk interaksi. Jangkauan akun unik tidak tersedia dari platform.">
+ return <AnalyticsPanel title={<span>Narasi utama <InfoTip label="Tentang narasi">Sentimen bersih = (positif − negatif) ÷ yang dianalisis. Ukuran gelembung mengikuti interaksi yang dilaporkan.</InfoTip></span>} label="Narasi utama">
   {narratives.length?<>
    {ranked.length>0&&<div className="np-plot"><ChartContainer config={config} className="np-chart aspect-auto" role="img" aria-label={`Gelembung narasi: sumbu datar jumlah posting, sumbu tegak sentimen bersih. ${ranked.length} narasi. Daftar yang sama ada di bawah grafik.`}>
     <ScatterChart margin={{top:12,right:20,bottom:20,left:0}}>
@@ -71,11 +71,11 @@ export default function NarrativePanel({narratives=[],onOpen,postsLink}){
      <Scatter data={ranked} isAnimationActive={false} shape={props=><Bubble {...props} onPick={open}/>}/>
     </ScatterChart></ChartContainer>
     <p className="np-zones" aria-hidden="true"><span>▲ condong positif</span><span>▼ condong negatif</span></p></div>}
-   {unrated>0&&<p className="po-panel-note">{formatCount(unrated)} narasi belum punya posting yang dianalisis, jadi belum digambar. Tetap ada di daftar.</p>}
+   {unrated>0&&<p className="po-panel-note">{formatCount(unrated)} narasi belum dianalisis, tidak digambar.</p>}
    <ol className="po-narrative-list">{narratives.slice(0,6).map((g,i)=>{
     const where=narrativePlatforms(g.posts),names=where.rows.map(row=>`${platformLabel(row.platform)} (${formatCount(row.count)})`).concat(where.more?[`${where.more} platform lain`]:[]),whereText=names.length>1?names.slice(0,-1).join(', ')+' dan '+names.at(-1):names[0]||'';
     const accounts=accountCount(g.posts),total=interactionsTotal(g.posts),kpis=[['Interaksi',total.value,PulseBeat,`Interaksi dari ${formatCount(total.posts)} posting`],['Dibagikan',contentShares(g.posts),PulseShare],['Tayangan',sumOf(g.posts,'views'),PulseView]],tones=g.posts.reduce((t,p)=>{t[postSentiment(p)]=(t[postSentiment(p)]||0)+1;return t;},{}),lead=['negative','neutral','positive'].sort((a,b)=>(tones[b]||0)-(tones[a]||0))[0];
     return <li key={g.id}><button type="button" onClick={()=>onOpen('Kelompok percakapan',g.posts,{oneContent:true})} aria-label={`Narasi ${i+1}: ${g.title.slice(0,140)}. ${g.posts.length} posting dari ${accounts} akun${whereText?`, di ${whereText}`:''}. Periksa posting.`}><span className="po-narrative-rank" aria-hidden="true">{i+1}</span><span className="po-narrative-body"><strong>{g.title.slice(0,140)}{g.title.length>140?'…':''}</strong><small>{dateRange(g.posts)&&<time>{dateRange(g.posts)}</time>}{dateRange(g.posts)?' · ':''}{formatCount(g.posts.length)} posting · {formatCount(accounts)} akun{where.rows.length>0&&<span className="po-narrative-platforms" aria-hidden="true">{where.rows.map(row=><span key={row.platform} title={platformLabel(row.platform)} style={{'--ps-plat':platformColor(row.platform)}}><PlatformIcon platform={row.platform} size={14}/><b>{formatCount(row.count)}</b></span>)}{where.more>0&&<span title="Platform lain">+{where.more}</span>}</span>}</small><span className="po-narrative-kpis">{kpis.map(([label,value,icon,title])=><span key={label} title={title||label}>{createElement(icon,{size:14})}<b>{value==null?'—':formatCount(value)}</b>{label.toLowerCase()}</span>)}{tones[lead]>0&&<SentimentTag size="sm" value={lead}/>}</span></span><PulseArrow/></button></li>;})}</ol>
-  </>:<PulsePanelEmpty title="Belum ada narasi berulang" action={postsLink&&<Link className="po-more" to={postsLink}>Buka semua posting <PulseArrow/></Link>}>Belum ada kelompok berisi lebih dari satu posting pada pilihan ini.</PulsePanelEmpty>}
+  </>:<PulsePanelEmpty title="Belum ada narasi berulang" action={postsLink&&<Link className="po-more" to={postsLink}>Buka semua posting <PulseArrow/></Link>}>Belum ada kelompok dengan lebih dari satu posting.</PulsePanelEmpty>}
  </AnalyticsPanel>;
 }

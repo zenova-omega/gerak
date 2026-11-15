@@ -40,22 +40,22 @@ export function MostSeenPanel({ posts = [] }) {
       <div><strong>{post.author || 'Nama tidak tersedia'}</strong><p>{clean(post).slice(0, 110) || 'Teks tidak tersedia'}</p></div>
       <span className="oi-views"><PulseView size={15} /><b>{formatCount(post.metrics.views)}</b></span>
       {safeSourceUrl(post.url) && <a className="oi-cover" href={safeSourceUrl(post.url)} target="_blank" rel="noopener noreferrer" aria-label={`Buka posting ${post.author || ''} di sumbernya`} />}
-    </li>)}</ol> : <PulsePanelEmpty title="Belum ada angka tayangan">Berita dan sebagian posting tidak membawa angka tayangan.</PulsePanelEmpty>}
+    </li>)}</ol> : <PulsePanelEmpty title="Belum ada angka tayangan">Tidak ada tayangan tercatat.</PulsePanelEmpty>}
   </AnalyticsPanel>;
 }
 
 /** The emoji used in posts and their comments, packed as a cloud. */
 export function EmojiPanel({ posts = [] }) {
   const emoji = useMemo(() => topEmoji(posts.flatMap(post => [clean(post), ...((post.metrics?.comment_snapshot?.items || []).map(comment => comment.text))]), 24), [posts]);
-  return <AnalyticsPanel title="Emotikon teratas" description="Ukuran mengikuti jumlah posting dan komentar yang memakainya.">
-    {emoji.length ? <EmojiCloud rows={emoji} /> : <PulsePanelEmpty title="Belum ada emotikon">Posting dan komentar dalam cakupan ini tidak memakai emotikon.</PulsePanelEmpty>}
+  return <AnalyticsPanel title="Emotikon teratas">
+    {emoji.length ? <EmojiCloud rows={emoji} /> : <PulsePanelEmpty title="Belum ada emotikon">Tidak ada emotikon.</PulsePanelEmpty>}
   </AnalyticsPanel>;
 }
 
 /** The hashtags in use, packed as a word cloud. */
 export function TagPanel({ posts = [], search = '' }) {
   const tags = useMemo(() => topHashtags(posts.map(post => `${post.title || ''} ${post.text || ''}`), 45), [posts]);
-  return <AnalyticsPanel title="Tagar" description="Ukuran mengikuti jumlah posting. Klik tagar untuk membuka postingnya.">
-    {tags.length ? <HashtagCloud rows={tags} search={search} /> : <PulsePanelEmpty title="Belum ada tagar">Posting dalam cakupan ini tidak memakai tagar.</PulsePanelEmpty>}
+  return <AnalyticsPanel title="Tagar">
+    {tags.length ? <HashtagCloud rows={tags} search={search} /> : <PulsePanelEmpty title="Belum ada tagar">Tidak ada tagar.</PulsePanelEmpty>}
   </AnalyticsPanel>;
 }

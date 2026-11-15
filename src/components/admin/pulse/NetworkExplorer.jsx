@@ -190,7 +190,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
             const at=projected[n.id],r=radiusOf(n.id),picked=n.id===active?.id,name=n.label||'Nama tidak tersedia';
             return <text key={n.id} className="nx-node-name" data-picked={picked?'':undefined} data-far={pointed&&n.id!==pointed&&!near.has(n.id)?'':undefined} x={at.x} y={labels.get(n.id)==='above'?at.y-r-(picked?10:6):at.y+r+(picked?18:14)} textAnchor="middle">{name.length>20?name.slice(0,18)+'…':name}</text>;
           })}</g>
-        </svg>{!nodes.length&&<div className="nx-empty"><p>Belum ada hubungan akun untuk filter dan waktu ini. Ini bukan berarti tidak ada posting.</p><button onClick={()=>setIncludeIsolated(true)}>Tampilkan akun tanpa hubungan</button></div>}
+        </svg>{!nodes.length&&<div className="nx-empty"><p>Belum ada hubungan akun untuk filter dan waktu ini.</p><button onClick={()=>setIncludeIsolated(true)}>Tampilkan akun tanpa hubungan</button></div>}
         {mode==='3d'&&<div className="nx-rotation"><label>Putar ruang <input type="range" min="-180" max="180" value={angle} onChange={e=>setAngle(Number(e.target.value))}/></label><label>Kemiringan <input type="range" min="-60" max="60" value={tilt} onChange={e=>setTilt(Number(e.target.value))}/></label></div>}
         {nodes.length>0&&<MapLegend platforms={[...new Set(nodes.map(n=>n.platform).filter(Boolean))]}/>}
       </>}
@@ -199,7 +199,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
         <PostAvatar post={{author:active?.label||'',platform:active?.platform,profile_image_url:activePhoto}}/>
         <div className="nxi-who">
           <select aria-label="Akun explorer" value={active?.id||''} onChange={e=>setSelected(e.target.value)}>{!nodes.length&&<option value="">Belum ada akun</option>}{nodes.map(n=><option value={n.id} key={n.id}>{n.label||'Nama tidak tersedia'}</option>)}</select>
-          <p>{!active?'Belum ada akun dalam sampel':hovered&&hovered!==selected?'Pratinjau · klik lingkaran untuk mengunci':active.observed?`${formatCount(evidence.length)} posting · ${formatCount(connections.length)} hubungan${followers!=null?` · ${formatCount(followers)} pengikut`:''}`:'Hanya disebut akun lain'}</p>
+          <p>{!active?'Belum ada akun dalam sampel':hovered&&hovered!==selected?'Pratinjau':active.observed?`${formatCount(evidence.length)} posting · ${formatCount(connections.length)} hubungan${followers!=null?` · ${formatCount(followers)} pengikut`:''}`:'Hanya disebut akun lain'}</p>
         </div>
         {(signals.length>0||(full&&top.has(active?.id))||!full)&&<div className="nxi-tags">
           {full&&top.has(active?.id)&&<AccountSignal kind="viral" compact/>}

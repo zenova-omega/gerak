@@ -1,4 +1,5 @@
 import AnalyticsPanel from './AnalyticsPanel';
+import InfoTip from './InfoTip';
 import {PulsePanelEmpty} from '../components/ui/PulseAnalytics';
 import {platformLabel} from '../components/admin/pulse/PlatformIcon';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
@@ -53,7 +54,6 @@ function Curve({reading,onOpen}){
  return <section className="ac-block acc" aria-label="Kurva konsentrasi">
   <p className="ac-lead acc-lead"><strong>{formatCount(reach.accounts)}</strong>akun menulis 80% posting, {part(reach.account_share)} dari {formatCount(posts.accounts)} akun</p>
   {posts.curve?<>
-   <p className="acc-caption">Ke kanan: bagian akun, mulai dari yang paling aktif. Ke atas: bagian posting yang mereka tulis.</p>
    <div className="acc-chart">
     <div className="acc-yaxis" aria-hidden="true">{[100,80,50,0].map(value=><span key={value} style={{top:`${100-value}%`}}>{value}%</span>)}</div>
     <div className="acc-plot" role="img" aria-label={`Kurva kumulatif posting menurut akun, dari yang paling aktif: ${said}.${interactions.curve?` Garis putus-putus: ${formatCount(other.accounts)} dari ${formatCount(interactions.accounts)} akun (${part(other.account_share)}) memegang 80% interaksi.`:''} Angkanya ada pada Lihat angka.`}>
@@ -72,10 +72,10 @@ function Curve({reading,onOpen}){
     <div className="acc-xaxis" aria-hidden="true"><span>0%</span><span>50%</span><span>100% akun</span></div>
    </div>
    <ul className="acc-keys"><li className="acc-key acc-key-posts"><i aria-hidden="true"/>Posting</li>{interactions.curve&&<li className="acc-key acc-key-interactions"><i aria-hidden="true"/>Interaksi</li>}<li className="acc-key acc-key-even"><i aria-hidden="true"/>Bila semua akun sama aktif</li></ul>
-  </>:<p className="acc-says">Kurva digambar bila ada 10 akun atau lebih; pilihan ini memuat {formatCount(posts.accounts)} akun.</p>}
-  <p className="acc-says">{other?<>80% interaksi berasal dari <b>{formatCount(other.accounts)}</b> dari {formatCount(interactions.accounts)} akun ({part(other.account_share)}). Interaksi diketahui pada {cut(interactions.measured)} posting.{posts.curve&&!interactions.curve&&' Garis interaksi digambar bila akunnya 10 atau lebih.'}</>
-   :interactions.total===null?'Kurva interaksi tidak digambar: sumber tidak melaporkan interaksi pada pilihan ini.'
-   :'Interaksi yang dilaporkan berjumlah nol, jadi tidak ada bagian yang dapat dihitung.'}{reading.without_account>0&&` ${formatCount(reading.without_account)} posting tanpa nama akun tidak ikut dihitung.`}</p>
+  </>:<p className="acc-says">Kurva butuh 10 akun atau lebih.</p>}
+  <p className="acc-says">{other?<>80% interaksi berasal dari <b>{formatCount(other.accounts)}</b> dari {formatCount(interactions.accounts)} akun ({part(other.account_share)}). Interaksi diketahui pada {cut(interactions.measured)} posting.</>
+   :interactions.total===null?'Sumber tidak melaporkan interaksi.'
+   :'Interaksi yang dilaporkan nol.'}{reading.without_account>0&&` ${formatCount(reading.without_account)} posting tanpa nama akun tidak dihitung.`}</p>
   {onOpen&&<button type="button" className="acc-open" onClick={()=>onOpen(reach.accounts)}>Lihat posting {formatCount(reach.accounts)} akun ini</button>}
   {posts.curve&&<details className="acc-data"><summary>Lihat angka</summary><div className="acc-tables">
    <CurveTable caption="Posting" column="Bagian posting" curve={line} reach={reach}/>
@@ -92,14 +92,13 @@ export default function AccountConcentration({posts=[],onOpen}){
  const behind=keys=>posts.filter(post=>keys.has(postMeasures(post).account));
  const accountRows=c.topAccounts.map(row=>{const name=`${row.author} · ${platformLabel(row.platform)}`;return {key:row.key,name,author:row.author,platform:row.platform,share:row.share,open:onOpen&&(()=>onOpen(name,behind(new Set([row.key]))))};});
  const postRows=c.topPosts.map(row=>{const name=`${row.author||'Tanpa nama'} · ${platformLabel(row.platform)}`;return {key:row.id,name,author:row.author,platform:row.platform,share:row.share,open:onOpen&&(()=>onOpen('Posting '+name,posts.filter(post=>post.id===row.id)))};});
- return <AnalyticsPanel title="Konsentrasi percakapan" description="Seberapa besar percakapan bertumpu pada segelintir akun dan posting."
-  footer="Akun dihitung per platform. Konsentrasi tinggi bisa wajar, misalnya media yang rutin menulis, dan bukan bukti akun terkoordinasi. Interaksi adalah angka terakhir yang tercatat, hanya dari posting yang membawanya.">
+ return <AnalyticsPanel title={<span>Konsentrasi percakapan <InfoTip label="Tentang konsentrasi">Konsentrasi tinggi bukan bukti akun terkoordinasi.</InfoTip></span>} label="Konsentrasi percakapan">
   {c.posts?<div className="ac-grid ac-grid-curve">
    <section className="ac-block" aria-label="Konsentrasi akun"><p className="ac-lead"><strong>{percentLabel(c.topAccountShare)}</strong>posting berasal dari 3 akun teratas, dari {formatCount(c.accounts)} akun</p>
     <Split rows={accountRows} label="Porsi posting tiga akun teratas" total="Akun lainnya"/></section>
-   <section className="ac-block" aria-label="Konsentrasi interaksi">{c.topPostShare===null?<PulsePanelEmpty title="Belum ada angka interaksi">Sumber tidak melaporkan interaksi pada posting dalam pilihan ini.</PulsePanelEmpty>:<><p className="ac-lead"><strong>{percentLabel(c.topPostShare)}</strong>interaksi berasal dari 3 posting teratas</p>
+   <section className="ac-block" aria-label="Konsentrasi interaksi">{c.topPostShare===null?<PulsePanelEmpty title="Belum ada angka interaksi">Sumber tidak melaporkan interaksi.</PulsePanelEmpty>:<><p className="ac-lead"><strong>{percentLabel(c.topPostShare)}</strong>interaksi berasal dari 3 posting teratas</p>
     <Split rows={postRows} label="Porsi interaksi tiga posting teratas" total="Posting lainnya"/></>}</section>
    <Curve reading={c.reading} onOpen={onOpen&&(count=>onOpen(`${formatCount(count)} akun teraktif`,behind(leadingAccounts(posts,count))))}/>
-  </div>:<PulsePanelEmpty title="Belum ada akun">Belum ada posting dengan nama akun pada pilihan ini.</PulsePanelEmpty>}
+  </div>:<PulsePanelEmpty title="Belum ada akun">Belum ada posting dengan nama akun.</PulsePanelEmpty>}
  </AnalyticsPanel>;
 }

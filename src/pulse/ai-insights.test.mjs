@@ -146,7 +146,7 @@ test('the AI Insights page shows every state in plain Indonesian and never names
     assert.match(html, /class="[^"]*ain-badge">Mingguan</);
     assert.match(html, /class="ain-platforms">Semua platform</);
     assert.match(html, /<div class="ain-chart"><\/div>/);
-    assert.match(html, /Ditulis 14 Nov 2026, 09\.27 WIB dari 3\.000 posting terbaru dan 17\.514 komentar\. Posting yang lebih lama tidak dibaca\./);
+    assert.match(html, /Ditulis 14 Nov 2026, 09\.27 WIB dari 3\.000 posting terbaru dan 17\.514 komentar\./);
     assert.match(render({ state: loaded(stored({ scope: { ...stored().scope, truncated: false } })) }), /dari 3\.000 posting dan 17\.514 komentar\.<\/p>/);
     assert.doesNotMatch(button(html, 'Perbarui insight'), / disabled=""/);
     assert.doesNotMatch(html, /Buat insight|role="alert"|ain-differs/);
@@ -170,12 +170,12 @@ test('the AI Insights page shows every state in plain Indonesian and never names
 
     // AI not available: the stored insight stays readable, the action is off and says why.
     pages.off = render({ state: loaded(stored(), { available: false }) });
-    assert.match(pages.off, /belum diaktifkan di instalasi ini/);
+    assert.match(pages.off, /AI Insights belum aktif/);
     assert.match(button(pages.off, 'Perbarui insight'), /disabled=""/);
     assert.match(pages.off, /Lonjakan terjadi pada 8 Nov\./);
     const offEmpty = render({ state: loaded(null, { available: false }) });
     assert.match(button(offEmpty, 'Buat insight'), /disabled=""/);
-    assert.match(offEmpty, /belum diaktifkan di instalasi ini/);
+    assert.match(offEmpty, /AI Insights belum aktif/);
 
     // Fewer posts than the floor: a warning, never a block.
     pages.thin = render({ state: loaded(null, { posts_now: 12 }) });
@@ -189,10 +189,10 @@ test('the AI Insights page shows every state in plain Indonesian and never names
     // Writing: the pulse with honest wording; a previous insight stays on screen.
     pages.writing = render({ state: loaded(null), busy: true });
     assert.match(pages.writing, /aria-busy="true"/);
-    assert.match(pages.writing, /class="pu-loader"[^>]*role="status"[\s\S]*?sekitar satu menit/);
+    assert.match(pages.writing, /class="pu-loader"[^>]*role="status"[\s\S]*?Menunggu 1–3 menit/);
     assert.match(pages.writing, /<button[^>]*disabled=""[^>]*aria-busy="true"[^>]*>(?:(?!<\/button>).)*Menulis insight…<\/button>/);
     pages.rewriting = render({ state: loaded(stored()), busy: true });
-    assert.match(pages.rewriting, /class="pu-loader"[\s\S]*?Insight sebelumnya tetap tampil/);
+    assert.match(pages.rewriting, /class="pu-loader"[\s\S]*?Menunggu 1–3 menit/);
     assert.match(pages.rewriting, /Lonjakan terjadi pada 8 Nov\./);
 
     // Failed: said once as an alert, the previous insight is kept.
@@ -203,7 +203,7 @@ test('the AI Insights page shows every state in plain Indonesian and never names
     // Written for another period or other platforms than the project bar shows now: one line and the action.
     pages.differs = render({ state: loaded(stored()), period: { from: '2026-11-08', to: '2026-11-14' }, platforms: ['x', 'tiktok'] });
     const line = pages.differs.match(/<div class="[^"]*ain-differs[\s\S]*?<\/div>/)[0];
-    assert.match(line, /ditulis untuk 3 Nov 2026 – 9 Nov 2026, semua platform/);
+    assert.match(line, /Insight untuk 3 Nov 2026 – 9 Nov 2026, semua platform/);
     assert.match(line, /8 Nov 2026 – 14 Nov 2026, TikTok dan X/);
     assert.doesNotMatch(button(pages.differs, 'Perbarui insight'), / disabled=""/);                   // one action, not two with the same name
     assert.match(pages.differs, /class="ain-range">3 Nov 2026 – 9 Nov 2026</, 'the period card describes the insight on screen');

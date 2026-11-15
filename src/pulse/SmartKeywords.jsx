@@ -22,7 +22,7 @@ export default function SmartKeywords({ fields, topicId, onAdd }) {
       const data = await api.post('/admin/pulse/keywords/suggest', body);
       setState({ status: data.suggestions.length ? 'ready' : 'empty', rows: data.suggestions, checked: data.checked_posts });
     } catch (error) {
-      setState({ status: 'error', rows: [], checked: 0, message: error.status === 503 ? 'Saran keyword belum tersedia di instalasi ini.' : error.status ? 'Saran keyword tidak berhasil dibuat. Coba lagi.' : 'Tidak dapat terhubung ke server PULSE.' });
+      setState({ status: 'error', rows: [], checked: 0, message: error.status === 503 ? 'Saran keyword belum tersedia.' : error.status ? 'Saran gagal dibuat.' : 'Tidak dapat terhubung.' });
     }
   }
   function toggle(term) { setPicked(current => { const next = new Set(current); if (next.has(term)) next.delete(term); else next.add(term); return next; }); }
@@ -35,16 +35,16 @@ export default function SmartKeywords({ fields, topicId, onAdd }) {
   const open = ['ready', 'added'].includes(state.status) && state.rows.length > 0;
   return <section className="psk-smart" aria-label="Saran keyword pintar">
     <div className="psk-head">
-      <div><strong><Sparkles size={16} aria-hidden="true" />Smart keyword</strong><p>Dapatkan saran variasi, konteks, dan pengecualian dari istilah utama Anda. Tidak ada yang ditambahkan sebelum Anda memilih dan mengonfirmasi.</p></div>
-      <PulseButton onClick={load} disabled={seed.length < 2} busy={state.status === 'loading'} busyLabel="Mencari saran…">{state.rows.length || state.status === 'empty' ? 'Minta saran lagi' : 'Sarankan keyword'}</PulseButton>
+      <div><strong><Sparkles size={16} aria-hidden="true" />Smart keyword</strong></div>
+      <PulseButton onClick={load} disabled={seed.length < 2} busy={state.status === 'loading'} busyLabel="Mencari…">{state.rows.length || state.status === 'empty' ? 'Minta saran lagi' : 'Sarankan keyword'}</PulseButton>
     </div>
-    {seed.length < 2 && <p className="psk-note">Isi istilah utama terlebih dahulu.</p>}
+    {seed.length < 2 && <p className="psk-note">Isi istilah utama dulu.</p>}
     <div aria-live="polite">
       {state.status === 'error' && <p className="psk-error" role="alert">{state.message}</p>}
-      {state.status === 'empty' && <p className="psk-note">Tidak ada saran baru di luar keyword yang sudah Anda miliki.</p>}
-      {state.status === 'added' && <p className="psk-note" role="status">{state.added} keyword ditambahkan ke isian di atas. Periksa ringkasan pencarian sebelum menyimpan.</p>}
+      {state.status === 'empty' && <p className="psk-note">Tidak ada saran baru.</p>}
+      {state.status === 'added' && <p className="psk-note" role="status">{state.added} keyword ditambahkan.</p>}
     </div>
-    {open && <fieldset className="psk-list"><legend>Pilih keyword yang ingin ditambahkan</legend>
+    {open && <fieldset className="psk-list"><legend>Pilih keyword</legend>
       <ul>{state.rows.map(row => <li key={row.term}><label>
         <input type="checkbox" checked={picked.has(row.term)} onChange={() => toggle(row.term)} />
         <span className="psk-term"><strong>{row.term}</strong>{row.reason && <small>{row.reason}</small>}</span>
@@ -54,7 +54,7 @@ export default function SmartKeywords({ fields, topicId, onAdd }) {
       <div className="psk-actions">
         <PulseButton variant="primary" disabled={!picked.size} onClick={confirm}>{picked.size ? `Tambahkan ${picked.size} keyword` : 'Pilih keyword dahulu'}</PulseButton>
         <PulseButton variant="quiet" onClick={() => setPicked(new Set(picked.size === state.rows.length ? [] : state.rows.map(row => row.term)))}>{picked.size === state.rows.length ? 'Batalkan semua' : 'Pilih semua'}</PulseButton>
-        {state.checked > 0 && <small>Dibandingkan dengan {formatCount(state.checked)} posting tersimpan project ini.</small>}
+        
       </div>
     </fieldset>}
   </section>;

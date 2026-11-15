@@ -21,7 +21,7 @@ export default function TopicManager({ resource, onSelectTopic, selectedTopicId,
     finally { setBusy(false); }
   };
   const remove = async (topic) => {
-    if (!window.confirm('Hapus topik “' + topic.label + '”? Data terkait dapat ikut dihapus.')) return;
+    if (!window.confirm('Hapus topik “' + topic.label + '”? Data terkait ikut terhapus.')) return;
     setBusy(true);
     setError('');
     try {
@@ -34,7 +34,6 @@ export default function TopicManager({ resource, onSelectTopic, selectedTopicId,
   return (
     <aside className="pulse-topics">
       <div className="pulse-section-heading"><h2>Topik pantauan</h2><Search size={17} /></div>
-      <p>Pilih cakupan analisis Anda.</p>
       <nav aria-label="Topik pantauan">
         <button className={'pulse-topic ' + (!selectedTopicId ? 'is-selected' : '')} aria-pressed={!selectedTopicId} disabled={busy || disabled} onClick={() => onSelectTopic(null)}>
           <span>Semua topik</span><span className="pulse-topic-count">{resource.topics.length}</span>
@@ -47,18 +46,17 @@ export default function TopicManager({ resource, onSelectTopic, selectedTopicId,
         </div>)}
       </nav>
       {resource.loading && <p role="status">Memuat topik…</p>}
-      {!resource.loading && !resource.error && !resource.topics.length && <p>Belum ada topik. Siapkan topik awal atau tambahkan sendiri.</p>}
+      {!resource.loading && !resource.error && !resource.topics.length && <p>Belum ada topik.</p>}
       <details className="pulse-topic-form">
         <summary><Plus size={15} /> Tambah topik</summary>
         <form onSubmit={submit}>
           <label>Nama topik<input required maxLength={200} value={label} onChange={e => setLabel(e.target.value)} placeholder="Nama topik pantauan" /></label>
           <label>Kata kunci<input required value={query} onChange={e => setQuery(e.target.value)} placeholder="Kata kunci pencarian" /></label>
-          <p>Sumber awal: RSS publik. Tidak memulai crawl.</p>
           <button className="pulse-button primary" disabled={busy || disabled}>{busy ? 'Menyimpan…' : 'Simpan topik'}</button>
         </form>
       </details>
       {error && <p className="pulse-inline-error" role="alert">{error}</p>}
-      <div className="pulse-sidebar-note"><strong>Data, bukan asumsi.</strong><p>Hanya sumber yang berhasil dikumpulkan. Cakupan ini bukan keseluruhan percakapan publik.</p></div>
+      
     </aside>
   );
 }

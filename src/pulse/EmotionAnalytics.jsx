@@ -62,9 +62,9 @@ export default function EmotionAnalytics({ posts = [] }) {
   const drawn = filledDays(data.days);
   const skipsDays = drawn.length === data.days.length && data.days.length > 1
     && (Date.parse(data.days.at(-1).date) - Date.parse(data.days[0].date)) / 86400000 + 1 > data.days.length;
-  const title = <span>Emosi percakapan <InfoTip label="Tentang analisis emosi">Emosi yang dinyatakan dalam teks, bukan kondisi psikologis penulis atau opini seluruh publik. Satu emosi dominan per posting. Sentimen negatif tidak otomatis marah. Persentase tiap emosi dihitung dari posting yang menyatakan emosi; posting tanpa emosi jelas dihitung terpisah. Warna dan ilustrasi hanya penanda kategori.</InfoTip></span>;
+  const title = <span>Emosi percakapan <InfoTip label="Tentang analisis emosi">Emosi yang tertulis di teks, bukan kondisi penulis atau opini publik.</InfoTip></span>;
 
-  return <AnalyticsPanel title={title} label="Emosi percakapan" description="Apa nada emosional di balik percakapan?" className="pea-panel"
+  return <AnalyticsPanel title={title} label="Emosi percakapan" className="pea-panel"
     actions={bounds && <PulseRange chart="Emosi percakapan" bounds={bounds} value={range} onChange={next => { setRange(next); setDay(null); setLimit(10); }} />}>
     {data.analyzed ? <div className="pea-lede">
       <div className="pea-figures">
@@ -82,11 +82,11 @@ export default function EmotionAnalytics({ posts = [] }) {
           <span className="pea-aside">{formatCount(data.unknown)} belum dianalisis{data.review > 0 && ` · ${formatCount(data.review)} perlu ditinjau`}</span>
         </div>
       </div>
-    </div> : <p className="pea-empty">Hasil emosi belum tersedia pada filter ini{data.unknown > 0 ? ` (${data.unknown.toLocaleString('id-ID')} posting belum dianalisis)` : ''}. Analisis berikutnya akan mengisi kategori secara otomatis; label sentimen lama tidak diubah menjadi emosi.</p>}
+    </div> : <p className="pea-empty">Belum ada hasil emosi{data.unknown > 0 ? ` (${data.unknown.toLocaleString('id-ID')} posting belum dianalisis)` : ''}.</p>}
 
     {data.days.length > 0 && <div className="pea-trend">
       <h3>Perkembangan emosi</h3>
-      <p className="pea-caption">Posting yang menyatakan emosi, per hari ({zone().name}). Yang tanpa emosi jelas tidak digambar. Klik batang untuk melihat postingnya.{skipsDays && ' Rentang ini panjang, jadi hari tanpa posting dilewati; pilih rentang yang lebih pendek untuk melihat tiap hari.'}</p>
+      {skipsDays && <p className="pea-caption">Hari tanpa posting dilewati.</p>}
       <ChartContainer config={series} className="pea-chart aspect-auto" role="img" aria-label={`Grafik batang bertumpuk: jumlah posting per emosi dan tanggal ${zone().name}. Angkanya ada pada Data harian di bawah grafik.`}>
         <BarChart data={drawn} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="22%">
           <CartesianGrid vertical={false} />
@@ -101,7 +101,6 @@ export default function EmotionAnalytics({ posts = [] }) {
 
     {data.analyzed > 0 && <div className="pea-pick">
       <h3>Emosi yang dinyatakan</h3>
-      <p className="pea-caption">Urut dari yang terbanyak. Pilih satu untuk menyorotnya di grafik dan melihat postingnya.</p>
       <div className="pea-emotions">{summary.ranked.map(({ key, count, share }) =>
         <button type="button" key={key} className={'pea-emotion ' + key} aria-pressed={selected === key && !day} aria-label={`${emotionLabels[key]}: ${count} posting. Lihat sumber`} onClick={() => choose(selected === key && !day ? null : key)}>
           <span className="pea-face" aria-hidden="true">{emotionFaces[key]}</span>
@@ -120,7 +119,7 @@ export default function EmotionAnalytics({ posts = [] }) {
 
     {selected && <section className="pea-evidence" aria-label="Posting sumber emosi">
       <header><h3>{selected === 'none' ? 'Tanpa emosi jelas' : emotionLabels[selected]}{day ? ` · ${dayLabel(day)}` : ''} <span>{rows.length} posting</span></h3><button type="button" onClick={() => choose(null)}>Tutup rincian</button></header>
-      {!rows.length ? <p>Belum ada posting dengan label emosi ini dalam filter terpilih.</p> : <ol>{rows.slice(0, limit).map(post => {
+      {!rows.length ? <p>Belum ada posting dengan emosi ini.</p> : <ol>{rows.slice(0, limit).map(post => {
         const value = postEmotion(post), url = safeSourceUrl(post.url);
         return <li key={post.id}>
           <div className="pea-identity"><PostAvatar post={post} /><div><strong>{post.author || 'Sumber tanpa nama'}</strong><span><PlatformLabel platform={post.platform} /> · {pulseDate(post.published_at)}</span></div></div>

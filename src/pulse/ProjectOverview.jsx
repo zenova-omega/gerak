@@ -76,8 +76,8 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
    {signals.length>0&&<ul className="po-signals" aria-label="Sorotan untuk diperiksa">{signals.map(s=><li key={s.key}><button type="button" onClick={s.onClick}><span className="po-signal-label">{s.label}</span><strong>{s.value}</strong><small>{s.note}</small><span className="po-signal-action">{s.action} <PulseArrow/></span></button></li>)}</ul>}
    <PlatformPie platforms={r.platforms} onOpen={id=>open(platformLabel(id),r.posts.filter(p=>p.platform===id))}/>
    <footer className="po-brief-foot">
-    <span className="po-quality">{quality.paired?`${Math.round(quality.accuracy*100)}% sesuai penilaian analis · ${quality.correct}/${quality.paired} sampel`:'Belum ada sampel berlabel manual'} <InfoTip label="Tentang angka ringkasan">Kualitas analisis hanya dari sampel yang dinilai analis dalam pilihan ini; bukan ukuran akurasi seluruh data. Perlu ditinjau mencakup penilaian kurang yakin, perbedaan label, atau penandaan analis. Konten unik menggabungkan teks identik dengan perbedaan kapital dan spasi; kemiripan narasi tidak dihitung sebagai duplikat. Sentimen bersih = (positif − negatif) ÷ posting yang dianalisis; {hideUnknown?'posting belum dianalisis disembunyikan di halaman Sentimen, dan di sini juga tidak dihitung':'posting belum dianalisis tidak dihitung'}. Konsentrasi akun adalah porsi posting dari tiga akun paling aktif, bukan bukti akun terkoordinasi.</InfoTip></span>
-    {extra.loaded&&!extra.reviews&&<small>Status koreksi analis belum tersedia; hasil belum disaring berdasarkan koreksi.</small>}
+    <span className="po-quality">{quality.paired?`${Math.round(quality.accuracy*100)}% sesuai penilaian analis · ${quality.correct}/${quality.paired} sampel`:'Belum ada sampel berlabel manual'} <InfoTip label="Tentang angka ringkasan">Akurasi hanya dari sampel yang dinilai analis, bukan seluruh data. Sentimen bersih = (positif − negatif) ÷ posting dianalisis. Konsentrasi akun bukan bukti koordinasi.</InfoTip></span>
+    {extra.loaded&&!extra.reviews&&<small>Status koreksi analis belum tersedia.</small>}
    </footer>
   </section>
   <AiSummaryCard key={params.get('topic')||''} topicId={params.get('topic')||''}/>
@@ -85,10 +85,10 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
   <EvidenceSheet selection={selection} onClose={()=>setSelection(null)}/>
   <section id="overview-development" className="lay-grid">
    <div className="lay-12">
-   <TrendChart title="Perkembangan isu" description="Posting dan interaksi dari waktu ke waktu, atau dipilah menurut sentimen atau platform." posts={r.posts} period={period}
-    footer="Tanggal publikasi WIB. Lonjakan bukan bukti peristiwa baru atau sebab perubahan." onPick={(row,unit)=>open('Posting '+bucketLabel(row,unit),bucketPosts(r.posts,row))}/>
+   <TrendChart title="Perkembangan isu" posts={r.posts} period={period}
+    onPick={(row,unit)=>open('Posting '+bucketLabel(row,unit),bucketPosts(r.posts,row))}/>
    </div>
   </section>
-  <nav className="po-detail-links" aria-label="Detail di halaman lain"><h2>Telusuri lebih jauh</h2><ul>{detailPages.map(([view,title,note])=><li key={view}><Link to={page(view)}><strong>{title}</strong><small>{note}</small><PulseArrow/></Link></li>)}</ul></nav>
+  <nav className="po-detail-links" aria-label="Detail di halaman lain"><h2>Telusuri lebih jauh</h2><ul>{detailPages.map(([view,title])=><li key={view}><Link to={page(view)}><strong>{title}</strong><PulseArrow/></Link></li>)}</ul></nav>
  </div>;
 }

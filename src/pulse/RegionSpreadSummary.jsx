@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MapPinned } from 'lucide-react';
 import AnalyticsPanel from './AnalyticsPanel';
 import RegionMiniMap from './RegionMiniMap';
+import InfoTip from './InfoTip';
 import { PulseArrow } from '../components/ui/PulseArrow';
 import { accountSpread, spreadByDay, spreadTotals } from '../lib/pulsePlaces';
 import { formatCount } from '../lib/pulseData';
@@ -23,9 +24,8 @@ export default function RegionSpreadSummary({ posts = [], to }) {
   const rows = spreadTotals(spread), homes = spreadTotals(people), most = rows[0]?.count || 0;
   const open = <Link className="po-more rs-open" to={to}>Buka peta sebaran <PulseArrow /></Link>;
   const top = rows.slice(0, 3).map(row => `${row.name} ${formatCount(row.count)}`).join(', ');
-  return <AnalyticsPanel className="rs-panel" icon={MapPinned} title="Sebaran tempat" actions={open}
-    description="Provinsi yang paling sering disebut dalam judul dan teks posting pada periode ini. Ini tempat yang dibicarakan, bukan lokasi penulis.">
-    {!rows.length ? <p className="tc-empty">Belum ada posting yang menyebut provinsi, kota atau kabupaten pada periode ini.</p> : <div className="rs">
+  return <AnalyticsPanel className="rs-panel" icon={MapPinned} label="Sebaran tempat" title={<span>Sebaran tempat <InfoTip label="Tentang sebaran tempat">Tempat yang disebut dalam posting, bukan lokasi penulis.</InfoTip></span>} actions={open}>
+    {!rows.length ? <p className="tc-empty">Belum ada tempat yang disebut.</p> : <div className="rs">
       <RegionMiniMap rows={rows} label={`Peta Indonesia: ${rows.length} dari ${outline.provinces.length} provinsi disebut. Terbanyak: ${top}.`} />
       <ol className="rs-top" aria-label="Provinsi yang paling sering disebut">{rows.slice(0, SHOWN).map(row => <li key={row.code}>
         <span className="rs-name">{row.name}</span><span className="rs-count">{formatCount(row.count)} posting</span>

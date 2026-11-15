@@ -60,14 +60,13 @@ export default function TopMentions({ posts, onOpen }) {
       {lists.map(list => <div key={list.tone} className="tm-card" data-tone={list.tone}>
         <div className="tm-card-head">
           <h3><i aria-hidden="true" />{list.title}</h3>
-          <p>{formatCount(list.matching)} dari {formatCount(list.analysed)} mention{where} yang sudah dianalisis</p>
+          <p>{formatCount(list.matching)} dari {formatCount(list.analysed)} mention{where}</p>
         </div>
         {list.rows.length
           ? <ol className="tm-list">{list.rows.map(post => <Mention key={post.id} post={post} />)}</ol>
-          : <p className="tm-empty">Belum ada mention {list.word}{where} dalam cakupan ini.</p>}
+          : <p className="tm-empty">Belum ada mention {list.word}{where}.</p>}
         {list.matching > list.rows.length && <button type="button" className="tm-all" onClick={() => onOpen(`Mention ${list.word}${where}`, list.all)}>Lihat semua {formatCount(list.matching)} mention</button>}
       </div>)}
     </div>
-    <p className="tm-note">Hanya mention yang nadanya sudah dianalisis. Urutan: interaksi yang tercatat, terbanyak dahulu; berita tidak melaporkan interaksi, jadi tampil sesudah posting yang interaksinya tercatat. Interaksi bukan jangkauan.</p>
   </section>;
 }

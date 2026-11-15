@@ -16,7 +16,7 @@ import { postInteractions } from '../lib/pulseEngagement';
 import { kindLabels, kindOrder, shares } from '../lib/pulseVoice';
 import { stanceLabels } from '../lib/pulseResponse';
 import { sourceText } from '../lib/pulseOverview';
-import { accountRowsThatFit, axisTicks, fallbackSummary, maxTopPosts, periodLabel, summaryScopeNote } from '../lib/pulseReportPages';
+import { accountRowsThatFit, axisTicks, fallbackSummary, maxTopPosts, periodLabel } from '../lib/pulseReportPages';
 
 const tones = ['positive', 'neutral', 'negative'];
 const stances = ['supports', 'opposes', 'unclear'];
@@ -96,10 +96,9 @@ function CoverPage({ page, frame }) {
 function SummaryPage({ page, frame }) {
   const { data, summary } = frame;
   const sentences = summary ? [] : fallbackSummary(data, { platformName });
-  const scope = summary?.scope || {};
   const lede = summary
-    ? `Ringkasan AI, ditulis ${pulseDate(summary.createdAt)}${Number.isFinite(scope.posts) ? ` dari ${formatCount(scope.posts)} posting${Number.isFinite(scope.comments) ? ` dan ${formatCount(scope.comments)} komentar` : ''}` : ''}. ${summaryScopeNote(scope, frame.report, data.total)}`.trim()
-    : data.total ? 'Disusun otomatis dari angka dalam laporan ini.' : null;
+    ? `Ringkasan AI, ditulis ${pulseDate(summary.createdAt)}.`
+    : null;
   return <Sheet page={page} frame={frame} title={page.title} lede={lede}>
     {summary ? <div className="rp-brief">{summary.sections.map((section, index) => <section key={index}>
       <h3>{section.title}</h3>
@@ -165,17 +164,17 @@ function TrendChart({ trend }) {
 function TrendPage({ page, frame }) {
   const { data, report } = frame, { trend } = data;
   if (!trend.rows.length) return <Sheet page={page} frame={frame} title={page.title}>
-    <Empty>{data.total ? 'Posting pada periode ini tidak membawa tanggal terbit, jadi tren belum dapat digambar.' : 'Belum ada posting pada periode ini, jadi tren belum dapat digambar.'}</Empty>
+    <Empty>{data.total ? 'Tidak ada tanggal terbit.' : 'Belum ada posting.'}</Empty>
   </Sheet>;
   const busiest = [...report.days].sort((a, b) => b.total - a.total || a.date.localeCompare(b.date)).slice(0, 5);
   return <Sheet page={page} frame={frame} title={page.title}
-    lede={`Jumlah posting per ${trend.unit === 'day' ? 'hari' : 'minggu'} menurut tanggal terbit (${zone().name}), dibagi menurut sentimen.`}>
+    lede={`Posting per ${trend.unit === 'day' ? 'hari' : 'minggu'} menurut tanggal terbit (${zone().name}).`}>
     <TrendChart trend={trend} />
     <Legend label="Keterangan warna grafik" items={[
       ...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: data.counts[key], share: data.analysed ? data.shares[key] : null, shareText: data.analysed ? data.shareText[key] : null })),
       { key: 'unknown', label: sentimentLabels.unknown, hatch: true, value: data.counts.unknown },
     ]} />
-    <p className="rp-note">Persentase dihitung dari {formatCount(data.analysed)} posting yang sudah dianalisis ({data.coverage}% dari {formatCount(data.total)} posting). Posting yang belum dianalisis tidak dianggap netral.{data.undated > 0 ? ` ${formatCount(data.undated)} posting tanpa tanggal terbit tidak masuk grafik.` : ''}</p>
+    <p className="rp-note">Persentase dari {formatCount(data.analysed)} posting yang dianalisis ({data.coverage}% dari {formatCount(data.total)}).{data.undated > 0 ? ` ${formatCount(data.undated)} posting tanpa tanggal tidak masuk grafik.` : ''}</p>
     <section className="rp-block">
       <h3>Hari paling ramai</h3>
       <table className="rp-table">
@@ -197,7 +196,7 @@ function Voice({ title, voice, none }) {
     <h3>{title}</h3>
     {!voice.total ? <Empty>{none}</Empty> : <>
       <p className="rp-sub">{formatCount(voice.total)} posting, {voice.unknown ? `${formatCount(voice.analysed)} sudah dianalisis` : 'semuanya sudah dianalisis'}</p>
-      {!voice.lead ? <Empty>Belum ada posting yang dianalisis, jadi nadanya belum dapat dibaca.</Empty> : <>
+      {!voice.lead ? <Empty>Belum ada posting yang dianalisis.</Empty> : <>
         <p className="rp-leading"><strong>{voice.shareText[voice.lead]}</strong><span>{sentimentLabels[voice.lead].toLowerCase()}, bagian terbesar dari {formatCount(voice.analysed)} posting yang dianalisis</span></p>
         <Bar label={`${title}: ${toneWords(voice.counts, voice.shareText)}`} parts={toneParts(voice.counts)} />
         <Legend label={`Keterangan warna ${title.toLowerCase()}`} items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: voice.counts[key], share: voice.shares[key], shareText: voice.shareText[key] }))} />
@@ -214,9 +213,9 @@ function Voice({ title, voice, none }) {
 
 function VoicesPage({ page, frame }) {
   const { data } = frame;
-  if (!data.total) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting pada periode ini, jadi belum ada suara yang dapat dibaca.</Empty></Sheet>;
+  if (!data.total) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting.</Empty></Sheet>;
   return <Sheet page={page} frame={frame} title={page.title}
-    lede="Posting warganet dan berita dibaca terpisah. Berita ditulis datar, jadi menggabungkan keduanya membuat percakapan tampak lebih netral daripada kenyataannya.">
+    >
     <div className="rp-pair">
       <Voice title="Posting warganet" voice={data.voices.public} none="Tidak ada posting dari media sosial pada periode ini." />
       <Voice title="Pemberitaan" voice={data.voices.news} none="Tidak ada berita pada periode ini." />
@@ -245,7 +244,7 @@ function OpinionPage({ page, frame }) {
   // The largest stance; a tie goes to the reading that needs a look first, as with sentiment.
   const stanceLead = ['opposes', 'unclear', 'supports'].reduce((best, key) => (opinion.stance[key] > opinion.stance[best] ? key : best), 'opposes');
   return <Sheet page={page} frame={frame} title={page.title}
-    lede={`${formatCount(opinion.analysed)} dari ${formatCount(opinion.total)} komentar tersimpan sudah dianalisis${opinion.posts ? `, dari ${formatCount(opinion.posts)} posting` : ''}. Persentase di halaman ini dihitung dari komentar yang sudah dianalisis, bukan dari seluruh komentar.`}>
+    lede={`${formatCount(opinion.analysed)} dari ${formatCount(opinion.total)} komentar dianalisis.`}>
     <div className="rp-coverage" role="img" aria-label={`${covered}% komentar tersimpan sudah dianalisis`}>
       <span className="rp-meter"><i style={{ width: `${opinion.analysed / opinion.total * 100}%` }} /></span>
       <span><strong>{covered < 1 && opinion.analysed > 0 ? 'kurang dari 1' : covered}%</strong> komentar tersimpan sudah dianalisis</span>
@@ -264,9 +263,9 @@ function OpinionPage({ page, frame }) {
           <Bar label={`Sikap komentar: ${stances.map(key => `${stanceLabels[key]} ${opinion.stanceShares[key]}%`).join(', ')}`} parts={stances.map(key => ({ key, value: opinion.stance[key], color: stanceColor[key] }))} />
           <Legend label="Keterangan warna sikap" items={stances.map(key => ({ key, label: stanceLabels[key], color: stanceColor[key], value: opinion.stance[key], share: opinion.stanceShares[key] }))} />
           {opinion.target && <p className="rp-note">Isu yang dinilai: {opinion.target}.</p>}
-        </> :<Empty>Sikap terhadap isu belum terbaca pada komentar yang dianalisis.</Empty>}
+        </> :<Empty>Sikap belum terbaca.</Empty>}
       </section>
-    </div> : <Empty>{opinion.loaded ? 'Belum ada komentar yang dianalisis, jadi sentimen dan sikap belum dapat dibaca.' : 'Hasil analisis komentar belum termuat saat laporan disusun.'}</Empty>}
+    </div> : <Empty>{opinion.loaded ? 'Belum ada komentar yang dianalisis.' : 'Hasil analisis komentar belum termuat saat laporan disusun.'}</Empty>}
     {opinion.liked.length > 0 && <section className="rp-block">
       <h3>Komentar paling disukai</h3>
       <ul className="rp-quotes">{opinion.liked.map(comment => <li key={comment.id}>
@@ -287,7 +286,7 @@ function OpinionPage({ page, frame }) {
 
 function SourcesPage({ page, frame }) {
   const { data, report } = frame;
-  if (!data.total) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting pada periode ini, jadi belum ada platform atau akun untuk diperingkat.</Empty></Sheet>;
+  if (!data.total) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting.</Empty></Sheet>;
   // The sheet has a fixed height: with more than five platforms the accounts table gives up a row for each extra one.
   const accounts = report.accounts.slice(0, accountRowsThatFit(data.platforms.length));
   const accountsTitle = accounts.length === 10 ? 'Sepuluh akun dengan interaksi terbanyak' : accounts.length < report.accounts.length ? `${formatCount(accounts.length)} akun dengan interaksi terbanyak` : 'Akun dengan interaksi terbanyak';
@@ -316,7 +315,7 @@ function SourcesPage({ page, frame }) {
           <td className="rp-num"><strong>{formatCount(account.engagement)}</strong>{account.engagement != null && account.interaction_posts != null && <small className="rp-count">{`dari ${formatCount(account.interaction_posts)} posting`}</small>}</td>
         </tr>)}</tbody>
       </table> : <Empty>Posting pada periode ini tidak membawa nama akun.</Empty>}
-      <p className="rp-note">Interaksi adalah suka, komentar, dan bagikan yang teramati pada posting akun itu dalam periode ini. Bukan jangkauan dan bukan skor pengaruh. “—” berarti angka tidak tersedia, bukan nol.</p>
+      <p className="rp-note">“—” berarti angka tidak tersedia.</p>
     </section>
   </Sheet>;
 }
@@ -325,14 +324,13 @@ function SourcesPage({ page, frame }) {
  * accounts name on their profile. Neither is where a post was written, and the page says so twice. */
 function PlacesPage({ page, frame }) {
   const { places } = frame.data, accounts = places.accounts;
-  const lede = 'Provinsi yang disebut dalam judul dan teks posting. Ini tempat yang dibicarakan, bukan lokasi penulis.';
-  if (!places.named) return <Sheet page={page} frame={frame} title={page.title} lede={lede}><Empty>Belum ada posting yang menyebut provinsi, kota atau kabupaten pada periode ini.</Empty></Sheet>;
+  const lede = null;
+  if (!places.named) return <Sheet page={page} frame={frame} title={page.title} lede={lede}><Empty>Belum ada tempat yang disebut.</Empty></Sheet>;
   const top = places.rows.slice(0, 3).map(row => `${row.name} ${formatCount(row.count)}`).join(', ');
   return <Sheet page={page} frame={frame} title={page.title} lede={lede}>
     <section className="rp-block rp-block-first">
       <figure className="rp-map">
         <RegionMiniMap rows={places.map} label={`Peta Indonesia: ${places.provinces} dari 34 provinsi disebut. Terbanyak: ${top}.`} />
-        <figcaption>Makin gelap, makin banyak posting yang menyebut provinsi itu. Lingkaran menunjukkan jumlahnya.</figcaption>
       </figure>
     </section>
     <section className="rp-block">
@@ -341,15 +339,15 @@ function PlacesPage({ page, frame }) {
         <thead><tr><th scope="col" className="rp-cell-rank">No.</th><th scope="col">Provinsi</th><th scope="col" className="rp-num">Posting</th><th scope="col" className="rp-num">Bagian</th><th scope="col">Nama yang disebut</th></tr></thead>
         <tbody>{places.rows.map((row, index) => <tr key={row.code}><td className="rp-cell-rank">{index + 1}</td><th scope="row">{row.name}</th><td className="rp-num"><strong>{formatCount(row.count)}</strong></td><td className="rp-num">{row.share}%</td><td>{row.names}</td></tr>)}</tbody>
       </table>
-      <p className="rp-note">{formatCount(places.named)} dari {formatCount(places.total)} posting menyebut tempat; satu posting bisa menyebut lebih dari satu provinsi. Nama media dan nama akun tidak dihitung. Garis batas 2017, peta dasar © kontributor OpenStreetMap lewat geoBoundaries (ODbL).</p>
+      <p className="rp-note">{formatCount(places.named)} dari {formatCount(places.total)} posting menyebut tempat. Peta dasar © OpenStreetMap/geoBoundaries (ODbL).</p>
     </section>
     <section className="rp-block">
       <h3>Akun X menurut lokasi di profilnya</h3>
       {accounts.rows.length ? <table className="rp-table rp-table-tight">
         <thead><tr><th scope="col">Provinsi</th><th scope="col" className="rp-num">Akun</th><th scope="col">Lokasi yang ditulis</th></tr></thead>
         <tbody>{accounts.rows.map(row => <tr key={row.code}><th scope="row">{row.name}</th><td className="rp-num"><strong>{formatCount(row.count)}</strong></td><td>{row.names}</td></tr>)}</tbody>
-      </table> : <Empty>{!accounts.total ? 'Tidak ada akun X pada periode ini.' : accounts.unasked === accounts.total ? 'Lokasi profil akun X pada periode ini belum diperiksa.' : 'Belum ada akun X yang menulis lokasi profil yang menyebut provinsi.'}</Empty>}
-      {accounts.total > 0 && <p className="rp-note">{formatCount(accounts.named)} dari {formatCount(accounts.total)} akun X menulis lokasi yang bisa dipetakan{accounts.unasked > 0 ? `; ${formatCount(accounts.unasked)} akun belum diperiksa` : ''}. Lokasi profil adalah keterangan pemilik akun, bukan posisi saat memposting.</p>}
+      </table> : <Empty>{!accounts.total ? 'Tidak ada akun X pada periode ini.' : accounts.unasked === accounts.total ? 'Lokasi profil akun X pada periode ini belum diperiksa.' : 'Belum ada lokasi profil.'}</Empty>}
+      {accounts.total > 0 && <p className="rp-note">{formatCount(accounts.named)} dari {formatCount(accounts.total)} akun X menulis lokasi yang bisa dipetakan{accounts.unasked > 0 ? `; ${formatCount(accounts.unasked)} akun belum diperiksa` : ''}</p>}
     </section>
   </Sheet>;
 }
@@ -366,7 +364,7 @@ function Metrics({ metrics, platform }) {
 
 function PostsPage({ page, frame }) {
   const { data } = frame, shown = Math.min(maxTopPosts, frame.report.topPosts.length);
-  if (!page.posts.length) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting pada periode ini untuk diperingkat.</Empty></Sheet>;
+  if (!page.posts.length) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting.</Empty></Sheet>;
   return <Sheet page={page} frame={frame} title={page.title}
     lede={page.part === 1 ? `${formatCount(shown)} posting dengan interaksi terbanyak dari ${formatCount(data.total)} posting pada periode ini.` : `Peringkat ${page.rank} sampai ${page.rank + page.posts.length - 1}.`}>
     <ol className="rp-posts">{page.posts.map((post, index) => {
@@ -390,9 +388,9 @@ function PostsPage({ page, frame }) {
 
 function NarrativesPage({ page, frame }) {
   const { groups } = frame.data;
-  if (!groups.rows.length) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada konten yang diulang oleh lebih dari satu posting pada periode ini.</Empty></Sheet>;
+  if (!groups.rows.length) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada konten berulang.</Empty></Sheet>;
   return <Sheet page={page} frame={frame} title={page.title}
-    lede={`${groups.rows.length < groups.total ? `${formatCount(groups.rows.length)} kelompok terbesar dari ${formatCount(groups.total)}` : `${formatCount(groups.total)}`} kelompok posting yang isinya sama atau sangat mirip, diurutkan dari yang paling banyak diulang.`}>
+    lede={`${groups.rows.length < groups.total ? `${formatCount(groups.rows.length)} kelompok terbesar dari ${formatCount(groups.total)}` : `${formatCount(groups.total)}`} kelompok.`}>
     <ol className="rp-groups">{groups.rows.map((group, index) => <li key={group.id}>
       <span className="rp-rank">{index + 1}</span>
       <div>
@@ -406,7 +404,7 @@ function NarrativesPage({ page, frame }) {
         </dl>
       </div>
     </li>)}</ol>
-    <p className="rp-note">“Dibagikan” adalah berapa kali konten itu dibagikan menurut platform. Angka itu dihitung sekali untuk tiap konten dan tidak ditambahkan ke interaksi, karena sebuah repost tidak memiliki bagikan sendiri. “—” berarti angka tidak tersedia, bukan nol.</p>
+    <p className="rp-note">“Dibagikan” tidak ditambahkan ke interaksi. “—” berarti angka tidak tersedia.</p>
   </Sheet>;
 }
 
@@ -418,7 +416,7 @@ function MethodPage({ page, frame }) {
   const listed = report.sourceCoverage.filter(row => row.platform !== 'unknown' || row.count > 0);
   const rows = listed.filter(row => row.count > 0), empty = listed.filter(row => !row.count);
   const opinion = data.opinion;
-  return <Sheet page={page} frame={frame} title={page.title} lede="Yang dimuat laporan ini, seberapa banyak yang sudah dianalisis, dan hal yang perlu diingat saat membaca angkanya.">
+  return <Sheet page={page} frame={frame} title={page.title} >
     <dl className="rp-facts rp-facts-wide">
       <div><dt>Project</dt><dd>{report.topic.label}</dd></div>
       <div><dt>Kata kunci</dt><dd className="rp-clamp" title={report.topic.query || undefined}>{report.topic.query || 'Tidak tersedia'}</dd></div>
@@ -451,13 +449,13 @@ function MethodPage({ page, frame }) {
     <section className="rp-block rp-block-tight">
       <h3>Batasan</h3>
       <ul className="rp-limits">
-        <li>Laporan memuat posting yang tersimpan di PULSE untuk kata kunci project ini, bukan seluruh percakapan di tiap platform. Hari teramai adalah hari dengan posting terbanyak dalam data tersimpan.</li>
-        <li>Sentimen menilai nada teks, bukan dukungan politik. Sindiran, kutipan, dan konteks dapat terbaca keliru.</li>
-        <li>Posting dan komentar yang belum dianalisis tidak dianggap netral. Setiap persentase dihitung dari yang sudah dianalisis.</li>
-        <li>Interaksi adalah suka, komentar, dan bagikan yang teramati saat data diambil. Tayangan bukan jumlah orang, dan laporan ini tidak memuat perkiraan jangkauan.</li>
-        <li>Angka yang tidak dikirim sumber ditulis “—”, bukan nol.{data.undated > 0 ? ` ${formatCount(data.undated)} posting tanpa tanggal terbit tidak masuk grafik tren.` : ''}</li>
-        {summary && <li>Ringkasan eksekutif dirangkai AI dari posting dan komentar tersimpan. Periksa buktinya di PULSE sebelum dikutip.</li>}
-        <li>Laporan ini tidak memeriksa kebenaran klaim di dalam posting.</li>
+        <li>Hanya posting tersimpan di PULSE, bukan seluruh percakapan platform.</li>
+        <li>Sentimen menilai nada teks, bukan dukungan politik.</li>
+        <li>Yang belum dianalisis tidak dihitung netral.</li>
+        <li>Tayangan bukan jumlah orang; tidak ada perkiraan jangkauan.</li>
+        <li>“—” berarti angka tidak tersedia.</li>
+        {summary && <li>Ringkasan ditulis AI; periksa buktinya sebelum dikutip.</li>}
+        <li>Kebenaran klaim tidak diperiksa.</li>
       </ul>
     </section>
   </Sheet>;

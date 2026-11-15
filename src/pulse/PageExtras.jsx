@@ -3,6 +3,7 @@
 import {lazy,Suspense,useMemo,useState} from 'react';
 import {useLocation,useSearchParams} from 'react-router-dom';
 import AnalyticsPanel from './AnalyticsPanel';
+import InfoTip from './InfoTip';
 import NarrativePanel from './NarrativePanel';
 import AccountConcentration from './AccountConcentration';
 import WhoIsSpeaking from './WhoIsSpeaking';
@@ -43,12 +44,11 @@ export function NetworkNarratives({posts=[]}){
  const link=view=>pageLink(params,id,view);
  return <>
   <NarrativePanel narratives={r.narratives} onOpen={open} postsLink={link('posts')}/>
-  <AnalyticsPanel title="Penyebaran percakapan" description="Urutan publikasi paling awal yang tersedia pada setiap platform.">
+  <AnalyticsPanel label="Penyebaran percakapan" title={<span>Penyebaran percakapan <InfoTip label="Tentang urutan publikasi">Urutan waktu bukan bukti platform asal.</InfoTip></span>}>
    {r.platformTimeline.length?<ol className="po-spread">{r.platformTimeline.map(p=><li key={p.platform}><PlatformIcon platform={p.platform}/><strong>{platformLabel(p.platform)}</strong><span>Publikasi awal: {pulseDate(p.firstPublished)}{p.firstPublished&&!hasClock(p.firstPublished)&&' (hanya tanggal)'}</span><small>Pertama ditemukan: {pulseDate(p.firstObserved)}</small><PulseButton onClick={()=>open(platformLabel(p.platform),r.posts.filter(post=>post.platform===p.platform))}>{p.count} posting <PulseArrow/></PulseButton></li>)}</ol>:<PulsePanelEmpty title="Belum ada urutan publikasi">Belum ada posting dalam pilihan ini.</PulsePanelEmpty>}
-   {r.platformTimelineDateOnly>0&&<p className="po-panel-note">{formatCount(r.platformTimelineDateOnly)} posting hanya bertanggal tidak diurutkan menurut jam.</p>}
-   <p className="po-panel-note">Urutan waktu tidak membuktikan platform asal. Hubungan repost harus didukung tautan atau bukti langsung.</p>
+   {r.platformTimelineDateOnly>0&&<p className="po-panel-note">{formatCount(r.platformTimelineDateOnly)} posting hanya bertanggal.</p>}
   </AnalyticsPanel>
-  <section id="network-spread"><Suspense fallback={<AnalyticsPanel title="Sebaran tempat" description="Memuat peta…"><p className="po-empty" role="status">Memuat peta…</p></AnalyticsPanel>}><RegionSpreadSummary posts={r.posts} to={link('network') + '&focus=map'}/></Suspense></section>
+  <section id="network-spread"><Suspense fallback={<AnalyticsPanel title="Sebaran tempat"><p className="po-empty" role="status">Memuat peta…</p></AnalyticsPanel>}><RegionSpreadSummary posts={r.posts} to={link('network') + '&focus=map'}/></Suspense></section>
   <EvidenceSheet selection={selection} onClose={()=>setSelection(null)}/>
  </>;
 }
@@ -67,10 +67,10 @@ export function AccountsInsights({posts=[],topic,period}){
   <WhoIsSpeaking posts={posts} onOpen={open} sentimentFiltered={sentimentFiltered} mapLink={pageLink(params,id,'network',{focus:'map',layer:'accounts'})}/>
   <AccountConcentration posts={r.posts} onOpen={open}/>
   <div className="lay-grid">
-   <div className="lay-4"><AnalyticsPanel title="Sumber percakapan" description="Jumlah posting per platform, bukan estimasi audiens.">
+   <div className="lay-4"><AnalyticsPanel title="Sumber percakapan">
     {r.platforms.length?<PulseBreakdown total={r.posts.length} rows={r.platforms.map(row=>({key:row.platform,label:platformLabel(row.platform),value:row.count,color:platformColor(row.platform),leading:<PlatformIcon platform={row.platform} size={16}/>,onClick:()=>open(platformLabel(row.platform),r.posts.filter(p=>p.platform===row.platform))}))}/>:<PulsePanelEmpty>Belum ada sumber dalam pilihan ini.</PulsePanelEmpty>}
    </AnalyticsPanel></div>
-   <div className="lay-8 po-eng-stack"><AnalyticsPanel title="Rincian interaksi" description="Jenis interaksi pada posting dalam pilihan ini, beserta dua indikator turunannya." footer="Snapshot terakhir tiap posting. Metrik yang tidak dikirim sumber tidak dihitung sebagai nol, sehingga jumlah posting per metrik dapat berbeda."><PulseEngagement posts={r.posts}/></AnalyticsPanel></div>
+   <div className="lay-8 po-eng-stack"><AnalyticsPanel label="Rincian interaksi" title={<span>Rincian interaksi <InfoTip label="Tentang rincian interaksi">Metrik yang tidak dikirim sumber tidak dihitung nol.</InfoTip></span>}><PulseEngagement posts={r.posts}/></AnalyticsPanel></div>
   </div>
   <GrowthEvidence data={extra.growth} posts={r.posts} onOpen={open} loaded={extra.loaded}/>
   <EvidenceSheet selection={selection} onClose={()=>setSelection(null)}/>

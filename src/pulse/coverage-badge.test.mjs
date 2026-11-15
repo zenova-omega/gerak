@@ -44,7 +44,6 @@ test('thin data: the badge names the level and the share that set it, and is its
     const card = html.match(/<aside[^>]*class="pcv-card"[\s\S]*<\/aside>/)[0];
     assert.match(card, /role="tooltip"/);
     assert.match(text(card), /Terbatas: jam terbit ada pada 16% posting/);
-    assert.match(text(card), /menyebut angka mana yang bertumpu pada lebih sedikit posting, bukan mutu project/);
     assert.deepEqual(rowsOf(card), [
       'Platform Posting Dianalisis Interaksi Jam terbit',
       'Seluruh pilihan 6 100% 100% 16%',
@@ -83,7 +82,6 @@ test('the detail for Sumber & Cakupan adds the dated share and the full column n
       'X 1 100% 100% 100% 100%',
     ]);
     assert.match(full, /<th[^>]*scope="col"[^>]*data-lowest=""[^>]*><span class="pcv-long">Jam terbit ada<\/span><\/th>/, 'the share that set the level is marked');
-    assert.match(text(html), /Bertanggal dilaporkan dan tidak ikut menentukan tingkat/);
     assert.doesNotMatch(detail(thin, { compact: true }), /Bertanggal/);
   });
 });

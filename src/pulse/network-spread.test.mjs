@@ -19,7 +19,7 @@ const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 test('posts that carry a date without a clock are counted under the order of publication, in the words Jaringan already uses', async () => {
   const html = await spread([post('a', 'x', '2026-11-10T05:00:00Z'), post('b', 'instagram', '2026-11-09T00:00:00'), post('c', 'instagram', '2026-11-11')]);
-  assert.match(text(html), /2 posting hanya bertanggal tidak diurutkan menurut jam\./);
+  assert.match(text(html), /2 posting hanya bertanggal\./);
 });
 
 test('a channel whose earliest post has only a date is written as a date, and says so; no clock is invented', async () => {

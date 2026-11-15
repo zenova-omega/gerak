@@ -107,7 +107,7 @@ function usePreviewScale() {
  * says so when it was filed under older ones, or before rule versions were recorded. */
 export function ArchivedContext({ archive, onBack }) {
   return <p className="pr-archived-context" data-screen-only="" role="status">
-    <span>Menampilkan arsip <strong>{archive.title}</strong>, disimpan {pulseDate(archive.created_at)}. Angka, periode, dan platform mengikuti arsip itu, bukan data terkini.{recounted(archive.snapshot) && <span className="pr-archived-rules">Angka laporan ini dihitung ulang dengan aturan perhitungan terbaru.</span>}</span>
+    <span>Arsip <strong>{archive.title}</strong>, disimpan {pulseDate(archive.created_at)}.{recounted(archive.snapshot) && <span className="pr-archived-rules"> Dihitung ulang dengan aturan terbaru.</span>}</span>
     <PulseButton size="sm" onClick={onBack}>Kembali ke data terkini</PulseButton>
   </p>;
 }
@@ -145,9 +145,9 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
       setPdf({ status: 'done', text: `PDF tersimpan sebagai ${made.filename}${made.pages ? `, ${made.pages} halaman` : ''}.` });
     } catch (error) {
       if (error?.status === 503) {
-        setPdf({ status: 'print', text: 'Server ini belum dapat membuat PDF, jadi dialog cetak browser dibuka. Pilih “Simpan sebagai PDF” di sana.' });
+        setPdf({ status: 'print', text: 'PDF server belum tersedia; dialog cetak dibuka.' });
         setTimeout(() => window.print(), 150);   // after the line above is on screen: the dialog blocks the page
-      } else setPdf({ status: 'error', text: 'PDF belum berhasil dibuat. Coba lagi, atau tekan Cetak lalu pilih “Simpan sebagai PDF”.' });
+      } else setPdf({ status: 'error', text: 'PDF belum berhasil dibuat. Coba lagi atau tekan Cetak.' });
     }
   }
   function downloadJson() {
@@ -157,7 +157,7 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
       const anchor = document.createElement('a');
       anchor.href = url; anchor.download = `pulse-report-${report.generatedAt.replace(/[:.]/g, '-')}.json`;
       document.body.appendChild(anchor); anchor.click(); anchor.remove(); setDownloadError('');
-    } catch { setDownloadError('Unduhan belum berhasil. Coba unduh JSON kembali.'); }
+    } catch { setDownloadError('Unduhan belum berhasil.'); }
     finally { if (url) setTimeout(() => URL.revokeObjectURL(url), 1000); }
   }
 
@@ -165,7 +165,7 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
     {/* Only while the report is open: its sheets fill the paper, so the paper has no margin of its own. */}
     <style>{'@page{size:A4;margin:0}'}</style>
     <div className="pr-bar" data-screen-only="" role="group" aria-label="Tindakan laporan">
-      <p className="pr-bar-text" role="status" data-state={pdf.status}>{pdf.text || (pages.length ? <>{pages.length} halaman A4 untuk <strong>{covered}</strong>. Berkas PDF sama dengan pratinjau di bawah.</> : 'Semua bagian dimatikan, jadi belum ada halaman untuk diunduh.')}</p>
+      <p className="pr-bar-text" role="status" data-state={pdf.status}>{pdf.text || (pages.length ? <>{pages.length} halaman A4 · <strong>{covered}</strong></> : 'Tidak ada halaman.')}</p>
       <div className="pr-actions">
         {/* Stays focusable while it works, so the keyboard is not dropped; a second press does nothing. */}
         <PulseButton variant="primary" aria-disabled={busy || undefined} disabled={!pages.length} onClick={downloadPdf}>{busy
@@ -180,7 +180,7 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
     <details className="pr-more" data-screen-only="">
       <summary>Arsip dan data mentah</summary>
       <div className="pr-more-body">
-        <div className="pr-raw"><p>Angka di balik laporan ini sebagai berkas JSON, untuk diolah di tempat lain.</p><PulseButton onClick={downloadJson}>Unduh JSON</PulseButton></div>
+        <div className="pr-raw"><PulseButton onClick={downloadJson}>Unduh JSON</PulseButton></div>
         {downloadError && <p className="pr-error" role="alert">{downloadError}</p>}
         <ReportArchive topicId={topic.id} report={opened?.report || (analysisReady ? live : null)} onOpen={(value, archive) => { setOpened({ report: value, archive }); setPdf({ status: 'idle', text: '' }); }} />
       </div>
@@ -192,7 +192,7 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
         {pages.length
           // An archive is printed with sentences worked out from its own figures: a stored summary may be newer than it.
           ? <ReportPages rootRef={root} report={report} pages={pages} data={facts} summary={opened ? null : summary} brand={settings.brand} />
-          : <p className="pr-none" data-screen-only="">Semua bagian dimatikan. Nyalakan setidaknya satu bagian di “Susunan laporan” untuk membuat laporan.</p>}
+          : <p className="pr-none" data-screen-only="">Semua bagian dimatikan.</p>}
       </section>
     </div>
   </div>;

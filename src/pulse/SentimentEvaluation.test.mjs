@@ -32,7 +32,7 @@ test('evaluation renders honest empty, error, matrix and escaped evidence states
     assert.match(html, /3 label manual/);
     assert.match(html, /scope="col"/);
     assert.match(html, /scope="row"/);
-    assert.match(html, /held-out/);
+    assert.match(html, /aria-label="Tentang evaluasi"/);
     assert.match(html, /&lt;script&gt;/);
     assert.doesNotMatch(html, /<script>/);
     const zero = render({data:{reviewed_count:1,paired_count:1,matches:0,agreement:0,confusion_matrix:{},samples:[]}});

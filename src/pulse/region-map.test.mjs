@@ -127,9 +127,7 @@ test('a province is drawn darker the more it is named, and the map can be brough
 
 test('the reader is told what the map shows and what it does not', async () => {
   const html = await render({ posts });
-  assert.match(html, /bukan lokasi penulis/);
-  assert.match(html, /Posting yang tidak menyebut tempat tidak digambar/);
-  assert.match(html, /OpenStreetMap/);
+  assert.match(html, /aria-label="Tentang peta"/);
   assert.match(html, /<ul[^>]*class="rm-legend"/);
   for (const label of ['Makin gelap, makin banyak posting', 'Baru hari ini', 'Belum disebut']) assert.match(html, new RegExp(`class="rm-legend"[\\s\\S]*?${label}`));
 });
@@ -165,10 +163,10 @@ test('the Java and Bali view draws the same data closer', async () => {
 
 test('posts that name no place, or carry no date, leave a plain explanation and no empty map', async () => {
   const none = await render({ posts: [post('x', '2026-11-03T05:00:00Z', 'Pernyataan resmi')] });
-  assert.match(none, /Belum ada posting yang menyebut provinsi, kota atau kabupaten/);
+  assert.match(none, /Belum ada tempat yang disebut\./);
   assert.doesNotMatch(none, /class="rm-bubble"|type="range"|<table/);
   const undated = await render({ posts: [{ id: 'y', title: 'Demo di Bandung', metrics: {} }] });
-  assert.match(undated, /Belum ada posting bertanggal/);
+  assert.match(undated, /Belum ada posting bertanggal\./);
   assert.doesNotMatch(undated, /<svg[^>]*role="img"/);
   const mixed = await render({ posts: [...posts, { id: 'z', title: 'Demo di Medan', metrics: {} }] });
   assert.match(mixed, /1 posting yang menyebut tempat tidak bertanggal dan tidak masuk garis waktu/);
@@ -217,7 +215,6 @@ test('the account view pins X accounts on the province their profile names, with
   assert.match(html, /<b[^>]*class="rm-pin-count"[^>]*>2<\/b>/, 'and the pin counts the accounts there');
   assert.deepEqual(ranked(html), ['Jawa Barat 2 akun sejak 3 Nov', 'Jawa Timur 1 akun sejak 6 Nov']);
   assert.match(html, /<svg[^>]*role="img"[^>]*aria-label="Peta Indonesia: 2 dari 34 provinsi punya akun X berlokasi profil sampai 7 Nov 2026\. Terbanyak: Jawa Barat 2, Jawa Timur 1\."/);
-  assert.match(html, /bukan posisi saat memposting/);
   assert.match(html, /1 akun X belum diperiksa lokasinya/);
   assert.match(html, /1 akun menulis lokasi yang tidak menyebut provinsi/);
   // The other view is one press away and keeps the same day.
@@ -249,11 +246,11 @@ test('the numbers of the account view are a table too', async () => {
 
 test('an account view without pins says why, and the other view stays in reach', async () => {
   const unasked = await render({ posts: [xpost('1', '2026-11-03T05:00:00Z', '@a', undefined), { ...post('2', '2026-11-04T05:00:00Z', 'Demo di Bandung'), platform: 'news' }], initialLayer: 'accounts' });
-  assert.match(unasked, /Lokasi profil 1 akun X pada rentang ini belum diperiksa/);
+  assert.match(unasked, /Memeriksa lokasi 1 akun X/);
   assert.doesNotMatch(unasked, /class="rm-pin"|<table/);
   assert.match(group(unasked, 'Isi peta'), /Tempat disebut/);
   const none = await render({ posts: [xpost('1', '2026-11-03T05:00:00Z', '@a', 'Bumi')], initialLayer: 'accounts' });
-  assert.match(none, /Belum ada akun X yang menulis lokasi profil yang menyebut provinsi/);
+  assert.match(none, /Belum ada lokasi profil yang bisa dipetakan/);
   const other = await render({ posts: [{ ...post('2', '2026-11-04T05:00:00Z', 'Demo di Bandung'), platform: 'news' }], initialLayer: 'accounts' });
-  assert.match(other, /Belum ada akun X pada rentang ini/);
+  assert.match(other, /Belum ada akun X\./);
 });

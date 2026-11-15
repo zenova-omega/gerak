@@ -26,13 +26,13 @@ const cellNames = html => [...html.matchAll(/class="phg-cell"[^>]*aria-label="([
 test('no post in the selection: nothing is drawn and the panel says so', async () => {
   const html = await render({ posts: [] });
   assert.doesNotMatch(html, /<table|phg-legend/);
-  assert.match(text(html), /Belum ada posting pada pilihan ini/);
+  assert.match(text(html), /Belum ada posting\./);
 });
 
 test('posts without a clock: no grid, and the count of date-only and undated posts instead', async () => {
   const html = await render({ posts: [at('d1', '2026-11-05T00:00:00'), at('d2', '2026-11-06'), at('u1', null)] });
   assert.doesNotMatch(html, /<table|phg-legend/);
-  assert.match(text(html), /Tidak ada posting yang membawa jam terbit pada pilihan ini/);
+  assert.match(text(html), /Tidak ada posting dengan jam terbit/);
   assert.match(text(html), /2 posting hanya bertanggal dan 1 tanpa tanggal/);
 });
 
@@ -45,7 +45,7 @@ test('a few posts on one day: one row for that day, never a weekday row', async 
   assert.equal(names[9], 'Selasa, 10 Nov, pukul 09.00: 1 posting');
   assert.equal(names[0], 'Selasa, 10 Nov, pukul 00.00: 0 posting');
   assert.match(text(html), /Paling ramai: Selasa, 10 Nov pukul 15\.00 WIB, 2 posting/);
-  assert.match(text(html), /3 dari 3 posting membawa jam terbit/);
+  assert.match(text(html), /3 dari 3 posting punya jam terbit/);
   assert.doesNotMatch(text(html), /hanya bertanggal|tanpa tanggal/);
   // The key says in numbers what each step of the one hue stands for; with a largest cell of 2 there are two steps.
   const legend = html.match(/<ul[^>]*class="phg-legend"[\s\S]*?<\/ul>/)[0];
@@ -67,9 +67,8 @@ test('more than 14 days: seven weekday rows from Monday, hours of the zone, a ke
   assert.deepEqual(heads.slice(1, 25).filter(cell => !/pu-sr/.test(cell)).map(text), ['00', '03', '06', '09', '12', '15', '18', '21']);
   assert.match(html, /<caption[^>]*>[^<]*per hari dan jam terbit \(WIB\)/);
   assert.match(text(html), /Paling ramai: Senin pukul 10\.00 WIB, 3 posting/);
-  assert.match(text(html), /Tiap baris menggabungkan hari yang sama dari 2–16 Nov 2026/);
-  assert.match(text(html), /5 dari 8 posting membawa jam terbit/);
-  assert.match(text(html), /2 posting hanya bertanggal dan 1 tanpa tanggal tidak masuk kisi/);
+  assert.match(text(html), /5 dari 8 posting punya jam terbit/);
+  assert.match(text(html), /2 posting hanya bertanggal dan 1 tanpa tanggal tidak masuk/);
   assert.deepEqual([...html.matchAll(/<td[^>]*class="phg-sum"[^>]*>([^<]*)</g)].map(match => match[1]), ['3', '0', '1', '0', '0', '0', '1']);
 });
 
@@ -82,7 +81,6 @@ test('with a way to open posts each cell is a button and the grid is one stop fo
   const stops = [...html.matchAll(/<button[^>]*class="phg-cell"[^>]*>/g)].map(match => match[0]).filter(tag => / tabindex="0"/.test(tag));
   assert.equal(stops.length, 1);
   assert.match(stops[0], /aria-label="Senin, pukul 10\.00: 3 posting"/, 'the keyboard starts on the busiest cell');
-  assert.match(text(html), /Pilih sel untuk melihat postingnya/);
 });
 
 test('in the word panel of a project page the grid takes the place of the 24 bars, with the same range filter', async () => {
@@ -91,7 +89,7 @@ test('in the word panel of a project page the grid takes the place of the 24 bar
     assert.doesNotMatch(html, /pi-hour-bar|pi-hour-chart|Lihat hitungan 24 jam/);
     assert.match(html, /<table[^>]*class="phg-grid"/);
     assert.match(html, /aria-label="Rentang waktu Jam publikasi"/);
-    assert.match(html, /<h3>Kapan posting dipublikasikan\?<\/h3><p>Jumlah posting per hari dan jam terbit, dalam WIB\.<\/p>/);
+    assert.match(html, /<h3>Kapan posting dipublikasikan\?<\/h3>/);
     // Without the switch (the old Command Center view) the bars stay as they were.
     const old = renderToStaticMarkup(React.createElement(Panel, { posts: threeWeeks, ranged: false }));
     assert.equal((old.match(/class="pi-hour-bar"/g) || []).length, 24);

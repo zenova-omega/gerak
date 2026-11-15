@@ -22,6 +22,5 @@ export default function PostQuickFilters({ posts, filters, onApply }) {
         <span className={'pm-sentiment-dot ' + key} aria-hidden="true" /><span>{label}</span><small>{sentiments[key]}</small>
       </label>)}
     </fieldset>
-    <p className="pm-rail-note">Jumlah mengikuti filter lain yang aktif. “Belum dianalisis” tidak berarti netral.</p>
   </aside>;
 }

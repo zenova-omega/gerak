@@ -8,9 +8,9 @@ test('emotion UI separates missing results from observed zero and exposes source
  try{
   const {default:Panel}=await server.ssrLoadModule('/src/pulse/EmotionAnalytics.jsx');
   const missing=renderToStaticMarkup(React.createElement(Panel,{posts:[{id:'a',metrics:{sentiment:{label:'negative'}}}]}));
-  assert.match(missing,/Hasil emosi belum tersedia/);assert.match(missing,/1 posting belum dianalisis/);assert.doesNotMatch(missing,/aria-label="Marah:/);
+  assert.match(missing,/Belum ada hasil emosi/);assert.match(missing,/1 posting belum dianalisis/);assert.doesNotMatch(missing,/aria-label="Marah:/);
   const result=renderToStaticMarkup(React.createElement(Panel,{posts:[{id:'a',metrics:{emotion:{label:'anger',confidence:.9,reason:'Nada marah'}}}]}));
-  assert.match(result,/aria-label="Marah: 1 posting. Lihat sumber"/);assert.match(result,/100%/);assert.doesNotMatch(result,/Hasil emosi belum tersedia/);
+  assert.match(result,/aria-label="Marah: 1 posting. Lihat sumber"/);assert.match(result,/100%/);assert.doesNotMatch(result,/Belum ada hasil emosi/);
  }finally{await server.close();}
 });
 
@@ -48,7 +48,7 @@ test('the emotion chart names the installation zone of its days (day_v1), never 
   try {
    const posts = [{ id: 'a', published_at: '2026-11-10T05:00:00Z', platform: 'x', author: 'akun_a', text: 'Isi a', metrics: { emotion: { label: 'anger', confidence: 0.9, reason: 'alasan' } } }];
    const html = renderToStaticMarkup(React.createElement(Panel, { posts }));
-   assert.match(html, /per hari \(WIT\)/);
+   assert.match(html, /tanggal WIT/);
    assert.match(html, /tanggal WIT/);
    assert.match(html, /Data harian · WIT/);
    assert.doesNotMatch(html, /\bWIB\b/);

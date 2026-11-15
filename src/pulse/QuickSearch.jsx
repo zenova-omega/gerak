@@ -13,13 +13,12 @@ export default function QuickSearch() {
     let active = true;
     api.get('/admin/pulse/search', { q: query }).then(data => {
       if (active) setState({ query, data });
-    }).catch(error => { if (active) setState({ query, error: error.status ? error.message : 'Server tidak terhubung. Coba lagi.' }); });
+    }).catch(error => { if (active) setState({ query, error: error.status ? error.message : 'Tidak terhubung.' }); });
     return () => { active = false; };
   }, [query]);
   const pending = query.length >= 2 && state.query !== query;
   return <section className="ps-quick-search">
     <h1>Pencarian cepat</h1>
-    <p>Cari caption, judul, atau akun dari data yang tersedia, tanpa membuat project.</p>
     <form className="pm-mentions-search" onSubmit={event => {
       event.preventDefault();
       setParams({ q: new FormData(event.currentTarget).get('q').trim() });
@@ -27,11 +26,10 @@ export default function QuickSearch() {
       <label htmlFor="pulse-global-query">Kata atau frasa<input key={query} id="pulse-global-query" name="q" type="search" defaultValue={query} minLength={2} maxLength={200} required placeholder="Contoh: penyadapan presiden" /></label>
       <PulseButton type="submit" variant="primary">Cari data tersimpan</PulseButton>
     </form>
-    {!query && <PulseNotice>Pencarian frasa literal, bukan pencarian seluruh internet. Hasil yang sama dari beberapa project ditampilkan satu kali.</PulseNotice>}
-    {pending && <p role="status">Mencari posting tersimpan…</p>}
+    {pending && <p role="status">Mencari…</p>}
     {!pending && state.query === query && state.error && <PulseNotice tone="warning" role="alert">{state.error} <PulseButton onClick={() => window.location.reload()}>Coba lagi</PulseButton></PulseNotice>}
     {!pending && state.query === query && state.data && <>
-      <p role="status">{state.data.posts.length} posting unik ditemukan{state.data.truncated ? '. Hasil dibatasi pada 500 rekaman terbaru; gunakan frasa lebih spesifik.' : '.'}</p>
+      <p role="status">{state.data.posts.length} posting unik ditemukan{state.data.truncated ? ' (500 terbaru).' : '.'}</p>
       <PostFeed key={query} posts={state.data.posts} />
     </>}
   </section>;

@@ -22,7 +22,7 @@ import { insightView, periodBadge, scopeDiffers } from './summaryModel';
 import './ds/ai-insights.css';
 
 const summaryPath = topicId => '/admin/pulse/topics/' + encodeURIComponent(topicId) + '/summary';
-const WAITING = 'Membaca posting dan komentar, lalu menulis insight. Biasanya sekitar satu menit, paling lama tiga menit.';
+const WAITING = 'Menunggu 1–3 menit…';
 
 const platformText = platforms => (platforms?.length ? new Intl.ListFormat('id', { style: 'long', type: 'conjunction' }).format([...platforms].sort().map(platformLabel)) : 'semua platform');
 const sentenceCase = text => text.charAt(0).toUpperCase() + text.slice(1);
@@ -83,11 +83,11 @@ function PeriodCard({ projectName, scope }) {
 export function InsightsView({ topicId, projectName = '', period = {}, platforms = null, state, busy = false, error = '', onMake, onRetry, chart = null }) {
   const meta = pageMeta.insights;
   const head = <PulsePageHead icon={meta.icon} title={meta.title} tagline={meta.tagline} guide={meta.guide} />;
-  if (!topicId) return <section className="ain-page">{head}<PulsePanelEmpty title="Pilih project terlebih dahulu">AI Insights ditulis dari posting tersimpan satu project. Pilih project di bagian atas halaman.</PulsePanelEmpty></section>;
+  if (!topicId) return <section className="ain-page">{head}<PulsePanelEmpty title="Pilih project terlebih dahulu">Pilih project di bagian atas halaman.</PulsePanelEmpty></section>;
   if (!state) return <section className="ain-page" aria-busy="true">{head}<PulseSkeleton label="Memuat insight tersimpan…" stats={0} panels={1} rows={3} /></section>;
   if (state.failed) return <section className="ain-page">{head}{state.missing
-    ? <PulsePanelEmpty title="Project tidak tersedia">Pilih project lain melalui picker di atas.</PulsePanelEmpty>
-    : <PulsePanelEmpty title="Insight tersimpan tidak dapat dimuat" action={<PulseButton onClick={onRetry}>Coba lagi</PulseButton>}>Periksa koneksi ke server PULSE, lalu coba lagi.</PulsePanelEmpty>}</section>;
+    ? <PulsePanelEmpty title="Project tidak tersedia">Pilih project lain.</PulsePanelEmpty>
+    : <PulsePanelEmpty title="Insight tersimpan tidak dapat dimuat" action={<PulseButton onClick={onRetry}>Coba lagi</PulseButton>}>Periksa koneksi, lalu coba lagi.</PulsePanelEmpty>}</section>;
 
   const summary = state.summaries?.insights || null;
   const posts = state.posts_now || 0, floor = state.min_posts || 30;
@@ -97,26 +97,26 @@ export function InsightsView({ topicId, projectName = '', period = {}, platforms
   const chosen = { from: period.from || '', to: period.to || '', platforms };
   // Whole-project insights can be compared with the project as it is now; a narrowed scope cannot, so it stays silent.
   const newer = summary && !differs && !scope.from && !scope.to && !scope.platforms && !scope.truncated ? posts - (scope.posts || 0) : 0;
-  const blocked = !state.available ? 'AI Insights belum diaktifkan di instalasi ini. Hubungi administrator organisasi.' : !posts ? 'Belum ada posting tersimpan untuk project ini.' : '';
+  const blocked = !state.available ? 'AI Insights belum aktif. Hubungi administrator.' : !posts ? 'Belum ada posting tersimpan untuk project ini.' : '';
   const action = label => <PulseButton variant={summary && !differs ? 'secondary' : 'primary'} disabled={Boolean(blocked)} busy={busy} busyLabel="Menulis insight…" onClick={onMake}>{summary ? <RefreshCw /> : <Sparkles />}{label}</PulseButton>;
 
   return <section className="ain-page" aria-busy={busy || undefined}>
     {head}
     <div className="ain-notices">
-      {blocked && summary && <PulseNotice>{blocked} Insight yang sudah tersimpan tetap bisa dibaca.</PulseNotice>}
-      {posts > 0 && posts < floor && <PulseNotice tone="warning">Baru {formatCount(posts)} posting terkumpul. Insight lebih bisa diandalkan setelah pengumpulan berjalan lebih lama.</PulseNotice>}
-      {busy && summary && <div className="ain-writing"><PulseLoader inline label={WAITING + ' Insight sebelumnya tetap tampil sampai yang baru selesai.'} /></div>}
+      {blocked && summary && <PulseNotice>{blocked}</PulseNotice>}
+      {posts > 0 && posts < floor && <PulseNotice tone="warning">Baru {formatCount(posts)} posting terkumpul.</PulseNotice>}
+      {busy && summary && <div className="ain-writing"><PulseLoader inline label={WAITING} /></div>}
       {error && <p className="ain-error" role="alert">{error}</p>}
     </div>
     <div className="ain-layout">
       <PeriodCard projectName={projectName} scope={summary ? scope : chosen} />
       {summary ? <Card className="ain-card ain-main">
         <CardHeader className="ain-head">
-          {differs && <div className="ain-caution ain-differs" role="status"><p>Insight ini ditulis untuk {scopeText(scope)}. Bilah project sekarang memilih {scopeText(chosen)}.</p></div>}
+          {differs && <div className="ain-caution ain-differs" role="status"><p>Insight untuk {scopeText(scope)}; bilah project: {scopeText(chosen)}.</p></div>}
           {newer > 0 && <div className="ain-caution" role="status"><p>{formatCount(newer)} posting baru belum masuk insight ini.</p></div>}
           <CardTitle className="ain-headline">{view.headline || 'Insight project ini'}</CardTitle>
           <div className="ain-meta">
-            <p>Ditulis {pulseDate(summary.created_at)} dari {formatCount(scope.posts)} posting{scope.truncated ? ' terbaru' : ''} dan {formatCount(scope.comments)} komentar.{scope.truncated ? ' Posting yang lebih lama tidak dibaca.' : ''}</p>
+            <p>Ditulis {pulseDate(summary.created_at)} dari {formatCount(scope.posts)} posting{scope.truncated ? ' terbaru' : ''} dan {formatCount(scope.comments)} komentar.</p>
             {action('Perbarui insight')}
           </div>
         </CardHeader>
@@ -127,14 +127,14 @@ export function InsightsView({ topicId, projectName = '', period = {}, platforms
               {item.body.length > 0 && ' '}
               {item.body.map((part, i) => (part.number ? <Reference key={i} number={part.number} source={view.evidence[part.number - 1].source} /> : part.text))}
             </p></li>)}</ol>
-            : <p className="ain-reason">Insight tersimpan tidak berisi butir yang bisa ditampilkan. Tekan Perbarui insight untuk menulis ulang.</p>}
+            : <p className="ain-reason">Tidak ada butir insight. Tekan Perbarui insight.</p>}
           <Evidence rows={view.evidence} />
         </CardContent>
-        <CardFooter><p className="ain-note">Dirangkai AI dari posting dan komentar tersimpan. Periksa bukti sebelum dipakai.</p></CardFooter>
+        
       </Card> : <Card className="ain-card ain-main">
         <CardHeader>
           <CardTitle className="ain-empty-title">Belum ada insight untuk project ini</CardTitle>
-          <CardDescription className="ain-empty-text">AI menulis satu judul dan tiga sampai lima insight dari posting dan komentar tersimpan, untuk periode dan platform yang dipilih di bilah project. Tiap insight membawa bukti yang bisa dibuka. Insight hanya ditulis saat diminta, lalu disimpan sampai Anda memperbaruinya.</CardDescription>
+          
         </CardHeader>
         <CardContent className="ain-empty-action">
           {action('Buat insight')}
@@ -176,11 +176,11 @@ function ProjectInsights({ topicId, chart }) {
       const made = await api.post(summaryPath(topicId), body);
       setState(current => ({ ...current, summaries: { ...(current?.summaries || {}), insights: made } }));
     } catch (failure) {
-      setError(failure.status === 503 ? 'AI Insights belum tersedia di instalasi ini.'
-        : failure.status === 409 ? 'Belum ada posting pada periode dan platform ini. Ubah pilihan di bilah project, lalu coba lagi.'
+      setError(failure.status === 503 ? 'AI Insights belum tersedia.'
+        : failure.status === 409 ? 'Belum ada posting pada pilihan ini.'
         : failure.status === 404 ? 'Project tidak ditemukan.'
         : failure.status ? `Insight belum berhasil ditulis.${kept} Coba lagi.`
-        : `Tidak dapat terhubung ke server PULSE.${kept}`);
+        : `Tidak dapat terhubung.${kept}`);
     } finally { setBusy(false); }
   }
   return <InsightsView topicId={topicId} projectName={topics.topics.find(topic => topic.id === topicId)?.label || ''} period={period} platforms={platforms}

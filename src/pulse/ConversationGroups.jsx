@@ -137,7 +137,7 @@ export default function ConversationGroups({ posts = [], period = {}, platforms 
   const showMore = () => { if (page.remaining <= groupPageSize) status.current?.focus(); setPaging({ signature, pages: (paging.signature === signature ? paging.pages : 1) + 1 }); };
   const lead = leaders.find(group => group.id === openLead);
   useEffect(() => { if (openLead) leadPosts.current?.scrollIntoView({ block: 'nearest' }); }, [openLead]);
-  const tip = <InfoTip label="Tentang kelompok percakapan">Kelompok adalah dua posting atau lebih yang teksnya mirip; teks yang ditampilkan berasal dari posting paling awal. Kemiripan teks bukan bukti koordinasi. Periode dan platform mengikuti pilihan project, akun dihitung per platform, dan posting yang berdiri sendiri tetap ada di Posting individual.</InfoTip>;
+  const tip = <InfoTip label="Tentang kelompok percakapan">Teks mirip bukan bukti koordinasi.</InfoTip>;
 
   return <section className="pcg" aria-label="Kelompok percakapan">
     <AnalyticsPanel className="pcg-lead" label="Paling banyak diulang" title={<>Paling banyak diulang {tip}</>} description={<>{emphasise(groupTotalsText(built.totals))}.</>}>
@@ -153,11 +153,11 @@ export default function ConversationGroups({ posts = [], period = {}, platforms 
           </article>,
           open && lead && <div className="pcg-lead-posts" key={group.id + ':posts'} ref={leadPosts}><GroupPosts group={lead} id={id} label={`Posting dalam kelompok peringkat ${index + 1}`} heading={`Peringkat ${index + 1}, ${formatCount(lead.size)} posting.`} /></div>,
         ]; })}
-      </div> : <PulsePanelEmpty title="Belum ada teks yang diulang">{built.totals.posts ? 'Setiap posting pada pilihan ini berdiri sendiri. Periksa di Posting individual, atau perluas periode dan platform project.' : 'Belum ada posting pada periode dan platform project ini.'}</PulsePanelEmpty>}
+      </div> : <PulsePanelEmpty title="Belum ada teks yang diulang">{built.totals.posts ? 'Setiap posting berdiri sendiri.' : 'Belum ada posting.'}</PulsePanelEmpty>}
     </AnalyticsPanel>
 
     {/* With no more groups than the lead shows, a second list would only repeat it. */}
-    {result.total > leaders.length && <AnalyticsPanel className="pcg-list" title="Semua kelompok" description="Teks serupa yang muncul dalam dua posting atau lebih.">
+    {result.total > leaders.length && <AnalyticsPanel className="pcg-list" title="Semua kelompok">
       <div className="pcg-filter" role="search" aria-label="Saring kelompok" data-chips={showChips ? '' : undefined}>
         <div className="pcg-filter-top">
           <label className="pu-search pcg-search"><Search aria-hidden="true" /><span className="pu-sr">Cari kelompok</span><input type="search" value={filters.query} maxLength={80} onChange={event => patch({ query: event.target.value })} placeholder="Cari teks atau nama akun" /></label>
@@ -180,7 +180,7 @@ export default function ConversationGroups({ posts = [], period = {}, platforms 
         <div className="pcg-result"><p ref={status} tabIndex={-1} role="status"><strong>{formatCount(result.groups.length)}</strong> dari {formatCount(result.total)} kelompok{page.remaining > 0 && <span> · {formatCount(page.visible.length)} ditampilkan</span>}</p>{filtered && page.visible.length > 0 && <PulseButton variant="quiet" size="sm" onClick={clear}><X aria-hidden="true" />Hapus semua filter</PulseButton>}</div>
       </div>
       {page.visible.length ? <ul className="pcg-rows">{page.visible.map(group => <GroupRow key={group.id} group={group} />)}</ul>
-        : <PulsePanelEmpty title="Tidak ada kelompok yang cocok" action={<PulseButton size="sm" onClick={clear}>Hapus semua filter</PulseButton>}>Longgarkan filter atau ganti kata pencarian. Hanya kelompok dalam periode dan platform project yang diperiksa.</PulsePanelEmpty>}
+        : <PulsePanelEmpty title="Tidak ada kelompok yang cocok" action={<PulseButton size="sm" onClick={clear}>Hapus semua filter</PulseButton>}>Longgarkan filter atau kata pencarian.</PulsePanelEmpty>}
       {page.remaining > 0 && <div className="pcg-next"><PulseButton onClick={showMore}>Tampilkan {formatCount(page.next)} lagi{page.remaining > page.next && <span className="pcg-rest">({formatCount(page.remaining)} tersisa)</span>}</PulseButton></div>}
     </AnalyticsPanel>}
   </section>;

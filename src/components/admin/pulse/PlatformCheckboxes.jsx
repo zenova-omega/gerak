@@ -16,6 +16,5 @@ export default function PlatformCheckboxes({ platforms, value, onChange, counts 
       <PlatformLabel platform={platform} />
       {counts[platform] != null && <small aria-label={`${counts[platform]} posting`}>{counts[platform]}</small>}
     </label>)}</div>
-    <p>Pilih satu atau beberapa platform. Hasil digabung dari platform yang dipilih.</p>
   </fieldset>;
 }

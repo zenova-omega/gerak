@@ -111,7 +111,7 @@ export default function CommentPostPicker({ rows = [], value = 'all', onChange, 
       {chosen ? <AccountAvatar size="xs" author={chosen.author} platform={chosen.platform} /> : <Search className="cpp-trigger-icon" size={16} aria-hidden="true" />}
       <span className="cpp-value" id={valueId}>{chosen
         ? <><strong>{postName(chosen)}</strong><span>{chosen.caption || 'Tanpa teks'}</span></>
-        : <><strong>Semua posting</strong><span>{formatCount(rows.length)} posting, cari caption atau akun</span></>}</span>
+        : <><strong>Semua posting</strong><span>{formatCount(rows.length)} posting</span></>}</span>
       <ChevronDown className="cpp-caret" size={16} aria-hidden="true" />
     </button>
     {open && <div className="cpp-panel" id={panelId} role="dialog" aria-label="Pilih posting">
@@ -125,7 +125,7 @@ export default function CommentPostPicker({ rows = [], value = 'all', onChange, 
         {chips.map(({ platform, posts }) => <PlatformTag key={platform} platform={platform} count={formatCount(posts)} pressed={platforms.includes(platform)} disabled={!posts && !platforms.includes(platform)} aria-label={`${platformLabel(platform)}, ${formatCount(posts)} posting`}
           onClick={event => chip(platforms.includes(platform) ? platforms.filter(key => key !== platform) : [...platforms, platform], event)} />)}
       </div>}
-      <p className="cpp-status" role="status">{!results.length ? 'Tidak ada posting yang cocok.' : filtered ? `${formatCount(results.length)} dari ${formatCount(rows.length)} posting cocok` : `${formatCount(rows.length)} posting yang punya komentar`}{results.length > 0 && <>, paling ramai dulu{results.length > SHOWN ? `. ${formatCount(SHOWN)} teratas ditampilkan, ketik untuk mempersempit.` : ''}</>}</p>
+      <p className="cpp-status" role="status">{!results.length ? 'Tidak ada posting yang cocok.' : filtered ? `${formatCount(results.length)} dari ${formatCount(rows.length)} posting cocok` : `${formatCount(rows.length)} posting berkomentar`}{results.length > SHOWN && <>, {formatCount(SHOWN)} teratas ditampilkan</>}</p>
       {/* Pressing an option must not take focus from the search box. */}
       <ul className="cpp-list" id={listId} ref={list} role="listbox" aria-label="Posting yang punya komentar" tabIndex={0} aria-activedescendant={optionId(active)}
         onMouseDown={event => event.preventDefault()} onFocus={() => setByKey(true)} onKeyDown={event => listKeys(event, true)}>
@@ -148,7 +148,7 @@ export default function CommentPostPicker({ rows = [], value = 'all', onChange, 
           <Check className="cpp-check" size={16} aria-hidden="true" />
         </li>)}
       </ul>
-      {!results.length && <div className="cpp-empty"><p>Coba kata lain, atau hapus pencarian untuk melihat semua posting lagi.</p><PulseButton size="sm" onClick={() => { narrow('', []); input.current?.focus(); }}>Hapus pencarian</PulseButton></div>}
+      {!results.length && <div className="cpp-empty"><p>Coba kata lain.</p><PulseButton size="sm" onClick={() => { narrow('', []); input.current?.focus(); }}>Hapus pencarian</PulseButton></div>}
     </div>}
   </div>;
 }

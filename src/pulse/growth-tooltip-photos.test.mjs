@@ -67,7 +67,7 @@ test('growth: the change of pace is a tag, and the first observed growth is neve
   assert.match(rows[0], /class="pu-tag[^"]*"[^>]*>[\s\S]*?Melambat/);
   assert.match(rows[1], /data-tone="unknown"[^>]*>[\s\S]*?Belum cukup data/);
   assert.doesNotMatch(markup, /(Melambat|Mempercepat|Tetap|Belum cukup data)Pertumbuhan teramati/);
-  assert.match(rows[0], /15 Nov 2026, 05\.09 → 07\.12 WIB<\/span><small>Pertumbuhan teramati sejak 14 Nov 2026, 17\.09 WIB<\/small>/);
+  assert.match(rows[0], /15 Nov 2026, 05\.09 → 07\.12 WIB<\/span><small>Tumbuh sejak 14 Nov 2026, 17\.09 WIB<\/small>/);
   assert.doesNotMatch(rows[1], /Pertumbuhan teramati sejak/);
 });
 
@@ -75,7 +75,7 @@ test('growth: every column has a header and the post is the row header', async (
   const markup = await growthHtml();
   for (const name of ['Posting', 'Tambahan interaksi', 'Per jam', 'Perubahan laju', 'Pengamatan']) assert.match(markup, new RegExp(`<th scope="col"[^>]*>${name}</th>`));
   assert.equal((markup.match(/<th scope="row"/g) || []).length, 2);
-  assert.match(markup, /2 dari 3 posting memiliki pengamatan yang dapat dibandingkan\./);
+  assert.match(markup, /2 dari 3 posting dapat dibandingkan\./);
 });
 
 test('growth: pressing a row opens that post', async () => {
@@ -96,7 +96,7 @@ test('growth: pressing a row opens that post', async () => {
 
 test('growth: nothing comparable still says so and draws no table', async () => {
   const markup = await growthHtml({ data: { posts: [] } });
-  assert.match(markup, /Belum cukup pengamatan yang sebanding/);
+  assert.match(markup, /Belum cukup pengamatan/);
   assert.doesNotMatch(markup, /<table/);
 });
 

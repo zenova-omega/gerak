@@ -23,9 +23,8 @@ test('on Ikhtisar the day with the most posts is the busiest day, and the chart 
     const highlights = text(html.match(/<ul class="po-signals"[\s\S]*?<\/ul>/)[0]);
     assert.match(highlights, /Hari teramai 10 Nov 3 posting · 75% dari cakupan/);
     assert.doesNotMatch(html, /[Pp]uncak/, 'a busiest day is not a peak in the sense of the chart');
-    assert.match(html, /Tanggal publikasi WIB\. Lonjakan bukan bukti peristiwa baru atau sebab perubahan\./);
-    // No answer from the server here, so nothing on the page is called a spike except the footer's caution.
-    assert.equal((html.match(/[Ll]onjakan/g) || []).length, 1);
+    // No answer from the server here, so nothing on the page is called a spike.
+    assert.equal((html.match(/[Ll]onjakan/g) || []).length, 0);
   } finally { await server.close(); }
 });
 
@@ -65,13 +64,11 @@ test('the report, the platform lines and the growth panel use the same names', a
     const pages = lib.reportPages(lib.resolveSections([]), { topPosts: report.topPosts });
     const printed = renderToStaticMarkup(React.createElement(ReportPages, { report, pages, data: lib.reportData(report), summary: null, brand: { logo: null, accent: null, organisation: '', description: '' } }));
     assert.match(printed, /<text class="rp-peak"[^>]*>Teramai: 3 posting, 2 Nov<\/text>/);
-    assert.match(printed, /Hari teramai adalah hari dengan posting terbanyak dalam data tersimpan\./);
     assert.doesNotMatch(printed, /[Pp]uncak|[Ll]onjakan/);
 
     // The panel of interaction growth speaks of growth.
     const { default: GrowthEvidence } = await server.ssrLoadModule('/src/pulse/GrowthEvidence.jsx');
     const growth = renderToStaticMarkup(React.createElement(GrowthEvidence, { data: { posts: [] }, posts: [], loaded: true }));
-    assert.match(growth, /Penambahan jenis metrik atau penurunan penghitung tidak dihitung sebagai pertumbuhan\./);
     assert.doesNotMatch(growth, /lonjakan/i);
   } finally { await server.close(); }
 });

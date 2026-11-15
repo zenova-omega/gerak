@@ -34,13 +34,12 @@ test('the report is a stack of A4 pages, each with the period, the brand mark an
 
     // Conclusions first: without a stored summary the page writes plain sentences from the data.
     const summary = sheet(html, 'summary');
-    assert.match(summary, /Disusun otomatis dari angka dalam laporan ini\./);
     assert.match(summary, /Terkumpul 1 posting dari 1 akun dan sumber di 1 platform, semuanya terbit pada 3 Nov 2026\./);
     assert.match(summary, /<dt>Posting<\/dt>[\s\S]*<dt>Akun dan sumber<\/dt>[\s\S]*<dt>Interaksi<\/dt><dd>8<\/dd>[\s\S]*<dt>Komentar dianalisis<\/dt>/);
     assert.doesNotMatch(summary, /Batasan|bukan seluruh percakapan/, 'the caveats moved out of the summary');
     // The honest fine print has its own page.
     const method = sheet(html, 'method');
-    for (const line of [/bukan seluruh percakapan di tiap platform/, /tidak dianggap netral/, /tidak memuat perkiraan jangkauan/, /tidak memeriksa kebenaran klaim/, /<dt>Kata kunci<\/dt><dd class="rp-clamp" title="kata kunci">kata kunci<\/dd>/]) assert.match(method, line);
+    for (const line of [/bukan seluruh percakapan platform/, /tidak dihitung netral/, /tidak ada perkiraan jangkauan/, /Kebenaran klaim tidak diperiksa/, /<dt>Kata kunci<\/dt><dd class="rp-clamp" title="kata kunci">kata kunci<\/dd>/]) assert.match(method, line);
 
     // An account is its avatar with initials underneath, and a post keeps the link to its source.
     const posts = sheet(html, 'posts');
@@ -82,12 +81,12 @@ test('a page without data says so in one sentence instead of drawing an empty ch
     assert.match(sheet(html, 'cover'), /<dt>Platform<\/dt><dd>Tidak ada platform dipilih<\/dd>/);
     assert.doesNotMatch(html, /Excluded author/);
     assert.equal(sheets(html).length, 10, 'an empty section keeps its page');
-    assert.match(sheet(html, 'places'), /<p class="rp-empty">Belum ada posting yang menyebut provinsi, kota atau kabupaten pada periode ini\.<\/p>/);
+    assert.match(sheet(html, 'places'), /<p class="rp-empty">Belum ada tempat yang disebut\.<\/p>/);
     assert.match(sheet(html, 'summary'), /Belum ada posting pada periode dan platform yang dipilih\./);
-    assert.match(sheet(html, 'trend'), /<p class="rp-empty">Belum ada posting pada periode ini, jadi tren belum dapat digambar\.<\/p>/);
+    assert.match(sheet(html, 'trend'), /<p class="rp-empty">Belum ada posting\.<\/p>/);
     assert.match(sheet(html, 'opinion'), /<p class="rp-empty">Belum ada komentar tersimpan/);
-    assert.match(sheet(html, 'posts'), /<p class="rp-empty">Belum ada posting pada periode ini untuk diperingkat\.<\/p>/);
-    assert.match(sheet(html, 'narratives'), /<p class="rp-empty">Belum ada konten yang diulang/);
+    assert.match(sheet(html, 'posts'), /<p class="rp-empty">Belum ada posting\.<\/p>/);
+    assert.match(sheet(html, 'narratives'), /<p class="rp-empty">Belum ada konten berulang/);
     assert.doesNotMatch(printed(html), /<svg class="rp-trend"|class="rp-bar/);
     assert.equal((printed(html).match(/<table/g) || []).length, 1, 'only the coverage table is left');
     assert.match(sheet(html, 'method'), /<th scope="row">Seluruh laporan<\/th><td class="rp-num">0<\/td><td class="rp-num">—<\/td><td>Tidak ada posting pada periode ini<\/td>/);
@@ -120,11 +119,11 @@ test('sections, order, brand and a stored summary shape the pages', async () => 
     assert.match(sheet(html, 'cover'), /<div class="rp-cover-org"><strong>Dinas Uji<\/strong><p>Untuk rapat pimpinan\.<\/p><\/div>/);
 
     const written = sheet(html, 'summary');
-    assert.match(written, /Ringkasan AI, ditulis 14 Nov 2026, 09\.00 WIB dari 6 posting dan 0 komentar\./);
+    assert.match(written, /Ringkasan AI, ditulis 14 Nov 2026, 09\.00 WIB\./);
     assert.match(written, /<h3>Ringkasan<\/h3><div><p>Isu ramai sejak 1 Nov\.<\/p><\/div>/, 'evidence codes are not printed');
     assert.match(written, /<ol><li>Akun besar\.<\/li><\/ol>/);
     assert.doesNotMatch(written, /Disusun otomatis/);
-    assert.match(sheet(html, 'method'), /Ringkasan eksekutif dirangkai AI/);
+    assert.match(sheet(html, 'method'), /Ringkasan ditulis AI/);
 
     const [first, second] = sheets(html).filter(page => page.includes('data-section="posts"'));
     assert.equal((first.match(/class="rp-post"/g) || []).length, 4);
@@ -136,7 +135,7 @@ test('sections, order, brand and a stored summary shape the pages', async () => 
     const trend = sheet(html, 'trend');
     assert.match(trend, /<svg class="rp-trend"[^>]*role="img" aria-label="Grafik batang jumlah posting per hari dari 1 Nov 2026 sampai 6 Nov 2026/);
     for (const label of ['Positif', 'Netral', 'Negatif', 'Belum dianalisis']) assert.match(trend, new RegExp(`<ul class="rp-legend"[\\s\\S]*<span>${label}</span>`));
-    assert.match(trend, /Persentase dihitung dari 6 posting yang sudah dianalisis \(100% dari 6 posting\)/);
+    assert.match(trend, /Persentase dari 6 posting yang dianalisis \(100% dari 6\)/);
     const groups = sheet(html, 'narratives');
     assert.match(groups, /<dt>Dibagikan<\/dt><dd>3\.600×<\/dd>/);
     assert.match(groups, /<dt>Interaksi<\/dt><dd>60<\/dd>/, 'the original post’s shares stay out of the interactions');
@@ -181,14 +180,12 @@ test('the place page draws the provinces the posts name, lists them, and adds wh
     const html = renderToStaticMarkup(React.createElement(ReportPages, { report, pages, data: lib.reportData(report), summary: null, brand: { logo: null, accent: null, organisation: '', description: '' } }));
     const page = sheet(html, 'places'), text = page.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     assert.match(page, /<h2>Sebaran tempat<\/h2>/);
-    assert.match(page, /bukan lokasi penulis/);
     assert.match(page, /<svg[^>]*role="img"[^>]*aria-label="Peta Indonesia: 2 dari 34 provinsi disebut\. Terbanyak: DKI Jakarta 2, Jawa Barat 1\."/);
     assert.equal((page.match(/class="rm-province"/g) || []).length, 34);
     assert.match(page, /<td class="rp-cell-rank">1<\/td><th scope="row">DKI Jakarta<\/th><td class="rp-num"><strong>2<\/strong><\/td><td class="rp-num">100%<\/td><td>Jakarta 2<\/td>/);
-    assert.match(text, /2 dari 5 posting menyebut tempat;/);
+    assert.match(text, /2 dari 5 posting menyebut tempat\./);
     assert.match(page, /<th scope="row">Jawa Timur<\/th><td class="rp-num"><strong>1<\/strong><\/td><td>Surabaya 1<\/td>/);
-    assert.match(text, /1 dari 2 akun X menulis lokasi yang bisa dipetakan; 1 akun belum diperiksa\./);
-    assert.match(text, /bukan posisi saat memposting/);
+    assert.match(text, /1 dari 2 akun X menulis lokasi yang bisa dipetakan; 1 akun belum diperiksa/);
     assert.doesNotMatch(page, /<button|onclick|foreignObject/i, 'the picture is static: nothing in it to press');
   } finally { await server.close(); }
 });
@@ -337,13 +334,13 @@ test('an opened archive says its figures were recounted only when it was filed u
   try {
     const { ArchivedContext } = await server.ssrLoadModule('/src/pulse/ProjectReport.jsx');
     const { RULES } = await server.ssrLoadModule('/src/lib/pulseMeasures.js');
-    const line = '<span class="pr-archived-rules">Angka laporan ini dihitung ulang dengan aturan perhitungan terbaru.</span>';
+    const line = '<span class="pr-archived-rules"> Dihitung ulang dengan aturan terbaru.</span>';
     const draw = snapshot => renderToStaticMarkup(React.createElement(ArchivedContext, { archive: { title: 'Laporan November', created_at: '2026-11-13T02:00:00Z', snapshot }, onBack: () => {} }));
     const filedBefore = draw({ posts: [] }), current = draw({ posts: [], rules: { ...RULES } }), older = draw({ posts: [], rules: { ...RULES, interactions: 'interactions_v0' } });
     assert.ok(filedBefore.includes(line), 'a report filed before rule versions were recorded has none');
     assert.ok(older.includes(line), 'one rule is older than today');
     assert.ok(!current.includes(line), 'filed under the rules in force today');
-    assert.match(current, /Menampilkan arsip <strong>Laporan November<\/strong>/);
+    assert.match(current, /Arsip <strong>Laporan November<\/strong>/);
     assert.equal(filedBefore.replace(line, ''), current, 'the line is the only difference');
     assert.equal(older.replace(line, ''), current);
   } finally { await server.close(); }

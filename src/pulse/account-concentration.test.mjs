@@ -33,7 +33,7 @@ test('fewer than ten accounts: the 80% figure stands in words and no curve is dr
   assert.match(text(block), /3 akun menulis 80% posting/);
   assert.match(text(block), /75% dari 4 akun/);
   assert.doesNotMatch(block, /acc-plot|<svg|<table/);
-  assert.match(text(block), /Kurva digambar bila ada 10 akun atau lebih/);
+  assert.match(text(block), /Kurva butuh 10 akun atau lebih/);
   assert.equal((html.match(/class="ac-bar"/g) || []).length, 2, 'the two bars that were there stay');
 });
 
@@ -68,7 +68,7 @@ test('a selection without reported interactions draws the posts curve alone and 
   assert.match(block, /acc-line-posts/);
   assert.doesNotMatch(block, /acc-line-interactions/);
   assert.deepEqual([...block.matchAll(/<li[^>]*class="acc-key[^"]*"[^>]*>([\s\S]*?)<\/li>/g)].map(match => text(match[1]).trim()), ['Posting', 'Bila semua akun sama aktif']);
-  assert.match(text(block), /Kurva interaksi tidak digambar: sumber tidak melaporkan interaksi pada pilihan ini/);
+  assert.match(text(block), /Sumber tidak melaporkan interaksi/);
 });
 
 test('with a way to open posts the named accounts and the 80% figure open theirs; without one nothing promises it', async () => {

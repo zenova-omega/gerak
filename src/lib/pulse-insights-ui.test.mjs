@@ -97,7 +97,7 @@ test('Buat insight writes for the period and platforms of the project bar, waits
   let release;
   api.write = body => new Promise(resolve => { release = () => resolve(insight({ from: body.from, to: body.to, platforms: body.platforms })); });
   await page.getByRole('button', { name: 'Buat insight', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: 'Biasanya sekitar satu menit, paling lama tiga menit.' }).waitFor();
+  await page.getByRole('status').filter({ hasText: 'Menunggu 1–3 menit…' }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Menulis insight…', exact: true }).isDisabled(), true);
   release();
   await page.getByRole('heading', { level: 2, name: 'Isu penyadapan melonjak pada 8 Nov dan didominasi nada negatif.', exact: true }).waitFor();
@@ -111,7 +111,7 @@ test('Buat insight writes for the period and platforms of the project bar, waits
   assert.equal(await fits(page), true);
   // The project bar now shows all platforms: the stored insight says what it was written for and offers the rewrite.
   await open('/pulse/insights?topic=topic-a&platforms=all');
-  await page.getByText('Insight ini ditulis untuk 3 Nov 2026 – 9 Nov 2026, TikTok dan X. Bilah project sekarang memilih 3 Nov 2026 – 9 Nov 2026, semua platform.', { exact: true }).waitFor();
+  await page.getByText('Insight untuk 3 Nov 2026 – 9 Nov 2026, TikTok dan X; bilah project: 3 Nov 2026 – 9 Nov 2026, semua platform.', { exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Perbarui insight', exact: true }).count(), 1);
   assert.match(await period.innerText(), /TikTok dan X/);
   assert.equal(await fits(page), true);

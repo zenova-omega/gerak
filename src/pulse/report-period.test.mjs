@@ -28,8 +28,8 @@ test('the report page has the period control between the actions and the preview
 });
 
 test('the action line names the dates the file will cover', async () => {
-  assert.match(await page({ from: '2026-11-01', to: '2026-11-12' }), /<p class="pr-bar-text"[^>]*>10 halaman A4 untuk <strong>1 Nov 2026 – 12 Nov 2026<\/strong>\. Berkas PDF sama dengan pratinjau di bawah\.<\/p>/);
-  assert.match(await page({}), /<p class="pr-bar-text"[^>]*>10 halaman A4 untuk <strong>seluruh periode tersimpan<\/strong>\./);
+  assert.match(await page({ from: '2026-11-01', to: '2026-11-12' }), /<p class="pr-bar-text"[^>]*>10 halaman A4 · <strong>1 Nov 2026 – 12 Nov 2026<\/strong><\/p>/);
+  assert.match(await page({}), /<p class="pr-bar-text"[^>]*>10 halaman A4 · <strong>seluruh periode tersimpan<\/strong>/);
 });
 
 test('the file name carries the dates of the report, and the day it was made when no dates were chosen', async () => {

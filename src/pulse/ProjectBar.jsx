@@ -47,7 +47,7 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
     if (deleting || deleteText.trim() !== (topic.label || '').trim()) return;
     setDeleting(true);
     try { await resource.deleteTopic(topic.id); onDeleted?.(); }
-    catch (error) { setNotice({ error: true, text: error.status === 409 ? 'Pengumpulan project ini sedang berjalan. Coba hapus lagi sebentar.' : 'Project belum berhasil dihapus. Periksa izin dan coba lagi.' }); setDeleting(false); }
+    catch (error) { setNotice({ error: true, text: error.status === 409 ? 'Pengumpulan sedang berjalan. Coba lagi sebentar.' : 'Project belum berhasil dihapus.' }); setDeleting(false); }
   }
   const [lookback, setLookback] = useState(7);
   const [savedLookback, setSavedLookback] = useState(null);
@@ -89,50 +89,48 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
       const pull = !topic || savedLookback !== lookback || topic.query !== payload.query || String(topic.sources) !== String(payload.sources);
       // A new project also gets each source's schedule switched on, so collection goes on after the first pull.
       if (pull) { try { const path = '/admin/pulse/topics/' + encodeURIComponent(savedId); const state = topic ? await api.put(path + '/lookback', { days: lookback }) : await api.post(path + '/start', { days: lookback }); setSavedLookback(lookback); setLookbackRun(state); } catch { /* the project is saved; the pull can be repeated from here */ } }
-      setNotice({ text: pull ? `Pengaturan tersimpan. Semua posting ${lookback} hari terakhir sedang ditarik dari tiap sumber; angka akan bertambah dalam beberapa menit.` : 'Pengaturan project tersimpan.' });
-    } catch (error) { setNotice({ error: true, text: error.status ? 'Project gagal disimpan. Periksa izin dan coba lagi.' : error.message }); }
+      setNotice({ text: pull ? `Tersimpan. Menarik posting ${lookback} hari terakhir…` : 'Tersimpan.' });
+    } catch (error) { setNotice({ error: true, text: error.status ? 'Project gagal disimpan.' : error.message }); }
     finally { setBusy(false); }
   }
   return <form className="ps-project-editor" onSubmit={submit} aria-busy={busy}>
     <fieldset disabled={busy || readOnly}><legend>{topic ? 'Pengaturan project' : 'Project baru'}</legend>
-      <section className="ps-set" aria-labelledby="ps-set-identity"><h3 id="ps-set-identity">Identitas</h3><p>Nama yang tampil di pemilih project dan di laporan.</p>
+      <section className="ps-set" aria-labelledby="ps-set-identity"><h3 id="ps-set-identity">Identitas</h3>
       <label>Nama project<input value={label} onChange={e => setLabel(e.target.value)} maxLength={100} required /></label>
       <label>Mode project<select value={projectMode} onChange={e => setProjectMode(e.target.value)}><option value="issue">Pantau isu</option><option value="post">Telusuri posting</option></select></label>
       {projectMode === 'post' && <>
         <label>URL posting acuan<input type="url" required maxLength={2048} value={seedUrl} onChange={e=>{setSeedUrl(e.target.value);setPreviewUrl('');}} placeholder="https://x.com/akun/status/…" /></label>
-        <p>Satu posting sebagai acuan. Gunakan URL lengkap, bukan link profil atau shortlink. Pencarian memakai keyword di bawah; ini belum merupakan pelacak seluruh repost.</p>
         <PulseButton disabled={!seedUrl.trim()} onClick={()=>setPreviewUrl(seedUrl.trim())}>Periksa posting tersimpan</PulseButton>
         {previewUrl && <SeedPostPreview url={previewUrl} onUseCaption={value=>{setQuery(value);setAdvanced(true);}}/>}
       </>}
       </section>
-      <section className="ps-set" aria-labelledby="ps-set-keyword"><h3 id="ps-set-keyword">Keyword</h3><p>Menentukan percakapan yang dikumpulkan. Mengubahnya tidak menghapus posting yang sudah tersimpan.</p>
+      <section className="ps-set" aria-labelledby="ps-set-keyword"><h3 id="ps-set-keyword">Keyword</h3>
       <div className="ps-keyword-mode"><PulseButton aria-pressed={!advanced} disabled={advanced && !currentFields} onClick={openBuilder}>Keyword builder</PulseButton><PulseButton aria-pressed={advanced} disabled={!advanced && Boolean(builderError)} onClick={()=>{if(!advanced) {setQuery(builtQuery);setAdvanced(true);}}}>Boolean lanjutan</PulseButton></div>
-      {advanced && !currentFields && <p>Edit query ini dengan Boolean lanjutan.</p>}
-      {!advanced ? <section className="ps-keyword-builder" aria-label="Susun keyword"><p>Pisahkan kata atau frasa dengan koma.</p>
+            {!advanced ? <section className="ps-keyword-builder" aria-label="Susun keyword">
         <div className="ps-keyword-fields">
-          <KeywordChips label="Istilah utama" value={main} onChange={setMain} placeholder="transportasi publik" help="Wajib diisi. OR: cukup salah satu istilah utama atau variasinya cocok."/>
-          <KeywordChips label="Variasi istilah" value={variations} onChange={setVariations} placeholder="angkutan umum, transportasi umum" help="Tambahkan singkatan, ejaan lain, atau sinonim."/>
-          <KeywordChips label="Akun personal publik (opsional)" value={accounts} onChange={setAccounts} placeholder="@namatokoh, https://x.com/namatokoh" help="Akun tokoh, partai, atau lembaga yang ingin dipantau sebutannya, termasuk serangan. Hanya akun publik; warga biasa tidak ditambahkan."/>
-          <KeywordChips label="Konteks wajib" value={required} onChange={setRequired} placeholder="Jakarta" help="Opsional. AND: semua kata atau frasa di sini wajib muncul, bukan salah satunya."/>
-          <KeywordChips label="Istilah yang dikecualikan" value={excluded} onChange={setExcluded} placeholder="iklan, lowongan" help="Opsional. NOT: abaikan posting yang mengandung salah satu istilah ini."/>
+          <KeywordChips label="Istilah utama" value={main} onChange={setMain} placeholder="transportasi publik" help="Wajib. OR: cukup satu cocok."/>
+          <KeywordChips label="Variasi istilah" value={variations} onChange={setVariations} placeholder="angkutan umum, transportasi umum"/>
+          <KeywordChips label="Akun personal publik (opsional)" value={accounts} onChange={setAccounts} placeholder="@namatokoh, https://x.com/namatokoh" help="Hanya akun publik; warga biasa tidak ditambahkan."/>
+          <KeywordChips label="Konteks wajib" value={required} onChange={setRequired} placeholder="Jakarta" help="AND: semua wajib muncul."/>
+          <KeywordChips label="Istilah yang dikecualikan" value={excluded} onChange={setExcluded} placeholder="iklan, lowongan" help="NOT: posting dengan istilah ini diabaikan."/>
         </div>
         <SmartKeywords fields={{main,variations,required,excluded}} topicId={topic?.id} onAdd={added=>{setVariations(value=>mergeTerms(value,added.variation));setRequired(value=>mergeTerms(value,added.context));setExcluded(value=>mergeTerms(value,added.exclude));}}/>
         <div className="ps-query-preview" aria-live="polite" aria-atomic="true"><strong>Ringkasan pencarian</strong>{builtQuery ? <><p>{explainProjectQuery(main,required,excluded,variations,accounts)}</p><details><summary>Lihat query</summary><code>{builtQuery}</code></details></> : <p>{builderError}</p>}</div>
-      </section> : <><label>Query yang dipantau<textarea value={query} onChange={e => setQuery(e.target.value)} rows={3} maxLength={500} required aria-describedby="ps-query-help" /></label>
+      </section> : <><label>Query yang dipantau<textarea value={query} onChange={e => setQuery(e.target.value)} rows={3} maxLength={500} required /></label>
         <SmartKeywords fields={{main:query.replace(/["()]/g,' ').replace(/\b(AND|OR|NOT)\b/g,',')}} topicId={topic?.id} onAdd={added=>setQuery(current=>appendToQuery(current,added))}/></>}
       </section>
-      <section className="ps-set" aria-labelledby="ps-set-sources"><h3 id="ps-set-sources">Sumber dan rentang</h3><p>Dari mana posting diambil dan seberapa jauh ke belakang.</p>
+      <section className="ps-set" aria-labelledby="ps-set-sources"><h3 id="ps-set-sources">Sumber dan rentang</h3>
       <fieldset className="ps-source-options"><legend>Sumber pencarian</legend>{[['rss','Berita'],['social','X'],['instagram','Instagram'],['tiktok','TikTok'],['youtube','YouTube']].map(([value,title])=><label key={value}><input type="checkbox" checked={sources.includes(value)} onChange={e=>setSources(e.target.checked?[...sources,value]:sources.filter(s=>s!==value))}/>{title}</label>)}</fieldset>
-      {effectiveQuery.length > 250 && <PulseNotice tone="warning">Query ini lebih dari 250 karakter. Pendekkan agar X, Instagram, dan TikTok bisa diambil.</PulseNotice>}
-      <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e => setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select><small>{lookbackRun?.running ? 'Penarikan sedang berjalan.' : lookbackRun?.last_run ? `Terakhir ditarik ${lookbackRun.last_run.days} hari: ${lookbackRun.last_run.results.reduce((sum, row) => sum + row.ingested, 0)} posting baru.` : 'Dijalankan sekali saat disimpan, untuk tiap sumber yang dicentang. Setelah itu jadwal hanya mengambil posting terbaru.'}</small></label>
+      {effectiveQuery.length > 250 && <PulseNotice tone="warning">Query lebih dari 250 karakter; X, Instagram, dan TikTok tidak bisa diambil.</PulseNotice>}
+      <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e => setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select><small>{lookbackRun?.running ? 'Menarik…' : lookbackRun?.last_run ? `Terakhir ${lookbackRun.last_run.days} hari: ${lookbackRun.last_run.results.reduce((sum, row) => sum + row.ingested, 0)} posting baru.` : ''}</small></label>
       </section>
-      {topic && routed && <section className="ps-set" aria-labelledby="ps-set-collect"><h3 id="ps-set-collect">Pengumpulan</h3><p>Jadwal per sumber, batas harian, dan komentar otomatis diatur di Monitor dan berlaku untuk project ini.</p><div className="ps-set-links"><Link to={'/pulse/monitor?' + new URLSearchParams({ topic: topic.id })}>Atur jadwal dan batas <ArrowRight size={14} aria-hidden="true" /></Link><Link to={'/pulse/sources?' + new URLSearchParams({ topic: topic.id })}>Lihat sumber dan cakupan <ArrowRight size={14} aria-hidden="true" /></Link></div></section>}
+      {topic && routed && <section className="ps-set" aria-labelledby="ps-set-collect"><h3 id="ps-set-collect">Pengumpulan</h3><div className="ps-set-links"><Link to={'/pulse/monitor?' + new URLSearchParams({ topic: topic.id })}>Atur jadwal dan batas <ArrowRight size={14} aria-hidden="true" /></Link><Link to={'/pulse/sources?' + new URLSearchParams({ topic: topic.id })}>Lihat sumber dan cakupan <ArrowRight size={14} aria-hidden="true" /></Link></div></section>}
       <div className="ps-set-save"><PulseButton type="submit" variant="primary" disabled={!advanced && Boolean(builderError)} busy={busy} busyLabel="Menyimpan…">{topic ? 'Simpan perubahan' : 'Buat project'}</PulseButton></div>
     </fieldset>
-    {topic && !readOnly && <section className="ps-set ps-set-danger" aria-labelledby="ps-set-danger"><h3 id="ps-set-danger">Hapus project</h3><p>Menghapus project ini beserta semua posting, komentar, analisis, alert, dan jadwalnya. Tidak bisa dibatalkan. Laporan PDF yang sudah diunduh tidak terpengaruh.</p>
-      {!confirmDelete ? <PulseButton onClick={() => { setConfirmDelete(true); setDeleteText(''); }}>Hapus project ini…</PulseButton> : <div className="ps-set-confirm" role="group" aria-label="Konfirmasi hapus project"><label>Ketik nama project untuk memastikan: <strong>{topic.label}</strong><input value={deleteText} onChange={event => setDeleteText(event.target.value)} autoComplete="off" autoFocus aria-describedby="ps-delete-note" /></label><p id="ps-delete-note">Semua data project ini hilang permanen setelah tombol di bawah ditekan.</p><div><PulseButton variant="reverse" disabled={deleteText.trim() !== (topic.label || '').trim()} busy={deleting} busyLabel="Menghapus…" onClick={removeProject}>Hapus permanen</PulseButton><PulseButton variant="quiet" disabled={deleting} onClick={() => setConfirmDelete(false)}>Batal</PulseButton></div></div>}
+    {topic && !readOnly && <section className="ps-set ps-set-danger" aria-labelledby="ps-set-danger"><h3 id="ps-set-danger">Hapus project</h3><p>Menghapus project beserta semua datanya. Tidak bisa dibatalkan.</p>
+      {!confirmDelete ? <PulseButton onClick={() => { setConfirmDelete(true); setDeleteText(''); }}>Hapus project ini…</PulseButton> : <div className="ps-set-confirm" role="group" aria-label="Konfirmasi hapus project"><label>Ketik nama project untuk memastikan: <strong>{topic.label}</strong><input value={deleteText} onChange={event => setDeleteText(event.target.value)} autoComplete="off" autoFocus /></label><div><PulseButton variant="reverse" disabled={deleteText.trim() !== (topic.label || '').trim()} busy={deleting} busyLabel="Menghapus…" onClick={removeProject}>Hapus permanen</PulseButton><PulseButton variant="quiet" disabled={deleting} onClick={() => setConfirmDelete(false)}>Batal</PulseButton></div></div>}
     </section>}
-    {readOnly && <p>Hanya pemilik atau admin yang dapat mengubah project.</p>}
+    {readOnly && <p>Hanya pemilik atau admin yang dapat mengubah.</p>}
     {notice && <PulseNotice role={notice.error ? 'alert' : 'status'} tone={notice.error ? 'warning' : 'neutral'}>{notice.text}</PulseNotice>}
   </form>;
 }
@@ -182,17 +180,16 @@ export default function ProjectBar({ readOnly = false }) {
       <div className="ps-project-actions">{topic && <PulseButton aria-expanded={mode === 'edit'} onClick={() => setMode(mode === 'edit' ? '' : 'edit')}><SlidersHorizontal size={16} />Pengaturan</PulseButton>}{!topic && <Link className="ps-project-search-link" to={'/pulse/search' + (params.get('q') ? '?' + new URLSearchParams({q:params.get('q')}) : '')}><Search size={16} aria-hidden="true"/>Pencarian cepat</Link>}{!readOnly && <PulseButton aria-expanded={mode === 'new'} onClick={() => setMode(mode === 'new' ? '' : 'new')}><Plus size={16} />Project baru</PulseButton>}</div>
     </div>
     {topic && <div className="pcv-band"><CoverageBadge reading={coverageReading} to={'/pulse/sources?' + new URLSearchParams({ topic: id })} /></div>}
-    {resource.error ? <PulseNotice role="alert" tone="warning">Daftar project gagal dimuat. <PulseButton onClick={resource.refetch}>Coba lagi</PulseButton></PulseNotice> : topic ? null : <div className="ps-project-start">
-      <p className="ps-project-help">Pilih project atau mulai dengan keyword baru melalui Pencarian cepat.</p>
+    {resource.error ? <PulseNotice role="alert" tone="warning">Gagal memuat project. <PulseButton onClick={resource.refetch}>Coba lagi</PulseButton></PulseNotice> : topic ? null : <div className="ps-project-start">
       {resource.loading ? <p role="status">Memuat daftar project…</p> : <>
         {resource.topics.length > 5 && <label className="ps-project-find">Cari project<input type="search" value={projectFilter} onChange={e=>setProjectFilter(e.target.value)} placeholder="Nama project…"/></label>}
-        <div className="ps-project-shortcuts" aria-label="Pilih project tersimpan">{available.map(t=><button type="button" key={t.id} onClick={()=>select(t.id)}><FolderOpen size={18} aria-hidden="true"/><span><strong>{t.label}</strong><small>{t.seed_post ? 'Telusuri posting' : 'Pantau topik'} · data tersimpan</small></span><ArrowRight size={16} aria-hidden="true"/></button>)}</div>
-        {!available.length && <p role="status">{resource.topics.length ? 'Tidak ada project dengan nama tersebut.' : 'Belum ada project. Mulai dengan pencarian atau buat project untuk monitoring berulang.'}</p>}
+        <div className="ps-project-shortcuts" aria-label="Pilih project tersimpan">{available.map(t=><button type="button" key={t.id} onClick={()=>select(t.id)}><FolderOpen size={18} aria-hidden="true"/><span><strong>{t.label}</strong><small>{t.seed_post ? 'Telusuri posting' : 'Pantau topik'}</small></span><ArrowRight size={16} aria-hidden="true"/></button>)}</div>
+        {!available.length && <p role="status">{resource.topics.length ? 'Tidak ada project dengan nama tersebut.' : 'Belum ada project.'}</p>}
       </>}
     </div>}
-    {topic?.seed_post && mode !== 'edit' && <details className="ps-seed-context"><summary>Posting acuan & batas penelusuran</summary><SeedPostPreview key={topic.id+topic.seed_post.url} url={topic.seed_post.url}/><p>Dashboard menampilkan hasil keyword project. Konten terkait atau terbit setelah acuan bukan bukti repost maupun sebab-akibat. Peta belum berpusat otomatis pada posting acuan.</p></details>}
+    {topic?.seed_post && mode !== 'edit' && <details className="ps-seed-context"><summary>Posting acuan & batas penelusuran</summary><SeedPostPreview key={topic.id+topic.seed_post.url} url={topic.seed_post.url}/></details>}
     {topic && scopeOpen && <div className="ps-scope" id="ps-scope"><ProjectPeriod key={id} topicId={id}/>
-      <section className="ps-scope-group ps-project-platforms" aria-label="Platform project"><span className="ps-scope-label">Platform <InfoTip label="Tentang filter platform">Berlaku di seluruh dashboard dan laporan. Pilih satu atau beberapa platform; hasil digabung dari platform yang dipilih.</InfoTip></span>
+      <section className="ps-scope-group ps-project-platforms" aria-label="Platform project"><span className="ps-scope-label">Platform <InfoTip label="Tentang filter platform">Berlaku di seluruh dashboard dan laporan.</InfoTip></span>
         <div className="pu-tag-group" role="group" aria-label="Pilih platform"><PulseTag size="lg" tone="accent" pressed={platforms===null} onClick={()=>setPlatforms(null)}>Semua</PulseTag>{platformChoices.map(platform=><PlatformTag key={platform} size="lg" platform={platform} pressed={platforms!==null&&platforms.includes(platform)} onClick={()=>togglePlatform(platform)}>{platform==='unknown'?'Lainnya':undefined}</PlatformTag>)}</div>
       </section>
       <p className="ps-scope-query"><span>{topic.seed_post ? 'Telusuri posting · 1 acuan' : 'Pantau isu'}</span><code title={topic.query}>{topic.query}</code></p>

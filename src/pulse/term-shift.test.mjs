@@ -63,7 +63,6 @@ test('rising and falling terms are bars to the right and left of one centre line
   // The figures are written beside each bar: direction in a word, both shares in numbers.
   assert.match(text(html), /banjir naik 40 poin dari 20% ke 60%/);
   assert.match(text(html), /macet turun 40 poin dari 50% ke 10%/);
-  assert.match(text(html), /sedikitnya 5 posting pada salah satu periode/);
 });
 
 test('a term opens its posts in the list the word panel already has, a pair of words included', async () => {
@@ -86,7 +85,7 @@ test('without a chosen period there is nothing to compare, and the panel says wh
 
 test('while the period before is loading, and when it could not be loaded, the panel says so', async () => {
   const loading = wordsPanel(await shiftView({ period, before, posts: null, status: 'loading' }));
-  assert.match(loading, /<p[^>]*role="status"[^>]*>Memuat posting 2–8 Nov 2026/);
+  assert.match(loading, /<p[^>]*role="status"[^>]*>Memuat 2–8 Nov 2026/);
   assert.doesNotMatch(loading, /pts-row/);
   const failed = wordsPanel(await shiftView({ period, before, posts: null, status: 'error', retry() {} }));
   assert.match(text(failed), /Posting 2–8 Nov 2026 belum dapat dimuat/);
@@ -96,7 +95,7 @@ test('while the period before is loading, and when it could not be loaded, the p
 test('no post in the period before is no shift, not a rise from zero', async () => {
   const html = wordsPanel(await shiftView({ period, before, posts: [], status: 'ready' }));
   assert.doesNotMatch(html, /pts-row/);
-  assert.match(text(html), /Tidak ada posting pada 2–8 Nov 2026, jadi belum ada pembanding/);
+  assert.match(text(html), /Tidak ada posting pada 2–8 Nov 2026\./);
 });
 
 test('thin data: terms in fewer than five posts are not listed, and the panel says why it is empty', async () => {

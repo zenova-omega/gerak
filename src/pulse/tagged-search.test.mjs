@@ -15,7 +15,7 @@ test('quick search starts a new project with platform choices, not an archive qu
  try{
   const {default:Search}=await server.ssrLoadModule('/src/pulse/TaggedSearch.jsx');
   const html=renderToStaticMarkup(React.createElement(MemoryRouter,{initialEntries:['/pulse/search?q=penyadapan,disadap&required=presiden&excluded=promo']},React.createElement(Search)));
-  for(const text of ['Kata utama','Konteks wajib','Pengecualian','Cari &amp; buat project','Platform','Hapus keyword penyadapan','Hapus keyword disadap','OR','AND','NOT'])assert.ok(html.includes(text),text);
+  for(const text of ['Kata utama','Konteks wajib','Pengecualian','Cari &amp; buat project','Platform','Hapus keyword penyadapan','Hapus keyword disadap',])assert.ok(html.includes(text),text);
   assert.doesNotMatch(html,/Cari data tersimpan|Tidak menggunakan kuota crawler|Simpan sebagai project/);
   assert.ok(!html.includes('posting unik ditemukan'),'Do not invent results before response');
  }finally{await server.close();}

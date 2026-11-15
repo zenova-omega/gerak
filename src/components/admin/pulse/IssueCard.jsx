@@ -5,6 +5,7 @@ import { fetchIssueDetail } from '../../../hooks/usePulse';
 import { PlatformIcon, platformLabel } from './PlatformIcon';
 import { allegationLabel, pulseDate, pulseError, safeSourceUrl } from '../../../lib/pulseData';
 import { readTime } from '../../../lib/pulseMeasures';
+import InfoTip from '../../../pulse/InfoTip';
 
 function sentimentTag(s) {
   if (s === null || s === undefined) return null;
@@ -102,9 +103,9 @@ export default function IssueCard({ issue, platformFilter = 'all', dateMode = 'r
 
       {open && (
         <div className="mt-3 border-t border-[#EDEBE3] pt-3">
-          <p className="ps-help">Dasar kelompok: kemiripan judul dan teks dengan posting acuan pertama (SimHash 64-bit, selisih maksimal 3 bit). Ini bukan bukti akun saling membagikan, berkoordinasi, atau memiliki sikap yang sama. Teks pendek dan salinan kutipan bisa ikut tergabung.</p>
+          <InfoTip label="Dasar kelompok">Dikelompokkan dari kemiripan judul dan teks dengan posting acuan pertama. Bukan bukti akun berkoordinasi.</InfoTip>
           {loading && <div className="text-xs text-[#6B6555]">Memuat sumber…</div>}
-          {error && <div role="alert" className="pulse-inline-error">{pulseError(error)} Tutup lalu buka kembali untuk mencoba lagi.</div>}
+          {error && <div role="alert" className="pulse-inline-error">{pulseError(error)}</div>}
 
           {!loading && detail && (
             <>

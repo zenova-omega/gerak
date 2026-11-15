@@ -17,6 +17,6 @@ export default function InsightsTrend() {
   if (!topicId || !analytics.data) return null;
   const posts = filterPosts(analytics.data.posts || [], { platforms, from: period.from, to: period.to });
   if (!posts.length) return null;
-  return <TrendChart compact title="Posting dan interaksi" description="Untuk periode dan platform di bilah project." posts={posts} period={period}
+  return <TrendChart compact title="Posting dan interaksi" posts={posts} period={period}
     onPick={row => navigate(postsEvidenceLink(params.toString(), { day: row.from, day_to: row.to !== row.from ? row.to : '' }))} />;
 }

@@ -29,15 +29,14 @@ export default function ProjectWarmup({ topic, platforms, onOpen, pollMs = 4000 
   const open = () => { if (!opened.current) { opened.current = true; onOpen(); } };
   useEffect(() => { if (summary.ready) open(); });
   return <section className="pwu" aria-label="Pengumpulan awal project">
-    <header><h2>Mengumpulkan percakapan untuk “{topic.label}”</h2>
-      <p>Semua sumber diminta mengirim seluruh posting pada rentang hari project. Project terbuka sendiri saat semuanya selesai atau setelah sekitar tiga menit.</p></header>
+    <header><h2>Mengumpulkan percakapan untuk “{topic.label}”</h2></header>
     <div className="pwu-time" role="progressbar" aria-label="Waktu pengumpulan awal" aria-valuemin={0} aria-valuemax={WARMUP_SECONDS} aria-valuenow={Math.min(elapsed, WARMUP_SECONDS)} aria-valuetext={`${summary.clock} dari sekitar 3 menit`}><i style={{ transform: `scaleX(${summary.share})` }} /></div>
     <p className="pwu-clock" role="status"><b>{summary.clock}</b> dari sekitar 3 menit<span>{formatCount(summary.posts)} posting diterima</span><span>{summary.settled} dari {summary.total} sumber selesai</span></p>
     <ul className="pwu-rows">{rows.map(row => <li key={row.platform} data-state={row.state}>
       <span className="pwu-source"><PlatformIcon platform={row.platform} size={18} />{platformLabel(row.platform)}</span>
       <span className="pwu-state">{warmupText(row, formatCount)}</span>
     </li>)}</ul>
-    <footer><p>Setelah project terbuka, pengumpulan berlanjut di latar dan mengikuti jadwal tiap sumber. Angka akan terus bertambah.</p>
+    <footer>
       <PulseButton onClick={open}>Buka sekarang</PulseButton></footer>
   </section>;
 }

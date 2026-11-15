@@ -42,22 +42,22 @@ function SearchWorkspace({params}){
    // screen below follows its progress and opens the project.
    await api.post('/admin/pulse/topics/'+encodeURIComponent(created.id)+'/start',{days:lookback,platforms:chosen});
    if(live.current)setWarming(chosen);
-  }catch(e){if(live.current)setError(created?'Project sudah dibuat, tetapi pengumpulan awal belum dapat dimulai. Buka project untuk melanjutkan.':e.message||'Project belum berhasil dibuat.');}
+  }catch(e){if(live.current)setError(created?'Project dibuat, tetapi pengumpulan awal gagal dimulai.':e.message||'Project belum berhasil dibuat.');}
   finally{locked.current=false;if(live.current)setBusy(false);}
  }
  return <section className="ps-quick-search pqs-workspace"><PulsePageHead icon={pageMeta.search.icon} title={pageMeta.search.title} tagline={pageMeta.search.tagline} guide={pageMeta.search.guide}/>
   {error&&<PulseNotice tone="warning" role="alert">{error}</PulseNotice>}
   <form className="pqs-builder" onSubmit={start}><fieldset disabled={busy||!!project} className="pqs-fields">
-   <KeywordChips label="Kata utama" value={main} onChange={setMain} placeholder="calon wakil presiden, cawapres" help="Pisahkan dengan koma. Cukup salah satu tag cocok (OR)."/>
+   <KeywordChips label="Kata utama" value={main} onChange={setMain} placeholder="calon wakil presiden, cawapres" help="Pisahkan dengan koma. OR: cukup satu cocok."/>
    <SmartKeywords fields={{main,required,excluded}} onAdd={added=>{setMain(value=>mergeTerms(value,added.variation));setRequired(value=>mergeTerms(value,added.context));setExcluded(value=>mergeTerms(value,added.exclude));if(added.context.length||added.exclude.length)setRefine(true);}}/>
-   <details open={refine||Boolean(params.get('required')||params.get('excluded'))} onToggle={event=>setRefine(event.currentTarget.open)}><summary>Konteks &amp; pengecualian</summary><div className="pqs-refinements"><KeywordChips label="Konteks wajib" value={required} onChange={setRequired} placeholder="Indonesia" help="Semua tag wajib ditemukan (AND)."/><KeywordChips label="Pengecualian" value={excluded} onChange={setExcluded} placeholder="promo, jualan" help="Abaikan posting yang memuat salah satu tag (NOT)."/></div></details>
+   <details open={refine||Boolean(params.get('required')||params.get('excluded'))} onToggle={event=>setRefine(event.currentTarget.open)}><summary>Konteks &amp; pengecualian</summary><div className="pqs-refinements"><KeywordChips label="Konteks wajib" value={required} onChange={setRequired} placeholder="Indonesia" help="AND: semua wajib muncul."/><KeywordChips label="Pengecualian" value={excluded} onChange={setExcluded} placeholder="promo, jualan" help="NOT: posting dengan istilah ini diabaikan."/></div></details>
    <PlatformCheckboxes platforms={platforms} value={selected} onChange={setSelected}/>
-   <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e=>setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select><small>Hasil pertama tampil dulu; posting lama menyusul masuk ke project dalam beberapa menit.</small></label>
+   <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e=>setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select></label>
    <div className="pqs-actions"><PulseButton type="submit" variant="primary" busy={busy} busyLabel="Mengumpulkan…">Cari &amp; buat project</PulseButton></div>
   </fieldset></form>
   {progress&&<p role="status">{progress}</p>}
   {project&&warming&&<ProjectWarmup topic={project} platforms={warming} onOpen={()=>navigate('/pulse/overview?topic='+encodeURIComponent(project.id))}/>}
-  {project&&!warming&&!busy&&<section className="pqs-results"><header><div><h2>{project.label}</h2><p>Project sudah dibuat.</p></div><Link to={'/pulse/overview?topic='+encodeURIComponent(project.id)}>Buka dashboard project <PulseArrow/></Link></header>
+  {project&&!warming&&!busy&&<section className="pqs-results"><header><div><h2>{project.label}</h2></div><Link to={'/pulse/overview?topic='+encodeURIComponent(project.id)}>Buka dashboard project <PulseArrow/></Link></header>
    <div className="pqs-actions"><Link to={'/pulse/monitor?topic='+encodeURIComponent(project.id)}>Lihat pengumpulan</Link><PulseButton onClick={()=>{setProject(null);setWarming(null);setError('');setProgress('');}}>Pencarian baru</PulseButton></div></section>}
  </section>;
 }

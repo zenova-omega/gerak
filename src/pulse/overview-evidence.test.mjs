@@ -30,8 +30,8 @@ test('a narrative row shows on which platforms its posts are, as logos with coun
   const marks=row.match(/<span[^>]*class="po-narrative-platforms"[^>]*>[\s\S]*?<\/span><\/span>/)[0];
   assert.deepEqual([...marks.matchAll(/<span[^>]*title="([^"]*)"[^>]*>[\s\S]*?<b>(\d+)<\/b>/g)].map(found=>[found[1],found[2]]),[['X','2'],['TikTok','1']]);
   assert.equal((marks.match(/pulse-platform-icon/g)||[]).length,2,'each platform is its logo');
-  assert.match(html,/Sentimen bersih = \(positif − negatif\)/,'the bubble chart says how its vertical axis is made');
-  assert.match(html,/belum punya posting yang dianalisis/,'a narrative with nothing analysed is said to be left out, not drawn at zero');
+  assert.match(html,/aria-label="Tentang narasi"/,'the bubble chart says how its vertical axis is made');
+  assert.match(html,/belum dianalisis, tidak digambar/,'a narrative with nothing analysed is said to be left out, not drawn at zero');
  } finally {await server.close();}
 });
 
@@ -165,7 +165,7 @@ test('a drawer and a narrative row count accounts by account_v1, and one account
   assert.match(drawer,/<strong>2<\/strong><span>akun<\/span>/);
   assert.match(drawer,/Dari 2 akun/,'the copies of one text say how many accounts posted them');
   assert.match(render(React.createElement(Panel,{narratives:overviewEvidence(posts).narratives,onOpen:()=>{}})),/4 posting dari 2 akun/);
-  assert.match(render(React.createElement(EvidencePosts,{posts:posts.slice(0,2)})),/Semuanya dari @okezonenews · X · /,'one account: its most recently published name');
+  assert.match(render(React.createElement(EvidencePosts,{posts:posts.slice(0,2)})),/@okezonenews · X · /,'one account: its most recently published name');
   // One named post and one without a name or an id: not "all from one account", and the nameless post is no account.
   const mixed=render(React.createElement(EvidencePosts,{posts:[posts[0],{...posts[1],id:'5',author:''}]}));
   assert.doesNotMatch(mixed,/Semuanya dari/);

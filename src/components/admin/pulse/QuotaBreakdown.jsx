@@ -5,7 +5,7 @@ const names={rss:'Berita',social:'X, Instagram, TikTok',youtube:'YouTube'};
 const platforms={rss:'news',social:'x'};
 export default function QuotaBreakdown({ data }) {
   return <section className="pm-quota" aria-label="Pembagian kuota global">
-    <h3>Pemakaian kuota per project & platform <InfoTip label="Tentang pembagian kuota">Ini pemakaian aktual, bukan jatah terjamin. Antrean otomatis diproses berdasarkan waktu siap paling awal; sisa kuota tidak dijamin terbagi rata. Percobaan gagal dan retry tetap terhitung. Crawl manual umum dan komentar berada di luar batas ini. Angka ini bukan kredit atau biaya vendor. IG/TikTok otomatis mengambil maksimal 20 posting per percobaan.</InfoTip></h3>
+    <h3>Pemakaian kuota per project & platform <InfoTip label="Tentang pembagian kuota">Pemakaian aktual, bukan jatah terjamin atau biaya vendor. Percobaan gagal tetap terhitung.</InfoTip></h3>
     <p>Semua project · hari UTC {data.quota_day_utc} · reset 07.00 WIB</p>
     <div className="pm-quota-bars">{data.workers.map(w=><div key={w.provider}><strong>{names[w.provider]}</strong><span>{w.used} / {w.daily_limit} percobaan · sisa {Math.max(0,w.daily_limit-w.used)}</span><progress aria-label={'Kuota terpakai '+names[w.provider]} value={Math.min(w.used,w.daily_limit)} max={Math.max(1,w.daily_limit)}/>{w.blocked_reason&&<span role="status">Diblokir: {w.blocked_reason}</span>}{!w.daily_limit&&<span>Kuota belum diaktifkan</span>}</div>)}</div>
     <div className="pm-table"><table><caption>Percobaan yang sudah memakai kuota hari ini</caption><thead><tr><th>Project</th><th>Platform</th><th>Jalur</th><th>Terpakai</th></tr></thead><tbody>

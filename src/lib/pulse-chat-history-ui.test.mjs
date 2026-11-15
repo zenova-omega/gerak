@@ -161,10 +161,6 @@ test('the list says when it is loading, empty, cut or unavailable, and the conve
   release();
   await panel.getByText('Belum ada percakapan tersimpan untuk project ini.', { exact: true }).waitFor();
   assert.equal(await panel.getByRole('listitem').count(), 0);
-  // The note under the question box is true now.
-  const note = await page.locator('#pc-note').innerText();
-  assert.match(note, /Percakapan tersimpan untuk akun Anda dan dapat dihapus dari riwayat\./);
-  assert.doesNotMatch(note, /tidak disimpan/);
 
   // The list cannot be read: the panel says so and offers to try again; asking still works and the answer shows up in the list.
   state.chat.holdList = null;
@@ -192,7 +188,7 @@ test('a conversation that cannot be opened says why and offers the next step', a
   await page.setViewportSize({ width: 1440, height: 900 });
   // Deleted elsewhere, or never this person's: not found.
   await open('/pulse/chat?topic=topic-a&c=conv-gone');
-  const missing = page.getByRole('alert').filter({ hasText: 'Percakapan ini tidak ditemukan. Mungkin sudah dihapus.' });
+  const missing = page.getByRole('alert').filter({ hasText: 'Percakapan tidak ditemukan.' });
   await missing.waitFor();
   assert.equal(await page.locator('.pc-turn').count(), 0);
   assert.equal(await history(page).getByRole('listitem').count(), 2, 'the history is still there to pick from');
@@ -207,7 +203,7 @@ test('a conversation that cannot be opened says why and offers the next step', a
   // The server fails: say so, keep the address, try again on request.
   state.chat.openStatus = 500;
   await open('/pulse/chat?topic=topic-a&c=conv-b');
-  const broken = page.getByRole('alert').filter({ hasText: 'Percakapan ini tidak dapat dibuka.' });
+  const broken = page.getByRole('alert').filter({ hasText: 'Percakapan tidak dapat dibuka.' });
   await broken.waitFor();
   state.chat.openStatus = 200;
   await broken.getByRole('button', { name: 'Coba lagi', exact: true }).click();
@@ -231,13 +227,13 @@ test('an answer that could not be kept says so, and a full conversation asks for
   state.chat.keep = false;
   await ask(page, FIRST);
   await page.locator('.pc-turn').first().waitFor();
-  await page.locator('.pc-turn').first().getByText('Jawaban ini tidak tersimpan di riwayat.', { exact: true }).waitFor();
+  await page.locator('.pc-turn').first().getByText('Tidak tersimpan di riwayat.', { exact: true }).waitFor();
   assert.equal(query(page, 'c'), null);
   assert.equal(await history(page).getByRole('listitem').count(), 3, 'nothing was added to the list');
 
   await open('/pulse/chat?topic=topic-a&c=conv-full');
   await page.locator('.pc-turn').nth(39).waitFor();
-  const full = page.getByRole('status').filter({ hasText: 'Percakapan ini sudah penuh.' });
+  const full = page.getByRole('status').filter({ hasText: 'Percakapan penuh.' });
   await full.waitFor();
   assert.equal(await page.getByLabel('Pertanyaan Anda', { exact: true }).isDisabled(), true);
   assert.match(await history(page).getByRole('link', { name: /Percakapan panjang/ }).innerText(), /40 pertanyaan/);
@@ -255,10 +251,10 @@ test('an answer that arrives after the reader moved to another conversation goes
   await open('/pulse/chat?topic=topic-a&c=conv-a');
   await page.locator('.pc-turn').first().waitFor();
   await ask(page, 'Pertanyaan yang lama dijawab');
-  await page.getByText('Menyusun jawaban dari data tersimpan…').waitFor();
+  await page.getByText('Menyusun jawaban…').waitFor();
   await history(page).getByRole('link', { name: new RegExp(SECOND.replace('?', '\\?')) }).click();
   await page.locator('.pc-turn').nth(1).waitFor();
-  assert.equal(await page.getByText('Menyusun jawaban dari data tersimpan…').count(), 0, 'the wait belongs to the other conversation');
+  assert.equal(await page.getByText('Menyusun jawaban…').count(), 0, 'the wait belongs to the other conversation');
   release();
   // The row of the conversation that was asked shows the new count; the open conversation keeps its two questions.
   await history(page).getByRole('link', { name: new RegExp(FIRST.replace('?', '\\?')) }).filter({ hasText: '2 pertanyaan' }).waitFor();
@@ -277,7 +273,7 @@ test('an answer that arrives after the reader moved to another conversation goes
   await history(page).getByRole('button', { name: 'Percakapan baru', exact: true }).click();
   await page.getByText('Coba salah satu pertanyaan ini', { exact: true }).waitFor();
   await ask(page, 'Pertanyaan pertama yang ditinggal');
-  await page.getByText('Menyusun jawaban dari data tersimpan…').waitFor();
+  await page.getByText('Menyusun jawaban…').waitFor();
   await history(page).getByRole('link', { name: new RegExp(SECOND.replace('?', '\\?')) }).click();
   await page.locator('.pc-turn').nth(1).waitFor();
   release();

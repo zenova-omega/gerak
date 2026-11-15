@@ -26,7 +26,7 @@ export default function SentimentProgress({ topicId, onChange, quiet = false, po
     return () => {active=false;clearTimeout(timer);};
   },[topicId,onChange]);
   if (quiet) return null;
-  if (!state) return <p className="ps-ai-progress-status" role="status">{error?'Status analisis belum tersedia.':'Memuat hasil analisis…'}</p>;
+  if (!state) return <p className="ps-ai-progress-status" role="status">{error?'Status analisis belum tersedia.':'Memuat…'}</p>;
   const total=posts ? posts.length : state.total;
   const analyzed=posts ? total-sentimentCounts(posts).unknown : state.analyzed;
   const percent = (total ? analyzed/total*100 : 0).toLocaleString('id-ID',{maximumFractionDigits:1});
@@ -35,6 +35,6 @@ export default function SentimentProgress({ topicId, onChange, quiet = false, po
     <progress value={analyzed} max={Math.max(1,total)} aria-label="Posting dengan hasil sentimen"/>
     <div className="ps-help-row">{posts?'Cakupan periode & platform terpilih':'Cakupan seluruh project'} <InfoTip label="Tentang progress analisis">Posting yang belum dianalisis tidak dihitung sebagai netral. Seluruh project: {state.analyzed}/{state.total} berlabel.</InfoTip></div>
     {aiStateNotice(state.ai_state) && <p role={state.ai_state === 'access' ? 'alert' : 'status'}>{aiStateNotice(state.ai_state)}</p>}
-    {error && <p role="status">Koneksi status terputus. Angka terakhir mungkin belum mutakhir.</p>}
+    {error && <p role="status">Koneksi status terputus.</p>}
   </section>;
 }

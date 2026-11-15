@@ -44,19 +44,19 @@ export default function VoiceOverview({ posts, opinion, loaded, hideUnknown, onH
   const postBasis = (side, noun) => `dari ${formatCount(side.rows.length - side.counts.unknown)} ${noun} yang sudah dianalisis`;
   return <section className="pvo" aria-label="Sentimen menurut siapa yang bicara">
     <Voice primary title="Opini publik" unit="komentar" hideUnknown counts={opinion.counts} kinds={opinion.kinds}
-      tip={<InfoTip label="Tentang opini publik"><p>Dibaca dari komentar di bawah posting, tempat warganet menanggapi. Posting dan berita dibaca terpisah di bawahnya.</p><p>Komentar paling disukai pada posting teramai dianalisis lebih dulu, jadi angka ini sampel yang terus bertambah, bukan survei.</p></InfoTip>}
+      tip={<InfoTip label="Tentang opini publik">Dari komentar di bawah posting. Sampel yang bertambah, bukan survei.</InfoTip>}
       action={waiting > 0 && <div className="pvo-toggle"><UnanalysedToggle hidden={hideUnknown} onChange={onHideUnknown} count={waiting} /></div>}
       basis={`dari ${formatCount(opinion.analysed)} komentar teranalisis pada ${formatCount(opinion.posts)} posting`}
-      empty={!loaded ? 'Memuat hasil analisis komentar…' : opinion.total ? `${formatCount(opinion.total)} komentar menunggu analisis. Hasil masuk bertahap, komentar paling disukai lebih dulu.` : 'Belum ada komentar tersimpan pada cakupan ini.'}>
-      {opinion.analysed > 0 && <div className="pvo-stance"><span>Sikap terhadap isu<InfoTip label="Tentang sikap"><p>Sikap yang dinyatakan komentar terhadap isu project: mendukung, menolak, atau hanya membahas. Nada negatif tidak otomatis berarti menolak.</p><p>Sikap dinilai terhadap nama project. Bila nama itu sebuah peristiwa atau tokoh, dukungan kepada tokohnya bisa terbaca sebagai dukungan kepada isunya; baca komentarnya sebelum menyimpulkan.</p></InfoTip></span>
+      empty={!loaded ? 'Memuat…' : opinion.total ? `${formatCount(opinion.total)} komentar menunggu analisis.` : 'Belum ada komentar.'}>
+      {opinion.analysed > 0 && <div className="pvo-stance"><span>Sikap terhadap isu<InfoTip label="Tentang sikap">Sikap terhadap nama project. Nada negatif tidak otomatis menolak.</InfoTip></span>
         <ul>{stanceKeys.map(key => <li key={key} title={stanceLabels[key]}><span aria-hidden="true">{stanceShort[key][0]}</span>{stanceShort[key][1]} <b>{stancePct[key]}%</b></li>)}</ul>
         <Link to={commentsLink}>Baca komentarnya <PulseArrow /></Link></div>}
-      {opinion.total > 0 && opinion.analysed > 0 && <p className="pvo-coverage"><span>Cakupan</span><i role="img" aria-label={`${Math.round(coverage)}% komentar sudah dianalisis`}><b style={{ width: `${Math.max(coverage, 1)}%` }} /></i><span>{formatCount(opinion.analysed)} dari {formatCount(opinion.total)} komentar tersimpan{opinion.analysed < opinion.total ? ' · bertambah otomatis' : ''}</span></p>}
+      {opinion.total > 0 && opinion.analysed > 0 && <p className="pvo-coverage"><span>Cakupan</span><i role="img" aria-label={`${Math.round(coverage)}% komentar sudah dianalisis`}><b style={{ width: `${Math.max(coverage, 1)}%` }} /></i><span>{formatCount(opinion.analysed)} dari {formatCount(opinion.total)} komentar tersimpan</span></p>}
     </Voice>
     <div className="pvo-sides">{sides.map(side => <Voice key={side.key} title={side.key === 'public' ? 'Posting warganet' : voiceLabels.news} unit={side.key === 'news' ? 'berita' : 'posting'} hideUnknown={hideUnknown} counts={side.counts} kinds={side.kinds} active={voice === side.key || voice === 'all'}
-      tip={side.key === 'news' ? <InfoTip label="Tentang pemberitaan">Berita ditulis datar, jadi sebagian besar terbaca netral. Itu nada penulisan media, bukan ukuran opini publik.</InfoTip> : <InfoTip label="Tentang posting warganet">Posting di media sosial: X, Instagram, TikTok, YouTube, Reddit. Ini suara orang yang memulai percakapan; tanggapan atasnya ada di Opini publik.</InfoTip>}
+      tip={side.key === 'news' ? <InfoTip label="Tentang pemberitaan">Nada penulisan media, bukan opini publik.</InfoTip> : <InfoTip label="Tentang posting warganet">Suara orang yang memulai percakapan.</InfoTip>}
       basis={postBasis(side, side.key === 'news' ? 'berita' : 'posting')}
-      empty={side.rows.length ? `${formatCount(side.rows.length)} ${side.key === 'news' ? 'berita' : 'posting'} menunggu analisis.` : side.key === 'news' ? 'Tidak ada berita pada cakupan ini.' : 'Tidak ada posting media sosial pada cakupan ini.'} />)}</div>
-    <div className="pvo-scope"><span id="pvo-scope-label">Rincian di bawah menampilkan</span><div className="pu-tag-group" role="group" aria-labelledby="pvo-scope-label">{['public', 'news', 'all'].map(key => <PulseTag key={key} size="lg" tone="accent" pressed={voice === key} onClick={() => onVoice(key)}>{voiceLabels[key]}</PulseTag>)}</div></div>
+      empty={side.rows.length ? `${formatCount(side.rows.length)} ${side.key === 'news' ? 'berita' : 'posting'} menunggu analisis.` : side.key === 'news' ? 'Tidak ada berita.' : 'Tidak ada posting media sosial.'} />)}</div>
+    <div className="pvo-scope"><span id="pvo-scope-label">Rincian</span><div className="pu-tag-group" role="group" aria-labelledby="pvo-scope-label">{['public', 'news', 'all'].map(key => <PulseTag key={key} size="lg" tone="accent" pressed={voice === key} onClick={() => onVoice(key)}>{voiceLabels[key]}</PulseTag>)}</div></div>
   </section>;
 }

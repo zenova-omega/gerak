@@ -38,7 +38,7 @@ test('sentiment page reads public opinion from comments and keeps the press apar
     // Opinion is read from the analysed comments only; the unanalysed one is coverage, not a category.
     assert.match(html,/<h2>Opini publik<\/h2>/);
     assert.match(html,/<strong>67%<\/strong> negatif<small>dari 3 komentar teranalisis pada 2 posting<\/small>/);
-    assert.match(html,/3 dari 4 komentar tersimpan · bertambah otomatis/);
+    assert.match(html,/3 dari 4 komentar tersimpan/);
     assert.match(html,/aria-label="Opini publik: Negatif 67%, Netral 33%"/);
     assert.match(html,/Tolak <b>33%<\/b>/);
     assert.match(html,/href="\/pulse\/comments\?topic=p1"/);
@@ -89,7 +89,7 @@ test('tone_share_v1 on the Sentimen page: the three shares are of the analysed p
     assert.match(voices(true), /aria-label="Posting warganet: Negatif 50%, Netral 25%, Positif 25%"/);
     assert.match(voices(false), /<strong>50%<\/strong> negatif<small>dari 4 posting yang sudah dianalisis<\/small>/);
     assert.match(voices(true), /<strong>50%<\/strong> negatif<small>dari 4 posting yang sudah dianalisis<\/small>/);
-    assert.match(voices(false), /title="Sembunyikan posting yang belum dianalisis\. Persentase selalu dihitung dari yang sudah dianalisis\."/, 'the switch says what it does now');
+    assert.match(voices(false), /title="Sembunyikan posting yang belum dianalisis"/, 'the switch says what it does now');
     // Nothing analysed yet: no percentage at all, and the waiting posts carry the whole count.
     const waiting = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Voices, { posts: [post('u'), post('v')], opinion: publicOpinion([]), loaded: true, hideUnknown: false, onHideUnknown() {}, voice: 'public', onVoice() {}, commentsLink: '/pulse/comments' })));
     assert.doesNotMatch(waiting, /\d%|NaN/);
@@ -122,7 +122,7 @@ test('the daily sentiment chart names the installation zone of its days (day_v1)
     try {
       const posts = [{ id: 'p', author: 'Source A', platform: 'x', url: 'https://x.com/i/status/1', text: 'Isi', published_at: '2026-11-03T01:00:00Z', metrics: { sentiment: { label: 'negative' } } }];
       const html = renderToStaticMarkup(React.createElement(MemoryRouter, { initialEntries: ['/pulse/sentiment?topic=p1'] }, React.createElement(Page, { data: { posts } })));
-      assert.match(html, /Tanggal publikasi WIT\./);
+      assert.match(html, /Tanggal WIT/);
       assert.match(html, /<th>Tanggal WIT<\/th>/);
       assert.doesNotMatch(html, /\bWIB\b/);
     } finally { setZone(before); }

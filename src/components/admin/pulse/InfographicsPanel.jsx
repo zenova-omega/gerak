@@ -7,6 +7,7 @@ import { PulseRange } from '../../ui/PulseRange';
 import './InfographicsPanel.css';
 import { PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
 import AccountAvatar from './AccountAvatar';
+import InfoTip from '../../../pulse/InfoTip';
 import HourGrid from '../../../pulse/HourGrid';
 import TermShift from '../../../pulse/TermShift';
 import { Button } from '../../ui/shadcn/button';
@@ -52,11 +53,10 @@ export default function InfographicsPanel({ posts = [], ranged = true, grid = fa
   const maxWord = words.terms[0]?.count || 1;
   const maxHour = Math.max(1, ...hours.bins);
   return <section id="pulse-infographics" className="pi-panel" aria-label="Infografik bukti percakapan">
-    <header className="pi-heading"><h2>Kata dan waktu</h2><p>Dari posting dalam cakupan. Bukan perkiraan jangkauan atau profil audiens.</p></header>
+    <header className="pi-heading"><h2>Kata dan waktu<InfoTip label="Tentang infografik">Dihitung dari posting dalam cakupan; bukan perkiraan jangkauan atau profil audiens.</InfoTip></h2></header>
     <div className="pi-layout">
       <section className="pi-words" aria-label="Peta kata">
-        <header className="pi-head"><div><h3>Kata dalam percakapan</h3>
-          <p>{shifting ? 'Kata dan pasangan kata yang porsinya paling berubah dibanding periode sebelumnya.' : 'Maksimal 24 kata dari judul dan teks. Ukuran = jumlah posting yang memuat kata, bukan jumlah pengulangan.'}</p></div>
+        <header className="pi-head"><div><h3>Kata dalam percakapan<InfoTip label="Tentang kata">{shifting ? 'Kata dan pasangan kata yang porsinya paling berubah dibanding periode sebelumnya.' : 'Ukuran = jumlah posting yang memuat kata, bukan jumlah pengulangan.'}</InfoTip></h3></div>
           {shift && <div className="pu-segmented pts-switch" role="group" aria-label="Tampilan kata">{[['frequent', 'Paling sering'], ['shift', 'Naik dan turun']].map(([key, label]) =>
             <Button key={key} type="button" size="sm" variant={wordView === key ? 'secondary' : 'ghost'} aria-pressed={wordView === key} onClick={() => setWordView(key)}>{label}</Button>)}</div>}
           {!shifting && wordBounds && <PulseRange chart="Kata dalam percakapan" bounds={wordBounds} value={wordChoice} onChange={setWordChoice} />}</header>
@@ -64,13 +64,13 @@ export default function InfographicsPanel({ posts = [], ranged = true, grid = fa
         <div className="pi-wordcloud" role="group" aria-label="Pilih kata untuk melihat sumber">
           {words.terms.map(row => <button key={row.term} type="button" className="pi-word" style={{ fontSize: row.fontSize }} aria-pressed={row.term === active} aria-label={`${row.term}: ${row.count} posting`} aria-controls={evidenceId} onClick={() => setSelected(row.term)}>{row.term}<small>{row.count}</small></button>)}
         </div>
-        {!words.terms.length && <p className="pi-empty">Belum ada kata yang dapat dihitung dari judul atau teks posting.</p>}
-        <p className="pi-note">{formatCount(words.withText)} dari {formatCount(words.total)} posting memiliki kata yang lolos penyaringan. Kata umum Indonesia, URL, dan handle dikeluarkan; tanpa stemming atau penyamaan makna.</p>
+        {!words.terms.length && <p className="pi-empty">Belum ada kata.</p>}
+        <p className="pi-note">{formatCount(words.withText)} dari {formatCount(words.total)} posting memiliki kata yang dihitung.</p>
         </>}
         {(!shifting || active) && <section className="pi-evidence" id={evidenceId} aria-label="Posting sumber kata terpilih">
           <h4>{active ? `Bukti kata “${active}”` : 'Bukti kata'}</h4>
-          <p role="status">{shifting ? (evidence.count ? `${formatCount(evidence.rows.length)} dari ${formatCount(evidence.count)} posting periode ini ditampilkan. Maksimal 10, mengikuti urutan data yang dimuat.` : 'Tidak ada posting periode ini yang memuat kata ini; kata ini hanya ada pada periode sebelumnya.')
-            : `${formatCount(evidence.rows.length)} dari ${formatCount(evidence.count)} posting cocok ditampilkan. Maksimal 10, mengikuti urutan data yang dimuat.`}</p>
+          <p role="status">{shifting ? (evidence.count ? `${formatCount(evidence.rows.length)} dari ${formatCount(evidence.count)} posting periode ini ditampilkan.` : 'Tidak ada posting periode ini dengan kata ini.')
+            : `${formatCount(evidence.rows.length)} dari ${formatCount(evidence.count)} posting cocok ditampilkan.`}</p>
           <ul>{evidence.rows.map((post, index) => <li className="pi-source" key={post.id ?? index}>
             {safeSourceUrl(post.url) ? <a href={safeSourceUrl(post.url)} target="_blank" rel="noopener noreferrer">{post.title || 'Posting tanpa judul — buka sumber'}</a> : <span>{post.title || 'Posting tanpa judul'} · Tautan tidak tersedia</span>}
             <small className="pu-account-line"><AccountAvatar size="xs" author={post.author} platform={post.platform} />{post.author || 'Penulis tidak tersedia'}</small>
@@ -79,18 +79,17 @@ export default function InfographicsPanel({ posts = [], ranged = true, grid = fa
       </section>
 
       <section className="pi-keywords" aria-label="Lima kata teratas">
-        <header className="pi-head"><div><h3>5 kata teratas</h3><p>Jumlah posting per kata. Satu posting dapat masuk beberapa kata.</p></div>
+        <header className="pi-head"><div><h3>5 kata teratas</h3></div>
           {wordBounds && <PulseRange chart="5 kata teratas" bounds={wordBounds} value={wordChoice} onChange={setWordChoice} captionOnly />}</header>
         <ol className="pi-keyword-list">{words.terms.slice(0, 5).map(row => <li key={row.term}>
           <button type="button" aria-pressed={row.term === active} aria-controls={evidenceId} onClick={() => setSelected(row.term)}><span>{row.term}</span><strong>{row.count}</strong></button>
           <div className="pi-bar-track" aria-hidden="true"><span style={{ width: `${row.count / maxWord * 100}%` }}/></div>
         </li>)}</ol>
         {!words.terms.length && <p className="pi-empty">Belum ada frekuensi kata.</p>}
-        <p className="pi-note">Hitungan dokumen, bukan sentimen, dukungan, atau popularitas populasi.</p>
       </section>
 
       <section className="pi-hours" aria-label="Jam publikasi WIB" data-grid={grid ? '' : undefined}>
-        <header className="pi-head"><div><h3>Kapan posting dipublikasikan?</h3><p>{grid ? `Jumlah posting per hari dan jam terbit, dalam ${zone().name}.` : 'Jumlah posting per jam WIB, digabung dari semua tanggal yang tercakup.'}</p></div>
+        <header className="pi-head"><div><h3>Kapan posting dipublikasikan?</h3></div>
           {hourBounds && <PulseRange chart="Jam publikasi" bounds={hourBounds} value={hourChoice} onChange={setHourChoice} />}</header>
         {grid ? <HourGrid posts={hourPosts} onOpen={onOpen} /> : <>
         {!hours.dated && <p className="pi-empty">Belum ada waktu publikasi dengan jam yang valid.</p>}
@@ -102,7 +101,7 @@ export default function InfographicsPanel({ posts = [], ranged = true, grid = fa
             {hour % 3 === 0 || hour === 23 ? <text x={33 + hour * 20} y="184" textAnchor="middle">{String(hour).padStart(2, '0')}</text> : null}
           </g>)}
         </svg>
-        <p className="pi-note">{formatCount(hours.dated)} dari {formatCount(hours.total)} posting membawa jam publikasi{hours.unknown ? `; ${formatCount(hours.unknown)} hanya bertanggal atau tanpa waktu dan tidak dihitung` : ''}. Bukan jam pengambilan data atau estimasi reach. Jam dikonversi ke WIB.</p>
+        <p className="pi-note">{formatCount(hours.dated)} dari {formatCount(hours.total)} posting membawa jam publikasi{hours.unknown ? `; ${formatCount(hours.unknown)} tanpa jam dan tidak dihitung` : ''}.</p>
         <details className="pi-hour-table"><summary>Lihat hitungan 24 jam</summary><table><caption>Posting berdasarkan jam publikasi WIB</caption><thead><tr><th scope="col">Jam WIB</th><th scope="col">Posting</th></tr></thead><tbody>{hours.bins.map((count, hour) => <tr key={hour}><th scope="row">{String(hour).padStart(2, '0')}:00</th><td>{count}</td></tr>)}</tbody></table></details>
         </>}
       </section>

@@ -26,7 +26,6 @@ test('the summary card ranks the provinces a conversation names, draws them, and
     return renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(RegionSpreadSummary, { posts, to: '/pulse/network?topic=p1&focus=map' })));
   });
   assert.match(html, /role="region"[^>]*aria-label="Sebaran tempat"/);
-  assert.match(html, /bukan lokasi penulis/i);
   const rows = [...html.match(/<ol[^>]*class="rs-top"[\s\S]*?<\/ol>/)[0].matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map(match => text(match[1]));
   assert.deepEqual(rows, ['DKI Jakarta 6 posting Jakarta 6', 'Jawa Timur 2 posting Surabaya 2', 'Jawa Barat 1 posting Bandung 1']);
   assert.match(html, /<svg[^>]*role="img"[^>]*aria-label="Peta Indonesia: 3 dari 34 provinsi disebut\. Terbanyak: DKI Jakarta 6, Jawa Timur 2, Jawa Barat 1\."/);
@@ -42,7 +41,7 @@ test('the summary card says so when no post names a place, and still offers the 
     const { default: RegionSpreadSummary } = await module('/src/pulse/RegionSpreadSummary.jsx');
     return renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(RegionSpreadSummary, { posts: [post('n', '2026-11-05T06:00:00Z', 'Pernyataan resmi')], to: '/pulse/network?focus=map' })));
   });
-  assert.match(html, /Belum ada posting yang menyebut provinsi, kota atau kabupaten/);
+  assert.match(html, /Belum ada tempat yang disebut\./);
   assert.doesNotMatch(html, /class="rs-top"|<svg[^>]*role="img"/);
   assert.match(html, /Buka peta sebaran/);
 });

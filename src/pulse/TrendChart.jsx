@@ -147,7 +147,7 @@ function NetPlot({ rows, unit }) {
  *   `spikes` (`{posts, interactions}`, each a list of `{key, value, usual, times}`) hands the card spikes that are already
  *   known, where no call to the server can be made (a test, a page rendered on the server). Without it the card asks the server.
  */
-export default function TrendChart({ posts = [], period = {}, title = 'Tren percakapan', description = 'Menurut tanggal terbit (WIB).', onPick, onClear, selected, initialView = 'volume', initialRange = allRange, compact = false, dense = false, footer, spikes: handedSpikes }) {
+export default function TrendChart({ posts = [], period = {}, title = 'Tren percakapan', description, onPick, onClear, selected, initialView = 'volume', initialRange = allRange, compact = false, dense = false, footer, spikes: handedSpikes }) {
   const [view, setView] = useState(initialView), [chosenUnit, setUnit] = useState('day'), [choice, setChoice] = useState(initialRange), [hot, setHot] = useState(null);
   // The range comes first: it decides which days are drawn, then the unit groups those days. Presets end on the last day
   // with a post; "Semua" keeps the whole project period, as before.
@@ -189,9 +189,8 @@ export default function TrendChart({ posts = [], period = {}, title = 'Tren perc
   </>;
   const pickedLabel = selected?.from ? bucketLabel({ from: selected.from, to: selected.to || selected.from }, 'week') : '';
   return <AnalyticsPanel className={'tc' + (compact ? ' tc-compact' : '') + (dense ? ' tc-dense' : '')} title={title} description={description} actions={switches} footer={footer}>
-    {!rows.length ? <p className="tc-empty">Belum ada posting bertanggal pada pilihan ini, jadi belum ada garis yang bisa digambar.</p> : <div data-pick={clickable ? '' : undefined}>
+    {!rows.length ? <p className="tc-empty">Belum ada posting bertanggal.</p> : <div data-pick={clickable ? '' : undefined}>
       {pickedLabel && <p className="tc-selected" role="status"><span>Menampilkan posting {pickedLabel}.</span>{onClear && <Button type="button" size="sm" variant="outline" onClick={onClear}>Semua tanggal</Button>}</p>}
-      {clickable && !pickedLabel && <p className="tc-hint">Klik grafik untuk melihat posting pada {noun} itu.</p>}
       {volume ? Object.entries(volumeSeries).map(([key, series]) => <figure className="tc-chart" key={key}>
         <figcaption><i style={{ background: series.color }} aria-hidden="true" /><strong>{series.label}</strong><span>{formatCount(total(key))} pada rentang ini</span></figcaption>
         <Plot rows={rows} unit={unit} series={{ [key]: series }} pick={onPick} selected={selected} name={series.label.toLowerCase()} spikes={spikes[key]}
@@ -210,19 +209,19 @@ export default function TrendChart({ posts = [], period = {}, title = 'Tren perc
             <Plot rows={item.rows} unit={unit} series={{ posts: { label, color } }} mini axis={index === platforms.length - 1} name={'posting di ' + label} />
           </li>;
         })}</ol>
-        <p className="tc-note">Tiap platform digambar pada skalanya sendiri supaya platform kecil tetap terbaca. Bandingkan besarnya lewat angka dan batang porsi, bukan tinggi garis.</p>
+        <p className="tc-note">Skala tiap platform sendiri-sendiri.</p>
       </figure> : <figure className="tc-chart">
         <figcaption><strong>Posting menurut sentimen</strong><span>{formatCount(all - unknown)} posting berlabel</span></figcaption>
         <Plot rows={rows} unit={unit} series={toneSeries} tall pick={onPick} selected={selected} labelEnds name="posting menurut sentimen" />
         <ul className="tc-legend" aria-label="Keterangan garis">{Object.entries(toneSeries).map(([key, series]) => <Key key={key} series={series} />)}</ul>
-        {unknown > 0 && <p className="tc-note">{formatCount(unknown)} dari {formatCount(all)} posting belum dianalisis dan tidak digambar.</p>}
+        {unknown > 0 && <p className="tc-note">{formatCount(unknown)} dari {formatCount(all)} posting belum dianalisis, tidak digambar.</p>}
       </figure>}
       {!volume && !platforms.length && <figure className="tc-chart">
-        <figcaption><strong>Sentimen bersih</strong><span>(positif − negatif) ÷ yang dianalisis · garis putus-putus = seimbang</span></figcaption>
+        <figcaption><strong>Sentimen bersih</strong><span>(positif − negatif) ÷ yang dianalisis</span></figcaption>
         <NetPlot rows={rows} unit={unit} />
       </figure>}
       {marked && <p className="tc-note tc-spike-note"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><SpikeMark cx={9} cy={9} color="var(--ps-muted)" /></svg>
-        <span>Titik bercincin menandai lonjakan: jauh di atas {noun} lain pada rentang ini. Arahkan kursor atau ketuk titiknya untuk melihat dari mana angkanya{compact ? '' : '; uraiannya juga ada di Lihat angka'}.</span></p>}
+        <span>Titik bercincin: lonjakan.</span></p>}
       {undated > 0 && <p className="tc-note">{formatCount(undated)} posting tanpa tanggal terbit tidak masuk grafik.</p>}
       {!compact && <details className="tc-data"><summary>Lihat angka</summary><div className="tc-table"><table>
         <caption className="pu-sr">{platforms.length ? `Posting per platform per ${noun}` : `Posting, interaksi dan sentimen per ${noun}`}</caption>

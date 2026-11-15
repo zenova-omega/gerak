@@ -40,13 +40,13 @@ function Group({ label, heading, rows, verb, side, largest, active, onSelect, ev
  */
 export default function TermShift({ reading, shift, total, active, onSelect, evidenceId }) {
   const before = shift.before ? rangeLabel(shift.before.from, shift.before.to) : '';
-  if (!shift.before) return <div className="pts"><p className="pts-empty"><strong>Belum ada pembanding</strong>Naik dan turun kata dihitung terhadap periode sama panjang tepat sebelumnya. Pilih periode di bilah project, misalnya 7 hari, untuk melihatnya.</p></div>;
-  if (shift.status === 'error') return <div className="pts"><div className="pts-empty" role="alert"><strong>Posting {before} belum dapat dimuat</strong>Tanpa posting periode itu tidak ada pembanding.{shift.retry && <div><PulseButton size="sm" onClick={shift.retry}>Coba lagi</PulseButton></div>}</div></div>;
-  if (shift.status !== 'ready' || !shift.posts) return <div className="pts"><p className="pts-empty pts-wait" role="status">Memuat posting {before} sebagai pembanding…</p></div>;
+  if (!shift.before) return <div className="pts"><p className="pts-empty"><strong>Belum ada pembanding</strong>Pilih periode di bilah project, misalnya 7 hari.</p></div>;
+  if (shift.status === 'error') return <div className="pts"><div className="pts-empty" role="alert"><strong>Posting {before} belum dapat dimuat</strong>Tanpa itu tidak ada pembanding.{shift.retry && <div><PulseButton size="sm" onClick={shift.retry}>Coba lagi</PulseButton></div>}</div></div>;
+  if (shift.status !== 'ready' || !shift.posts) return <div className="pts"><p className="pts-empty pts-wait" role="status">Memuat {before}…</p></div>;
   const versus = <p className="pts-versus"><b>{rangeLabel(shift.period.from, shift.period.to)}</b> ({formatCount(total)} posting) dibanding <b>{before}</b> ({formatCount(shift.posts.length)} posting)</p>;
-  if (!reading) return <div className="pts">{versus}<p className="pts-empty">{total ? `Tidak ada posting pada ${before}, jadi belum ada pembanding.` : 'Belum ada posting pada periode ini.'}</p></div>;
+  if (!reading) return <div className="pts">{versus}<p className="pts-empty">{total ? `Tidak ada posting pada ${before}.` : 'Belum ada posting.'}</p></div>;
   const rows = [...reading.rising, ...reading.falling];
-  if (!rows.length) return <div className="pts">{versus}<p className="pts-empty"><strong>Belum ada kata yang porsinya berubah</strong>Kata dihitung bila dimuat sedikitnya 5 posting pada salah satu periode.</p></div>;
+  if (!rows.length) return <div className="pts">{versus}<p className="pts-empty"><strong>Belum ada kata yang porsinya berubah</strong>Minimal 5 posting memuat kata itu.</p></div>;
   const largest = Math.max(...rows.map(row => Math.abs(row.shift)));
   const shared = { largest, active, onSelect, evidenceId };
   return <div className="pts">
@@ -54,6 +54,5 @@ export default function TermShift({ reading, shift, total, active, onSelect, evi
     <p className="pts-axis" aria-hidden="true"><span><span>turun</span><span>naik</span></span></p>
     <Group label="Kata yang naik" heading="Naik" verb="naik" side="up" rows={reading.rising} {...shared} />
     <Group label="Kata yang turun" heading="Turun" verb="turun" side="down" rows={reading.falling} {...shared} />
-    <p className="pi-note">Porsi adalah bagian posting pada periode itu yang memuat kata atau dua kata berurutan tersebut; perubahannya dalam poin persentase. Kata dihitung bila dimuat sedikitnya 5 posting pada salah satu periode, paling banyak 8 yang naik dan 8 yang turun. Bukan ukuran sentimen atau dukungan.</p>
   </div>;
 }

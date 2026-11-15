@@ -15,7 +15,7 @@ test('response charts retain unanalysed counts and printable explanations while 
   assert.match(screen,/aria-label="Belum dianalisis: 1/);
   assert.doesNotMatch(screen,/<p class="pra-note">/);
   const print=renderToStaticMarkup(React.createElement(ResponseAnalysisView,{...props,printable:true}));
-  assert.match(print,/bukan identitas atau afiliasi/);
-  assert.match(print,/bukan tanggal komentar/);
+  assert.match(print,/bukan identitas penulis/);
+  assert.match(print,/tanggal publikasi posting induknya/);
  }finally{await server.close();}
 });

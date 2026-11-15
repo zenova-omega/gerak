@@ -27,7 +27,7 @@ test('the trend chart sends its two lines to the server once and marks the day t
   await open('/pulse/posts?topic=topic-a');
   const card = page.getByRole('region', { name: 'Tren posting', exact: true });
   await card.locator('.tc-spike-note').waitFor();
-  assert.match(await card.locator('.tc-spike-note').innerText(), /Titik bercincin menandai lonjakan/);
+  assert.match(await card.locator('.tc-spike-note').innerText(), /Titik bercincin: lonjakan/);
   assert.equal(await card.locator('.tc-plot').first().getAttribute('aria-label'), 'Grafik garis posting per hari. 1 lonjakan ditandai. Angkanya ada pada tabel di bawah grafik.');
   assert.match(await card.locator('.tc-plot').nth(1).getAttribute('aria-label'), /^Grafik garis interaksi per hari\. Angkanya/, 'the server named no spike in interactions');
   assert.equal(await card.locator('.tc-plot').first().locator('.tc-spike').count(), 1, 'one ringed point on the posts line');

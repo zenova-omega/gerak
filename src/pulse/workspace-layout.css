@@ -10,7 +10,6 @@
     .pulse-standalone .ps-sidebar nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
     .pulse-standalone .ps-sidebar-bottom { flex: 0 0 auto; }
   }
-  .pulse-standalone .ps-sidebar nav a { min-height: 44px; padding: 10px 12px; gap: 12px; }
   .pulse-standalone .ps-sidebar nav a svg { flex-shrink: 0; }
   .pulse-standalone .ps-sidebar-bottom { margin-top: auto; padding-top: 20px; }
   .pulse-standalone .ps-user strong { overflow-wrap: anywhere; }

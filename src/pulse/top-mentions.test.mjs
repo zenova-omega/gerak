@@ -34,7 +34,7 @@ test('every mention shows the account the way accounts are shown everywhere, its
     assert.match(rows[2], /Kompas\.com/);
     assert.match(rows[2], /Gibran diminta mundur/, 'an article shows its headline');
     assert.match(rows[2], /tidak dilaporkan/, 'news reports no interactions, said in words, never 0');
-    assert.match(negative, /3 dari 4 mention yang sudah dianalisis/);
+    assert.match(negative, /3 dari 4 mention/);
   });
 });
 

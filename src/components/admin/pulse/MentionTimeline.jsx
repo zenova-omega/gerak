@@ -12,7 +12,7 @@ export default function MentionTimeline({ posts, filters, onApply, globalPeriod=
   function apply(event) {
     event.preventDefault();
     const fields=new FormData(event.currentTarget),from=fields.get('from'),to=fields.get('to');
-    if(from&&to&&from>to){setError('Tanggal akhir harus sama atau setelah tanggal mulai.');return;}
+    if(from&&to&&from>to){setError('Tanggal akhir tidak boleh sebelum tanggal mulai.');return;}
     setError('');onApply({...filters,from,to});
   }
   return <section className="pm-mentions-timeline" aria-label="Timeline posting harian">
@@ -24,11 +24,10 @@ export default function MentionTimeline({ posts, filters, onApply, globalPeriod=
       {(filters.from||filters.to)&&<PulseButton onClick={()=>{setError('');onApply({...filters,from:'',to:''});}}>Seluruh periode</PulseButton>}
     </form>}
     {error&&<p role="alert">{error}</p>}
-    <p>{globalPeriod?'Grafik mengikuti periode project. Klik tanggal untuk menerapkan hari tersebut ke Ikhtisar, Posting, Akun & Jaringan. Perluas kembali melalui periode project di atas.':'Klik batang untuk melihat posting pada tanggal tersebut. Grafik mengikuti filter konten/platform; pilihan tanggal membatasi daftar di bawah.'}</p>
     <div className="pm-mentions-bars" role="group" aria-label="Pilih tanggal publikasi">{days.map(day=><button key={day.date} type="button" aria-label={`${day.date}: ${day.count} posting`} aria-pressed={filters.from===day.date&&filters.to===day.date} onClick={()=>{setError('');onApply({...filters,from:day.date,to:day.date});}}>
       <strong>{day.count}</strong><span className="pm-mentions-bar" style={{height:Math.max(4,day.count/maximum*76)}} aria-hidden="true"/><time dateTime={day.date}>{day.date.slice(8)}/{day.date.slice(5,7)}<small>{day.date.slice(0,4)}</small></time>
     </button>)}</div>
-    {!days.length&&<p>Belum ada posting bertanggal untuk filter ini.</p>}
-    <small>Hanya tanggal dengan posting tersimpan yang ditampilkan, bukan seluruh aktivitas platform. {undated} posting tanpa tanggal tidak masuk grafik.</small>
+    {!days.length&&<p>Belum ada posting bertanggal.</p>}
+    <small>{undated} posting tanpa tanggal tidak masuk grafik.</small>
   </section>;
 }

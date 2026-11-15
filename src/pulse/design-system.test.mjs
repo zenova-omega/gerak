@@ -14,7 +14,6 @@ test('shared buttons prevent accidental form submit and disable duplicate busy a
     assert.match(renderToStaticMarkup(React.createElement(PulseMetric,{label:'Likes',value:null})),/aria-label="Tidak tersedia"/);
     const {default:Gallery}=await server.ssrLoadModule('/src/pulse/DesignSystemGallery.jsx');
     const gallery=renderToStaticMarkup(React.createElement(Gallery));
-    assert.match(gallery,/bukan data monitoring/);
     assert.match(gallery,/PULSE design system/);
     assert.doesNotMatch(gallery,/<iframe|<video/);
     const html=renderToStaticMarkup(React.createElement(PulseButton,{busy:true,busyLabel:'Mengambil…'},'Kumpulkan'));
@@ -42,7 +41,6 @@ test('source disclosure keeps collection separate from expansion and distinguish
     assert.match(html,/4 \/ 5/);
     assert.match(html,/0 \/ 5/);
     assert.match(html,/Kumpulkan semua posting Instagram/);
-    assert.match(html,/tanpa batas jumlah/);
     assert.doesNotMatch(html,/maks\. \d/);
     const blocked=renderToStaticMarkup(React.createElement(SourceDisclosure,{source,budget:{used:4,daily_limit:4},topicId:'topic',onCollect:()=>{}}));
     assert.match(blocked,/<button[^>]*disabled/);

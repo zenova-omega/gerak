@@ -189,7 +189,7 @@ test('the trend chart on Posting filters the list to the day that is picked, and
   assert.equal(new URL(page.url()).searchParams.get('day'), '2026-11-11');
   assert.equal(await page.getByText('Older stored evidence', { exact: true }).count(), 0);
   await card.getByRole('button', { name: 'Sentimen', exact: true }).click();
-  await card.getByText('2 dari 2 posting belum dianalisis dan tidak digambar.', { exact: true }).waitFor();
+  await card.getByText('2 dari 2 posting belum dianalisis, tidak digambar.', { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(nonReads(state), []);
   assert.deepEqual(state.unexpected, []);

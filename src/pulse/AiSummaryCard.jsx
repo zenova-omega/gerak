@@ -6,12 +6,11 @@ import { PulseTag } from '../components/ui/PulseTag';
 import { PulseArrow } from '../components/ui/PulseArrow';
 import { formatCount, pulseDate, safeSourceUrl } from '../lib/pulseData';
 import SummaryInfographic, { Timeline, Overview, conclusion } from './SummaryInfographics';
+import InfoTip from './InfoTip';
 import { PulseLoader } from '../components/ui/PulseLoader';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 import { cardFormats, cardScope, openingFormat } from './summaryModel';
 import * as store from './summaryStore';
-
-const formatHelp = { brief: 'Enam jawaban singkat: awal, viral, topik, isi, sentimen, alasan.', timeline: 'Urutan kejadian per tanggal, lalu titik viral dan suasananya.', executive: 'Satu paragraf untuk pimpinan dan tiga hal yang perlu dipantau.' };
 
 /** Text with evidence codes ([P1], [A2], [N1], [K3]) turned into links to the source list of this card. */
 function Cited({ text, codes, prefix, titles = {} }) {
@@ -81,7 +80,7 @@ export default function AiSummaryCard({ topicId }) {
       <div className="pu-tag-group ais-formats" role="group" aria-label="Bentuk summary">{formats.map(item => <PulseTag key={item.key} size="lg" tone="accent" pressed={format === item.key} onClick={() => setFormat(item.key)}>{item.label}{state.summaries?.[item.key] ? '' : ' ·  baru'}</PulseTag>)}</div>
     </header>
     {summary ? <>
-      {(stale || !summary.facts || !read.whole) && <p className="ais-stale" role="status"><span>{!read.whole ? `Ringkasan ini masih memakai cakupan lama: ${read.text.replace(/^Hanya/, 'hanya')}. Perbarui agar membaca seluruh periode project.` : <>{stale ? `Ringkasan ini baru membaca ${formatCount(summary.scope.posts)} dari ${formatCount(posts)} posting (${Math.round(summary.scope.posts / posts * 100)}%). ` : ''}{!summary.facts ? 'Dibuat sebelum grafik tersedia. ' : ''}Perbarui agar mencakup data terbaru.</>}</span><PulseButton size="sm" variant="reverse" busy={busy === format} busyLabel="Menyusun…" onClick={() => make(format)}><RefreshCw />Perbarui sekarang</PulseButton></p>}
+      {(stale || !summary.facts || !read.whole) && <p className="ais-stale" role="status"><span>{!read.whole ? `Cakupan lama: ${read.text.replace(/^Hanya/, 'hanya')}.` : <>{stale ? `Baru membaca ${formatCount(summary.scope.posts)} dari ${formatCount(posts)} posting (${Math.round(summary.scope.posts / posts * 100)}%). ` : ''}{!summary.facts ? 'Tanpa grafik. ' : ''}</>}</span><PulseButton size="sm" variant="reverse" busy={busy === format} busyLabel="Menyusun…" onClick={() => make(format)}><RefreshCw />Perbarui sekarang</PulseButton></p>}
       <Overview facts={summary.facts} />
       <div className="ais-body" data-format={format}>{summary.sections.map((section, index) => <section key={index} data-kind={section.kind || 'text'}><h3>{section.title}</h3>
         <SummaryInfographic kind={section.kind} facts={summary.facts} />
@@ -89,13 +88,12 @@ export default function AiSummaryCard({ topicId }) {
         {section.bullets.length > 0 && (section.kind === 'timeline' ? <Timeline bullets={section.bullets} render={text => <Cited text={text} codes={codes} prefix={prefix} titles={titles} />} /> : section.kind === 'watch' ? <ol className="sig-watch">{section.bullets.map((text, i) => <li key={i}><Cited text={text} codes={codes} prefix={prefix} titles={titles} /></li>)}</ol> : <ul>{section.bullets.map((text, i) => <li key={i}><Cited text={text} codes={codes} prefix={prefix} titles={titles} /></li>)}</ul>)}
       </section>)}</div>
       {summary.sources.length > 0 && <details className="ais-sources" open><summary>{formatCount(summary.sources.length)} bukti yang dirujuk</summary><ol>{summary.sources.map(source => <li key={source.code} id={`${prefix}-${source.code}`}><span className="pc-source-code">{source.code}</span><div><span className="pu-account-line"><AccountAvatar size="xs" author={source.author} platform={source.platform} /><strong>{source.author || 'Nama tidak tersedia'}</strong>{source.comment && <PulseTag size="sm">Komentar</PulseTag>}</span><p>{source.text || 'Teks tidak tersedia'}</p></div>{safeSourceUrl(source.url) && <a href={safeSourceUrl(source.url)} target="_blank" rel="noopener noreferrer" aria-label={'Buka sumber ' + source.code}><PulseArrow /></a>}</li>)}</ol></details>}
-      <footer className="ais-foot"><p>Dibuat {pulseDate(summary.created_at)}. Cakupan: {read.text.replace(/^Hanya/, 'hanya')}; {formatCount(summary.scope.posts)} posting dan {formatCount(summary.scope.comments)} komentar.{stale ? ` Sekarang ada ${formatCount(posts)} posting.` : ''} Tidak berubah saat periode atau platform di bilah project diganti. Dirangkai AI; periksa bukti sebelum dipakai.</p>{summary.sections.length > 0 && <PulseButton size="sm" variant="secondary" onClick={copy}><Copy />{copied ? 'Tersalin' : 'Salin untuk laporan'}</PulseButton>}<PulseButton size="sm" variant={stale ? 'reverse' : 'secondary'} busy={busy === format} busyLabel="Menyusun…" onClick={() => make(format)}><RefreshCw />Perbarui</PulseButton></footer>
+      <footer className="ais-foot"><p>Dibuat {pulseDate(summary.created_at)} · {formatCount(summary.scope.posts)} posting, {formatCount(summary.scope.comments)} komentar{stale ? ` (sekarang ${formatCount(posts)} posting)` : ''} <InfoTip label="Tentang summary AI">Dirangkai AI; periksa bukti sebelum dipakai.</InfoTip></p>{summary.sections.length > 0 && <PulseButton size="sm" variant="secondary" onClick={copy}><Copy />{copied ? 'Tersalin' : 'Salin untuk laporan'}</PulseButton>}<PulseButton size="sm" variant={stale ? 'reverse' : 'secondary'} busy={busy === format} busyLabel="Menyusun…" onClick={() => make(format)}><RefreshCw />Perbarui</PulseButton></footer>
     </> : <div className="ais-empty">
-      <p>{formatHelp[format]} Dibuat dari seluruh {formatCount(posts)} posting tersimpan di project ini beserta komentarnya, apa pun periode dan platform yang dipilih, lengkap dengan bukti yang bisa dibuka.</p>
-      {thin && <p className="ais-thin">Baru {formatCount(posts)} posting terkumpul. Summary lebih bisa diandalkan setelah pengumpulan berjalan lebih lama.</p>}
+      {thin && <p className="ais-thin">Baru {formatCount(posts)} posting terkumpul.</p>}
       <PulseButton variant="reverse" disabled={!state.available || !posts} busy={busy === format} busyLabel="Menyusun summary…" onClick={() => make(format)}><Sparkles />Buat summary AI</PulseButton>
-      {!state.available && <small>{state.error ? 'Status layanan tidak dapat diperiksa. Muat ulang halaman.' : 'Fitur ini belum diaktifkan di instalasi Anda.'}</small>}
-      {busy && <PulseLoader inline label="Membaca posting dan komentar. Biasanya kurang dari satu menit." />}
+      {!state.available && <small>{state.error ? 'Status layanan tidak dapat diperiksa.' : 'Fitur ini belum aktif.'}</small>}
+      {busy && <PulseLoader inline label="Menunggu ±1 menit…" />}
     </div>}
     {error && <p className="ais-error" role="alert">{error}</p>}
   </section>;

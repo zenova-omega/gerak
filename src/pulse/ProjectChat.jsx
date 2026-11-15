@@ -1,3 +1,4 @@
+import InfoTip from './InfoTip';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { SendHorizontal, Plus, Trash2 } from 'lucide-react';
@@ -213,7 +214,7 @@ function Chat({ topicId }) {
       }
     } catch (err) {
       setDraft(text);
-      setError(err.status === 503 ? 'Tanya AI belum tersedia di instalasi ini.' : err.status === 502 ? 'Jawaban tidak berhasil disusun. Coba kirim lagi.' : err.status ? (err.message || 'Pertanyaan tidak dapat diproses.') : 'Tidak dapat terhubung ke server PULSE.');
+      setError(err.status === 503 ? 'Tanya AI belum tersedia di instalasi ini.' : err.status === 502 ? 'Jawaban tidak berhasil disusun. Coba kirim lagi.' : err.status ? (err.message || 'Pertanyaan tidak dapat diproses.') : 'Tidak dapat terhubung.');
     } finally { setPending(null); }
   }
 
@@ -223,37 +224,36 @@ function Chat({ topicId }) {
   const closed = !ready || Boolean(pending) || view.state === 'opening' || view.full;
   return <section ref={page} className="pc-chat pch-page" aria-label="Tanya AI tentang project">
     <PulsePageHead icon={pageMeta.chat.icon} title={pageMeta.chat.title} tagline={<>{pageMeta.chat.tagline} · {scopeText}</>} guide={pageMeta.chat.guide} />
-    {postId && <PulseNotice>Pertanyaan difokuskan pada satu posting pilihan. <Link to={'/pulse/chat?' + overview}>Tanya tentang seluruh project</Link></PulseNotice>}
-    {status && !ready && <PulsePanelEmpty title="Tanya AI belum tersedia">{status.error ? 'Status layanan tidak dapat diperiksa. Muat ulang halaman.' : 'Fitur ini belum diaktifkan di instalasi Anda. Hubungi administrator organisasi.'}</PulsePanelEmpty>}
+    {postId && <PulseNotice>Pertanyaan tentang satu posting. <Link to={'/pulse/chat?' + overview}>Tanya tentang seluruh project</Link></PulseNotice>}
+    {status && !ready && <PulsePanelEmpty title="Tanya AI belum tersedia">{status.error ? 'Status layanan tidak dapat diperiksa.' : 'Fitur ini belum aktif. Hubungi administrator.'}</PulsePanelEmpty>}
     <div className="pch-layout">
       <div className="pch-main">
-        {view.state === 'missing' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan ini tidak ditemukan. Mungkin sudah dihapus.</span><PulseButton size="sm" onClick={() => startNew({ replace: true })}>Mulai percakapan baru</PulseButton></PulseNotice></div>}
-        {view.state === 'failed' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan ini tidak dapat dibuka. Periksa koneksi lalu coba lagi.</span><PulseButton size="sm" onClick={() => setFailure(null)}>Coba lagi</PulseButton></PulseNotice></div>}
+        {view.state === 'missing' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan tidak ditemukan.</span><PulseButton size="sm" onClick={() => startNew({ replace: true })}>Mulai percakapan baru</PulseButton></PulseNotice></div>}
+        {view.state === 'failed' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan tidak dapat dibuka.</span><PulseButton size="sm" onClick={() => setFailure(null)}>Coba lagi</PulseButton></PulseNotice></div>}
         <div className="pc-thread" aria-live={spoken ? 'polite' : 'off'}>
           {view.state === 'opening' && <div className="pc-pending" ref={mark}><PulseLoader inline label="Membuka percakapan…" /></div>}
-          {view.state === 'ready' && !view.turns.length && !waitingHere && ready && <div className="pc-starters"><p>Coba salah satu pertanyaan ini</p><div className="pu-tag-group">{(postId ? postQuestions : generalQuestions).map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question)}>{question}</PulseTag>)}</div>{!postId && <><p className="pc-starters-plan">Rencana respons <small>usulan dari data, perlu ditinjau tim sebelum dipakai</small></p><div className="pu-tag-group">{responseQuestions.map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question, 'respons')}>{question}</PulseTag>)}</div></>}</div>}
+          {view.state === 'ready' && !view.turns.length && !waitingHere && ready && <div className="pc-starters"><p>Coba salah satu pertanyaan ini</p><div className="pu-tag-group">{(postId ? postQuestions : generalQuestions).map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question)}>{question}</PulseTag>)}</div>{!postId && <><p className="pc-starters-plan">Rencana respons</p><div className="pu-tag-group">{responseQuestions.map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question, 'respons')}>{question}</PulseTag>)}</div></>}</div>}
           {view.turns.map((turn, index) => <article className="pc-turn" key={index} ref={index === view.turns.length - 1 ? last : undefined}>
             <p className="pc-question"><span className="pu-sr">Pertanyaan: </span>{turn.question}</p>
             <div className="pc-answer">
-              {turn.mode === 'respons' && <p className="pc-answer-meta pc-plan-note"><strong>Rencana respons</strong> · usulan dari data, perlu ditinjau tim sebelum dipakai.</p>}
+              {turn.mode === 'respons' && <p className="pc-answer-meta pc-plan-note"><strong>Rencana respons</strong></p>}
               <ChatAnswer turn={turn} index={index} />
               <p className="pc-answer-meta">Dari {formatCount(turn.scope?.posts)} posting tersimpan{turn.scope?.truncated ? ' (dibatasi 3.000 posting terbaru)' : ''} · {pulseDate(turn.answered_at)}</p>
-              {turn.unsaved && <p className="pc-answer-meta pch-unsaved">Jawaban ini tidak tersimpan di riwayat.</p>}
+              {turn.unsaved && <p className="pc-answer-meta pch-unsaved">Tidak tersimpan di riwayat.</p>}
             </div>
           </article>)}
-          {waitingHere && <div className="pc-pending"><PulseLoader inline label="Menyusun jawaban dari data tersimpan…" /></div>}
+          {waitingHere && <div className="pc-pending"><PulseLoader inline label="Menyusun jawaban…" /></div>}
           <span ref={end} />
         </div>
-        {view.full && <PulseNotice role="status"><span>Percakapan ini sudah penuh. Mulai percakapan baru untuk bertanya lagi.</span><PulseButton size="sm" onClick={() => startNew()}>Percakapan baru</PulseButton></PulseNotice>}
+        {view.full && <PulseNotice role="status"><span>Percakapan penuh.</span><PulseButton size="sm" onClick={() => startNew()}>Percakapan baru</PulseButton></PulseNotice>}
         <form className="pc-composer" onSubmit={event => { event.preventDefault(); ask(draft); }}>
-          <label htmlFor="pc-question">Pertanyaan Anda</label>
+          <label htmlFor="pc-question">Pertanyaan Anda <InfoTip label="Tentang jawaban AI">Jawaban dirangkai AI; periksa posting yang dirujuk. Waktu kenaikan interaksi adalah waktu pengamatan crawler.</InfoTip></label>
           <div className="pc-composer-row">
             <textarea ref={input} id="pc-question" rows={2} maxLength={600} value={draft} disabled={closed} placeholder={postId ? 'Contoh: kapan posting ini pertama kali viral?' : 'Contoh: apa isu utama dalam cakupan ini?'}
-              onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); ask(draft); } }} aria-describedby="pc-note" />
+              onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); ask(draft); } }} />
             <PulseButton type="submit" variant="primary" disabled={closed || draft.trim().length < 2} busy={Boolean(pending)} busyLabel="Menjawab…"><SendHorizontal size={16} />Kirim</PulseButton>
           </div>
           {error && <p className="pc-error" role="alert">{error}</p>}
-          <p id="pc-note" className="pc-note">Enter untuk mengirim, Shift+Enter untuk baris baru. Jawaban dirangkai AI dari data tersimpan; periksa posting yang dirujuk sebelum dipakai. Waktu kenaikan interaksi adalah waktu pengamatan crawler, bukan waktu pasti kejadian. Percakapan tersimpan untuk akun Anda dan dapat dihapus dari riwayat.</p>
         </form>
       </div>
       <ChatHistory history={history} open={open} linkTo={linkTo} shell={shell} onNew={() => startNew()} onRemoved={removed}
@@ -265,7 +265,7 @@ function Chat({ topicId }) {
 export default function ProjectChat() {
   const [params] = useSearchParams();
   const topicId = params.get('topic') || '';
-  if (!topicId) return <section className="pc-chat"><PulsePanelEmpty title="Pilih project terlebih dahulu">Tanya AI menjawab dari posting tersimpan satu project. Pilih project di bagian atas halaman.</PulsePanelEmpty></section>;
+  if (!topicId) return <section className="pc-chat"><PulsePanelEmpty title="Pilih project terlebih dahulu">Pilih project di bagian atas halaman.</PulsePanelEmpty></section>;
   // A project change starts over: no conversation, list or draft of the other project stays in memory.
   return <Chat key={topicId} topicId={topicId} />;
 }

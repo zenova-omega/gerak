@@ -6,11 +6,11 @@ import { PulseButton } from '../components/ui/PulseUI';
 import { defaultAccent, descriptionMax, logoProblem, logoTypes, moveSection, organisationMax, sectionPageLabel, sectionTitle, switchSection } from '../lib/pulseReportPages';
 
 const saveText = {
-  loading: 'Memuat pengaturan tersimpan…',
+  loading: 'Memuat…',
   pending: 'Menyimpan…',
   saving: 'Menyimpan…',
-  saved: 'Pengaturan tersimpan untuk project ini.',
-  error: 'Belum tersimpan di server. Perubahan tetap berlaku di halaman ini.',
+  saved: 'Tersimpan.',
+  error: 'Belum tersimpan di server.',
 };
 
 /** @param {{sections: {key: string, on: boolean}[], brand: {logo: string|null, accent: string|null, organisation: string, description: string},
@@ -81,23 +81,21 @@ export default function ReportBuilder({ sections, brand, pages, status, onSectio
           <div className="rb-logo">
             <span className="rb-logo-view">{brand.logo ? <img src={brand.logo} alt="Logo yang dipakai sekarang" /> : <span>Belum ada logo. Laporan memakai tanda PULSE.</span>}</span>
             <span className="rb-logo-actions">
-              <PulseButton size="sm" disabled={locked} aria-describedby="rb-logo-hint" onClick={() => file.current?.click()}><ImageUp aria-hidden="true" />{brand.logo ? 'Ganti logo' : 'Unggah logo'}</PulseButton>
+              <PulseButton size="sm" disabled={locked} onClick={() => file.current?.click()}><ImageUp aria-hidden="true" />{brand.logo ? 'Ganti logo' : 'Unggah logo'}</PulseButton>
               {brand.logo && <PulseButton variant="quiet" size="sm" disabled={locked} onClick={() => { setLogoError(''); onBrand({ logo: null }); }}><Trash2 aria-hidden="true" />Hapus</PulseButton>}
             </span>
             <input ref={file} type="file" hidden tabIndex={-1} aria-hidden="true" accept={logoTypes.join(',')} onChange={pickLogo} />
           </div>
-          <p className="rb-hint" id="rb-logo-hint">PNG, JPEG, atau WebP, paling besar 300 KB.</p>
           {logoError && <p className="rb-error" role="alert">{logoError}</p>}
         </div>
         <div className="rb-field">
           <label className="rb-label" htmlFor="rb-accent">Warna aksen</label>
           <div className="rb-accent">
-            <input id="rb-accent" type="color" disabled={locked} value={brand.accent || defaultAccent} aria-describedby="rb-accent-hint"
+            <input id="rb-accent" type="color" disabled={locked} value={brand.accent || defaultAccent}
               onChange={event => { const value = event.target.value.toLowerCase(); onBrand({ accent: value === defaultAccent ? null : value }); }} />
             <code>{(brand.accent || defaultAccent).toUpperCase()}</code>
             <PulseButton variant="quiet" size="sm" disabled={locked || !brand.accent} onClick={() => onBrand({ accent: null })}><RotateCcw aria-hidden="true" />Warna PULSE</PulseButton>
           </div>
-          <p className="rb-hint" id="rb-accent-hint">Dipakai hemat: garis judul, penanda periode, dan penekanan grafik.</p>
         </div>
         <div className="rb-field">
           <label className="rb-label" htmlFor="rb-organisation">Nama organisasi</label>
@@ -106,7 +104,7 @@ export default function ReportBuilder({ sections, brand, pages, status, onSectio
         <div className="rb-field">
           <label className="rb-label" htmlFor="rb-description">Deskripsi singkat</label>
           <textarea id="rb-description" rows={4} disabled={locked} value={brand.description} maxLength={descriptionMax} aria-describedby="rb-description-hint" onChange={event => onBrand({ description: event.target.value })} />
-          <p className="rb-hint rb-hint-split" id="rb-description-hint"><span>Tampil di sampul, di bawah nama organisasi.</span><span>{brand.description.length} / {descriptionMax}</span></p>
+          <p className="rb-hint rb-hint-split" id="rb-description-hint"><span></span><span>{brand.description.length} / {descriptionMax}</span></p>
         </div>
       </section>
 

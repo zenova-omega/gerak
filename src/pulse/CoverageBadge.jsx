@@ -32,7 +32,7 @@ export function CoverageDetail({ reading, compact = false }) {
   if (!reading?.level) return null;
   const keys = compact ? COVERAGE_SHARES : [...COVERAGE_SHARES, 'dated'], [level] = LEVELS[reading.level];
   return <div className="pcv-detail" data-compact={compact ? '' : undefined}>
-    <p className="pcv-says"><b>{level}</b>: {SHARES[reading.lowest][2]} {percent(reading[reading.lowest])} posting. Tingkat mengikuti bagian terkecil dari tiga bagian di bawah; ia menyebut angka mana yang bertumpu pada lebih sedikit posting, bukan mutu project.</p>
+    <p className="pcv-says"><b>{level}</b>: {SHARES[reading.lowest][2]} {percent(reading[reading.lowest])} posting.</p>
     <div className="pcv-scroll"><table className="pcv-table">
       <caption className="pu-sr">Kelengkapan data untuk seluruh pilihan dan per platform</caption>
       <thead><tr><th scope="col">Platform</th><th scope="col">Posting</th>{keys.map(key => <th scope="col" key={key} data-lowest={key === reading.lowest ? '' : undefined}>{compact ? SHARES[key][1] : <><span className="pcv-long">{SHARES[key][0]}</span><span className="pcv-short">{SHARES[key][1]}</span></>}</th>)}</tr></thead>
@@ -42,7 +42,6 @@ export function CoverageDetail({ reading, compact = false }) {
           <td>{formatCount(row.total)}</td>{keys.map(key => <td key={key}><Share part={row[key]} /></td>)}</tr>)}
       </tbody>
     </table></div>
-    {!compact && <p>Sudah dianalisis: posting yang punya label sentimen. Interaksi diketahui: sumber melaporkan suka, komentar, atau bagikan. Jam terbit ada: sumber memberi jam, bukan hanya tanggal, sehingga posting ikut dalam angka per jam. Bertanggal dilaporkan dan tidak ikut menentukan tingkat.</p>}
   </div>;
 }
 

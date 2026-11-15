@@ -32,7 +32,7 @@ test('the trend card offers what to draw and in which unit, and greys out a unit
   assert.match(unit, /<button[^>]*>Minggu</);
   assert.doesNotMatch(unit.match(/<button[^>]*>Minggu</)[0], / disabled=""/);
   assert.match(unit.match(/<button[^>]*>Bulan</)[0], /disabled=""/, 'four posts in one month give a single monthly point');
-  assert.match(html, /Klik grafik untuk melihat posting/);
+  assert.match(html, /data-pick=/);
 });
 
 test('posts and interactions are two charts with one axis each, never two scales on one chart', async () => {
@@ -64,7 +64,7 @@ test('the sentiment view says how many posts are not analysed instead of drawing
   const html = await render({ posts, initialView: 'sentiment', onPick() {} });
   assert.deepEqual(pressed(group(html, 'Isi grafik')), ['Sentimen']);
   for (const label of ['Positif', 'Netral', 'Negatif']) assert.match(html, new RegExp(`class="tc-key[^"]*"[^>]*>(?:(?!</li>)[\\s\\S])*${label}`));
-  assert.match(html, /1 dari 4 posting belum dianalisis dan tidak digambar/);
+  assert.match(html, /1 dari 4 posting belum dianalisis, tidak digambar/);
 });
 
 test('a chosen date is named, with a way back to every date', async () => {
@@ -146,7 +146,7 @@ const answered = { posts: [{ key: '2026-11-10', value: 8, usual: 1, times: 8 }],
 test('a spike the server found is marked, and what the day is made of is told in words that need no hover', async () => {
   const html = await render({ posts: [...quiet, ...loud], spikes: answered, onPick() {} });
   assert.match(html, /class="tc-note tc-spike-note"/);
-  assert.match(html, /menandai lonjakan/);
+  assert.match(html, /Titik bercincin: lonjakan/);
   assert.match(html, /aria-label="Grafik garis posting per hari\. 1 lonjakan ditandai\./);
   const head = html.match(/<thead>[\s\S]*?<\/thead>/)[0];
   assert.match(head, />Lonjakan</, 'the table says in words what the mark says on hover');
@@ -207,7 +207,7 @@ test('the platform view draws one line per platform on its own axis, with each p
   assert.equal(text(items[0]), 'X 8 posting · 80% Teramai 10 Nov: 6');
   assert.equal(text(items[1]), 'TikTok 2 posting · 20% Teramai 11 Nov: 1');
   assert.match(items[1], /aria-label="Grafik garis posting di TikTok per hari/);
-  assert.match(html, /skalanya sendiri/, 'the reader is told the lines do not share a scale');
+  assert.match(html, /Skala tiap platform/, 'the reader is told the lines do not share a scale');
   assert.doesNotMatch(html, /Klik grafik/, 'a click on one platform\'s line would open every platform\'s posts, so none is promised');
   const head = [...html.match(/<thead>[\s\S]*?<\/thead>/)[0].matchAll(/<th [^>]*>([^<]*)</g)].map(match => match[1]);
   assert.deepEqual(head.slice(0, 4), ['Tanggal', 'Posting', 'X', 'TikTok']);

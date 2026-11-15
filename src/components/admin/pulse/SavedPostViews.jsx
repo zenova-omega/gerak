@@ -13,9 +13,9 @@ export default function SavedPostViews({topicId,draft,onLoad}) {
     if(views.length>=20){setNotice('Maksimal 20 tampilan per project.');return;}
     const next=parseSavedViews(JSON.stringify([...views,{name:name.trim(),filters:draft}]));
     try{localStorage.setItem(key,JSON.stringify(next));setViews(next);setName('');setNotice('Tampilan tersimpan di browser ini.');}
-    catch{setNotice('Penyimpanan browser tidak tersedia. Filter masih dapat diterapkan.');}
+    catch{setNotice('Penyimpanan browser tidak tersedia.');}
   }
-  return <section><h3>Tampilan tersimpan</h3><p>Per project, di browser ini. Tanggal tetap mengikuti periode project.</p>
+  return <section><h3>Tampilan tersimpan</h3>
     {views.length>0 && <label>Pilih tampilan<select value="" onChange={e=>{const view=views[Number(e.target.value)];if(view){onLoad({...view.filters});setNotice('Pilihan dimuat. Klik Terapkan filter.');}}}><option value="" disabled>Pilih…</option>{views.map((v,i)=><option value={i} key={v.name}>{v.name}</option>)}</select></label>}
     <label>Nama tampilan<input maxLength={60} value={name} onChange={e=>setName(e.target.value)} placeholder="Contoh: TikTok negatif"/></label><PulseButton disabled={!name.trim()||!topicId} onClick={save}>Simpan pilihan filter</PulseButton>{notice&&<p role="status">{notice}</p>}
   </section>;

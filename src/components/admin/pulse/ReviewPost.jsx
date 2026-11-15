@@ -31,7 +31,6 @@ export default function ReviewPost({ postId, topicId, review, onSaved, disabled 
     </div>
     {review?.review_needed && <p>Perlu ditinjau lagi</p>}
     <details><summary>Review sentimen manual</summary>
-      <p>Label manual terpisah dari AI; tidak melatih ulang model. Perlu ditinjau bukan label bot atau dukungan.</p>
       <label>Relevansi<select disabled={locked} value={relevance} onChange={e=>save({relevance:e.target.value})}>
         <option value="unreviewed">Belum ditinjau</option><option value="relevant">Relevan</option><option value="irrelevant">Tidak relevan</option>
       </select></label>
