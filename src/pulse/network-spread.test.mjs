@@ -48,3 +48,11 @@ test('what a panel says about the posts it opens reaches the drawer (one piece o
     assert.equal(selection, '{title,posts:rows,...options}');
   }
 });
+
+test('Ikhtisar opens its largest narrative as one piece of content, like Jaringan does', async () => {
+  // The drawer renders in a portal, so the hand-over is read from the source, as the test above does for PageExtras.
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('./ProjectOverview.jsx', import.meta.url), 'utf8');
+  assert.match(source, /const open=\(title,posts,options\)=>\{?setSelection\(\{title,posts,\.\.\.options\}\);?\}?;/, 'the drawer keeps what the caller says about the posts');
+  assert.match(source, /open\('Kelompok percakapan',topNarrative\.posts,\{oneContent:true\}\)/, 'a narrative is one piece of content, so its shares follow content_shares_v1');
+});

@@ -36,7 +36,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
  const total=r.posts.length;
  const quality=reviewEvidence(r.posts,reviews);
  const peak=[...r.days].sort((a,b)=>b.total-a.total)[0],comparison=previousPeriod(period),change=r.volumeChange;
- const open=(title,posts)=>{setSelection({title,posts});};
+ const open=(title,posts,options)=>{setSelection({title,posts,...options});};
  const page=view=>{const search=new URLSearchParams(params);search.set('topic',topic.id||params.get('topic')||'');return '/pulse/'+view+'?'+search;};
  const changeText=!comparison?'Pilih tanggal mulai dan akhir':extra.comparisonError?'Perbandingan belum tersedia':!change?'Memuat perbandingan…':change.percent===null?`${change.delta>0?'+':''}${change.delta} posting · basis sebelumnya 0`:`${change.percent>0?'+':''}${change.percent.toLocaleString('id-ID',{maximumFractionDigits:1})}%`;
  const trend=key=>r.days.map(d=>d[key]);const recent=key=>recentChange(trend(key));
@@ -51,7 +51,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
  const signals=[
   peak&&{key:'peak',label:'Hari teramai',value:dayLabel(peak.date),note:`${formatCount(peak.total)} posting · ${sharePercent(peak.total,total)||'0%'} dari cakupan`,action:'Lihat posting',onClick:()=>open('Hari teramai '+peak.date,r.posts.filter(p=>sentimentDate(p)===peak.date))},
   topPlatform&&{key:'platform',label:'Sumber terbanyak',value:platformLabel(topPlatform.platform),note:`${formatCount(topPlatform.count)} posting · ${sharePercent(topPlatform.count,total)||'0%'} dari cakupan`,action:'Lihat posting',onClick:()=>open(platformLabel(topPlatform.platform),r.posts.filter(p=>p.platform===topPlatform.platform))},
-  topNarrative&&{key:'narrative',label:'Narasi terbesar',value:topNarrative.title.slice(0,64)+(topNarrative.title.length>64?'…':''),note:`${formatCount(topNarrative.posts.length)} posting serupa`,action:'Periksa kelompok',onClick:()=>open('Kelompok percakapan',topNarrative.posts)},
+  topNarrative&&{key:'narrative',label:'Narasi terbesar',value:topNarrative.title.slice(0,64)+(topNarrative.title.length>64?'…':''),note:`${formatCount(topNarrative.posts.length)} posting serupa`,action:'Periksa kelompok',onClick:()=>open('Kelompok percakapan',topNarrative.posts,{oneContent:true})},
   quality.needsReview.length>0&&{key:'review',label:'Perlu ditinjau',value:`${formatCount(quality.needsReview.length)} posting`,note:'Penilaian kurang yakin atau ditandai analis',action:'Tinjau sekarang',onClick:()=>open('Perlu ditinjau',quality.needsReview)},
  ].filter(Boolean);
  const netText=net===null?null:`${net>0?'+':net<0?'−':''}${Math.abs(Math.round(net))}`;
