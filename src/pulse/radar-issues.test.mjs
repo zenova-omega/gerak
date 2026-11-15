@@ -52,7 +52,7 @@ test('the first card names the scope, says when the list was made, carries the b
   const categories = group(html, 'Kategori isu');
   assert.match(categories, /class="pu-segmented"/);
   assert.deepEqual(buttons(categories), ['Semua 12', 'Politik 11', 'Olahraga 1'], 'a category with nothing in it is not offered');
-  assert.deepEqual(buttons(group(html, 'Platform')), ['Semua platform', 'Berita', 'YouTube', 'Google']);
+  assert.deepEqual(buttons(group(html, 'Platform')), ['Semua platform', 'Berita', 'Google'], 'a platform with no issue in this refresh is not offered');
   assert.match(html, /<button[^>]*>(?:<svg[\s\S]*?<\/svg>)?Perbarui sekarang<\/button>/);
   assert.match(await lead({ payload: { ...payload, running: true } }), /<button[^>]*disabled=""[^>]*>[\s\S]*?Memperbarui…/);
   assert.doesNotMatch(await lead({ payload, canCreate: false }), /Perbarui sekarang/, 'a viewer cannot start a refresh');
@@ -67,7 +67,7 @@ test('a filter is shown as pressed, takes the row numbers out of the brief, and 
   assert.match(province, /<h2[^>]*>Isu yang ramai di Jawa Timur<\/h2>/);
   assert.match(province, /<button[^>]*aria-label="Kembali ke seluruh Indonesia"[^>]*>[\s\S]*?Provinsi: Jawa Timur/);
   assert.doesNotMatch(text(province), /mendominasi/, 'the national brief is not shown over a province list');
-  assert.deepEqual(buttons(group(province, 'Kategori isu')), ['Semua 5', 'Politik 1', 'Hukum 1', 'Olahraga 3']);
+  assert.deepEqual(buttons(group(province, 'Kategori isu')), ['Semua 4', 'Politik 1', 'Hukum 1', 'Olahraga 2']);
 });
 
 test('each state of the radar has its own words in the first card', async () => {
@@ -97,7 +97,7 @@ test('the figures strip counts the refresh, with meters for coverage', async () 
   assert.match(cells[0], /^Isu tersusun 14 12 nasional, 2 lokal$/);
   assert.match(cells[1], /^Sinyal dibaca 227 berita 122, pencarian 54, video 51$/);
   assert.match(cells[2], /^Daftar provinsi terbaca 2 dari 34 6% terbaca$/);
-  assert.match(cells[3], /^Sudah dipantau 1 dari 10 10% isu teratas dicakup project$/);
+  assert.match(cells[3], /^Isu teratas dipantau 1 dari 10 10% dicakup project$/);
   assert.match(html, /role="group"[^>]*aria-label="Angka pembaruan ini"/);
   const bare = await render({ payload: { ...payload, signals: {}, provinces_read: null } }, '/src/pulse/RadarFigures.jsx');
   assert.match(text(bare), /Sinyal dibaca —/, 'a figure the refresh did not report is unavailable, not zero');
@@ -135,7 +135,7 @@ test('a chosen category or platform narrows the list, and movement is told only 
   assert.ok(rows(politics).every(row => /Politik/.test(row)));
   assert.match(text(rows(politics)[0]), /Naik 4/, 'a category keeps the combined order, so movement still means something');
   const google = await render({ payload, filters: { ...none, platform: 'search' } });
-  assert.deepEqual(rows(google).map(row => text(row).split(' ').slice(0, 3).join(' ')), ['1 Timnas Indonesia Olahraga', '2 Pengunduran diri Wapres']);
+  assert.deepEqual(rows(google).map(row => text(row).split(' ').slice(0, 3).join(' ')), ['1 Timnas Indonesia', '2 Pengunduran diri']);
   assert.doesNotMatch(text(rows(google).join(' ')), /Naik|Turun|Baru/, 'ordered by one platform, the combined movement is not shown');
   assert.match(text(google), /Diurutkan menurut angka Google/);
 });
@@ -202,4 +202,101 @@ test('the evidence view shows why, the sources by platform, the proposed keyword
   assert.match(text(failed), /Bukti isu ini tidak dapat dimuat\./);
   const viewer = await render({ summary, detail, canCreate: false }, '/src/pulse/RadarIssueDrawer.jsx', 'RadarIssueDetail');
   assert.doesNotMatch(viewer, /Buat project/);
+});
+
+// ── X, TikTok and Instagram ─────────────────────────────────────────────────────────────────────────────────────────
+
+const socialIssues = [
+  issue(1, 'Antrean BBM', 'ekonomi', { news: { count: 40 }, x: { count: 625 }, tiktok: { found: 20, capped: true }, instagram: { found: 12, capped: false } }),
+  issue(2, 'Tagar BBM', 'ekonomi', { x: { posts: 3 } }),
+  issue(3, 'Laga bola', 'olahraga', { news: { count: 90 }, x: { count: 9700 }, tiktok: { found: 4, capped: false } }),
+];
+const socialPayload = { ...payload, signals: { news: 122, search: 54, youtube: 51, x: 7 }, issues: socialIssues };
+
+test('a row shows X with a bar when it was counted, and TikTok and Instagram as found, without a bar', async () => {
+  const list = rows(await render({ payload: socialPayload }));
+  assert.match(text(list[0]), /Berita 40 artikel X 625 posting TikTok 20\+ ditemukan Instagram 12 ditemukan/);
+  const meter = name => list[0].match(new RegExp(`<li[^>]*data-platform="${name}"[\\s\\S]*?</li>`))?.[0] || '';
+  assert.match(meter('x'), /title="X: 625 posting sejak kemarin"/);
+  assert.match(meter('x'), /<span class="rdi-track"[^>]*><i style="width:6\.4%"/, 'drawn against the loudest listed issue on X');
+  assert.doesNotMatch(meter('tiktok'), /rdi-track/, 'a sample is not a length');
+  assert.match(meter('tiktok'), /title="TikTok: sampel 20 posting terisi penuh, jumlah sebenarnya lebih banyak"/);
+  assert.match(meter('tiktok') + meter('instagram') + meter('x'), /<svg/, 'each platform is named by its mark');
+  assert.match(text(list[1]), /X 3 posting contoh/);
+  assert.doesNotMatch(list[1], /rdi-track/, 'found on X but not counted: no bar');
+});
+
+test('the platform switch offers the social platforms when the refresh has them, and each orders or keeps the list as it should', async () => {
+  assert.deepEqual(buttons(group(await lead({ payload: socialPayload }), 'Platform')), ['Semua platform', 'Berita', 'X', 'TikTok', 'Instagram']);
+  const onX = await render({ payload: socialPayload, filters: { ...none, platform: 'x' } });
+  assert.deepEqual(rows(onX).map(row => text(row).split(' ').slice(1, 3).join(' ')), ['Laga bola', 'Antrean BBM', 'Tagar BBM']);
+  assert.match(text(onX), /Diurutkan menurut jumlah posting di X sejak kemarin\./);
+  const onTiktok = await render({ payload: socialPayload, filters: { ...none, platform: 'tiktok' } });
+  assert.deepEqual(rows(onTiktok).map(row => text(row).split(' ').slice(1, 3).join(' ')), ['Antrean BBM', 'Laga bola']);
+  assert.match(text(onTiktok), /Isu yang ditemukan di TikTok, dalam urutan gabungan\./);
+  const none_ = await render({ payload, filters: { ...none, platform: 'instagram' } });
+  assert.match(text(none_), /Belum ada isu yang ditemukan di Instagram pada pembaruan ini\./);
+});
+
+test('the figures strip counts what X found, and the raw view lists X only when it was searched', async () => {
+  const cells = (await render({ payload: socialPayload }, '/src/pulse/RadarFigures.jsx')).split(/(?=<div class="pu-stat")/).slice(1).map(text);
+  assert.match(cells[1], /^Sinyal dibaca 234 berita 122, pencarian 54, video 51, X 7$/);
+  const lists = { news: [{ title: 'Judul berita', url: null, source: 'Kompas', figure: 4 }], youtube: [], search: [] };
+  const raw = await render({ payload: { ...payload, state: 'raw', issues: [], brief: null, raw: lists } });
+  assert.doesNotMatch(raw, /<h3[^>]*>(X|TikTok|Instagram)<\/h3>/, 'a platform that has no list of its own is not shown as unread');
+  const withX = await render({ payload: { ...payload, state: 'raw', issues: [], brief: null, raw: { ...lists, x: [{ title: 'Tagar soal BBM', url: 'https://x.com/a/status/11111', source: null, figure: null }] } } });
+  assert.match(withX, /<h3[^>]*>X<\/h3>[\s\S]*<a[^>]*href="https:\/\/x\.com\/a\/status\/11111"[^>]*>Tagar soal BBM<\/a>/);
+});
+
+test('the evidence view lists sampled posts by platform, with the account and the interactions, and says they are examples', async () => {
+  const summary = socialIssues[0];
+  const detail = { ...summary, evidence: [
+    { platform: 'news', title: 'Antre BBM di Medan', url: 'https://news.example/b', source: 'Tempo', figure: 2 },
+    { platform: 'x', title: 'Antre sejak subuh', url: 'https://x.com/i/status/33333', source: 'warga_medan', figure: 80 },
+    { platform: 'x', title: 'Posting dari @akun_a', url: 'https://x.com/akun_a/status/11111', source: null, figure: null },
+    { platform: 'tiktok', title: 'Antrean di SPBU', url: 'https://www.tiktok.com/@warga/video/44444', source: 'warga', figure: 900 },
+    { platform: 'instagram', title: 'Foto antrean', url: 'https://www.instagram.com/p/ABC/', source: 'kabar.medan', figure: null }] };
+  const html = await render({ summary, detail }, '/src/pulse/RadarIssueDrawer.jsx', 'RadarIssueDetail');
+  assert.match(html, /<h3[^>]*>Berita<\/h3>[\s\S]*<h3[^>]*>X, posting contoh<\/h3>[\s\S]*<h3[^>]*>TikTok, posting contoh<\/h3>[\s\S]*<h3[^>]*>Instagram, posting contoh<\/h3>/);
+  assert.match(text(html), /Berita 40 artikel X 625 posting sejak kemarin TikTok 20\+ posting ditemukan Instagram 12 posting ditemukan/);
+  assert.match(text(html), /Antre sejak subuh @warga_medan 80 interaksi/);
+  assert.match(text(html), /Posting dari @akun_a(?! @)/, 'a post known only by its link has no account or figure to repeat');
+  assert.match(text(html), /Antrean di SPBU @warga 900 interaksi/);
+  assert.match(text(html), /Foto antrean @kabar\.medan(?! \d)/);
+  assert.match(html, /<a[^>]*href="https:\/\/www\.tiktok\.com\/@warga\/video\/44444"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+});
+
+// ── A top ten per platform, in columns ──────────────────────────────────────────────────────────────────────────────
+
+const tops = props => render({ issues, ...props }, '/src/pulse/RadarPlatformTops.jsx');
+const columns = html => html.split(/(?=<div[^>]*role="region"[^>]*aria-label="Teratas di )/).slice(1);
+const topRows = card => (card.match(/<ol[^>]*class="rpt-list"[\s\S]*?<\/ol>/)?.[0] || '').split(/(?=<li)/).slice(1);
+
+test('each platform with a figure has its own ranked column: position, issue, its figure there and a bar against the first', async () => {
+  const html = await tops();
+  assert.match(html, /<div[^>]*class="rpt"[^>]*data-columns="2"[^>]*role="group"[^>]*aria-label="Isu teratas per platform"/);
+  const cards = columns(html);
+  assert.deepEqual(cards.map(card => text(card.match(/<h2[^>]*>[\s\S]*?<\/h2>/)[0])), ['Teratas di Berita', 'Teratas di Google']);
+  assert.match(text(cards[0]), /Menurut jumlah artikel\./);
+  const news = topRows(cards[0]);
+  assert.equal(news.length, 10);
+  assert.equal(text(news[0]), '1 Pengunduran diri Wapres 212 artikel');
+  assert.equal(text(news[1]), '2 Pertemuan di Bogor 64 artikel');
+  assert.deepEqual([...cards[0].matchAll(/<i[^>]*style="width:([\d.]+)%"/g)].slice(0, 2).map(match => Number(match[1])), [100, 30.2]);
+  assert.deepEqual(topRows(cards[1]).map(text), ['1 Timnas Indonesia 10.000+ pencarian', '2 Pengunduran diri Wapres 5.000+ pencarian']);
+  assert.match(news[0], /<button[^>]*class="rpt-title"[^>]*aria-pressed="false"[^>]*>Pengunduran diri Wapres<\/button>/, 'a row opens the same evidence as the main list');
+  assert.match(cards[0], /<h2[^>]*><svg/, 'the platform is named by its mark as well');
+});
+
+test('with X counted there are four columns; an issue opened elsewhere is marked here; scope follows the page', async () => {
+  const four = await tops({ issues: [...socialIssues, issue(4, 'Video viral', 'hiburan', { youtube: { count: 2, views: 5000000 }, search: { searches: 2000 } })], selectedKey: 'k3' });
+  assert.match(four, /class="rpt"[^>]*data-columns="4"/);
+  assert.deepEqual(columns(four).map(card => text(card.match(/<h2[^>]*>[\s\S]*?<\/h2>/)[0])), ['Teratas di Berita', 'Teratas di X', 'Teratas di YouTube', 'Teratas di Google']);
+  const onX = columns(four)[1];
+  assert.deepEqual(topRows(onX).map(text), ['1 Laga bola 9.700 posting', '2 Antrean BBM 625 posting']);
+  assert.match(text(onX), /Menurut jumlah posting sejak kemarin\./);
+  assert.match(topRows(onX)[0], /<li[^>]*data-selected=""[\s\S]*aria-pressed="true"/);
+  assert.doesNotMatch(four, /Teratas di (TikTok|Instagram)/, 'a sample has no order');
+  assert.deepEqual(columns(await tops({ filters: { ...none, category: 'olahraga' } })).map(card => topRows(card).map(text)), [['1 Timnas Indonesia 10.000+ pencarian']]);
+  assert.equal(await tops({ issues: [] }), '', 'nothing to rank: no row at all');
 });

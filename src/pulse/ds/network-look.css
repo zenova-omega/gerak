@@ -40,7 +40,7 @@
 .nx .nx-graph .nx-account-node .nx-node-badge svg { color: inherit; overflow: visible; }
 
 /* Names sit in their own layer above every circle and line, on a halo of the map colour. */
-.nx .nx-graph .nx-names .nx-node-name { fill: var(--nx-text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--nx-bg); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; transition: opacity var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
+.nx .nx-graph .nx-names .nx-node-name { fill: var(--nx-text); font-size:12px; font-weight: 600; paint-order: stroke; stroke: var(--nx-bg); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; transition: opacity var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
 .nx .nx-graph .nx-names .nx-node-name[data-picked] { font-weight: 700; }
 .nx .nx-graph .nx-names .nx-node-name[data-far] { opacity: .38; }
 

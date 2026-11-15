@@ -1,32 +1,80 @@
-/* Beranda's issue list (RadarIssues.jsx) and the evidence view in its drawer (RadarIssueDrawer.jsx).
-   A ranked list, not cards: rows divided by one line, the rank as a quiet numeral, one action per row. */
-.pulse-standalone .rdi { min-width: 0; }
-.pulse-standalone .rdi-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; margin: 0 0 12px; }
-.pulse-standalone .rdi-heading { margin: 0; color: var(--ps-ink); font-size: 1.125rem; font-weight: 650; line-height: 1.3; text-wrap: balance; }
-.pulse-standalone .rdi-fresh { margin: 4px 0 0; color: var(--ps-muted); font-size: .8125rem; }
-.pulse-standalone .rdi-brief { margin: 0 0 14px; max-width: 72ch; color: var(--ps-ink); font-size: .9375rem; line-height: 1.55; text-wrap: pretty; }
-.pulse-standalone .rdi > .pu-notice { margin: 0 0 14px; }
-.pulse-standalone .rdi > .pu-notice > p { margin: 0; }
-.pulse-standalone .rdi > .pu-notice > p + .pu-button { margin-top: 10px; }
-.pulse-standalone .rdi-switches { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 0 0 6px; }
+/* Beranda's first card (RadarLead.jsx), its issue list (RadarIssues.jsx), the top ten per platform
+   (RadarPlatformTops.jsx) and the evidence view in the drawer (RadarIssueDrawer.jsx). The list is ranked rows divided by one line, not cards: the rank as a quiet numeral, one
+   action per row, and one thin meter per platform in fixed columns so the same platform lines up down the list. */
+.pulse-standalone .rdl > [data-slot], .pulse-standalone .rdl { min-width: 0; }
+.pulse-standalone .rdl .pu-notice { margin: 0 0 16px; }
+.pulse-standalone .rdl .pu-notice > p { margin: 0; }
+.pulse-standalone .rdl .pu-notice > p + .pu-button { margin-top: 10px; }
+.pulse-standalone .rdl-brief { margin: 0 0 16px; max-width: 80ch; color: var(--ps-ink); font-size: 1rem; line-height: 1.6; text-wrap: pretty; }
+.pulse-standalone .rdl-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 
 .pulse-standalone .rdi-list { margin: 0; padding: 0; list-style: none; }
-.pulse-standalone .rdi-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: start; gap: 4px 12px; padding: 14px 0; border-top: 1px solid var(--ps-line); }
-.pulse-standalone .rdi-row:first-child { border-top: 0; }
-.pulse-standalone .rdi-row[data-selected] { background: color-mix(in oklch, var(--ps-soft) 60%, transparent); box-shadow: -8px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent), 8px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent); }
-.pulse-standalone .rdi-rank { padding-top: 1px; color: var(--ps-muted); font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.pulse-standalone .rdi-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: start; gap: 4px 12px; padding: 16px 0; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rdi-row:first-child { padding-top: 0; border-top: 0; }
+.pulse-standalone .rdi-row:last-child { padding-bottom: 0; }
+.pulse-standalone .rdi-row[data-selected] { background: color-mix(in oklch, var(--ps-soft) 60%, transparent); box-shadow: -10px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent), 10px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent); }
+.pulse-standalone .rdi-rank { padding-top: 1px; color: var(--ps-muted); font-size: 1.125rem; font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
 .pulse-standalone .rdi-body { min-width: 0; }
-.pulse-standalone .rdi-body > h3 { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.35; }
+.pulse-standalone .rdi-body > h3 { margin: 0; font-size: 1rem; font-weight: 650; line-height: 1.35; }
 .pulse-standalone.pulse-standalone .rdi-title { display: inline; height: auto; min-height: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ps-ink); font: inherit; text-align: left; cursor: pointer; text-wrap: balance; }
 .pulse-standalone.pulse-standalone .rdi-title:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pulse-standalone.pulse-standalone .rdi-title:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
 .pulse-standalone .rdi-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 0; }
 .pulse-standalone .rdi-reason { margin: 6px 0 0; max-width: 70ch; color: var(--ps-muted); font-size: .875rem; line-height: 1.5; text-wrap: pretty; }
-.pulse-standalone .rdi-figures { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: 6px 0 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+
+/* Meters, each in its own cell whether or not the issue is on it, so a platform lines up down the list. First row: the
+   lists that are read whole (Berita, YouTube, Google). Second row, only where there is something: the social platforms
+   (X with a bar when its posts were counted; TikTok and Instagram as found, with no bar, because a sample is not a length). */
+.pulse-standalone .rdi-meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 16px; margin: 10px 0 0; padding: 0; list-style: none; }
+.pulse-standalone .rdi-meters > li { display: grid; grid-template-columns: 16px minmax(24px, 1fr) auto; align-items: center; gap: 8px; min-width: 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rdi-meters > li[data-platform="news"] { grid-area: 1 / 1; }
+.pulse-standalone .rdi-meters > li[data-platform="youtube"] { grid-area: 1 / 2; }
+.pulse-standalone .rdi-meters > li[data-platform="search"] { grid-area: 1 / 3; }
+.pulse-standalone .rdi-meters > li[data-platform="x"] { grid-area: 2 / 1; }
+.pulse-standalone .rdi-meters > li[data-platform="tiktok"] { grid-area: 2 / 2; }
+.pulse-standalone .rdi-meters > li[data-platform="instagram"] { grid-area: 2 / 3; }
+.pulse-standalone .rdi-meter-mark { display: inline-grid; place-items: center; color: var(--ps-muted); }
+.pulse-standalone .rdi-track { display: block; height: 6px; border-radius: 999px; background: var(--ps-soft); overflow: hidden; }
+.pulse-standalone .rdi-track > i { display: block; height: 100%; border-radius: 999px; background: var(--ps-chart-1, var(--ps-accent)); }
+/* The figure has a fixed width per platform, so every bar in a column is drawn on the same track. */
+.pulse-standalone .rdi-meter-text { white-space: nowrap; }
+.pulse-standalone .rdi-meters > li[data-platform="news"] { grid-template-columns: 16px minmax(24px, 1fr) 5.75em; }
+.pulse-standalone .rdi-meters > li[data-platform="youtube"] { grid-template-columns: 16px minmax(24px, 1fr) 6.75em; }
+.pulse-standalone .rdi-meters > li[data-platform="search"] { grid-template-columns: 16px minmax(24px, 1fr) 9em; }
+.pulse-standalone .rdi-meters > li[data-platform="x"] { grid-template-columns: 16px minmax(24px, 1fr) 5.75em; }
+.pulse-standalone .rdi-meters > li[data-platform][data-plain] { grid-template-columns: 16px minmax(0, 1fr); }
+.pulse-standalone .rdi-spread, .pulse-standalone .rdi-quiet { margin: 6px 0 0; color: var(--ps-muted); font-size: .8125rem; }
 .pulse-standalone .rdi-action { display: flex; align-items: center; min-height: var(--ps-control-sm); }
 .pulse-standalone .rdi-action > a { text-decoration: none; white-space: nowrap; }
-.pulse-standalone .rdi-none { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 18px 0 6px; color: var(--ps-muted); font-size: .9375rem; }
+.pulse-standalone .rdi-none { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; color: var(--ps-muted); font-size: .9375rem; }
 .pulse-standalone .rdi-none > p { margin: 0; }
+/* A top ten per platform (RadarPlatformTops.jsx): one card a platform, three across, four once X is counted. Rows are
+   divided by a line; the figure has a fixed width per platform so the bars of a column share one track. */
+.pulse-standalone .rpt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ps-surface-gap); margin-block: 0 var(--ps-surface-gap); }
+.pulse-standalone .rpt[data-columns="1"] { grid-template-columns: minmax(0, 1fr); }
+.pulse-standalone .rpt[data-columns="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pulse-standalone .rpt[data-columns="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pulse-standalone .rpt > .pu-analytics-panel { min-width: 0; margin: 0; }
+.pulse-standalone .rpt-card .pu-panel-heading h2 { display: flex; align-items: center; gap: 8px; font-size: 1rem; line-height: 1.35; }
+.pulse-standalone .rpt-card .pu-panel-heading h2 > svg { flex: none; color: var(--ps-muted); }
+.pulse-standalone .rpt-list { margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .rpt-list > li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 0 10px; padding: 10px 0; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rpt-list > li:first-child { padding-top: 0; border-top: 0; }
+.pulse-standalone .rpt-list > li:last-child { padding-bottom: 0; }
+.pulse-standalone .rpt-list > li[data-selected] { background: color-mix(in oklch, var(--ps-soft) 60%, transparent); box-shadow: -8px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent), 8px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent); }
+.pulse-standalone .rpt-rank { color: var(--ps-muted); font-size: .9375rem; font-weight: 650; line-height: 1.4; font-variant-numeric: tabular-nums; text-align: right; }
+.pulse-standalone .rpt-body { min-width: 0; }
+.pulse-standalone.pulse-standalone .rpt-title { display: inline; height: auto; min-height: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ps-ink); font: inherit; font-size: .9375rem; font-weight: 600; line-height: 1.4; text-align: left; cursor: pointer; text-wrap: pretty; overflow-wrap: anywhere; }
+.pulse-standalone.pulse-standalone .rpt-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pulse-standalone.pulse-standalone .rpt-title:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .rpt-meter { display: grid; grid-template-columns: minmax(24px, 1fr) var(--rpt-figure, 7em); align-items: center; gap: 8px; margin: 6px 0 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rpt-text { white-space: nowrap; }
+.pulse-standalone .rpt-list[data-platform="news"] { --rpt-figure: 6.25em; }
+.pulse-standalone .rpt-list[data-platform="x"] { --rpt-figure: 7.25em; }
+.pulse-standalone .rpt-list[data-platform="youtube"] { --rpt-figure: 10.25em; }
+.pulse-standalone .rpt-list[data-platform="search"] { --rpt-figure: 9.5em; }
+/* The composition card: a second ranking under the first, divided by a line, not a card inside the card. */
+.pulse-standalone .rdb-sub { margin: 16px 0 4px; padding-top: 16px; border-top: 1px solid var(--ps-line); color: var(--ps-muted); font-size: .8125rem; font-weight: 600; }
 
 .pulse-standalone .rdi-raw { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px 28px; }
 .pulse-standalone :is(.rdi-raw, .rdi-detail) h3 { margin: 0 0 6px; color: var(--ps-muted); font-size: .8125rem; font-weight: 600; }
@@ -39,12 +87,20 @@
 .pulse-standalone .rdi-source { color: var(--ps-muted); font-size: .8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .pulse-standalone .rdi-detail { display: grid; gap: 18px; }
-.pulse-standalone .rdi-detail > :is(.rdi-reason, .rdi-figures) { margin: 0; }
-.pulse-standalone .rdi-detail > .rdi-reason { color: var(--ps-ink); font-size: .9375rem; }
+.pulse-standalone .rdi-detail > .rdi-reason { margin: 0; color: var(--ps-ink); font-size: .9375rem; }
+.pulse-standalone .rdi-figures { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rdi-fresh { margin: 4px 0 0; color: var(--ps-muted); font-size: .8125rem; }
 
-@media (max-width: 640px) {
+/* Four columns need a wide window; under it they are two by two, and one column on a phone. */
+@media (max-width: 1439px) { .pulse-standalone .rpt[data-columns="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1180px) { .pulse-standalone .rpt[data-columns="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .pulse-standalone .rpt.rpt { grid-template-columns: minmax(0, 1fr); }
   .pulse-standalone .rdi-row { grid-template-columns: 22px minmax(0, 1fr); }
   .pulse-standalone .rdi-row > .rdi-action { grid-column: 2; }
   .pulse-standalone .rdi-row > .rdi-action:empty { display: none; }
+  .pulse-standalone .rdi-meters { grid-template-columns: minmax(0, 1fr); }
+  .pulse-standalone .rdi-meters > li[data-platform] { grid-area: auto / 1; grid-template-columns: 16px minmax(24px, 1fr) 9em; }
+  .pulse-standalone .rdi-meters > li[data-platform][data-plain] { grid-template-columns: 16px minmax(0, 1fr); }
 }
-@media print { .pulse-standalone .rdi-switches, .pulse-standalone .rdi-action, .pulse-standalone .rdi-head .pu-button { display: none; } }
+@media print { .pulse-standalone .rdl-filters, .pulse-standalone .rdi-action, .pulse-standalone .rdl .pu-panel-actions { display: none; } }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { trendSeries, trendUnitsAvailable, bucketLabel, bucketPosts } from './pulseTrendSeries.js';
+import { trendSeries, trendUnitsAvailable, bucketLabel, bucketPosts, platformTrend } from './pulseTrendSeries.js';
 
 const post = (published_at, sentiment, metrics = {}) => ({ id: published_at + (sentiment || ''), published_at, platform: 'x',
   metrics: { ...metrics, ...(sentiment ? { sentiment: { label: sentiment } } : {}) } });
@@ -59,4 +59,20 @@ test('a bucket is named the way a reader says it', () => {
 test('the posts behind a bucket are the ones published inside it', () => {
   const posts = [post('2026-11-08T16:59:00Z'), post('2026-11-08T17:00:00Z'), post('2026-11-15T17:00:00Z')];   // 8 Nov 23:59, 9 Nov 00:00, 16 Nov 00:00 WIB
   assert.deepEqual(bucketPosts(posts, { from: '2026-11-09', to: '2026-11-15' }).map(row => row.published_at), ['2026-11-08T17:00:00Z']);
+});
+
+test('each platform gets its own line over the same buckets, busiest first, with its share and busiest bucket', () => {
+  const on = (platform, published_at) => ({ id: platform + published_at, platform, published_at, metrics: {} });
+  const posts = [on('x', '2026-11-03T05:00:00Z'), on('x', '2026-11-03T06:00:00Z'), on('x', '2026-11-05T05:00:00Z'),
+    on('tiktok', '2026-11-04T05:00:00Z'), on(undefined, '2026-11-12T05:00:00Z'), { id: 'undated', platform: 'tiktok', metrics: {} }];
+  const lines = platformTrend(posts, 'day');
+  assert.deepEqual(lines.map(line => [line.platform, line.total]), [['x', 3], ['other', 1], ['tiktok', 1]]);
+  assert.equal(lines[0].share, 0.6, 'a share of the dated posts: the undated one is in no line');
+  assert.deepEqual(lines[0].rows.map(row => row.posts), [2, 0, 1, 0, 0, 0, 0, 0, 0, 0], 'quiet days are zero, on the same days as the total');
+  assert.deepEqual(lines[0].rows.map(row => row.key), trendSeries(posts, 'day').map(row => row.key));
+  assert.deepEqual(lines[0].peak, { key: '2026-11-03', from: '2026-11-03', to: '2026-11-03', posts: 2 });
+  // Weeks: the lines add up to the total line, bucket by bucket.
+  const weeks = platformTrend(posts, 'week'), total = trendSeries(posts, 'week');
+  assert.deepEqual(total.map((row, index) => weeks.reduce((sum, line) => sum + line.rows[index].posts, 0)), total.map(row => row.posts));
+  assert.deepEqual(platformTrend([{ id: 'a', metrics: {} }], 'day'), []);
 });

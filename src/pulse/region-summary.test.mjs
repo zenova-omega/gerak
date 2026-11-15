@@ -47,11 +47,11 @@ test('the summary card says so when no post names a place, and still offers the 
   assert.match(html, /Buka peta sebaran/);
 });
 
-test('Ikhtisar carries the card in its spread section, and Jaringan opens on the map when a link asks for it', async () => {
+test('Jaringan carries the card in its spread section, and Jaringan opens on the map when a link asks for it', async () => {
   await load(async module => {
-    const source = (await import('node:fs')).readFileSync(new URL('./ProjectOverview.jsx', import.meta.url), 'utf8');
+    const source = (await import('node:fs')).readFileSync(new URL('./PageExtras.jsx', import.meta.url), 'utf8');
     assert.match(source, /lazy\(\(\) => import\('\.\/RegionSpreadSummary'\)\)/, 'the outlines are fetched with the card, not with the page');
-    assert.match(source, /id="overview-spread"[\s\S]*<RegionSpreadSummary[^>]*to=\{page\('network'\) ?\+ ?'&focus=map'\}/);
+    assert.match(source, /id="network-spread"[\s\S]*<RegionSpreadSummary[^>]*to=\{link\('network'\) ?\+ ?'&focus=map'\}/);
     const { default: NetworkAnalysis } = await module('/src/components/admin/pulse/NetworkAnalysis.jsx');
     const { focusFromSearch } = await module('/src/lib/pulseDrilldown.js');
     assert.equal(focusFromSearch('?topic=p1&focus=map'), 'map');

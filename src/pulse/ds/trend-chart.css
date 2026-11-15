@@ -26,6 +26,29 @@
 .pulse-standalone .tc-key svg { flex: none; }
 .pulse-standalone .tc-note { margin: 10px 0 0; color: var(--ps-muted); font-size: .8125rem; }
 
+/* Platform view: one row per platform, busiest first. Left, the platform as a small infographic (count, share of the
+   posts, share bar, busiest day); right, its line on its own axis, so a platform with a few posts a day still shows
+   its shape next to one with a thousand. Every plot has the same width, so the days line up down the stack. */
+.pulse-standalone .tc-plats { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .tc-plat { display: grid; grid-template-columns: minmax(148px, 184px) minmax(0, 1fr); align-items: center; gap: 4px 16px; padding-top: 4px; }
+.pulse-standalone .tc-plat + .tc-plat { border-top: 1px solid var(--ps-line); }
+.pulse-standalone .tc-plat-head { display: grid; gap: 3px; min-width: 0; }
+.pulse-standalone .tc-plat-head p { margin: 0; }
+.pulse-standalone .tc-plat-name { display: flex; align-items: center; gap: 7px; font-size: .875rem; }
+.pulse-standalone .tc-plat-name > span { display: inline-flex; color: var(--tc-plat); }
+.pulse-standalone .tc-plat-name strong { font-weight: 600; color: var(--ps-ink); }
+.pulse-standalone .tc-plat-figure, .pulse-standalone .tc-plat-peak { color: var(--ps-muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .tc-plat-figure b { color: var(--ps-ink); font-size: 1.0625rem; font-weight: 700; }
+.pulse-standalone .tc-plat-bar { display: block; height: 6px; border-radius: 3px; background: var(--ps-soft); overflow: hidden; }
+.pulse-standalone .tc-plat-bar > i { display: block; height: 100%; border-radius: 3px; background: var(--tc-plat); }
+.pulse-standalone .tc-plot.tc-plot-mini { height: 78px; }
+.pulse-standalone .tc-plot.tc-plot-mini.tc-plot-dated { height: 104px; }
+@media (max-width: 640px) {
+  .pulse-standalone .tc-plat { grid-template-columns: minmax(0, 1fr); }
+  .pulse-standalone .tc-plat-head { grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 12px; }
+  .pulse-standalone .tc-plat-bar, .pulse-standalone .tc-plat-peak { grid-column: 1 / -1; }
+}
+
 .pulse-standalone .tc-data { margin-top: 14px; font-size: .8125rem; }
 .pulse-standalone .tc-data > summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--ps-muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .pulse-standalone .tc-data > summary:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
@@ -43,3 +66,53 @@
   .pulse-standalone .tc-plot-tall { height: 240px; }
 }
 @media print { .pulse-standalone .tc-hint, .pulse-standalone .tc-data { display: none; } }
+
+/* Spikes: a ringed point on the line, an infographic of what its day is made of in the tooltip of the chart under
+   the cursor, and the same facts as sentences in the table. The card follows the brand's infographic templates:
+   figures, one proportion bar with its key, ranked rows, a quote. No panel inside the tooltip: blocks are set apart
+   by space and one rule. */
+.pulse-standalone .tc-tip-spike { width: 18.5rem; max-width: calc(100vw - 48px); gap: 8px; padding: 10px 12px 12px; }
+.pulse-standalone .tc-tip-up { transform: translateY(calc(-100% + 3.5rem)); }
+.pulse-standalone .tsp { display: grid; gap: 10px; margin-top: 2px; padding-top: 10px; border-top: 1px solid var(--ps-line); color: var(--ps-ink); }
+.pulse-standalone .tsp p { margin: 0; }
+.pulse-standalone .tsp-title { display: flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600; }
+.pulse-standalone .tsp-figures { display: flex; align-items: flex-end; gap: 20px; }
+.pulse-standalone .tsp-figure { display: grid; min-width: 0; }
+.pulse-standalone .tsp-figure strong { font-size: 1.375rem; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.pulse-standalone .tsp-figure[data-quiet] strong { font-size: 1rem; font-weight: 600; line-height: 1.35; color: var(--ps-muted); }
+.pulse-standalone .tsp-figure span { font-size: .75rem; line-height: 1.35; color: var(--ps-muted); }
+.pulse-standalone .tsp-block { display: grid; gap: 6px; min-width: 0; }
+.pulse-standalone .tsp-label { font-size: .75rem; color: var(--ps-muted); }
+.pulse-standalone .tsp-bar { display: flex; gap: 2px; height: 10px; border-radius: 5px; overflow: hidden; }
+.pulse-standalone .tsp-bar > span { flex-basis: 0; min-width: 4px; }
+.pulse-standalone .tsp-keys { display: flex; flex-wrap: wrap; gap: 3px 12px; margin: 0; padding: 0; list-style: none; font-size: .75rem; color: var(--ps-muted); }
+.pulse-standalone .tsp-keys li { display: inline-flex; align-items: center; gap: 5px; }
+.pulse-standalone .tsp-keys i { flex: none; width: 8px; height: 8px; border-radius: 2px; }
+.pulse-standalone .tsp-keys b, .pulse-standalone .tsp-rank b, .pulse-standalone .tsp-post b { color: var(--ps-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pulse-standalone .tsp-rank { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .tsp-rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; align-items: center; font-size: .75rem; }
+.pulse-standalone .tsp-rank i { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--tsp); }
+.pulse-standalone .tsp-who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.pulse-standalone .tsp-who > svg { flex: none; }
+.pulse-standalone .tsp-who > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .tsp-post { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: .75rem; }
+.pulse-standalone .tsp-post > span:last-child { color: var(--ps-muted); white-space: nowrap; }
+.pulse-standalone .tsp-quote { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; max-height: 2.9em; overflow: hidden; font-size: .75rem; font-style: italic; line-height: 1.45; color: var(--ps-muted); overflow-wrap: anywhere; }
+/* How a spike began: six hours as six columns (the peak hour in the series colour), then one line per question. */
+.pulse-standalone .tsp-hours { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: end; gap: 4px; height: 72px; margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .tsp-hours li { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; justify-items: center; gap: 2px; height: 100%; font-size: .75rem; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pulse-standalone .tsp-hours i { align-self: end; width: 100%; border-radius: 3px 3px 1px 1px; background: color-mix(in oklab, var(--tsp) 42%, var(--ps-panel)); }
+.pulse-standalone .tsp-hours li[data-peak] i { background: var(--tsp); }
+.pulse-standalone .tsp-hours li[data-peak] b { color: var(--ps-ink); }
+.pulse-standalone .tsp-hours b { font-weight: 600; }
+.pulse-standalone .tsp-fine { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
+.pulse-standalone .tsp-line { font-size: .75rem; line-height: 1.45; color: var(--ps-muted); }
+.pulse-standalone .tsp-line b { color: var(--ps-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pulse-standalone .tsp-chip { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; padding-top: 6px; border-top: 1px solid var(--ps-line); font-size: .75rem; color: var(--ps-muted); }
+.pulse-standalone .tc-spike-note { display: flex; align-items: flex-start; gap: 8px; }
+.pulse-standalone .tc-spike-note svg { flex: none; margin-top: 1px; }
+.pulse-standalone .tc-why-cell { min-width: 16rem; white-space: normal; text-align: left; color: var(--ps-muted); }
+.pulse-standalone .tc-why-cell span { display: block; }
+.pulse-standalone .tc-why-cell span + span { margin-top: 2px; }
+
+.pulse-standalone .tc-plot-net { height: 130px; }

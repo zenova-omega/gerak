@@ -1,6 +1,6 @@
 .sc-page { max-width:1280px; margin:0 auto; display:grid; gap:var(--ps-space-6); }
 .sc-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; }
-.sc-eyebrow { font-size:11px; letter-spacing:.12em; font-weight:600; color:var(--ps-muted); }
+.sc-eyebrow { font-size:12px; letter-spacing:.12em; font-weight:600; color:var(--ps-muted); }
 .sc-heading h1 { font-size:var(--ps-text-heading); line-height:1.2; font-weight:650; letter-spacing:-.8px; margin:8px 0!important; }
 .sc-heading p { color:var(--ps-muted); max-width:70ch; }
 .sc-heading .pu-button { flex-shrink:0; }
@@ -18,7 +18,7 @@
 .sc-page dt { color:var(--ps-muted); font-size:12px; }
 .sc-page dd { margin:0; font-variant-numeric:tabular-nums; }
 .sc-account-overview dd { font-size:20px; font-weight:600; margin-top:4px; }
-.sc-account-overview dd small { display:block; font-weight:400; color:var(--ps-muted); font-size:11px; }
+.sc-account-overview dd small { display:block; font-weight:400; color:var(--ps-muted); font-size:12px; }
 .sc-account-detail { border-top:1px solid var(--ps-line); }
 .sc-account-detail summary { cursor:pointer; padding:11px 24px; font-size:12px; color:var(--ps-muted); }
 .sc-account-detail>div { padding:4px 24px 20px; display:grid; gap:12px; justify-items:start; }
@@ -39,7 +39,7 @@
 .sc-source-icon-tiktok { background:var(--ps-mint); color:var(--ps-success-ink); }
 .sc-source-icon-youtube { background:var(--ps-peach); color:var(--ps-warning-ink); }
 .sc-source-name strong { display:block; font-size:14px; font-weight:600; }
-.sc-source-name small,.sc-source-total small { display:block; font-size:11px; color:var(--ps-muted); }
+.sc-source-name small,.sc-source-total small { display:block; font-size:12px; color:var(--ps-muted); }
 .sc-source-total { text-align:right; font-variant-numeric:tabular-nums; }
 .sc-source-total strong { font-size:16px; font-weight:600; }
 .sc-source-mode { font-size:12px; color:var(--ps-muted); text-align:right; }

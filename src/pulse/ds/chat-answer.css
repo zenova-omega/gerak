@@ -9,7 +9,7 @@
 .pulse-standalone .pca-list > li { position: relative; padding-left: 20px; color: var(--ps-ink); font-size: 1rem; line-height: 1.6; text-wrap: pretty; overflow-wrap: anywhere; }
 .pulse-standalone .pca-list > li::before { content: ""; position: absolute; left: 4px; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--ps-accent); }
 
-.pulse-standalone .pca-mark { position: relative; display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin: 0 2px; padding: 0 5px; box-sizing: border-box; border: 1px solid color-mix(in oklch, var(--ps-accent) 42%, var(--ps-panel)); border-radius: 999px; background: color-mix(in oklch, var(--ps-accent) 16%, var(--ps-panel)); color: var(--ps-ink); font-size: .6875rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; text-decoration: none; vertical-align: 2px; white-space: nowrap; }
+.pulse-standalone .pca-mark { position: relative; display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin: 0 2px; padding: 0 5px; box-sizing: border-box; border: 1px solid color-mix(in oklch, var(--ps-accent) 42%, var(--ps-panel)); border-radius: 999px; background: color-mix(in oklch, var(--ps-accent) 16%, var(--ps-panel)); color: var(--ps-ink); font-size:.75rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; text-decoration: none; vertical-align: 2px; white-space: nowrap; }
 .pulse-standalone a.pca-mark::after { content: ""; position: absolute; inset: -12px -6px; }      /* a finger-sized target around a small mark */
 .pulse-standalone a.pca-mark:hover { background: color-mix(in oklch, var(--ps-accent) 30%, var(--ps-panel)); }
 .pulse-standalone a.pca-mark:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }

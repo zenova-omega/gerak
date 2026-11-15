@@ -7,6 +7,8 @@ import './ds/radar-map.css';
 
 const [, , WIDTH, HEIGHT] = shapes.viewBox;
 const centre = Object.fromEntries(shapes.provinces.map(province => [province.code, [province.x, province.y]]));
+/** What the map is drawn from, and what it cannot know. Shown as the method note of the card that holds the map. */
+export const MAP_SOURCE = 'Peta memakai pencarian populer per provinsi dan tempat yang disebut berita. X, TikTok, dan Instagram tidak memberi lokasi.';
 /** One issue's shade for a province: by how many searches it has there. */
 const searchShade = searches => searches >= 2000 ? 3 : searches >= 1000 ? 2 : searches > 0 ? 1 : 0;
 
@@ -28,6 +30,8 @@ export default function RadarMap({ issues = [], selectedIssue = null, province =
     const name = provinceName(code);
     if (searched) {
       const searches = searched[code] || 0;
+      // A province whose list was not read is unknown for this issue too, never a "no".
+      if (!searches && read && !read.has(code)) return { shade: 'unread', label: `${name}: daftar tidak terbaca` };
       return { shade: String(searchShade(searches)), label: searches ? `${name}: ${formatCount(searches)}+ pencarian` : `${name}: tidak masuk pencarian populer` };
     }
     const count = counts[code] || 0;
@@ -36,7 +40,7 @@ export default function RadarMap({ issues = [], selectedIssue = null, province =
   }
   const choose = code => onProvince(code === province ? '' : code);
   const showTip = (code, label, x, y) => setTip({ code, label, left: `${x / WIDTH * 100}%`, top: `${y / HEIGHT * 100}%`, flip: x > WIDTH * .7 });
-  const anyUnread = !searched && read && shapes.provinces.some(shape => !read.has(shape.code) && !counts[shape.code]);
+  const anyUnread = Boolean(read) && shapes.provinces.some(shape => !read.has(shape.code) && !(searched ? searched[shape.code] : counts[shape.code]));
   const nothing = searched ? !footprint.regions.length && !footprint.pins.length : !Object.keys(counts).length;
   const rows = provinceRows(issues, provincesRead);
 
@@ -67,17 +71,17 @@ export default function RadarMap({ issues = [], selectedIssue = null, province =
       {searched ? <>
         <li className="rdm-ramp"><span>Pencarian di provinsi:</span><span><i data-shade="1" />di bawah 1.000</span><span><i data-shade="2" />1.000 lebih</span><span><i data-shade="3" />2.000 lebih</span></li>
         <li><i className="rdm-pin-key" />tempat yang disebut berita</li>
+        {anyUnread && <li><i data-shade="unread" />daftar tidak terbaca</li>}
       </> : <>
         {most > 0 && <li className="rdm-ramp"><span>Isu yang ramai di provinsi:</span>{shadeRanges(most).map(([step, label]) => <span key={step}><i data-shade={step} />{label}</span>)}</li>}
         {anyUnread && <li><i data-shade="unread" />daftar tidak terbaca</li>}
       </>}
     </ul>
-    <p className="rdm-source">Peta memakai pencarian populer per provinsi dan tempat yang disebut berita. X, TikTok, dan Instagram tidak memberi lokasi.</p>
     <details className="rdm-data"><summary>Lihat angka</summary>
       <div className="rdm-table"><table>
         <thead><tr><th scope="col">Provinsi</th><th scope="col">{searched ? 'Pencarian' : 'Isu ramai'}</th>{!searched && <th scope="col">Isu teratas</th>}</tr></thead>
         <tbody>{rows.map(row => <tr key={row.code}><th scope="row">{row.name}</th>
-          {searched ? <td>{searched[row.code] ? formatCount(searched[row.code]) + '+' : 'tidak masuk'}</td>
+          {searched ? <td>{searched[row.code] ? formatCount(searched[row.code]) + '+' : row.read ? 'tidak masuk' : 'tidak terbaca'}</td>
             : <><td>{!row.count && !row.read ? 'tidak terbaca' : row.count}</td><td>{row.top || ''}</td></>}
         </tr>)}</tbody>
       </table></div>

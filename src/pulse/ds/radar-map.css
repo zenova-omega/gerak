@@ -23,6 +23,8 @@
 .pulse-standalone .rdm-hatch-line { stroke: var(--ps-muted); stroke-width: 1.2; }
 .pulse-standalone .rdm-province:hover, .pulse-standalone .rdm-province:focus-visible { stroke: var(--ps-ink); stroke-width: 1.5px; }
 .pulse-standalone .rdm-province[aria-pressed="true"] { stroke: var(--ps-ink); stroke-width: 2.25px; }
+/* The chosen province keeps a visible sign of keyboard focus: the ink stroke becomes dashed. */
+.pulse-standalone .rdm-province[aria-pressed="true"]:focus-visible { stroke-dasharray: 5 3; }
 .pulse-standalone .rdm-pin { fill: var(--ps-ink); stroke: var(--ps-panel); stroke-width: 1.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
 .pulse-standalone .rdm-tip { position: absolute; z-index: 2; margin: 0; max-width: 240px; padding: 6px 10px; transform: translate(12px, 12px); border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); background: var(--ps-panel); color: var(--ps-ink); box-shadow: 0 6px 18px oklch(20% 0.02 285 / .16); font-size: .8125rem; pointer-events: none; white-space: nowrap; }
 .pulse-standalone .rdm-tip[data-flip] { transform: translate(calc(-100% - 12px), 12px); }
@@ -35,7 +37,6 @@
 .pulse-standalone .rdm-legend i { flex: none; width: 14px; height: 14px; border: 1px solid var(--ps-line); border-radius: 3px; background: color-mix(in oklch, var(--rdm-hue) var(--rdm-shade, 0%), var(--ps-panel)); }
 .pulse-standalone .rdm-legend i[data-shade="unread"] { background: repeating-linear-gradient(45deg, var(--ps-muted) 0 1.2px, var(--ps-panel) 1.2px 5px); }
 .pulse-standalone .rdm-legend i.rdm-pin-key { width: 10px; height: 10px; border: 1.5px solid var(--ps-panel); border-radius: 50%; background: var(--ps-ink); box-shadow: 0 0 0 1px var(--ps-line); }
-.pulse-standalone .rdm-source { margin: 8px 0 0; max-width: 72ch; color: var(--ps-muted); font-size: .8125rem; }
 
 .pulse-standalone .rdm-data { margin-top: 10px; font-size: .8125rem; }
 .pulse-standalone .rdm-data > summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--ps-muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }

@@ -135,3 +135,45 @@ test('the small form shows the days it covers and no switch', async () => {
   assert.equal(caption(html), '3–12 Nov 2026');
   assert.doesNotMatch(await render({ posts: [{ id: 'x', metrics: {} }], compact: true }), /pu-range/, 'nothing dated, nothing to caption');
 });
+
+test('a spike is marked, and what the day is made of is told in words that need no hover', async () => {
+  const at = (id, day, author, likes) => ({ id, published_at: `2026-11-${day}T05:00:00Z`, platform: 'x', author, text: 'Isi posting ' + id, metrics: { likes } });
+  const quiet = [at('q1', '08', 'satu', 10), at('q2', '09', 'dua', 10), at('q4', '11', 'empat', 10), at('q5', '12', 'lima', 10)];
+  const loud = ['a', 'b', 'c'].map(id => at(id, '10', 'ramai', 5)).concat(['d', 'e', 'f', 'g'].map(id => at(id, '10', 'akun_' + id, 5)), [at('viral', '10', 'kabar', 4000)]);
+  const html = await render({ posts: [...quiet, ...loud], onPick() {} });
+  assert.match(html, /class="tc-note tc-spike-note"/);
+  assert.match(html, /menandai lonjakan/);
+  const head = html.match(/<thead>[\s\S]*?<\/thead>/)[0];
+  assert.match(head, />Lonjakan</, 'the table says in words what the mark says on hover');
+  const row = html.match(/<tr><th scope="row">10 Nov<\/th>[\s\S]*?<\/tr>/)[0];
+  assert.match(row, /8 posting, 8× hari biasa pada rentang ini\./);
+  assert.match(row, /Terbanyak dari X: 8 posting \(100%\)\./);
+  assert.match(row, /Paling banyak memposting: @ramai \(3\)\./);
+  assert.match(row, /4\.035 interaksi, 403,5× hari biasa pada rentang ini\./);
+  assert.match(row, /99% dari satu posting: @kabar di X, “Isi posting viral”/);
+  const other = html.match(/<tr><th scope="row">9 Nov<\/th>[\s\S]*?<\/tr>/)[0];
+  assert.doesNotMatch(other, /hari biasa/, 'an ordinary day carries no note');
+  assert.doesNotMatch(html, /karena|penyebab|dipicu/i, 'a spike is described, never explained by a cause');
+  // No spike: no mark, no note, no extra column.
+  const calm = await render({ posts: quiet, onPick() {} });
+  assert.doesNotMatch(calm, /tc-spike-note|>Lonjakan</);
+});
+
+test('the platform view draws one line per platform on its own axis, with each platform\'s count and share beside it', async () => {
+  const on = (id, platform, day) => ({ id, platform, published_at: `2026-11-${day}T05:00:00Z`, author: 'akun_' + id, metrics: {} });
+  const mixed = [...Array.from({ length: 8 }, (_, index) => on('x' + index, 'x', index < 6 ? '10' : '11')), on('t1', 'tiktok', '11'), on('t2', 'tiktok', '12')];
+  const html = await render({ posts: mixed, initialView: 'platform', onPick() {} });
+  assert.deepEqual(pressed(group(html, 'Isi grafik')), ['Platform']);
+  const items = [...html.matchAll(/<li class="tc-plat"[\s\S]*?<\/li>/g)].map(match => match[0]);
+  assert.equal(items.length, 2);
+  const text = item => item.match(/<div class="tc-plat-head">[\s\S]*?<\/div>/)[0].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  assert.equal(text(items[0]), 'X 8 posting · 80% Puncak 10 Nov: 6');
+  assert.equal(text(items[1]), 'TikTok 2 posting · 20% Puncak 11 Nov: 1');
+  assert.match(items[1], /aria-label="Grafik garis posting di TikTok per hari/);
+  assert.match(html, /skalanya sendiri/, 'the reader is told the lines do not share a scale');
+  assert.doesNotMatch(html, /Klik grafik/, 'a click on one platform\'s line would open every platform\'s posts, so none is promised');
+  const head = [...html.match(/<thead>[\s\S]*?<\/thead>/)[0].matchAll(/<th [^>]*>([^<]*)</g)].map(match => match[1]);
+  assert.deepEqual(head.slice(0, 4), ['Tanggal', 'Posting', 'X', 'TikTok']);
+  const row = html.match(/<tr><th scope="row">11 Nov<\/th>[\s\S]*?<\/tr>/)[0];
+  assert.deepEqual([...row.matchAll(/<td>(\d+)<\/td>/g)].map(match => match[1]), ['3', '2', '1']);
+});

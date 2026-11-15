@@ -17,6 +17,6 @@ export default function RegionMiniMap({ rows = [], label, bubbles = true }) {
   return <svg className="rm-svg rm-mini" viewBox={outline.viewBox.join(' ')} role="img" aria-label={label} preserveAspectRatio="xMidYMid meet">
     <g>{outline.provinces.map(province => <path key={province.code} className="rm-province" data-shade={shadeStep(byCode.get(province.code)?.count, most)} d={province.d} />)}</g>
     <g>{marks.map(({ province, radius }) => <circle key={province.code} className="rm-bubble" cx={province.x} cy={province.y} r={radius} />)}</g>
-    <g aria-hidden="true">{marks.filter(mark => mark.radius >= 9).map(({ province, row }) => <text key={province.code} className="rm-count" x={province.x} y={province.y} fontSize="9" dy="3.2">{formatCount(row.count)}</text>)}</g>
+    <g aria-hidden="true">{marks.filter(mark => mark.radius >= 11).map(({ province, row }) => <text key={province.code} className="rm-count" x={province.x} y={province.y} fontSize="12" dy="3.2">{formatCount(row.count)}</text>)}</g>
   </svg>;
 }

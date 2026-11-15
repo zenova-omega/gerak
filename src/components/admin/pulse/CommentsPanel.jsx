@@ -60,19 +60,22 @@ export function Comment({ comment, video, post, platform, showAnalysis = true })
   const review = commentNeedsReview(comment);
   const reasons = [['Sentimen', comment.sentiment?.reason], ['Sikap', comment.stance?.reason]].filter(([, reason]) => reason);
   const sourceId = useId();
+  const url = safeSourceUrl(comment.url);
+  // Few rows, so many cards fit a screen: the way to the comment is an icon in the head, the reading and its reasons
+  // share a row, and the foot is one quiet line naming the post.
   return <article className="pcm-card" data-has-source={post && video ? '' : undefined}>
     {post && video && <div className="pcm-source-pop" id={sourceId} role="tooltip"><SourcePreview post={post} /></div>}
     <header className="pcm-head">
       <AccountAvatar size="sm" author={comment.author} platform={post?.platform || platform} photo={null} />
       <div className="pcm-who"><strong>{comment.author || 'Penulis tidak tersedia'}</strong><small>{pulseDate(comment.published_at)}{comment.replies > 0 && <> · {formatCount(comment.replies)} balasan</>}</small></div>
-      <span className="pcm-likes" title="Suka"><Heart size={14} aria-hidden="true" /><span className="pu-sr">Suka: </span>{formatCount(comment.likes)}</span>
+      <span className="pcm-likes" title="Suka"><Heart size={14} aria-hidden="true" /><span className="pu-sr">Suka: </span>{formatCount(comment.likes)}</span>{url && <a className="pcm-open" href={url} target="_blank" rel="noopener noreferrer" aria-label={`Buka komentar ${comment.author || 'ini'}`} title="Buka komentar"><ExternalLink size={14} aria-hidden="true" /></a>}
     </header>
     <p className="pcm-text">{comment.text}</p>
     {showAnalysis && <div className="pcm-reading">
       <div className="pu-tag-group">{!comment.sentiment?.label && !comment.stance?.label ? <PulseTag tone="unknown" dot>Belum dianalisis</PulseTag> : <><SentimentTag value={comment.sentiment?.label || 'unknown'} />{comment.sentiment?.label === 'neutral' && ['question', 'call', 'sarcasm'].includes(comment.sentiment.kind) && <PulseTag variant="outline" title={kindHints[comment.sentiment.kind]}>{kindLabels[comment.sentiment.kind]}</PulseTag>}<StanceTag value={comment.stance?.label} /></>}{review && <PulseTag tone="warning" dot>Perlu ditinjau</PulseTag>}</div>
-      {reasons.length > 0 && <details className="pcm-reasons"><summary>Alasan penilaian</summary><dl>{reasons.map(([label, reason]) => <div key={label}><dt>{label}</dt><dd>{reason}</dd></div>)}</dl></details>}
+      {reasons.length > 0 && <details className="pcm-reasons"><summary>Alasan</summary><dl>{reasons.map(([label, reason]) => <div key={label}><dt>{label}</dt><dd>{reason}</dd></div>)}</dl></details>}
     </div>}
-    {(video || safeSourceUrl(comment.url)) && <footer className="pcm-foot">{video && <span className="pcm-post" tabIndex={post ? 0 : undefined} aria-describedby={post ? sourceId : undefined}>Pada posting: {video}</span>}{safeSourceUrl(comment.url) && <a href={safeSourceUrl(comment.url)} target="_blank" rel="noopener noreferrer">Buka komentar <ExternalLink size={12} aria-hidden="true" /></a>}</footer>}
+    {video && <footer className="pcm-foot"><span className="pcm-post" tabIndex={post ? 0 : undefined} aria-describedby={post ? sourceId : undefined}>Pada posting: {video}</span></footer>}
   </article>;
 }
 

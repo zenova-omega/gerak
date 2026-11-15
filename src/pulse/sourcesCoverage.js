@@ -81,6 +81,13 @@ const threadsRefusals = {
   network: 'Threads tidak dapat dihubungi',
   not_configured: 'token belum disimpan',
 };
+const publicSearchRefusals = {
+  token: 'kunci layanan pencarian ditolak',
+  credits: 'kredit pencarian habis. Isi ulang kredit, lalu kumpulkan lagi',
+  permission: 'layanan pencarian menolak akses',
+  quota: 'terlalu banyak permintaan. Coba lagi sebentar lagi',
+  network: 'layanan pencarian tidak dapat dihubungi',
+};
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
 /** What the Threads row can say and whether a keyword collection can be asked for, from stored facts only.
@@ -90,6 +97,18 @@ export function threadsStatus(source, { topicId, readOnly, busy, now = new Date(
   const connection = source?.connection;
   const lines = [];
   let reason = null;
+  if (source?.public_search) {
+    // The paid public search needs no account connection: it reads every public post, one credit per search word.
+    lines.push('Pencarian publik aktif: menjangkau semua posting publik Threads, lengkap dengan jumlah suka, balasan, dan repost.');
+    lines.push('Setiap pengumpulan mencari semua kata kunci project sampai halaman terakhir, pada rentang hari project. Berbayar: sekitar 1 kredit per 15 posting yang dibaca.');
+    if (source.recurring_enabled && Number.isFinite(source.interval_minutes)) lines.push(`Otomatis: setiap project yang dipantau dicari setiap ${source.interval_minutes >= 60 && source.interval_minutes % 60 === 0 ? `${source.interval_minutes / 60} jam` : `${source.interval_minutes} menit`}.`);
+    const left = source.search_credits_remaining;
+    if (Number.isFinite(left)) lines.push(`Sisa kredit pada pengumpulan terakhir: ${left.toLocaleString('id-ID')}.`);
+    const refused = source.last_attempt?.status === 'failed' ? publicSearchRefusals[source.last_attempt.error] : null;
+    if (refused) lines.push(`Pengumpulan terakhir ditolak: ${refused}.`);
+    reason = readOnly ? 'Akses baca saja. Pengumpulan memerlukan administrator.' : busy ? 'Tunggu hingga permintaan saat ini selesai.' : !topicId ? 'Pilih satu topik sebelum mengumpulkan data.' : null;
+    return { lines, canCollect: !reason, reason };
+  }
   if (!source?.configured) {
     lines.push('Token Threads belum disimpan di server.');
     reason = 'Simpan token Threads terlebih dahulu.';

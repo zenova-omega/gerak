@@ -35,9 +35,9 @@
 .pulse-standalone .rm-pins { position: absolute; inset: 0; pointer-events: none; }
 .pulse-standalone .rm-pin { position: absolute; width: 24px; height: 24px; transform: translate(-50%, -50%); pointer-events: auto; cursor: pointer; }
 .pulse-standalone .rm-face { display: block; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--ps-soft); box-shadow: 0 0 0 2px var(--ps-panel), 0 1px 4px oklch(20% 0.02 285 / .35); }
-.pulse-standalone .rm-face[data-empty] { display: grid; place-items: center; background: color-mix(in oklch, var(--rm-hue) 34%, var(--ps-panel)); color: var(--ps-ink); font-size: 11px; font-weight: 650; line-height: 1; }
+.pulse-standalone .rm-face[data-empty] { display: grid; place-items: center; background: color-mix(in oklch, var(--rm-hue) 34%, var(--ps-panel)); color: var(--ps-ink); font-size:12px; font-weight: 650; line-height: 1; }
 .pulse-standalone .rm-pin[data-selected] > .rm-face { box-shadow: 0 0 0 2px var(--ps-ink), 0 1px 4px oklch(20% 0.02 285 / .35); }
-.pulse-standalone .rm-pin-count { position: absolute; right: -9px; bottom: -7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--ps-ink); color: var(--ps-panel); box-shadow: 0 0 0 1.5px var(--ps-panel); font-size: 10px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 16px; text-align: center; }
+.pulse-standalone .rm-pin-count { position: absolute; right: -9px; bottom: -7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--ps-ink); color: var(--ps-panel); box-shadow: 0 0 0 1.5px var(--ps-panel); font-size:12px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 16px; text-align: center; }
 .pulse-standalone .rm-pin.rm-pin-key { position: relative; display: inline-block; flex: none; margin-right: 10px; transform: none; cursor: default; }
 .pulse-standalone .rm-svg { display: block; width: 100%; height: auto; border-radius: var(--ps-radius-control); background: color-mix(in oklch, var(--ps-soft) 45%, var(--ps-panel)); }
 .pulse-standalone .rm-province { fill: color-mix(in oklch, var(--ps-line) 62%, var(--ps-panel)); stroke: var(--ps-panel); stroke-width: .75px; vector-effect: non-scaling-stroke; stroke-linejoin: round; cursor: pointer; }

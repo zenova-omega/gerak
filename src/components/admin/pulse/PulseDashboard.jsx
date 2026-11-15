@@ -41,6 +41,7 @@ import { ProjectPostsContext } from '../../../pulse/projectPosts';
 import AccountAvatar from './AccountAvatar';
 import { accountPageSize, accountPlatforms, accountRanking, isAccountFiltered, pageOf, platformFacets, readAccountFilters, socialPlatforms, togglePlatform, withFollowers, withoutAccountFilters, writeAccountFilters } from '../../../lib/pulseAccountFilters';
 import '../../../pulse/ds/accounts-filter.css';
+import { AccountsInsights, NetworkNarratives, WordsAndTime } from '../../../pulse/PageExtras';
 
 function Empty({ children }) {
   return <div className="pulse-empty"><Database size={25} strokeWidth={1.3} /><p>{children}</p></div>;
@@ -49,9 +50,9 @@ function ErrorNotice({ error, retry, standalone }) {
   return <div className="pulse-error" role="alert"><AlertCircle size={20} /><div><strong>Data tidak tersedia</strong><p>{pulseError(error)}</p>{!standalone && <Link to="/login?returnTo=pulse">Masuk dengan akun admin</Link>}</div>{retry && <PulseButton variant="secondary" className="pulse-button" onClick={retry}>Coba lagi</PulseButton>}</div>;
 }
 // What each page looks like before its data arrives.
-const skeletonShape = { overview: { stats: 6, panels: 2, rows: 3 }, sentiment: { stats: 4, panels: 1, rows: 3 }, posts: { stats: 0, panels: 0, rows: 6 }, comments: { stats: 0, panels: 3, rows: 4 }, accounts: { stats: 4, panels: 0, rows: 8 }, network: { stats: 4, panels: 1, rows: 2 }, infographics: { stats: 0, panels: 2, rows: 0 }, reports: { stats: 4, panels: 2, rows: 3 } };
+const skeletonShape = { overview: { stats: 6, panels: 2, rows: 3 }, sentiment: { stats: 4, panels: 1, rows: 3 }, posts: { stats: 0, panels: 0, rows: 6 }, comments: { stats: 0, panels: 3, rows: 4 }, accounts: { stats: 4, panels: 0, rows: 8 }, network: { stats: 4, panels: 1, rows: 2 }, reports: { stats: 4, panels: 2, rows: 3 } };
 // Pages that narrow to the sentiment carried in the URL. Ikhtisar, Sentimen and Laporan always show the whole picture; Posting has its own filter chips.
-const sentimentScoped = ['comments', 'accounts', 'network', 'infographics'];
+const sentimentScoped = ['comments', 'accounts', 'network'];
 function Panel({ title, note, children, className = '' }) {
   return <section className={'pulse-panel ' + className}><div className="pulse-panel-heading"><div><h2>{title}</h2>{note && <p>{note}</p>}</div></div>{children}</section>;
 }
@@ -165,8 +166,8 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
               <AreaChart data={timeline} margin={{ top: 18, right: 16, left: 0, bottom: 4 }}>
                 <defs><linearGradient id="pulse-area-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#168577" stopOpacity={0.24} /><stop offset="100%" stopColor="#168577" stopOpacity={0.01} /></linearGradient></defs>
                 <CartesianGrid stroke="#e7eeeb" vertical={false} strokeDasharray="3 4" />
-                <XAxis dataKey="date" tickFormatter={dateLabel} tickLine={false} axisLine={false} minTickGap={30} tick={{ fill: '#66766e', fontSize: 11 }} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={45} tick={{ fill: '#66766e', fontSize: 11 }} />
+                <XAxis dataKey="date" tickFormatter={dateLabel} tickLine={false} axisLine={false} minTickGap={30} tick={{ fill: '#66766e', fontSize: 12 }} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={45} tick={{ fill: '#66766e', fontSize: 12 }} />
                 <Tooltip labelFormatter={dateLabel} formatter={value => [formatCount(value), 'Mention']} contentStyle={{ borderRadius: 10, borderColor: '#dce7e0', fontSize: 12 }} />
                 <Area type="linear" dataKey="count" stroke="#168577" strokeWidth={2.5} fill="url(#pulse-area-fill)" dot={{ r: 3, fill: '#168577', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
               </AreaChart>
@@ -183,17 +184,19 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     <SentimentSummary posts={data.posts||[]} onSelect={openSentiment}/>
     </>}
     {view === 'accounts' && <PulseStatGrid label="Ringkasan akun dan sumber"><PulseStat label="Akun / sumber unik" icon={Users} value={allAccounts.length} note="Per platform, termasuk penerbit berita" /><PulseStat label="Posting terkumpul" icon={Radio} value={data.total_mentions} note={allAccounts.length ? `${(data.total_mentions / allAccounts.length).toLocaleString('id-ID', { maximumFractionDigits: 1 })} posting per akun · ${platforms.length} platform` : `${platforms.length} platform`} /><PulseStat label="Interaksi teramati" icon={Activity} value={totals.engagement?.value ?? null} share={data.total_mentions ? (totals.engagement?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting bermetrik" /><PulseStat label="Tayangan teramati" icon={Layers} value={totals.views?.value ?? null} share={data.total_mentions ? (totals.views?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting punya tayangan" note="Bukan audiens unik" /></PulseStatGrid>}
+    {view === 'accounts' && <AccountsInsights posts={data.posts || []} topic={topic} period={period} />}
     {['all', 'accounts'].includes(view) && <div className="pulse-detail-grid">
       <AccountRanking accounts={data.influencers} posts={data.posts} />
       {view === 'all' && <Panel title="Cakupan geografis" note="Lokasi hanya ditampilkan jika tersedia dari sumber">
         <GeographicView locations={data.locations} unknownCount={data.unknown_location_count} />
       </Panel>}
     </div>}
+    {view === 'network' && <><NetworkNarratives posts={data.posts || []} /><WordsAndTime posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></>}
     {['all', 'network'].includes(view) && <NetworkAnalysis key={'network-' + (data.posts?.[0]?.id || 'empty')} data={data.network} posts={data.posts || []} locations={data.locations||[]} unknownCount={data.unknown_location_count||0} />}
     {['all', 'comments'].includes(view) && <>{responsePanel}<CommentsPanel key={'comments-' + (data.posts?.[0]?.id || 'empty')} posts={data.posts || []} topicId={topic?.id||analysisParams.get('topic')} /></>}
     {view === 'posts' && <TrendChart dense title="Tren posting" posts={data.posts || []} period={period} selected={pickedDay ? { from: pickedDay, to: pickedDayTo || pickedDay } : null} onPick={row => pickDates(row.from, row.to)} onClear={() => pickDates('', '')} />}
     {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postPlatform,postProvince,pickedDay,pickedDayTo,analysisParams.get('find')].join(':')} initialProvince={postProvince} initialQuery={analysisParams.get('find') || ''} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={pickedDay} initialDayTo={pickedDayTo} initialSentiment={sentiment} initialAuthor={postAuthor} initialPlatform={postPlatform} />}
-    {['all', 'infographics'].includes(view) && <div id="pulse-infographics-view"><InfographicsPanel ranged={false} posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></div>}
+    {view === 'all' && <div id="pulse-infographics-view"><InfographicsPanel ranged={false} posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></div>}
   </>;
 }
 
@@ -260,11 +263,11 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
     else setSearchParams(params);
     setPlatform(null);
   };
-  const titles = { sentiment: 'Sentimen', overview: 'Ikhtisar', monitor: 'Monitor Project', network: 'Jaringan & narasi', accounts: 'Akun & sumber', infographics: 'Infografik', posts: 'Posting', comments: 'Komentar' };
-  const descriptions = { sentiment: 'Pahami nada percakapan, perubahan harian, dan posting di baliknya.', overview: 'Ringkasan aktivitas dan cakupan percakapan project.', monitor: 'Pantau alert, jadwal pengambilan, dan kesehatan antrean.', network: 'Telusuri hubungan akun dan kronologi berdasarkan bukti sumber.', accounts: 'Temukan akun penyebar dan bandingkan interaksi dalam sampel.', infographics: 'Jelajahi kata, waktu publikasi, dan cakupan geografis.', posts: 'Periksa konten asli, preview media, dan riwayat metrik.', comments: 'Baca respons publik dari komentar posting yang tersimpan.' };
+  const titles = { sentiment: 'Sentimen', overview: 'Ikhtisar', monitor: 'Monitor Project', network: 'Jaringan & narasi', accounts: 'Akun & sumber', posts: 'Posting', comments: 'Komentar' };
+  const descriptions = { sentiment: 'Pahami nada percakapan, perubahan harian, dan posting di baliknya.', overview: 'Ringkasan aktivitas dan cakupan percakapan project.', monitor: 'Pantau alert, jadwal pengambilan, dan kesehatan antrean.', network: 'Telusuri hubungan akun dan kronologi berdasarkan bukti sumber.', accounts: 'Temukan akun penyebar dan bandingkan interaksi dalam sampel.', posts: 'Periksa konten asli, preview media, dan riwayat metrik.', comments: 'Baca respons publik dari komentar posting yang tersimpan.' };
   titles.reports='Laporan';
   descriptions.reports='Ringkasan eksekutif dan bukti sumber sesuai periode project, siap dicetak sebagai PDF.';
-  if (standalone && !topicId) return <div className="pulse-empty"><Database size={28} /><h1>Pilih project untuk mulai memantau</h1><p>Gunakan picker di atas. Setiap project menyimpan satu topik beserta keyword, posting, dan alert-nya.</p></div>;
+  if (standalone && !topicId) return <div className="pulse-empty"><Database size={28} /><h1>Pilih project untuk mulai memantau</h1><p>Pilih salah satu project di atas. Setiap project menyimpan satu topik beserta keyword, posting, dan alert-nya.</p></div>;
   if (standalone && !topics.loading && !topics.error && !selected) return <div className="pulse-empty"><h1>Project tidak tersedia</h1><p>Pilih project lain melalui picker di atas.</p></div>;
   return <ProjectPostsContext.Provider value={scopedData?.posts || null}><div className="pulse-dashboard" id="pulse-dashboard" data-view={view}>
     {standalone ? <PulsePageHead icon={pageMeta[view]?.icon} title={pageMeta[view]?.title || titles[view] || 'Pulse'} tagline={pageMeta[view]?.tagline} guide={pageMeta[view]?.guide}><PulseButton variant="secondary" className="pulse-button" disabled={!!action || analytics.loading || issues.loading || topics.loading} onClick={refresh}><RefreshCw size={15} />Muat ulang</PulseButton></PulsePageHead> : <header className="pulse-header">

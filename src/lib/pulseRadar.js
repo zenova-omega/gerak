@@ -9,16 +9,27 @@ import { placePoint } from './pulseRegionMap.js';
 export const radarCategories = [['', 'Semua'], ['politik', 'Politik'], ['hukum', 'Hukum'], ['ekonomi', 'Ekonomi'], ['bencana', 'Bencana'], ['sosial', 'Sosial'],
   ['teknologi', 'Teknologi'], ['olahraga', 'Olahraga'], ['hiburan', 'Hiburan'], ['dunia', 'Dunia'], ['lainnya', 'Lainnya']];
 /** Platforms the radar can say something about. Location only ever comes from searches and named places. */
-export const radarPlatforms = [['', 'Semua platform'], ['news', 'Berita'], ['youtube', 'YouTube'], ['search', 'Google']];
+export const radarPlatforms = [['', 'Semua platform'], ['news', 'Berita'], ['x', 'X'], ['tiktok', 'TikTok'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['search', 'Google']];
+/** Platforms whose figure is a sample: what a small search found, never how much there is. They never order a list. */
+export const SAMPLED = ['tiktok', 'instagram'];
+/** Platforms whose evidence is example posts, not a list that was read whole. */
+export const SOCIAL = ['x', 'tiktok', 'instagram'];
 export const LIST_LENGTH = 10;
 export const categoryLabel = id => radarCategories.find(([key]) => key === id)?.[1] || 'Lainnya';
 export const provinceName = code => provinceNames[code] || code;
 
-/** The one number an issue is ordered by on a platform, or null when it is not on it. */
+/** The one number an issue is ordered by on a platform, or null when it has none there: it is not on it, it was found
+ * on X but not counted, or the platform is only sampled. */
 export function platformFigure(issue, platform) {
   const figures = issue?.platforms?.[platform];
   if (!figures) return null;
-  return platform === 'news' ? figures.count : platform === 'youtube' ? figures.views : figures.searches;
+  const value = platform === 'news' || platform === 'x' ? figures.count : platform === 'youtube' ? figures.views : platform === 'search' ? figures.searches : null;
+  return Number.isFinite(value) ? value : null;
+}
+/** The platform choices worth offering: those with an issue in this refresh, and the one already chosen (so it can be dropped). */
+export function offeredPlatforms(issues, chosen = '') {
+  const rows = Array.isArray(issues) ? issues : [];
+  return radarPlatforms.filter(([id]) => !id || id === chosen || rows.some(issue => issue.platforms?.[id]));
 }
 const loudIn = (issue, province) => (issue.regions || []).some(region => region.code === province);
 
@@ -33,7 +44,8 @@ function scoped(issues, province) {
 /** The rows on screen: at most ten. A platform keeps the issues that are on it, loudest there first. */
 export function visibleIssues(issues, { category = '', platform = '', province = '' } = {}) {
   let rows = scoped(issues, province).filter(issue => !category || issue.category === category);
-  if (platform) rows = rows.filter(issue => platformFigure(issue, platform) !== null).sort((a, b) => platformFigure(b, platform) - platformFigure(a, platform) || a.rank - b.rank);
+  // Loudest on that platform first; an issue with no figure there (sampled, or found but not counted) keeps the combined order, after the counted ones.
+  if (platform) rows = rows.filter(issue => issue.platforms?.[platform]).sort((a, b) => (platformFigure(b, platform) ?? -1) - (platformFigure(a, platform) ?? -1) || a.rank - b.rank);
   return rows.slice(0, LIST_LENGTH);
 }
 
@@ -91,14 +103,19 @@ export function issueFootprint(issue) {
   return { regions, pins };
 }
 
+const foundText = figures => `${formatCount(figures?.found || 0)}${figures?.capped ? '+' : ''}`;
 const figureText = {
   news: issue => `Berita ${formatCount(issue.platforms.news.count)} artikel`,
+  // The count on X is of posts since yesterday (the finest window it has); without a count, only the posts that found the issue are known.
+  x: issue => Number.isFinite(issue.platforms.x.count) ? `X ${formatCount(issue.platforms.x.count)} posting sejak kemarin` : `X ${formatCount(issue.platforms.x.posts || 0)} posting contoh`,
+  tiktok: issue => `TikTok ${foundText(issue.platforms.tiktok)} posting ditemukan`,
+  instagram: issue => `Instagram ${foundText(issue.platforms.instagram)} posting ditemukan`,
   youtube: issue => `YouTube ${formatCount(issue.platforms.youtube.count)} video tren`,
   search: issue => `Google ${formatCount(issue.platforms.search.searches)}+ pencarian`,
 };
 /** A row's figures, each with its unit, the chosen platform first, then how widely it is searched. */
 export function figureLine(issue, lead = '') {
-  const order = ['news', 'youtube', 'search'].sort((a, b) => (b === lead) - (a === lead));
+  const order = ['news', 'x', 'tiktok', 'instagram', 'youtube', 'search'].sort((a, b) => (b === lead) - (a === lead));
   const parts = order.filter(platform => issue.platforms?.[platform]).map(platform => figureText[platform](issue));
   const provinces = (issue.regions || []).length;
   return provinces ? [...parts, `ramai di ${provinces} provinsi`] : parts;
@@ -112,6 +129,7 @@ export function movementText(movement) {
 const asDate = value => typeof value === 'string' && value ? new Date(/Z$|[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z') : null;
 const wibDay = date => date.toLocaleDateString('id-ID', { dateStyle: 'medium', timeZone: 'Asia/Jakarta' });
 const sourceNames = { news: 'Berita', youtube: 'YouTube', search: 'daftar pencarian nasional' };
+const partNames = { x: 'X', tiktok: 'TikTok', instagram: 'Instagram' };      // asked issue by issue: some of it may be there
 /** The time of the refresh on screen, in WIB: the clock alone today, with its date on another day. */
 export function updatedText(payload, now = new Date()) {
   const date = asDate(payload?.updated_at);
@@ -128,6 +146,7 @@ export function freshnessText(payload, now = new Date()) {
   if (provinces.length === 1) text += `; ${provinceName(provinces[0])} tidak terbaca`;
   if (provinces.length > 1) text += `; ${provinces.length} provinsi tidak terbaca`;
   for (const name of missing) if (sourceNames[name]) text += `; ${sourceNames[name]} tidak terbaca`;
+  for (const name of missing) if (partNames[name]) text += `; ${partNames[name]} belum lengkap`;
   return text;
 }
 
@@ -142,13 +161,16 @@ export const projectHref = project => '/pulse/overview?' + search([['topic', pro
 // ── Infographics: the figures strip, the rankings beside the map and the list, the meters in a row ─────────────────
 
 const platformLabel = id => radarPlatforms.find(([key]) => key === id)?.[1] || id;
-/** The number a platform's meter and its printed figure share: articles, videos, searches. */
+/** The number a platform's meter and its printed figure share: articles, videos, searches, counted posts. Null where there is none to draw. */
 const meterValue = (issue, platform) => {
   const figures = issue?.platforms?.[platform];
-  if (!figures) return null;
-  return platform === 'search' ? figures.searches : figures.count;
+  if (!figures || SAMPLED.includes(platform)) return null;
+  const value = platform === 'search' ? figures.searches : figures.count;
+  return Number.isFinite(value) ? value : null;
 };
+const METERS = ['news', 'youtube', 'search', 'x', 'tiktok', 'instagram'];       // the lists that are read whole, then the social platforms
 const meterText = {
+  x: value => `${formatCount(value)} posting`,
   news: value => `${formatCount(value)} artikel`,
   youtube: value => `${formatCount(value)} video tren`,
   search: value => `${formatCount(value)}+ pencarian`,
@@ -158,7 +180,7 @@ const meterText = {
 export function radarFigures(payload) {
   const rows = Array.isArray(payload?.issues) ? payload.issues : [];
   const national = rows.filter(issue => issue.scope !== 'local'), listed = national.slice(0, LIST_LENGTH);
-  const counted = ['news', 'search', 'youtube'].filter(platform => Number.isFinite(payload?.signals?.[platform]));
+  const counted = ['news', 'search', 'youtube', 'x'].filter(platform => Number.isFinite(payload?.signals?.[platform]));
   const signals = counted.length ? { total: counted.reduce((sum, platform) => sum + payload.signals[platform], 0), ...Object.fromEntries(counted.map(platform => [platform, payload.signals[platform]])) } : null;
   const all = Object.keys(provinceNames).length, read = Array.isArray(payload?.provinces_read) ? payload.provinces_read.length : null;
   const covered = listed.filter(issue => issue.project).length;
@@ -183,16 +205,43 @@ export function categoryRows(issues, province = '') {
 
 /** On how many of the given issues each platform has something to say, most first. */
 export function platformCoverage(issues) {
-  return ['news', 'youtube', 'search'].map(id => ({ id, label: platformLabel(id), count: (issues || []).filter(issue => issue.platforms?.[id]).length }))
+  return ['news', 'x', 'tiktok', 'instagram', 'youtube', 'search'].map(id => ({ id, label: platformLabel(id), count: (issues || []).filter(issue => issue.platforms?.[id]).length }))
     .filter(row => row.count > 0).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'id'));
 }
 
-/** One meter per platform an issue is on: its figure in words, and its length against the loudest of `listed` on that platform. */
+/** One meter per platform an issue is on: its figure in words, and its length against the loudest of `listed` on that
+ * platform. `ratio` is null where there is nothing to draw a length from: a sample (TikTok, Instagram) says what was
+ * found, and an issue found on X but not counted says how many posts found it. `hint` says what a social figure is. */
 export function platformMeters(issue, listed) {
-  return ['news', 'youtube', 'search'].filter(platform => meterValue(issue, platform) !== null).map(platform => {
-    const value = meterValue(issue, platform), most = Math.max(value, ...(listed || []).map(other => meterValue(other, platform) || 0));
-    return { id: platform, label: platformLabel(platform), text: meterText[platform](value), ratio: most > 0 ? value / most : 0 };
-  });
+  return METERS.filter(platform => issue?.platforms?.[platform]).map(platform => {
+    const figures = issue.platforms[platform], label = platformLabel(platform), value = meterValue(issue, platform);
+    if (SAMPLED.includes(platform)) return { id: platform, label, text: `${foundText(figures)} ditemukan`, ratio: null,
+      hint: figures.capped ? `${label}: sampel ${formatCount(figures.found || 0)} posting terisi penuh, jumlah sebenarnya lebih banyak` : `${label}: ${formatCount(figures.found || 0)} posting ditemukan dalam sampel 3 hari terakhir` };
+    if (value === null) return platform === 'x' ? { id: 'x', label, text: `${formatCount(figures.posts || 0)} posting contoh`, ratio: null, hint: `X: ditemukan lewat ${formatCount(figures.posts || 0)} posting, belum dihitung` } : null;
+    const most = Math.max(value, ...(listed || []).map(other => meterValue(other, platform) || 0));
+    const meter = { id: platform, label, text: meterText[platform](value), ratio: most > 0 ? value / most : 0 };
+    return platform === 'x' ? { ...meter, hint: `X: ${meter.text} sejak kemarin` } : meter;
+  }).filter(Boolean);
+}
+
+const topText = {
+  news: value => `${formatCount(value)} artikel`,
+  x: value => `${formatCount(value)} posting`,
+  youtube: value => `${formatCount(value)} tayangan`,       // videos are ordered by views, so views are what the row says
+  search: value => `${formatCount(value)}+ pencarian`,
+};
+const topBasis = { news: 'Menurut jumlah artikel.', x: 'Menurut jumlah posting sejak kemarin.', youtube: 'Menurut tayangan video tren.', search: 'Menurut pencarian (batas bawah dari daftarnya).' };
+/** For the row of ranked lists: the ten loudest issues of the page's scope on each platform that has a figure to order
+ * by, as `[{ id, label, basis, rows: [{ key, title, text, ratio }] }]`. `ratio` is against the first row of that
+ * platform. A platform with nothing to order is left out, and TikTok and Instagram always are: a sample has no order.
+ * Category and province narrow it; the platform that orders the main list does not. */
+export function platformTops(issues, { category = '', province = '' } = {}, limit = LIST_LENGTH) {
+  return Object.keys(topText).map(id => {
+    const ordered = visibleIssues(issues, { category, province, platform: id }).filter(issue => platformFigure(issue, id) !== null).slice(0, limit);
+    const most = ordered.length ? platformFigure(ordered[0], id) : 0;
+    return { id, label: platformLabel(id), basis: topBasis[id],
+      rows: ordered.map(issue => ({ key: issue.key, title: issue.title, text: topText[id](platformFigure(issue, id)), ratio: most > 0 ? platformFigure(issue, id) / most : 0 })) };
+  }).filter(top => top.rows.length);
 }
 
 /** Beranda's address for a set of choices: the current ones with `changes` applied. An empty choice is left out. */
@@ -233,6 +282,7 @@ export function projectTones(row) {
   const counts = row?.sentiment_7d || {}, total = ['positive', 'neutral', 'negative', 'unknown'].reduce((sum, key) => sum + (counts[key] || 0), 0);
   if (!total) return [];
   return ['positive', 'neutral', 'negative', 'unknown'].filter(key => counts[key] > 0).map(key => ({
-    key, label: toneLabels[key], value: counts[key], share: Math.round(counts[key] / total * 100), color: `var(--ps-sent-${key})`, ...(key === 'unknown' ? { hatch: true } : {}),
+    key, label: toneLabels[key], value: counts[key], share: Math.round(counts[key] / total * 100), shareText: counts[key] / total < 0.01 ? '<1%' : `${Math.round(counts[key] / total * 100)}%`,
+    color: `var(--ps-sent-${key})`, ...(key === 'unknown' ? { hatch: true } : {}),
   }));
 }

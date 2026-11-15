@@ -1,15 +1,66 @@
-.pea-panel{--emotion-joy:var(--ps-mint);--emotion-anger:var(--ps-peach);--emotion-sadness:var(--ps-info);--emotion-fear:var(--ps-lavender);--emotion-disgust:var(--ps-danger);--emotion-admiration:var(--ps-lavender);--emotion-none:var(--ps-muted)}
-.pea-coverage{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;font-size:.875rem;color:var(--ps-muted)}.pea-coverage strong{color:var(--ps-ink)}
-.pea-emotions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.5rem}
-.pulse-standalone button.pea-emotion{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:1rem .5rem;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--ps-ink);min-width:0;box-shadow:none;cursor:pointer}
-.pulse-standalone button.pea-emotion:hover,.pulse-standalone button.pea-emotion[aria-pressed=true]{background:var(--ps-soft);border-color:var(--ps-control-line)}
-.pea-face{display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:50%;background:var(--emotion-color);color:var(--ps-ink);margin-bottom:.5rem}
-.pulse-standalone .pea-face svg{width:32px;height:32px;flex-shrink:0}
+/* Emotion panel. Each emotion has one colour, used by its bars and its tile: the six chart series of the design
+   system, in the pairing the palette validator keeps furthest apart (see STACK in EmotionAnalytics.jsx). Colour never
+   stands alone: a tile names its emotion and the tooltip repeats the names. */
+.pea-panel{--emotion-anger:var(--ps-chart-4);--emotion-admiration:var(--ps-chart-2);--emotion-joy:var(--ps-chart-3);--emotion-sadness:var(--ps-chart-5);--emotion-disgust:var(--ps-chart-6);--emotion-fear:var(--ps-chart-1);--emotion-none:var(--ps-control-line)}
+.pea-panel h3{margin:0;font-size:1rem;font-weight:600}
+.pea-caption{margin:.25rem 0 0;max-width:70ch;font-size:.8125rem;line-height:1.5;color:var(--ps-muted)}
+
+/* The answer first: two figures, then one bar that splits the analysed posts into "states an emotion" and "none". */
+.pea-lede{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:1rem 2.5rem}
+.pea-figures{display:flex;flex-wrap:wrap;gap:1rem 2.5rem}
+.pea-figure{display:grid;margin:0;min-width:0}
+.pea-figure strong{display:flex;align-items:center;gap:.4rem;font-size:1.75rem;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.pea-figure-face{font-size:1.5rem;line-height:1}
+.pea-figure>span{font-size:.875rem;font-weight:600}
+.pea-figure small{font-size:.8125rem;color:var(--ps-muted)}
+.pea-split{display:grid;gap:.5rem;min-width:0}
+.pea-split-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden}
+.pea-split-bar>span{flex-basis:0;min-width:4px;background:var(--emotion-none)}
+.pea-split-bar>span.stated{background:var(--ps-accent)}
+.pea-split-keys{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem 1.25rem;font-size:.8125rem;color:var(--ps-muted)}
+.pea-split-keys>span,.pulse-standalone .pea-split-keys>button{display:inline-flex;align-items:center;gap:.4rem}
+.pea-split-keys strong{color:var(--ps-ink);font-weight:600;font-variant-numeric:tabular-nums}
+.pea-split-keys i{flex:none;width:10px;height:10px;border-radius:3px;background:var(--emotion-none)}
+.pea-split-keys i.stated{background:var(--ps-accent)}
+.pulse-standalone .pea-split-keys>button{padding:.25rem .6rem;margin:-.25rem -.6rem;border:1px solid transparent;border-radius:var(--ps-radius-control);background:transparent;color:inherit;font:inherit;box-shadow:none;cursor:pointer}
+.pulse-standalone .pea-split-keys>button:hover,.pulse-standalone .pea-split-keys>button[aria-pressed=true]{background:var(--ps-soft);border-color:var(--ps-control-line);color:var(--ps-ink)}
+.pea-aside{margin-left:auto}
+.pea-empty{font-size:.875rem;color:var(--ps-muted);max-width:70ch;line-height:1.65;margin-top:1rem}
+
+/* Day by day. */
+.pea-trend{margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--ps-line)}
+.pea-chart{height:260px;width:100%;margin-top:1rem}
+.pea-tip{display:grid;gap:.4rem;min-width:11rem;padding:.6rem .75rem;border:1px solid var(--ps-line);border-radius:var(--ps-radius-control);background:var(--ps-panel);color:var(--ps-ink);font-size:.75rem;box-shadow:0 10px 24px -12px color-mix(in oklab,var(--ps-ink) 45%,transparent)}
+.pea-tip p{margin:0}
+.pea-tip-day{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.pea-tip-day strong{font-weight:600}
+.pea-tip-day span,.pea-tip-none{color:var(--ps-muted)}
+.pea-tip ul{display:grid;gap:.3rem;margin:0;padding:0;list-style:none}
+.pea-tip li{display:flex;align-items:center;gap:.4rem}
+.pea-tip li i{flex:none;width:8px;height:8px;border-radius:2px}
+.pea-tip b{margin-left:auto;padding-left:1rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ps-ink)}
+.pea-tip-none{display:flex;padding-top:.4rem;border-top:1px solid var(--ps-line)}
+
+/* The six emotions: the chart's key and its filter. Largest first; the bar is the share among posts that state one. */
+.pea-pick{margin-top:1.75rem}
+.pea-emotions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.5rem;margin-top:1rem}
+.pulse-standalone button.pea-emotion{display:grid;justify-items:start;gap:.15rem;padding:.9rem .9rem 1rem;border:1px solid var(--ps-line);border-radius:12px;background:transparent;color:var(--ps-ink);min-width:0;text-align:left;box-shadow:none;cursor:pointer}
+.pulse-standalone button.pea-emotion:hover{background:var(--ps-soft)}
+.pulse-standalone button.pea-emotion[aria-pressed=true]{background:var(--ps-soft);border-color:var(--emotion-color)}
 .pea-emotion.joy{--emotion-color:var(--emotion-joy)}.pea-emotion.anger{--emotion-color:var(--emotion-anger)}.pea-emotion.sadness{--emotion-color:var(--emotion-sadness)}.pea-emotion.fear{--emotion-color:var(--emotion-fear)}.pea-emotion.disgust{--emotion-color:var(--emotion-disgust)}.pea-emotion.admiration{--emotion-color:var(--emotion-admiration)}
-.pea-label{font-size:.875rem;font-weight:600}.pea-emotion strong{font-size:1.25rem;font-variant-numeric:tabular-nums}.pea-emotion small{font-size:.75rem;color:var(--ps-muted);font-weight:400}.pea-bar{height:4px;width:100%;background:var(--ps-line);border-radius:2px;overflow:hidden;margin-top:.5rem}.pea-bar i{display:block;height:100%;background:var(--ps-accent)}
-.pea-other{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;border-top:1px solid var(--ps-line);margin-top:1.5rem;padding-top:1rem;font-size:.8125rem;color:var(--ps-muted)}
-.pea-empty{font-size:.875rem;color:var(--ps-muted);max-width:70ch;line-height:1.65;margin-top:1rem}.pea-trend{margin-top:2rem}.pea-trend h3,.pea-evidence h3{font-size:1rem}.pea-chart{height:220px;margin:1rem 0}.pea-trend summary{font-size:.8125rem;color:var(--ps-muted);cursor:pointer}.pea-table{overflow:auto}.pea-table table{border-collapse:collapse;width:100%;font-size:.8125rem}.pea-table th,.pea-table td{padding:.5rem;text-align:left;border-bottom:1px solid var(--ps-line)}
+.pea-face{display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin-bottom:.5rem;border-radius:50%;background:color-mix(in oklab,var(--emotion-color) 20%,var(--ps-panel));font-size:1.625rem;line-height:1}
+.pulse-standalone .pea-face svg{width:28px;height:28px;flex-shrink:0}
+.pea-label{display:inline-flex;align-items:center;gap:.4rem;font-size:.875rem;font-weight:600}
+.pea-label i{flex:none;width:10px;height:10px;border-radius:3px;background:var(--emotion-color)}
+.pea-emotion strong{font-size:1.5rem;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.pea-emotion small{font-size:.75rem;color:var(--ps-muted);font-weight:400}
+.pea-bar{height:6px;width:100%;margin-top:.6rem;border-radius:3px;background:var(--ps-line);overflow:hidden}
+.pea-bar i{display:block;height:100%;min-width:0;border-radius:3px;background:var(--emotion-color)}
+
+.pea-data{margin-top:1.25rem}
+.pea-data summary{font-size:.8125rem;color:var(--ps-muted);cursor:pointer}
+.pea-table{overflow:auto}.pea-table table{border-collapse:collapse;width:100%;font-size:.8125rem}.pea-table th,.pea-table td{padding:.5rem;text-align:left;border-bottom:1px solid var(--ps-line)}
 .pea-evidence{margin-top:1.5rem;border-top:1px solid var(--ps-line);padding-top:1rem}.pea-evidence header{display:flex;gap:1rem;justify-content:space-between;align-items:center}.pea-evidence h3 span{font-size:.8125rem;color:var(--ps-muted);font-weight:400}.pea-evidence ol{list-style:none;padding:0;margin:0}.pea-evidence li{padding:1.25rem 0;border-bottom:1px solid var(--ps-line)}.pea-identity{display:flex;gap:.75rem;align-items:center}.pea-identity>div{display:grid;gap:.25rem}.pea-identity span{font-size:.75rem;color:var(--ps-muted)}.pea-evidence p{font-size:.9rem;line-height:1.65;max-width:70ch;white-space:pre-wrap;overflow-wrap:anywhere}.pea-evidence .pea-reason{font-size:.8125rem;color:var(--ps-muted)}.pea-evidence a{font-size:.8125rem;color:var(--ps-accent)}.pea-review{font-size:.75rem;background:var(--ps-peach);color:var(--ps-warning-ink);padding:.25rem .5rem;margin-right:.75rem}
-@media(max-width:1000px){.pea-emotions{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:440px){.pea-emotions{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.pea-emotion.joy .pea-face{color:var(--ps-success-ink)}.pea-emotion.anger .pea-face{color:var(--ps-warning-ink)}.pea-emotion.sadness .pea-face{color:var(--ps-info-ink)}.pea-emotion.fear .pea-face,.pea-emotion.admiration .pea-face{color:var(--ps-accent-ink)}.pea-emotion.disgust .pea-face{color:var(--ps-danger-ink)}
+
+@media(max-width:1100px){.pea-emotions{grid-template-columns:repeat(3,minmax(0,1fr))}.pea-lede{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.pea-emotions{grid-template-columns:repeat(2,minmax(0,1fr))}.pea-aside{margin-left:0}.pea-chart{height:220px}}

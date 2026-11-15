@@ -55,3 +55,13 @@ export function overviewEvidence(input=[],{platforms=null,excludedIds=[],previou
     days:sentimentTimeline(posts),topPosts:[...posts].sort((a,b)=>(postInteractions(b.metrics)??-1)-(postInteractions(a.metrics)??-1)).slice(0,5),
     volumeChange:previous===null?null:{previous:previous.length,delta:posts.length-previous.length,percent:previous.length?(posts.length-previous.length)/previous.length*100:null}};
 }
+
+/** Where a narrative's posts are: its platforms with their post counts, most first (a tie is ordered by name, so the
+ * order does not jump between refreshes), at most `limit`. `more` counts the platforms left out. A post without a
+ * platform is not given one. */
+export function narrativePlatforms(posts=[],limit=4){
+  const counts=new Map();
+  for(const post of posts)if(post?.platform)counts.set(post.platform,(counts.get(post.platform)||0)+1);
+  const rows=[...counts].map(([platform,count])=>({platform,count})).sort((a,b)=>b.count-a.count||a.platform.localeCompare(b.platform));
+  return {rows:rows.slice(0,limit),more:Math.max(0,rows.length-limit)};
+}

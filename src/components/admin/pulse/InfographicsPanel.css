@@ -12,16 +12,16 @@
 .pi-layout>section{min-width:0;padding:24px;background:var(--pi-panel);border:1px solid var(--pi-line);border-radius:12px}
 .pi-wordcloud{display:flex;align-items:center;align-content:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;min-height:190px;padding:18px 0;border-block:1px solid var(--pi-line);margin-block:18px}
 .pi-panel .pi-word{display:inline-flex;align-items:baseline;gap:5px;max-width:100%;background:transparent;color:var(--pi-accent);border:1px solid transparent;border-radius:6px;padding:5px 8px;font-family:inherit;font-weight:600;line-height:1.3;min-height:42px;overflow-wrap:anywhere;cursor:pointer}
-.pi-panel .pi-word small{font-size:11px;color:var(--pi-muted);font-weight:400}
+.pi-panel .pi-word small{font-size:12px;color:var(--pi-muted);font-weight:400}
 .pi-panel .pi-word[aria-pressed=true]{background:var(--pi-soft);border-color:var(--pi-accent)}
 .pi-panel button:focus-visible,.pi-panel a:focus-visible,.pi-panel summary:focus-visible{outline:3px solid var(--pi-accent);outline-offset:3px}
-.pi-panel .pi-note{font-size:11px;line-height:1.7}
+.pi-panel .pi-note{font-size:12px;line-height:1.7}
 .pi-evidence{margin-top:24px}
 .pi-panel ul,.pi-keyword-list{padding:0;list-style:none;margin:12px 0}
 .pi-evidence ul{max-height:285px;overflow:auto;scrollbar-gutter:stable}
 .pi-source{padding:11px 0;border-bottom:1px solid var(--pi-line);overflow-wrap:anywhere;font-size:12px;line-height:1.6}
 .pi-panel a{color:var(--pi-accent);text-decoration:underline;text-underline-offset:3px}
-.pi-source small{display:block;color:var(--pi-muted);font-size:11px;margin-top:3px}
+.pi-source small{display:block;color:var(--pi-muted);font-size:12px;margin-top:3px}
 .pi-keyword-list li{margin:22px 0}
 .pi-panel .pi-keyword-list button{display:flex;justify-content:space-between;gap:12px;width:100%;background:transparent;color:var(--pi-ink);border:0;border-radius:4px;min-height:42px;padding:6px 0;font:inherit;text-align:left;overflow-wrap:anywhere;cursor:pointer}
 .pi-keyword-list button[aria-pressed=true] span{text-decoration:underline;text-underline-offset:4px}
@@ -31,10 +31,10 @@
 .pi-geo-empty strong{display:block;color:var(--pi-ink);font-size:18px;font-weight:600;margin-bottom:8px}
 .pi-geo-empty span{display:block;font-size:12px}
 .pi-grid{display:block;width:100%;max-width:510px;margin:20px auto}
-.pi-grid text,.pi-hour-chart text{fill:var(--pi-muted);font-size:10px;font-family:inherit}
+.pi-grid text,.pi-hour-chart text{fill:var(--pi-muted);font-size:12px;font-family:inherit}
 .pi-grid-cell{stroke:var(--pi-line);stroke-width:1}
 .pi-coverage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0;padding-block:16px;border-block:1px solid var(--pi-line)}
-.pi-coverage dt{color:var(--pi-muted);font-size:11px}
+.pi-coverage dt{color:var(--pi-muted);font-size:12px}
 .pi-coverage dd{margin:4px 0 0;font-size:24px;font-variant-numeric:tabular-nums}
 .pi-panel .pi-caution{border-left:3px solid var(--pi-accent);padding-left:12px;font-size:12px;margin-top:20px}
 .pi-provenance li{font-size:12px;overflow-wrap:anywhere;line-height:1.7;padding:10px 0;border-bottom:1px solid var(--pi-line)}

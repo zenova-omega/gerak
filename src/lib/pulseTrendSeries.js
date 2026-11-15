@@ -60,6 +60,33 @@ export function trendSeries(posts = [], unit = 'day', range = {}) {
   return [...rows.values()];
 }
 
+/**
+ * The same buckets as `trendSeries`, counted once per platform: one line each, busiest platform first.
+ * @returns {{platform:string, total:number, share:number, peak:{key:string, from:string, to:string, posts:number}|null,
+ *   rows:{key:string, from:string, to:string, posts:number}[]}[]} `share` is the platform's part of the dated posts (0 to 1);
+ *   `peak` is its busiest bucket, the earliest one on a tie. A post without a platform is counted under `other`.
+ */
+export function platformTrend(posts = [], unit = 'day', range = {}) {
+  const base = trendSeries(posts, unit, range);
+  if (!base.length) return [];
+  const first = base[0].from, last = base.at(-1).to, at = new Map(base.map((row, index) => [bounds(row.from, unit)[0], index]));
+  const counts = new Map();
+  let all = 0;
+  for (const post of posts) {
+    const date = sentimentDate(post);
+    if (!date || date < first || date > last) continue;
+    const id = post.platform || 'other';
+    if (!counts.has(id)) counts.set(id, base.map(() => 0));
+    counts.get(id)[at.get(bounds(date, unit)[0])]++;
+    all++;
+  }
+  return [...counts].map(([platform, values]) => {
+    const rows = base.map(({ key, from, to }, index) => ({ key, from, to, posts: values[index] }));
+    const total = values.reduce((sum, value) => sum + value, 0);
+    return { platform, total, share: total / all, peak: rows.reduce((best, row) => row.posts > (best?.posts ?? 0) ? row : best, null), rows };
+  }).sort((a, b) => b.total - a.total || a.platform.localeCompare(b.platform));
+}
+
 /** Which units give a line worth drawing: at least two points. */
 export function trendUnitsAvailable(posts = [], range = {}) {
   return Object.fromEntries(trendUnits.map(unit => [unit, trendSeries(posts, unit, range).length >= 2]));

@@ -47,3 +47,41 @@ test('the compact row is styled as a row, not as a card inside a card', () => {
   assert.match(css, /\.pcm-open[^{]*\{[^}]*min-width: var\(--ps-control-sm\)/, 'the way out keeps a comfortable target');
   assert.doesNotMatch(css.match(/\/\* Compact comment rows[\s\S]*$/)?.[0] || '', /border-(left|right):\s*[2-9]px/);
 });
+
+// ── The card on the Komentar page ───────────────────────────────────────────────────────────────────────────────────
+
+async function card(props) {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { Comment } = await server.ssrLoadModule('/src/components/admin/pulse/CommentsPanel.jsx');
+    return renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Comment, props)));
+  } finally { await server.close(); }
+}
+const read = { ...comment('k1', 'aynar045', 'dia terlalu sakit karna bapaknya terlalu di hina terus menerus', 170740),
+  sentiment: { label: 'negative', confidence: 0.9, reason: 'Nada kecewa' }, stance: { label: 'unclear', reason: 'Tidak memihak' } };
+
+test('the card on the Komentar page keeps everything in fewer rows: the way out sits in its head, the reading and its reasons share a row', async () => {
+  const html = await card({ comment: read, video: 'liat mas gibran nangis', post: { id: 'p', platform: 'tiktok', author: 'akun', metrics: {} } });
+  const head = html.match(/<header class="pcm-head">[\s\S]*?<\/header>/)[0];
+  assert.match(head, /<span class="pcm-likes"[\s\S]*?170\.740<\/span><a class="pcm-open" href="https:\/\/www\.tiktok\.com\/@akun\/video\/1\?comment=k1" target="_blank" rel="noopener noreferrer" aria-label="Buka komentar aynar045" title="Buka komentar">/,
+    'likes, then the icon link, in the head');
+  const reading = html.match(/<div class="pcm-reading">[\s\S]*?<\/details><\/div>/)[0];
+  assert.match(reading, /<div class="pu-tag-group">[\s\S]*Negatif[\s\S]*<\/div><details class="pcm-reasons"><summary>Alasan<\/summary>/, 'tags and the reasons disclosure are siblings of one row');
+  assert.match(reading, /Nada kecewa/);
+  const foot = html.match(/<footer class="pcm-foot">[\s\S]*?<\/footer>/)[0];
+  assert.match(foot, /Pada posting: liat mas gibran nangis/);
+  assert.doesNotMatch(foot, /<a /, 'the foot is one quiet line: the link moved to the head');
+  // With one post chosen there is no source line, so the card has no foot at all.
+  assert.doesNotMatch(await card({ comment: read }), /pcm-foot/);
+});
+
+test('the card is set tighter: smaller padding and gaps, 14px text, a foot without a rule', () => {
+  const css = readFileSync(new URL('./ds/comments-browse.css', import.meta.url), 'utf8');
+  const dense = css.match(/\/\* Denser comment cards[\s\S]*$/)?.[0] || '';
+  assert.match(dense, /\.pcm-card \{[^}]*gap: 8px[^}]*padding: 12px 14px/);
+  assert.match(dense, /\.pcm-text \{[^}]*font-size: \.875rem[^}]*line-height: 1\.5/);
+  assert.match(dense, /\.pcm-reading \{[^}]*display: flex[^}]*flex-wrap: wrap/);
+  assert.match(dense, /\.pcm-reasons\[open\] \{[^}]*flex: 1 1 100%/, 'opened, the reasons take a row of their own');
+  assert.match(dense, /\.pcm-foot \{[^}]*padding-top: 0[^}]*border-top: 0/);
+  assert.match(dense, /\.pcm-reasons > summary \{[^}]*min-height: 32px/, 'the disclosure keeps the 32px row the design rules ask for');
+});

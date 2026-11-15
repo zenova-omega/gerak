@@ -1,0 +1,28 @@
+.np-plot { position: relative; margin-bottom: 16px; }
+.np-chart { height: 300px; width: 100%; }
+.np-chart .np-axis { fill: var(--ps-muted); font-size: .75rem; }
+.np-bubble { cursor: pointer; outline: none; }
+.np-bubble:focus-visible circle { stroke: var(--ps-ink); stroke-width: 3; }
+.np-bubble:hover circle { fill-opacity: .8; }
+.np-bubble-rank { fill: var(--ps-ink); font-size: .75rem; font-weight: 650; pointer-events: none; font-variant-numeric: tabular-nums; }
+.np-zones { position: absolute; inset: 8px 8px 8px 52px; display: flex; flex-direction: column; justify-content: space-between; margin: 0; pointer-events: none; font-size:.75rem; color: var(--ps-muted); }
+.np-zones span:last-child { align-self: flex-start; }
+.np-zones span:first-child { align-self: flex-start; }
+.np-tip { display: grid; gap: 2px; max-width: 280px; padding: 10px 12px; border: 1px solid var(--ps-line); border-radius: 10px; background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; box-shadow: var(--ps-shadow-pop, 0 6px 20px rgba(0, 0, 0, .12)); }
+.np-tip strong { font-size: .8125rem; line-height: 1.4; }
+.np-tip span { color: var(--ps-muted); }
+
+.ac-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 720px) { .ac-grid { grid-template-columns: 1fr; } }
+.ac-block { display: grid; gap: 10px; align-content: start; }
+.ac-lead { margin: 0; display: flex; align-items: baseline; gap: 8px; font-size: .8125rem; color: var(--ps-muted); }
+.ac-lead strong { font-size: 1.75rem; line-height: 1; font-weight: 650; color: var(--ps-ink); font-variant-numeric: tabular-nums; }
+.ac-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--ps-soft); }
+.ac-bar > i { display: block; height: 100%; }
+.ac-bar > i + i { margin-left: 2px; }
+.ac-rows { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: .8125rem; }
+.ac-rows li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.ac-rows i { width: 10px; height: 10px; border-radius: 3px; }
+.ac-rows span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-rows b { font-variant-numeric: tabular-nums; }
+.ac-rest i { background: var(--ps-soft); border: 1px solid var(--ps-line); }

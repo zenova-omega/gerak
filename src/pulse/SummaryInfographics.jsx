@@ -49,9 +49,35 @@ function Sentiment({ facts }) {
 }
 
 function Anger({ facts }) {
-  const quote = facts.quotes?.[0], s = facts.sentiment;
-  if (!quote && !s.analysed) return null;
-  return <div className="sig sig-anger">{s.analysed > 0 && <Figure value={pct(s.negative, s.analysed) + '%'} label="posting bernada negatif" />}{quote && <blockquote><p>{quote.text}</p><footer>{quote.author || 'Komentar'} · <PulseLike size={13} /> {formatCount(quote.likes)}</footer></blockquote>}</div>;
+  const quote = facts.quotes?.[0], s = facts.sentiment, triggers = (facts.triggers || []).filter(row => row.text);
+  if (!quote && !s.analysed && !triggers.length) return null;
+  return <div className="sig sig-anger">{s.analysed > 0 && <Figure value={pct(s.negative, s.analysed) + '%'} label="posting bernada negatif" />}
+    {triggers.length > 0 && <ul className="sig-triggers">{triggers.map(row => <li key={row.code}><span className="pu-account-line"><strong>{row.author || 'Nama tidak tersedia'}</strong><b>{formatCount(row.interactions)} interaksi</b></span><p>{row.reason || row.text}</p></li>)}</ul>}
+    {quote && <blockquote><p>{quote.text}</p><footer>{quote.author || 'Komentar'} · <PulseLike size={13} /> {formatCount(quote.likes)}</footer></blockquote>}</div>;
+}
+
+/** The one-line conclusion over the card, written from counted facts only. */
+export function conclusion(facts) {
+  if (!facts?.totals) return '';
+  const t = facts.totals, s = facts.sentiment, peak = facts.peak_day;
+  const parts = [`${formatCount(t.posts)} posting dari ${formatCount(t.accounts)} akun dalam ${formatCount(t.days)} hari`];
+  if (peak && t.days > 1) parts.push(`teramai ${day(peak.date)} (${formatCount(peak.posts)} posting)`);
+  if (s?.analysed) { const lead = ['negative', 'neutral', 'positive'].sort((a, b) => s[b] - s[a])[0]; parts.push(`sentimen dominan ${sentimentLabels[lead].toLowerCase()} ${pct(s[lead], s.analysed)}%`); }
+  return parts.join(' · ');
+}
+
+/** Counted overview over the whole card: sentiment bar, platform split, loudest accounts, emotions. */
+export function Overview({ facts }) {
+  if (!facts?.totals) return null;
+  const platforms = facts.platforms || [], accounts = facts.accounts || [], emotions = (facts.emotions || []).filter(row => row.label !== 'none');
+  const total = platforms.reduce((sum, row) => sum + row.posts, 0);
+  const top = Math.max(...accounts.map(row => row.interactions), 1);
+  return <div className="sig-overview">
+    <p className="sig-conclusion"><strong>{conclusion(facts)}</strong></p>
+    {platforms.length > 0 && <div className="sig-block"><h4>Platform</h4><div className="sig-bar" role="img" aria-label={platforms.map(row => `${row.platform} ${pct(row.posts, total)}%`).join(', ')}>{platforms.map((row, index) => <span key={row.platform} style={{ flexGrow: row.posts, background: `color-mix(in oklch, var(--ps-accent) ${100 - index * 16}%, var(--ps-panel))` }} />)}</div><ul className="sig-legend">{platforms.map(row => <li key={row.platform}><strong>{pct(row.posts, total)}%</strong> {row.platform}</li>)}</ul></div>}
+    {accounts.length > 0 && <div className="sig-block"><h4>Akun dengan interaksi terbesar</h4><ol className="sig-talk">{accounts.map(row => <li key={row.author + row.platform}><span>{row.author}</span><b>{formatCount(row.interactions)}</b><i style={{ width: `${row.interactions / top * 100}%` }} /></li>)}</ol></div>}
+    {emotions.length > 0 && <div className="sig-block"><h4>Emosi dominan</h4><ul className="sig-legend">{emotions.map(row => <li key={row.label}><strong>{formatCount(row.posts)}</strong> {row.label}</li>)}</ul></div>}
+  </div>;
 }
 
 /** Bullets that start with a date become a timeline; the volume per day runs above it. */

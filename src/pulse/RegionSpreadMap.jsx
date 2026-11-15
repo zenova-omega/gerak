@@ -251,7 +251,7 @@ export default function RegionSpreadMap({ posts = [], title = 'Peta sebaran temp
               <circle className="rm-bubble" cx={province.x} cy={province.y} r={radius} />
             </g>)}</g>
             {/* The counts sit above every bubble, so a small neighbour never covers the number of a large one. */}
-            <g aria-hidden="true">{marks.filter(mark => mark.radius * zoom >= 9).map(({ province, row }) => <text key={province.code} className="rm-count" x={province.x} y={province.y} fontSize={9 / zoom} dy={3.2 / zoom}>{formatCount(row.count)}</text>)}</g>
+            <g aria-hidden="true">{marks.filter(mark => mark.radius * zoom >= 11).map(({ province, row }) => <text key={province.code} className="rm-count" x={province.x} y={province.y} fontSize={12 / zoom} dy={3.2 / zoom}>{formatCount(row.count)}</text>)}</g>
           </svg>
           {/* Pins are for the eye and the mouse: the list beside the map says the same to a keyboard and a screen reader. */}
           {people && <div className="rm-pins" aria-hidden="true">{pins.flatMap(pin => { const offsets = faceOffsets(pin.faces.length); return pin.faces.map((face, index) => <span key={pin.key + ':' + index} className="rm-pin"

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Users, Database, Sparkles, Search, HeartPulse, FileText, ChartPie, Lightbulb, House } from 'lucide-react';
+import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Users, Database, Sparkles, Search, HeartPulse, FileText, Lightbulb, House } from 'lucide-react';
 
 /** One entry per page: the sidebar, the page heading and any link to the page read from here,
  * so a page has the same name, mark and one-line purpose everywhere.
@@ -15,7 +15,6 @@ export const pageMeta = {
   accounts: { title: 'Akun & sumber', icon: Users, tagline: 'Siapa yang bicara', guide: ['Cara membandingkan akun', 'Urutkan berdasarkan interaksi atau jumlah posting. Ranking hanya berlaku pada data yang berhasil dikumpulkan.'] },
   network: { title: 'Jaringan', icon: Network, tagline: 'Pola penyebaran', guide: ['Cara menelusuri penyebaran', 'Lihat hubungan akun dan urutan publikasi konten serupa. Sinyal akun menandai yang perlu diperiksa, bukan memastikan bot. Peta sebaran menunjukkan provinsi yang disebut dalam posting dari hari ke hari, bukan lokasi penulis.'] },
   comments: { title: 'Komentar', icon: MessageCircle, tagline: 'Respons publik', guide: ['Cara membaca komentar', 'Baca semua komentar atau pilih satu posting. Komentar tersimpan adalah sampel sampai 300 per posting, bukan seluruh opini publik.'] },
-  infographics: { title: 'Infografik', icon: ChartPie, tagline: 'Kata, waktu, lokasi', guide: ['Cara membaca infografik', 'Kata yang sering muncul menunjukkan frekuensi, bukan dukungan. Peta hanya memakai lokasi yang tersedia dari sumber.'] },
   monitor: { title: 'Monitor', icon: Radio, tagline: 'Alert dan pengumpulan', guide: ['Cara membaca Monitor', 'Alert terbaru ada di atas; tandai yang sudah dibaca. Di bawahnya, tiap sumber menunjukkan berapa pengumpulan terjadwal yang terlaksana, rentang tanggal posting yang sudah terkumpul, dan seberapa sering ia mengumpulkan.'] },
   sources: { title: 'Sumber & Cakupan', icon: Database, tagline: 'Apa yang terhubung', guide: ['Cara membaca cakupan', 'Lihat sumber yang terhubung, jumlah posting tersimpan, dan field yang terisi per platform.'] },
 };

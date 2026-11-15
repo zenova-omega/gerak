@@ -23,12 +23,13 @@ import EmotionAnalytics from './EmotionAnalytics';
 import useHideUnknown from './useHideUnknown';
 import { UnanalysedToggle } from './UnanalysedToggle';
 import {PulseLegend,PulseChartTooltip,PulseStat,PulseStatGrid} from '../components/ui/PulseAnalytics';
-import {recentChange,deltaIntent} from '../lib/pulseTrend';
+import {recentShareChange,deltaIntent} from '../lib/pulseTrend';
 import VoiceOverview from './VoiceOverview';
 import useResponseAnalysis from './useResponseAnalysis';
 import {responseEvidence} from '../lib/pulseResponse';
 import {inVoice,kindHints,kindLabels,kindOrder,neutralBreakdown,neutralKind,publicOpinion,voiceLabels,voiceOf} from '../lib/pulseVoice';
 import {sentimentColor,sentimentOrder,sentimentTone} from '../lib/pulseChartTheme';
+import {divergingSplit,divergingScale} from '../lib/pulseInsightMetrics';
 
 const colors=sentimentColor;
 const labels=sentimentOrder.map(key=>[key,sentimentLabels[key]]);
@@ -85,9 +86,9 @@ export default function SentimentAnalytics({data,topicId}) {
   const emojiBySentiment=['negative','neutral','positive'].map(key=>{const rows=posts.filter(post=>postSentiment(post)===key);return {key,posts:rows.length,emoji:topEmoji(rows.flatMap(post=>[`${post.title||''} ${post.text||''}`,...((post.metrics?.comment_snapshot?.items||[]).map(comment=>comment.text))]),14)};});
   return <div className="po-overview psa-page">
     <VoiceOverview posts={allPosts} opinion={opinion} loaded={analysis.loaded||!topicId} hideUnknown={hideUnknown} onHideUnknown={setHideUnknown} voice={voice} onVoice={setVoice} commentsLink={'/pulse/comments?'+params}/>
-    <PulseStatGrid label={`Jumlah posting per sentimen, ${voiceLabels[voice].toLowerCase()}`} className="psa-scope-stats">{shown.map(([key,label])=>{const change=recentChange(days.map(row=>row[key]));return <PulseStat key={key} as={Link} to={link({sentiment:key})} tone={sentimentTone[key]} label={label} value={counts[key]}
+    <PulseStatGrid label={`Jumlah posting per sentimen, ${voiceLabels[voice].toLowerCase()}`} className="psa-scope-stats">{shown.map(([key,label])=>{const change=key==='unknown'?null:recentShareChange(days,key);return <PulseStat key={key} as={Link} to={link({sentiment:key})} tone={sentimentTone[key]} label={label} value={counts[key]}
         share={base?counts[key]/base*100:null} shareLabel={hideUnknown?'dari yang dianalisis':'dari seluruh posting'}
-        delta={key==='unknown'?null:change?.delta??null} deltaUnit="" deltaIntent={deltaIntent(key,change?.delta)} deltaNote={change?`${change.days} hari terakhir vs ${change.days} hari sebelumnya`:undefined} trend={days.map(row=>row[key])}/>;})}</PulseStatGrid>
+        delta={change?.delta??null} deltaUnit=" poin" deltaIntent={deltaIntent(key,change?.delta)} deltaNote={change?`porsi dari yang dianalisis · ${change.days} hari terakhir vs ${change.days} hari sebelumnya`:undefined} trend={days.map(row=>row[key])}/>;})}</PulseStatGrid>
     <div className="lay-grid"><div className="lay-8">
     <AnalyticsPanel title="Tren harian" description="Arahkan kursor ke batang untuk melihat posting teratas hari itu. Klik warna untuk membuka postingnya." actions={bounds&&<PulseRange chart="Tren harian" bounds={bounds} value={chartRange} onChange={setChartRange}/>} footer={`Tanggal publikasi WIB.${posts.length-dated>0?` ${formatCount(posts.length-dated)} posting tanpa tanggal tidak masuk grafik.`:''}`}>
       {days.length?<><PulseLegend items={shown.map(([key,label])=>({key,label,color:colors[key],hatch:key==='unknown',value:chartCounts[key]}))}/>
@@ -95,12 +96,15 @@ export default function SentimentAnalytics({data,topicId}) {
       <details className="po-data"><summary>Data harian & tautan posting</summary><div className="psa-table"><table><thead><tr><th>Tanggal WIB</th>{labels.map(([key,label])=><th key={key}>{label}</th>)}</tr></thead><tbody>{chartDays.map(row=><tr key={row.date}><th><button type="button" onClick={()=>setEvidenceRange({key:'custom',from:row.date,to:row.date})} aria-label={`Telusuri perubahan ${row.date}`}>{dayLabel(row.date)}</button></th>{labels.map(([key,label])=><td key={key}><Link aria-label={`${row.date}, ${label}: ${row[key]} posting`} to={link({day:row.date,sentiment:key})}>{row[key]} <PulseArrow/></Link></td>)}</tr>)}</tbody></table></div></details></>:<p className="po-empty">Belum ada posting bertanggal pada periode ini. Pilih rentang lain atau periksa Sumber & Cakupan.</p>}
     </AnalyticsPanel>
     </div><div className="lay-4">
-    <AnalyticsPanel title="Sentimen per platform" description="Jumlah posting, bukan jangkauan. Klik angka untuk membuka postingnya.">
-      {platforms.length?<ul className="psa-platforms">{platforms.map(({platform,counts:row,total})=>{const known=row.positive+row.neutral+row.negative,whole=hideUnknown?known:total,keys=['positive','neutral','negative',...(hideUnknown?[]:['unknown'])].filter(key=>row[key]>0);return <li key={platform}>
-        <span className="psa-platform-name"><PlatformIcon platform={platform}/> {platformLabel(platform)}<small>{formatCount(total)} posting</small></span>
-        <span className="psa-platform-bar" role="img" aria-label={whole?keys.map(key=>`${sentimentLabels[key]} ${Math.round(row[key]/whole*100)}%`).join(', '):'Belum dianalisis'}>{whole?keys.map(key=><i key={key} className={key==='unknown'?'empty':undefined} style={{flexGrow:row[key],background:key==='unknown'?undefined:colors[key]}}/>):<i className="empty"/>}</span>
+    <AnalyticsPanel title="Sentimen per platform" description="Negatif ke kiri, positif ke kanan, dalam satu skala. Klik angka untuk membuka postingnya." footer="Netral dibagi dua di sisi garis tengah. Posting yang belum dianalisis tidak digambar; jumlahnya ada di angka. Bersih = (positif − negatif) ÷ yang dianalisis.">
+      {platforms.length?<>{(()=>{const splits=platforms.map(row=>divergingSplit(row.counts)),scale=divergingScale(splits);return <ul className="psa-platforms">{platforms.map(({platform,counts:row,total},index)=>{const split=splits[index];return <li key={platform}>
+        <span className="psa-platform-name"><PlatformIcon platform={platform}/> {platformLabel(platform)}<small>{formatCount(total)} posting{split?` · bersih ${split.net>0?'+':split.net<0?'−':''}${Math.abs(Math.round(split.net))}`:''}</small></span>
+        <span className="psa-diverge" role="img" aria-label={split?`${platformLabel(platform)}: negatif ${Math.round(row.negative/(row.positive+row.neutral+row.negative)*100)}%, netral ${Math.round(row.neutral/(row.positive+row.neutral+row.negative)*100)}%, positif ${Math.round(row.positive/(row.positive+row.neutral+row.negative)*100)}% dari yang dianalisis`:'Belum dianalisis'}>
+          {split?<><span className="psa-diverge-side" data-side="left">{[...split.left].reverse().map(seg=><i key={seg.key} style={{width:`${seg.share/scale*100}%`,background:colors[seg.key]}}/>)}</span><span className="psa-diverge-side" data-side="right">{split.right.map(seg=><i key={seg.key} style={{width:`${seg.share/scale*100}%`,background:colors[seg.key]}}/>)}</span></>:<span className="psa-diverge-empty"/>}
+        </span>
         <span className="psa-platform-counts">{shown.map(([key,label])=><Link key={key} aria-label={`${platformLabel(platform)}, ${label}: ${row[key]} posting`} title={label} to={link({platform,sentiment:key})}><span className="psa-dot" data-tone={key} aria-hidden="true"/>{formatCount(row[key])}</Link>)}</span>
-      </li>;})}</ul>:<p className="po-empty">Belum ada data platform pada periode terpilih.</p>}
+      </li>;})}</ul>;})()}
+      <p className="psa-diverge-key" aria-hidden="true"><span>◀ negatif</span><span>positif ▶</span></p></>:<p className="po-empty">Belum ada data platform pada periode terpilih.</p>}
     </AnalyticsPanel>
     </div></div>
     <AnalyticsPanel title="Posting di balik angka" description="Pilih sentimen dan tanggal, lalu baca posting yang paling ramai." footer="Dihitung dari posting terkumpul, bukan bukti sebab-akibat atau opini seluruh publik. Sentimen teks tidak otomatis menunjukkan sikap terhadap tokoh.">

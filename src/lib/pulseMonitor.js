@@ -24,6 +24,7 @@ export const monitorExtras = [
   { channel: 'profiles_ig', label: 'Foto profil akun Instagram', paid: true },
   { channel: 'profiles_tt', label: 'Foto profil akun TikTok', paid: true },
   { channel: 'radar', label: 'Radar isu Indonesia', paid: true },
+  { channel: 'radar_social', label: 'Radar: X, TikTok, Instagram', paid: true },
 ];
 /** What a person can pick as "how often". Minutes; the server accepts 5 to 1440. */
 export const intervalChoices = [15, 30, 60, 120, 180, 360, 720, 1440];

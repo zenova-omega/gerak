@@ -3,7 +3,7 @@ import api from '../lib/api';
 import EvidenceDrawer from './EvidenceDrawer';
 import { KeywordTag } from '../components/ui/PulseTag';
 import { PulseLoader } from '../components/ui/PulseLoader';
-import { categoryLabel, figureLine, radarPlatforms } from '../lib/pulseRadar';
+import { categoryLabel, figureLine, radarPlatforms, SOCIAL } from '../lib/pulseRadar';
 import { IssueAction, SourceRow } from './RadarIssues';
 
 const split = text => String(text || '').split(',').map(part => part.trim()).filter(Boolean);
@@ -19,7 +19,7 @@ export function RadarIssueDetail({ summary, detail = null, error = false, canCre
       : !detail ? <PulseLoader label="Memuat bukti…" />
       : radarPlatforms.slice(1).map(([id, label]) => {
         const items = (detail.evidence || []).filter(item => item.platform === id);
-        return items.length ? <section key={id}><h3>{label}</h3><ol className="rdi-sources">{items.map((item, index) => <SourceRow key={index} platform={id} item={item} />)}</ol></section> : null;
+        return items.length ? <section key={id}><h3>{SOCIAL.includes(id) ? `${label}, posting contoh` : label}</h3><ol className="rdi-sources">{items.map((item, index) => <SourceRow key={index} platform={id} item={item} />)}</ol></section> : null;
       })}
     <section><h3>Keyword yang disarankan</h3>
       <p className="rdi-tags">{split(query.q || summary.title).map(term => <KeywordTag key={term}>{term}</KeywordTag>)}

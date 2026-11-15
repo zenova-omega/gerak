@@ -4,7 +4,7 @@ import {
   categoryCounts, figureLine, freshnessText, issueFootprint, movementText, projectHref, provinceCounts, provinceRows, radarCategories,
   radarPlatforms, searchHref, shadeOf, shadeRanges, updatedText, visibleIssues,
   categoryRows, homeHref, platformCoverage, platformMeters, provinceRanking, radarFigures,
-  attemptNotice, briefText, projectChange, projectTones,
+  attemptNotice, briefText, projectChange, projectTones, offeredPlatforms, platformFigure, platformTops,
 } from './pulseRadar.js';
 
 const issue = (rank, title, category, platforms, more = {}) => ({
@@ -44,7 +44,7 @@ test('the switches count what each category holds in the list that is on screen'
   assert.deepEqual(categoryCounts(issues, ''), { '': 4, politik: 2, olahraga: 1, hukum: 1 });
   assert.deepEqual(categoryCounts(issues, 'ID-JI'), { '': 4, politik: 1, olahraga: 1, hukum: 2 });
   assert.deepEqual(radarCategories.map(([id]) => id), ['', 'politik', 'hukum', 'ekonomi', 'bencana', 'sosial', 'teknologi', 'olahraga', 'hiburan', 'dunia', 'lainnya']);
-  assert.deepEqual(radarPlatforms.map(([, label]) => label), ['Semua platform', 'Berita', 'YouTube', 'Google']);
+  assert.deepEqual(radarPlatforms.map(([, label]) => label), ['Semua platform', 'Berita', 'X', 'TikTok', 'Instagram', 'YouTube', 'Google']);
 });
 
 test('a province is shaded by how many listed issues are loud in it, three or more sharing the darkest step', () => {
@@ -188,4 +188,79 @@ test('a project card says its last day against the day before and how its last w
   assert.equal(projectTones({ sentiment_7d: { positive: 1, neutral: 0, negative: 0, unknown: 3 } }).at(-1).hatch, true, 'unknown is hatched, never a flat grey');
   assert.deepEqual(projectTones({ sentiment_7d: { positive: 0, neutral: 0, negative: 0, unknown: 0 } }), []);
   assert.deepEqual(projectTones({}), []);
+  assert.deepEqual(projectTones({ sentiment_7d: { positive: 0, neutral: 999, negative: 0, unknown: 1 } }).map(row => row.shareText), ['100%', '<1%'], 'a sliver is not printed as nothing');
+  assert.equal(tones[0].shareText, '6%');
+});
+
+// ── X, TikTok and Instagram: a count on X, samples on the other two ─────────────────────────────────────────────────
+
+const social = [
+  issue(1, 'Antrean BBM', 'ekonomi', { news: { count: 40 }, x: { count: 625 }, tiktok: { found: 20, capped: true }, instagram: { found: 12, capped: false } }),
+  issue(2, 'Tagar BBM', 'ekonomi', { x: { posts: 3 } }),
+  issue(3, 'Laga bola', 'olahraga', { news: { count: 90 }, x: { count: 9700 }, tiktok: { found: 4, capped: false } }),
+  issue(4, 'Harga beras', 'ekonomi', { news: { count: 12 } }),
+];
+
+test('X orders by its count, an issue only found there comes after the counted ones, and a sampled platform keeps the combined order', () => {
+  assert.deepEqual(titles(visibleIssues(social, { platform: 'x' })), ['Laga bola', 'Antrean BBM', 'Tagar BBM']);
+  assert.deepEqual(titles(visibleIssues(social, { platform: 'tiktok' })), ['Antrean BBM', 'Laga bola'], 'twenty sampled posts are not a figure to order by');
+  assert.deepEqual(titles(visibleIssues(social, { platform: 'instagram' })), ['Antrean BBM']);
+  assert.equal(platformFigure(social[0], 'x'), 625);
+  assert.equal(platformFigure(social[1], 'x'), null, 'the posts that found an issue are not a count');
+  assert.equal(platformFigure(social[0], 'tiktok'), null);
+});
+
+test('only platforms with an issue in the refresh are offered, and the chosen one always is', () => {
+  assert.deepEqual(offeredPlatforms(issues, '').map(([id]) => id), ['', 'news', 'youtube', 'search']);
+  assert.deepEqual(offeredPlatforms(social, '').map(([id]) => id), ['', 'news', 'x', 'tiktok', 'instagram']);
+  assert.deepEqual(offeredPlatforms(social.slice(3), 'tiktok'), [['', 'Semua platform'], ['news', 'Berita'], ['tiktok', 'TikTok']], 'so a choice that has no issues any more can still be dropped');
+  assert.deepEqual(offeredPlatforms(null, ''), [['', 'Semua platform']]);
+});
+
+test('X has a bar when it was counted; TikTok and Instagram say what a sample found and draw no bar', () => {
+  assert.deepEqual(platformMeters(social[0], social), [
+    { id: 'news', label: 'Berita', text: '40 artikel', ratio: 40 / 90 },
+    { id: 'x', label: 'X', text: '625 posting', ratio: 625 / 9700, hint: 'X: 625 posting sejak kemarin' },
+    { id: 'tiktok', label: 'TikTok', text: '20+ ditemukan', ratio: null, hint: 'TikTok: sampel 20 posting terisi penuh, jumlah sebenarnya lebih banyak' },
+    { id: 'instagram', label: 'Instagram', text: '12 ditemukan', ratio: null, hint: 'Instagram: 12 posting ditemukan dalam sampel 3 hari terakhir' },
+  ]);
+  assert.deepEqual(platformMeters(social[1], social), [{ id: 'x', label: 'X', text: '3 posting contoh', ratio: null, hint: 'X: ditemukan lewat 3 posting, belum dihitung' }]);
+});
+
+test('social figures say what they are: a count since yesterday, or what a sample found', () => {
+  assert.deepEqual(figureLine(social[0]), ['Berita 40 artikel', 'X 625 posting sejak kemarin', 'TikTok 20+ posting ditemukan', 'Instagram 12 posting ditemukan']);
+  assert.deepEqual(figureLine(social[1]), ['X 3 posting contoh']);
+  assert.equal(figureLine(social[0], 'tiktok')[0], 'TikTok 20+ posting ditemukan');
+  assert.deepEqual(platformCoverage(social), [{ id: 'news', label: 'Berita', count: 3 }, { id: 'x', label: 'X', count: 3 }, { id: 'tiktok', label: 'TikTok', count: 2 }, { id: 'instagram', label: 'Instagram', count: 1 }]);
+});
+
+test('signals found on X are counted with the rest, and a social platform that was not read in full is said so', () => {
+  assert.deepEqual(radarFigures({ issues: social, signals: { news: 122, search: 54, youtube: 51, x: 7 }, provinces_read: [] }).signals, { total: 234, news: 122, search: 54, youtube: 51, x: 7 });
+  const payload = { updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, missing: ['ID-PA', 'x', 'tiktok'] };
+  assert.equal(freshnessText(payload, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, tiap 30 menit; Papua tidak terbaca; X belum lengkap; TikTok belum lengkap');
+});
+
+// ── A top ten per platform ──────────────────────────────────────────────────────────────────────────────────────────
+
+test('each platform with a figure to order by gets its own top ten, loudest first; the sampled platforms get none', () => {
+  const tops = platformTops(issues, {});
+  assert.deepEqual(tops.map(top => [top.id, top.label, top.basis]), [['news', 'Berita', 'Menurut jumlah artikel.'], ['youtube', 'YouTube', 'Menurut tayangan video tren.'],
+    ['search', 'Google', 'Menurut pencarian (batas bawah dari daftarnya).']]);
+  assert.deepEqual(tops[0].rows.map(row => [row.key, row.title, row.text, row.ratio]), [['k1', 'Pengunduran diri Wapres', '212 artikel', 1], ['k2', 'Pertemuan di Bogor', '64 artikel', 64 / 212],
+    ['k4', 'Perampokan di Malang', '22 artikel', 22 / 212], ['k3', 'Timnas Indonesia', '18 artikel', 18 / 212]]);
+  assert.deepEqual(tops[1].rows.map(row => [row.title, row.text, row.ratio]), [['Pengunduran diri Wapres', '9.000.000 tayangan', 1]], 'videos are ordered by views, so views are what the row says');
+  assert.deepEqual(tops[2].rows.map(row => [row.title, row.text, row.ratio]), [['Timnas Indonesia', '10.000+ pencarian', 1], ['Pengunduran diri Wapres', '5.000+ pencarian', 0.5]]);
+  const withX = platformTops(social, {});
+  assert.deepEqual(withX.map(top => [top.id, top.basis]), [['news', 'Menurut jumlah artikel.'], ['x', 'Menurut jumlah posting sejak kemarin.']], 'TikTok and Instagram are samples: there is no order to list');
+  assert.deepEqual(withX[1].rows.map(row => [row.title, row.text]), [['Laga bola', '9.700 posting'], ['Antrean BBM', '625 posting']], 'an issue found on X but not counted has no place in an order');
+});
+
+test('a top ten follows the category and the province of the page, holds ten rows at most, and is absent when nothing has a figure', () => {
+  assert.deepEqual(platformTops(issues, { category: 'hukum' }).map(top => [top.id, top.rows.map(row => row.title)]), [['news', ['Perampokan di Malang']]]);
+  assert.deepEqual(platformTops(issues, { province: 'ID-BA' }).map(top => [top.id, top.rows.map(row => row.title)]), [['search', ['Cek BSU']]]);
+  assert.deepEqual(platformTops(issues, { platform: 'search' }).map(top => top.id), ['news', 'youtube', 'search'], 'the platform that orders the main list does not narrow this row');
+  const many = Array.from({ length: 14 }, (_, index) => issue(index + 1, 'Isu ' + (index + 1), 'politik', { news: { count: 100 - index } }));
+  assert.deepEqual(platformTops(many, {})[0].rows.map(row => row.title), many.slice(0, 10).map(row => row.title));
+  assert.deepEqual(platformTops(null, {}), []);
+  assert.deepEqual(platformTops([issue(1, 'Hanya sampel', 'politik', { tiktok: { found: 3, capped: false }, x: { posts: 2 } })], {}), []);
 });

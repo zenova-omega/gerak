@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { overviewEvidence, previousPeriod, reviewEvidence, sourceText } from './pulseOverview.js';
+import { narrativePlatforms, overviewEvidence, previousPeriod, reviewEvidence, sourceText } from './pulseOverview.js';
 
 test('equal length previous period uses inclusive WIB calendar days',()=>{
   assert.deepEqual(previousPeriod({from:'2026-11-01',to:'2026-11-07'}),{from:'2026-10-25',to:'2026-10-31'});
@@ -33,4 +33,15 @@ test('review accuracy excludes unpaired labels and flags uncertain results separ
  const r=reviewEvidence(posts,[{post_id:'a',manual_sentiment:'negative'},{post_id:'b',manual_sentiment:'neutral'},{post_id:'c',manual_sentiment:'neutral'}]);
  assert.equal(r.paired,2);assert.equal(r.correct,1);assert.equal(r.accuracy,0.5);assert.deepEqual(r.needsReview.map(p=>p.id),['a','c']);
  assert.equal(reviewEvidence(posts,[]).accuracy,null);
+});
+
+test('a narrative says where its posts are: platforms with their counts, most first, the tail folded',()=>{
+  const on=(platform,count)=>Array.from({length:count},(_,index)=>({id:platform+index,platform}));
+  assert.deepEqual(narrativePlatforms([...on('tiktok',2),...on('x',5),...on('news',1)]),{rows:[{platform:'x',count:5},{platform:'tiktok',count:2},{platform:'news',count:1}],more:0});
+  const wide=narrativePlatforms([...on('x',5),...on('tiktok',4),...on('instagram',3),...on('youtube',2),...on('news',1),...on('reddit',1)]);
+  assert.deepEqual(wide.rows.map(row=>row.platform),['x','tiktok','instagram','youtube']);
+  assert.equal(wide.more,2,'beyond four platforms the rest is counted, not drawn');
+  assert.deepEqual(narrativePlatforms([{id:'a'},{id:'b',platform:''},...on('x',1)]),{rows:[{platform:'x',count:1}],more:0},'a post without a platform is not given one');
+  assert.deepEqual(narrativePlatforms([]),{rows:[],more:0});
+  assert.deepEqual(narrativePlatforms([...on('x',2),...on('tiktok',2)]).rows.map(row=>row.platform),['tiktok','x'],'a tie is ordered by name, so the order does not jump between refreshes');
 });

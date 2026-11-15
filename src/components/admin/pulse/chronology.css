@@ -3,8 +3,8 @@
 .nx-chronology>p{color:var(--nx-muted);font-size:12px;line-height:1.7;margin:10px 0}
 .nx-chronology-list{list-style:none;padding:0;margin:20px 0;display:grid;gap:14px}
 .nx-chronology-card{padding:18px;border:1px solid var(--nx-line);border-radius:var(--ps-radius-control, 8px);background:var(--nx-panel);min-width:0;overflow-wrap:anywhere}
-.nx-chronology-meta{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;color:var(--nx-muted);font-size:11px}
-.nx-chronology-first{display:block;color:var(--nx-mint);font-size:11px;margin-top:12px}
+.nx-chronology-meta{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;color:var(--nx-muted);font-size:12px}
+.nx-chronology-first{display:block;color:var(--nx-mint);font-size:12px;margin-top:12px}
 .nx-chronology-card h4{font-size:16px;line-height:1.6;margin:12px 0;font-weight:500;white-space:pre-wrap}
 .nx-chronology-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px}
 .nx-chronology-actions button{white-space:normal;text-align:left}

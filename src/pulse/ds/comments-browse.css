@@ -177,3 +177,25 @@
 @media (max-width: 700px) {
   .pulse-standalone .pcm-open { min-width: var(--ps-control-md); min-height: var(--ps-control-md); }
 }
+
+/* Denser comment cards (15 Nov 2026): the Komentar page shows a wall of cards, so each one keeps its parts in fewer,
+   tighter rows. Head (who, when, likes, the icon link to the comment), the words at 14px, one row for the reading
+   with its reasons at the right, and one quiet line naming the post. A card with a two-line comment went from about
+   253px to about 175px. Spacing steps: 8px between rows, 12px by 14px inside the card. */
+.pulse-standalone.pulse-standalone .pcb-list > .pcm-card { gap: 8px; padding: 12px 14px; }
+.pulse-standalone.pulse-standalone .pcb-list .pcm-head { grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; }
+.pulse-standalone .pcb-list .pcm-who { gap: 0; }
+.pulse-standalone .pcb-list .pcm-who strong { font-size: .875rem; }
+.pulse-standalone .pcb-list .pcm-open { margin: -2px -6px -2px -4px; }
+.pulse-standalone.pulse-standalone .pcb-list > .pcm-card > .pcm-text { font-size: .875rem; line-height: 1.5; }
+.pulse-standalone .pcb-list .pcm-reading { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; }
+.pulse-standalone .pcb-list .pcm-reading > .pu-tag-group { flex: 1 1 auto; }
+.pulse-standalone .pcb-list .pcm-reasons { margin-left: auto; }
+.pulse-standalone .pcb-list .pcm-reasons[open] { flex: 1 1 100%; margin-left: 0; }
+.pulse-standalone .pcb-list .pcm-reasons > summary { min-height: 32px; font-size: .75rem; }
+/* A small chevron says the word opens something; it turns when the reasons are shown. */
+.pulse-standalone .pcb-list .pcm-reasons > summary::after { content: ""; width: 6px; height: 6px; margin: -3px 2px 0 7px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+.pulse-standalone .pcb-list .pcm-reasons[open] > summary::after { margin-top: 3px; transform: rotate(225deg); }
+.pulse-standalone .pcb-list .pcm-reasons dl { margin-top: 0; padding: 10px 12px; }
+.pulse-standalone.pulse-standalone .pcb-list .pcm-foot { padding-top: 0; border-top: 0; }
+@media (max-width: 700px) { .pulse-standalone .pcb-list .pcm-reasons > summary { min-height: 44px; } }

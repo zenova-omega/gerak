@@ -21,20 +21,20 @@ export default function SourceDisclosure({ source, budget, topicId, readOnly, bu
   return <details className="sc-source" name="pulse-source-details">
     <summary>
       <span className={`sc-source-icon sc-source-icon-${source.platform}`}><PlatformIcon platform={source.platform} size={19} /></span>
-      <span className="sc-source-name"><strong>{names[source.platform] || source.platform}</strong><small>{source.provider === 'threads' ? 'Perlu koneksi akun' : source.provider === 'social' ? 'Memakai saldo' : source.provider === 'youtube' ? 'Kuota harian' : 'Tanpa biaya'}</small></span>
+      <span className="sc-source-name"><strong>{names[source.platform] || source.platform}</strong><small>{source.public_search ? 'Memakai kredit pencarian' : source.provider === 'threads' ? 'Perlu koneksi akun' : source.provider === 'social' ? 'Memakai saldo' : source.provider === 'youtube' ? 'Kuota harian' : 'Tanpa biaya'}</small></span>
       <PulseBadge tone={tone}>{label}</PulseBadge>
       <span className="sc-source-total"><strong>{count(source.stored_posts)}</strong><small>posting tersimpan</small></span>
       <span className="sc-source-mode">{source.recurring_enabled ? 'Terjadwal' : manual ? 'Manual' : 'Tidak terjadwal'}</span>
       <ChevronDown className="sc-chevron" size={17} aria-hidden="true" />
     </summary>
     <div className="sc-source-detail">
-      {threads && <div><h3>Koneksi Threads</h3>
+      {threads && <div><h3>{source.public_search ? 'Pencarian Threads' : 'Koneksi Threads'}</h3>
         {threads.lines.map(line => <p key={line}>{line}</p>)}
-        <p className="sc-small">Koneksi diperiksa: {time(source.connection_checked_at)}.</p>
+        {!source.public_search && <p className="sc-small">Koneksi diperiksa: {time(source.connection_checked_at)}.</p>}
         <div className="sc-collection-action">
           <PulseButton variant="primary" disabled={!threads.canCollect} aria-describedby="sc-reason-threads" onClick={() => onCollect(source, 'collect')}>Kumpulkan dari Threads</PulseButton>
-          <p className="sc-small" id="sc-reason-threads">{threads.reason || 'Mencari kata kunci project pada rentang hari project. Tidak memakai saldo sumber data.'}</p>
-          <PulseButton disabled={readOnly || busy} onClick={() => onCollect(source)}>Periksa koneksi Threads</PulseButton>
+          <p className="sc-small" id="sc-reason-threads">{threads.reason || (source.public_search ? 'Mencari kata kunci project pada rentang hari project. Memakai kredit pencarian Threads.' : 'Mencari kata kunci project pada rentang hari project. Tidak memakai saldo sumber data.')}</p>
+          {!source.public_search && <PulseButton disabled={readOnly || busy} onClick={() => onCollect(source)}>Periksa koneksi Threads</PulseButton>}
         </div>
       </div>}
       <div className="sc-field-section"><h3>Kelengkapan data</h3><p className="sc-small">Posting dengan nilai tersedia, bukan jumlah interaksi.</p>

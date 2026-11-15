@@ -49,7 +49,7 @@
 @media screen and (max-width: 600px) {
   .pulse-standalone .ps-content { padding-inline: 16px; padding-bottom: 32px; }
   .pulse-standalone .ps-sidebar { padding-inline: 16px; }
-  .pulse-standalone .ps-topline { font-size: 11px; gap: 12px; }
+  .pulse-standalone .ps-topline { font-size:12px; gap: 12px; }
   .pulse-standalone .ps-project-actions { width: 100%; gap: 8px; }
   .pulse-standalone .ps-project-period form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pulse-standalone .ps-project-period input { max-width: none; width: 100%; }

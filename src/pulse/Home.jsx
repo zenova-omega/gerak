@@ -1,37 +1,56 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
-import { Card } from '../components/ui/shadcn/card';
 import { PulsePageHead } from '../components/ui/PulsePatterns';
 import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import { visibleIssues } from '../lib/pulseRadar';
 import { pageMeta } from './pageMeta';
+import AnalyticsPanel from './AnalyticsPanel';
 import HomeProjects from './HomeProjects';
+import { CategoryMix, ProvinceRanking } from './RadarBreakdowns';
+import RadarFigures from './RadarFigures';
 import RadarIssueDrawer from './RadarIssueDrawer';
 import RadarIssues from './RadarIssues';
-import RadarMap from './RadarMap';
+import RadarLead from './RadarLead';
+import RadarMap, { MAP_SOURCE } from './RadarMap';
+import RadarPlatformTops from './RadarPlatformTops';
 import './ds/home.css';
 
 const OFFLINE = 'Tidak dapat terhubung ke server PULSE. Periksa koneksi lalu coba lagi.';
 const STORE = 'pulse-home-filters';
 const SLOW_MS = 300000, FAST_MS = 8000;
 
-/** Beranda as it is drawn: the map, the issue list, the projects. Everything comes in as props. */
+/**
+ * Beranda as it is drawn, on the product's twelve-column grid:
+ * the answer card (12) · the figures strip (12) · the map with the province ranking (8 + 4) · the issue list with
+ * the composition of the scope (8 + 4) · a top ten per platform (three or four columns) · the project cards (4 + 4 + 4).
+ * Everything comes in as props.
+ */
 export function HomeView({ radar, projects, error = '', notice = '', filters, selectedKey = '', canCreate = false, refreshing = false, now = new Date(), onFilters = () => {}, onSelect = () => {}, onRefresh = () => {}, onRetry = () => {} }) {
   const meta = pageMeta.home;
   const head = <PulsePageHead icon={meta.icon} title={meta.title} tagline={meta.tagline} guide={meta.guide}><a className="hm-jump" href="#hm-projects">Project aktif</a></PulsePageHead>;
   if (error) return <section className="hm">{head}<div className="hm-error"><PulseNotice role="alert"><p>{error}</p><PulseButton onClick={onRetry}>Coba lagi</PulseButton></PulseNotice></div></section>;
-  const drawable = Boolean(radar?.issues?.length);
-  const selected = drawable ? radar.issues.find(issue => issue.key === selectedKey) || null : null;
+  const listed = Boolean(radar?.issues?.length), raw = radar?.state === 'raw';
+  const selected = listed ? radar.issues.find(issue => issue.key === selectedKey) || null : null;
+  // The map answers "where", whatever platform orders the list: it follows the category and nothing else.
+  const mapped = listed ? visibleIssues(radar.issues, { category: filters.category }) : [];
+  const rows = listed ? visibleIssues(radar.issues, filters) : [];
   return <section className="hm">{head}
-    <Card className="hm-card hm-radar" data-map={drawable ? '' : undefined}>
-      {notice && <PulseNotice role="alert"><p>{notice}</p></PulseNotice>}
-      {drawable && <div className="hm-map"><RadarMap issues={visibleIssues(radar.issues, { category: filters.category, platform: filters.platform })} selectedIssue={selected}
-        province={filters.province} provincesRead={radar.provinces_read} onProvince={province => onFilters({ ...filters, province })} /></div>}
-      <div className="hm-list"><RadarIssues payload={radar} filters={filters} onFilters={onFilters} selectedKey={selected ? selectedKey : ''} onSelect={onSelect} canCreate={canCreate}
-        onRefresh={onRefresh} refreshing={refreshing} now={now} /></div>
-    </Card>
-    <Card className="hm-card" id="hm-projects"><HomeProjects rows={projects} canCreate={canCreate} now={now} /></Card>
+    {notice && <div className="hm-error"><PulseNotice role="alert"><p>{notice}</p></PulseNotice></div>}
+    <div className="lay-grid"><div className="lay-12"><RadarLead payload={radar} filters={filters} onFilters={onFilters} canCreate={canCreate} onRefresh={onRefresh} refreshing={refreshing} now={now} /></div></div>
+    {listed && <RadarFigures payload={radar} />}
+    {listed && <div className="lay-grid">
+      <div className="lay-8"><AnalyticsPanel title="Peta sebaran isu" description="Provinsi tempat isu pada daftar masuk pencarian populer. Pilih provinsi, atau buka satu isu untuk melihat sebarannya." footer={MAP_SOURCE}>
+        <RadarMap issues={mapped} selectedIssue={selected} province={filters.province} provincesRead={radar.provinces_read} onProvince={province => onFilters({ ...filters, province })} />
+      </AnalyticsPanel></div>
+      <div className="lay-4"><ProvinceRanking issues={mapped} filters={filters} /></div>
+    </div>}
+    {(listed || raw) && <div className="lay-grid">
+      <div className={listed ? 'lay-8' : 'lay-12'}><RadarIssues payload={radar} filters={filters} onFilters={onFilters} selectedKey={selected ? selectedKey : ''} onSelect={onSelect} canCreate={canCreate} /></div>
+      {listed && <div className="lay-4"><CategoryMix payload={radar} filters={filters} listed={rows} /></div>}
+    </div>}
+    {listed && <RadarPlatformTops issues={radar.issues} filters={filters} selectedKey={selected ? selectedKey : ''} onSelect={onSelect} />}
+    <HomeProjects rows={projects} canCreate={canCreate} now={now} />
   </section>;
 }
 
@@ -73,16 +92,17 @@ export default function Home({ canCreate = false }) {
   // Only on arrival: later changes are the person's own.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // A choice made through a link (the rankings beside the map and the list) is remembered like one made on a switch.
+  useEffect(() => {
+    try { localStorage.setItem(STORE, JSON.stringify({ cat: filters.category, pf: filters.platform })); } catch { /* Preference storage may be disabled. */ }
+  }, [filters.category, filters.platform]);
 
   const write = (changes, replace) => setParams(previous => {
     const next = new URLSearchParams(previous);
     for (const [name, value] of Object.entries(changes)) { if (value) next.set(name, value); else next.delete(name); }
     return next;
   }, { replace });
-  function onFilters(next) {
-    try { localStorage.setItem(STORE, JSON.stringify({ cat: next.category, pf: next.platform })); } catch { /* Preference storage may be disabled. */ }
-    write({ cat: next.category, pf: next.platform, prov: next.province, ...(next.province !== filters.province ? { issue: '' } : {}) }, true);
-  }
+  const onFilters = next => write({ cat: next.category, pf: next.platform, prov: next.province, ...(next.province !== filters.province ? { issue: '' } : {}) }, true);
   const onSelect = key => write({ issue: key === selectedKey ? '' : key }, false);
   async function onRefresh() {
     setNotice('');

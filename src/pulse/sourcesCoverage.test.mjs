@@ -137,3 +137,24 @@ test('the Threads row says what the saved token can do, from stored facts only',
   }
   assert.doesNotMatch(said(threadsStatus(row(account, { last_attempt: { status: 'succeeded', error: null } }), context)), /ditolak/);
 });
+
+test('with the paid public search on, the Threads row needs no connection and says what a collection costs', async () => {
+  const { threadsStatus } = await import('./sourcesCoverage.js');
+  const context = { topicId: 'topic-1', readOnly: false, busy: false };
+  const row = (extra = {}) => ({ platform: 'threads', provider: 'threads', configured: true, public_search: true, keyword_collection_available: true, connection: null, last_attempt: null, search_credits_remaining: null, ...extra });
+  const said = status => status.lines.join(' ');
+  const ready = threadsStatus(row(), context);
+  assert.equal(ready.canCollect, true, 'no token and no connection check are asked for');
+  assert.match(said(ready), /semua posting publik/);
+  assert.match(said(ready), /semua kata kunci project sampai halaman terakhir/);
+  assert.match(said(ready), /1 kredit per 15 posting/);
+  assert.doesNotMatch(said(ready), /Otomatis/);
+  assert.match(said(threadsStatus(row({ recurring_enabled: true, interval_minutes: 120 }), context)), /Otomatis: setiap project yang dipantau dicari setiap 2 jam\./);
+  assert.match(said(threadsStatus(row({ recurring_enabled: true, interval_minutes: 45 }), context)), /setiap 45 menit\./);
+  assert.doesNotMatch(said(ready), /Token|Sisa kredit/);
+  assert.match(said(threadsStatus(row({ search_credits_remaining: 1234 }), context)), /Sisa kredit pada pengumpulan terakhir: 1\.234\./);
+  assert.match(said(threadsStatus(row({ last_attempt: { status: 'failed', error: 'credits' } }), context)), /ditolak: kredit pencarian habis/);
+  assert.match(threadsStatus(row(), { ...context, topicId: '' }).reason, /Pilih satu topik/);
+  assert.equal(threadsStatus(row(), { ...context, readOnly: true }).canCollect, false);
+  assert.equal(threadsStatus(row(), { ...context, busy: true }).canCollect, false);
+});

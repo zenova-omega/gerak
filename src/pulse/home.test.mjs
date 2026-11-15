@@ -56,6 +56,7 @@ test('a project card shows the last day against the day before, a week as a line
   assert.match(text(second), /Posting 24 jam 96 -22% dari 24 jam sebelumnya/);
   assert.match(second, /data-hatch=""/, 'posts without a reading are hatched, never a flat grey');
   assert.match(text(second), /Belum dianalisis 75%/);
+  assert.match(second, /aria-label="Sentimen 7 hari: Positif 25%, Belum dianalisis 75%"/);
   assert.doesNotMatch(text(second), /alert baru/, 'no alert, no tag');
   assert.match(text(cardOf(html, 'cawapres')), /Posting 24 jam 50 0% dari 24 jam sebelumnya/);
   assert.match(text(cardOf(html, 'cawapres')), /belum pernah terkumpul/);
@@ -83,10 +84,10 @@ test('paused projects sit under their own disclosure and an empty installation o
   assert.match(text(await render('/src/pulse/HomeProjects.jsx', 'default', { rows: null, canCreate: true, now })), /Memuat project/);
 });
 
-test('the page follows the product grid: the answer, the figures, map with its ranking, list with its composition, projects', async () => {
+test('the page follows the product grid: the answer, the figures, map with its ranking, list with its composition, a top ten per platform, projects', async () => {
   const html = await view({});
   assert.match(html, /<h1[^>]*>Beranda<\/h1>/);
-  const marks = ['>Isu yang ramai di Indonesia<', 'class="pu-stat-grid', '>Peta sebaran isu<', '>Provinsi paling ramai<', '>Isu teratas<', '>Komposisi isu<', 'id="hm-projects"'];
+  const marks = ['Isu yang ramai di Indonesia</h2>', 'class="pu-stat-grid', 'Peta sebaran isu</h2>', 'Provinsi paling ramai</h2>', 'Isu teratas</h2>', 'Komposisi isu</h2>', 'aria-label="Isu teratas per platform"', 'id="hm-projects"'];
   const order = marks.map(mark => html.indexOf(mark));
   assert.ok(order.every((at, index) => at > 0 && (index === 0 || at > order[index - 1])), `in this order: ${order}`);
   assert.equal((html.match(/class="lay-8"/g) || []).length, 2);
@@ -113,7 +114,7 @@ test('the map shows where the category is loud whatever platform orders the list
 
 test('with no list there is no empty map or strip, and a failed first load says so', async () => {
   const waiting = await view({ radar: { ...radar, state: 'empty', issues: [], updated_at: null, brief: null, last_attempt: null } });
-  assert.doesNotMatch(waiting, /class="rdm"|pu-stat-grid|Isu teratas/);
+  assert.doesNotMatch(waiting, /class="rdm"|pu-stat-grid|Isu teratas<\/h2>/);
   assert.match(text(waiting), /Radar belum pernah berjalan/);
   assert.match(waiting, /id="hm-projects"/);
   const raw = await view({ radar: { ...radar, state: 'raw', issues: [], brief: null, raw: { news: [{ title: 'Judul', url: null, source: 'Kompas', figure: 1 }], youtube: [], search: [] } } });
@@ -139,4 +140,5 @@ test('/pulse is Beranda, an old link with a project goes to Ikhtisar, and the si
 
 test('the radar has its own switch in Monitor, asked about before it is turned on', () => {
   assert.deepEqual(monitorExtras.find(extra => extra.channel === 'radar'), { channel: 'radar', label: 'Radar isu Indonesia', paid: true });
+  assert.deepEqual(monitorExtras.find(extra => extra.channel === 'radar_social'), { channel: 'radar_social', label: 'Radar: X, TikTok, Instagram', paid: true }, 'the paid steps have their own switch');
 });

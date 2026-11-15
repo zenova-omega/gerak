@@ -132,6 +132,7 @@ export async function pulseUI(t, { authenticated = true } = {}) {
     } else if (method === 'GET' && path === '/api/admin/pulse/sentiment/progress') {
       body = { total: state.updated ? 2 : 1, analyzed: 0, pending: state.updated ? 2 : 1, failed: 0, last_finished_at: null, scope: 'project_all_dates' };
     } else if (method === 'GET' && path === '/api/admin/pulse/reviews') body = { reviews: [] };
+    else if (method === 'GET' && path === '/api/admin/pulse/growth') body = { posts: [], availability: { source: 'stored_metric_snapshots', total_posts: 0 } };   // Akun & sumber shows growth
     else if (method === 'GET' && path === '/api/admin/pulse/issues') body = [];
     else if (method === 'GET' && path === '/api/admin/pulse/sources/balance') body = state.balance;
     else if (method === 'GET' && path === '/api/admin/pulse/monitor') body = state.monitor;   // the unread-alert badge on the Monitor nav item
