@@ -109,14 +109,22 @@ def _count(result):
     return int(value)
 
 
+NOTHING_FOUND = ('no_data', 'no_results', 'empty')      # the supplier's status for a search that matched no post: a sentence, and no rows
+
+
 def _rows(result):
+    """The rows of a search answer. An answer that says nothing was found is an empty list, not a failure: read as a
+    failure it was reported as incomplete and bought again at every refresh (seen on a real round, 15 Nov 2026)."""
     if not isinstance(result, dict):
         raise ValueError('Invalid search answer')
     if result.get('isError'):
         xpoz._tool_error(result)
-    if result.get('structuredContent') is not None:
-        return xpoz._stored_rows(result['structuredContent'])
-    return xpoz._page_rows(_text_of(result))
+    structured = result.get('structuredContent')
+    if structured is not None:
+        return [] if isinstance(structured, dict) and structured.get('status') in NOTHING_FOUND else xpoz._stored_rows(structured)
+    text = _text_of(result)
+    said = re.search(r'^\s*status:\s*"?([A-Za-z_]+)"?\s*$', text, re.M)
+    return [] if said and said.group(1) in NOTHING_FOUND else xpoz._page_rows(text)
 
 
 def _evidence(platform, items):

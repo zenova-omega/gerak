@@ -48,6 +48,17 @@ def web_link(url):
     return url if re.match(r'https?://', url, re.I) else None
 
 
+# Pictures are kept only as links, and only from the two places the lists themselves use: the thumbnail a trending-search
+# list shows beside a term or a story, and the thumbnail of a video. Any other host or shape is dropped.
+_PICTURE = re.compile(r'https://(?:encrypted-tbn\d\.gstatic\.com/images\?q=tbn:[A-Za-z0-9_\-]{10,200}(?:&[a-z]{1,10}(?:=[A-Za-z0-9_\-]{0,40})?){0,4}'
+                      r'|i\.ytimg\.com/vi/[A-Za-z0-9_\-]{11}/(?:mq|hq|sd)?default\.jpg)')
+
+
+def picture_link(url):
+    """A picture link the page may show, or None."""
+    return url if isinstance(url, str) and _PICTURE.fullmatch(url) else None
+
+
 def _feed(text):
     """Is this an RSS document worth parsing? An error page, a truncated answer or one that defines entities is not."""
     return isinstance(text, str) and 0 < len(text) <= MAX_FEED_BYTES and '<rss' in text[:2000] and '<!ENTITY' not in text and '<!DOCTYPE' not in text
@@ -58,7 +69,8 @@ def _local(tag):
 
 
 def parse_trending(xml):
-    """Rows of a trending-searches feed: the term, the lower bound of its searches, and the news listed with it."""
+    """Rows of a trending-searches feed: the term, the lower bound of its searches, the news listed with it, and the
+    picture the list shows for the term and for each story."""
     if not _feed(xml):
         return []
     try:
@@ -74,14 +86,17 @@ def parse_trending(xml):
                 story = {_local(part.tag): (part.text or '') for part in child}
                 title = plain(story.get('news_item_title'))
                 if title:
-                    news.append({'title': title, 'url': web_link(story.get('news_item_url')), 'source': plain(story.get('news_item_source'), 80) or None})
+                    news.append({'title': title, 'url': web_link(story.get('news_item_url')), 'source': plain(story.get('news_item_source'), 80) or None,
+                                 'picture': picture_link(story.get('news_item_picture'))})
             else:
                 fields[name] = child.text or ''
         term = plain(fields.get('title'))
         if not term:
             continue
         digits = re.sub(r'\D', '', fields.get('approx_traffic', ''))
-        rows.append({'term': term, 'searches': int(digits) if digits else 0, 'news': news})
+        picture = picture_link(fields.get('picture'))
+        rows.append({'term': term, 'searches': int(digits) if digits else 0, 'news': news,
+                     'picture': {'url': picture, 'source': plain(fields.get('picture_source'), 80) or None} if picture else None})
     return rows
 
 
@@ -116,23 +131,36 @@ async def _text(client, url, params=None):
     return response.text
 
 
-async def _trending(client, geo):
+def _reason(error):
+    """The kind of failure, in our own words: an HTTP status, or the class of the network error (ProxyError,
+    ConnectError, ReadTimeout, ...). Never the source's text."""
+    return f'http_{error.response.status_code}' if isinstance(error, httpx.HTTPStatusError) else type(error).__name__
+
+
+async def _list(client, name, why, parse, url, params):
+    """One list, parsed. When it gives nothing, `why[name]` says why: the failure, a page that is not a feed, or an empty feed."""
     try:
-        return parse_trending(await _text(client, TRENDING_URL, {'geo': geo}))
-    except httpx.HTTPError:
+        text = await _text(client, url, params)
+    except httpx.HTTPError as error:
+        why[name] = _reason(error)
         return []
+    rows = parse(text)
+    if not rows:
+        why[name] = 'empty' if _feed(text) else 'not_a_feed'
+    return rows
 
 
-async def _news(client, section=None):
-    try:
-        return parse_news(await _text(client, NEWS_SECTION_URL + section if section else NEWS_URL, NEWS_EDITION))
-    except httpx.HTTPError:
-        return []
+async def _trending(client, geo, why=None):
+    return await _list(client, geo, why if why is not None else {}, parse_trending, TRENDING_URL, {'geo': geo})
 
 
-async def _videos(client, key):
+async def _news(client, section=None, why=None):
+    return await _list(client, section or 'news', why if why is not None else {}, parse_news, NEWS_SECTION_URL + section if section else NEWS_URL, NEWS_EDITION)
+
+
+async def _videos(client, key, why=None):
     """The popular lists, most general first. A refusal stops the reading: the allowance is shared by every list."""
-    found, read = {}, False
+    found, read, why = {}, False, why if why is not None else {}
     for category in YOUTUBE_CATEGORIES:
         params = {'part': 'snippet,statistics', 'chart': 'mostPopular', 'regionCode': 'ID', 'maxResults': 20, 'hl': 'id'}
         if category:
@@ -141,8 +169,9 @@ async def _videos(client, key):
             response = await client.get(YOUTUBE_URL, params=params, headers={'x-goog-api-key': key})
             response.raise_for_status()
             items = response.json().get('items', [])
-        except (httpx.HTTPError, ValueError):
+        except (httpx.HTTPError, ValueError) as error:
             if not read:
+                why['youtube'] = _reason(error)
                 return None
             continue        # one category the country has no list for does not undo the lists already read
         read = True
@@ -153,7 +182,8 @@ async def _videos(client, key):
                 continue
             views = str((item.get('statistics') or {}).get('viewCount') or '')
             found[video] = {'title': title, 'url': 'https://www.youtube.com/watch?v=' + video, 'source': plain(snippet.get('channelTitle'), 80) or None,
-                            'figure': int(views) if views.isdigit() else None, 'section': snippet.get('categoryId')}
+                            'figure': int(views) if views.isdigit() else None, 'section': snippet.get('categoryId'),
+                            'picture': (lambda link: {'url': link, 'source': plain(snippet.get('channelTitle'), 80) or None} if link else None)(picture_link(f'https://i.ytimg.com/vi/{video}/mqdefault.jpg'))}
     return list(found.values())
 
 
@@ -165,11 +195,11 @@ async def collect(settings, *, client=None, pause=0.3):
     """One reading of every list. Returns the numbered signals, what could not be read, and the provinces that were."""
     own = client is None
     client = client or httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers={'User-Agent': 'Mozilla/5.0 (compatible; radar)'})
-    missing, signals = [], []
+    missing, signals, why = [], [], {}
     try:
         # News: the top stories, then each section. A story is kept once, under the first place it was seen.
         stories, seen = [], set()
-        top = await _news(client)
+        top = await _news(client, why=why)
         if not top:
             missing.append('news')
         for section, rows in [(None, top)] + [(section, (await _news(client, section))[:SECTION_STORIES]) for section in NEWS_SECTIONS]:
@@ -183,13 +213,13 @@ async def collect(settings, *, client=None, pause=0.3):
 
         # Searches: the country's list, then every province's. A term is one signal however many lists carry it.
         terms, provinces_read = {}, []
-        national = await _trending(client, 'ID')
+        national = await _trending(client, 'ID', why)
         if not national:
             missing.append('search')
         for row in national:
-            terms.setdefault(_term(row['term']), {'figure': row['searches'], 'provinces': {}, 'related': row['news']})
+            terms.setdefault(_term(row['term']), {'figure': row['searches'], 'provinces': {}, 'related': row['news'], 'picture': row.get('picture')})
         for code in PROVINCES:
-            rows = await _trending(client, code)
+            rows = await _trending(client, code, why)
             if pause:
                 await asyncio.sleep(pause)
             if not rows:
@@ -197,18 +227,21 @@ async def collect(settings, *, client=None, pause=0.3):
                 continue
             provinces_read.append(code)
             for row in rows:
-                term = terms.setdefault(_term(row['term']), {'figure': None, 'provinces': {}, 'related': row['news']})
+                term = terms.setdefault(_term(row['term']), {'figure': None, 'provinces': {}, 'related': row['news'], 'picture': row.get('picture')})
+                term['picture'] = term['picture'] or row.get('picture')
                 term['provinces'][code] = max(row['searches'], term['provinces'].get(code, 0))
                 term['related'] = term['related'] or row['news']
         on_country = [(name, term) for name, term in terms.items() if term['figure'] is not None]
         local = sorted(((name, term) for name, term in terms.items() if term['figure'] is None),
                        key=lambda pair: (-len(pair[1]['provinces']), -max(pair[1]['provinces'].values(), default=0), pair[0]))[:LOCAL_TERMS]
-        searches = [{'platform': 'search', 'title': name, 'url': None, 'source': None, 'figure': term['figure'], 'provinces': term['provinces'],
+        searches = [{'platform': 'search', 'title': name, 'url': None, 'source': None, 'figure': term['figure'], 'provinces': term['provinces'], 'picture': term['picture'],
                      'related': term['related'][:3], 'section': None} for name, term in on_country + local]
 
         key = credential(settings, 'YOUTUBE_API_KEY')
         key = key.get_secret_value() if hasattr(key, 'get_secret_value') else (key or '')
-        videos = await _videos(client, key) if key else None
+        videos = await _videos(client, key, why) if key else None
+        if not key:
+            why['youtube'] = 'no_key'
         if videos is None:
             missing.append('youtube')
         watched = [{'platform': 'youtube', **video, 'provinces': {}, 'related': []} for video in videos or []]
@@ -217,4 +250,6 @@ async def collect(settings, *, client=None, pause=0.3):
             await client.aclose()
     for number, signal in enumerate(stories + searches + watched, 1):
         signals.append({'id': f'S{number}', **signal})
-    return {'signals': signals, 'missing': missing, 'provinces_read': provinces_read}
+    # Why each missing source was not read. The country's search list counts as 'search', the top stories as 'news'.
+    why = {('search' if name == 'ID' else name): reason for name, reason in why.items() if ('search' if name == 'ID' else name) in missing}
+    return {'signals': signals, 'missing': missing, 'provinces_read': provinces_read, 'why': why}

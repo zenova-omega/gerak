@@ -75,7 +75,7 @@ async def test_the_latest_composed_run_is_returned_with_everything_the_page_filt
     assert [(row['key'], row['rank'], row['scope']) for row in data['issues']] == [('k-a', 1, 'national'), ('k-b', 2, 'national'), ('k-l', 3, 'local')]
     first = data['issues'][0]
     assert first == {'key': 'k-a', 'scope': 'national', 'rank': 1, 'title': 'Laga Jepang lawan Brasil', 'category': 'olahraga', 'reason': 'Ramai di berita.',
-                     'platforms': {'news': {'count': 5}, 'search': {'searches': 5000}}, 'regions': [{'code': 'ID-BA', 'searches': 5000}],
+                     'platforms': {'news': {'count': 5}, 'search': {'searches': 5000}}, 'regions': [{'code': 'ID-BA', 'searches': 5000}], 'image': None,
                      'evidence_titles': ['Laga di Malang'], 'query': {'q': 'laga jepang lawan brasil', 'required': '', 'excluded': ''}, 'movement': None, 'project': None}
 
 
@@ -293,3 +293,18 @@ async def test_social_figures_and_sampled_posts_reach_the_page_without_what_the_
     assert detail['evidence'] == evidence
     assert not (keys(data) | keys(detail)) & {'model', 'method', 'usage', 'engine', 'provider', 'raw_answer', 'score', 'run_id', 'discovery', 'sampled'}
     assert 'sampled' not in response.text and 'discovery' not in response.text
+
+
+@pytest.mark.asyncio
+async def test_an_issues_picture_reaches_the_page_only_when_it_is_from_a_host_the_lists_use(client, db, admin_token, now):
+    shown = run(db, now - timedelta(minutes=10))
+    await db.flush()
+    good = {'url': 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg', 'source': 'Kanal Bola', 'kind': 'video'}
+    issue(db, shown, 'k-a', 1, 'Dengan gambar', image=good)
+    issue(db, shown, 'k-b', 2, 'Tautan lain', image={'url': 'https://evil.example/a.png', 'source': 'x', 'kind': 'photo'})
+    issue(db, shown, 'k-c', 3, 'Bentuk aneh', image='bukan peta')
+    issue(db, shown, 'k-d', 4, 'Tanpa gambar')
+    await db.flush()
+    data = await read(client, admin_token)
+    assert [row['image'] for row in data['issues']] == [good, None, None, None]
+    assert (await read(client, admin_token, '/radar/issues/k-a'))['image'] == good

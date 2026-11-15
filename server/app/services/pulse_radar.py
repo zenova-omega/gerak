@@ -8,6 +8,7 @@ Behind a second, paid switch (off by default) a refresh also asks what is loud o
 and samples posts from X, TikTok and Instagram as evidence. With that switch off none of it is asked.
 """
 import asyncio
+import collections
 import logging
 import re
 import time
@@ -15,6 +16,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy.exc import OperationalError
 
 from ..config import get_settings
 from ..database import async_session
@@ -25,7 +27,7 @@ from .ingest.common import credential
 from .pulse_monitor import insert_once
 from .pulse_radar_compose import compose
 from .pulse_radar_measure import SAMPLE_HOURS, SOCIAL as SOCIAL_PLATFORMS, count_phrase, measure
-from .pulse_radar_signals import collect
+from .pulse_radar_signals import collect, picture_link
 from .pulse_radar_x import discover, handle_of
 
 PROVIDER = 'radar'
@@ -45,6 +47,8 @@ RETRY_MINUTES = 120               # and is tried again this much later, not at t
 EVIDENCE_PER_PLATFORM = 5
 LIST_ROWS = 10             # the rows the page lists; the brief only cites these, and these are the ones sampled
 RAW_ROWS = 20
+WRITE_TRIES = 4            # the installation's database has one writer at a time; a busy one must not cost a refresh its list
+WRITE_PAUSE = (2, 5, 10)   # seconds between the tries
 PLATFORMS = ('news', 'x', 'youtube', 'search')     # what an issue is ordered by. TikTok and Instagram are samples: shown, never ordering
 COMPOSED = ('ok', 'partial')
 
@@ -89,8 +93,37 @@ def attach(issue, signals):
                 + [{'platform': 'x', 'title': 'Posting dari @' + handle_of(link) if handle_of(link) else 'Posting di X', 'url': link, 'source': None, 'figure': None} for link in links[:EVIDENCE_PER_PLATFORM]]
                 + [item('youtube', row, row['figure']) for row in videos[:EVIDENCE_PER_PLATFORM]]
                 + [item('search', row, _searches(row)) for row in terms[:EVIDENCE_PER_PLATFORM]])
-    return {**issue, 'platforms': platforms, 'evidence': evidence,
+    return {**issue, 'platforms': platforms, 'evidence': evidence, 'image': _picture(videos, terms),
             'regions': [{'code': code, 'searches': count} for code, count in sorted(regions.items(), key=lambda pair: (-pair[1], pair[0]))]}
+
+
+def _picture(videos, terms):
+    """One picture for an issue, from its own sources: its most watched video, else the picture the search list shows for
+    its most searched term, else the picture of a story listed under one of its terms. None when it has none of these."""
+    def shown(link, source, kind):
+        return {'url': link, 'source': source, 'kind': kind} if picture_link(link) else None
+    for row in videos:
+        found = shown((row.get('picture') or {}).get('url'), (row.get('picture') or {}).get('source'), 'video')
+        if found:
+            return found
+    searched = sorted(terms, key=lambda row: -_searches(row))
+    for row in searched:
+        found = shown((row.get('picture') or {}).get('url'), (row.get('picture') or {}).get('source'), 'photo')
+        if found:
+            return found
+    for row in searched:
+        for story in row.get('related', []):
+            found = shown(story.get('picture'), story.get('source'), 'photo')
+            if found:
+                return found
+    return None
+
+
+def _image(stored):
+    """A stored picture as the page gets it: only the three fields, and only a link from a host the lists use."""
+    if not isinstance(stored, dict) or not picture_link(stored.get('url')):
+        return None
+    return {'url': stored['url'], 'source': stored.get('source') if isinstance(stored.get('source'), str) else None, 'kind': 'video' if stored.get('kind') == 'video' else 'photo'}
 
 
 def loudness(issue, platform):
@@ -319,6 +352,9 @@ async def assemble(settings, now, *, previous=(), ai=None, client=None, social=N
             extra['sampled'] = sampled
     if state == 'ok' and missing:
         state = 'partial'
+    why = {name: reason for name, reason in (gathered.get('why') or {}).items() if name in missing}
+    if why:
+        extra['why'] = why        # never leaves the server; the log line summarises it
     counts = {platform: sum(1 for row in rows if row['platform'] == platform) for platform in PLATFORMS}
     if not counts['x']:
         del counts['x']
@@ -347,6 +383,21 @@ async def _left_by_earlier(db, now):
                         samples.setdefault(name, {})[platform] = {'at': at, 'figure': (issue.platforms or {}).get(platform),
                                                                   'evidence': [row for row in issue.evidence or [] if row.get('platform') == platform]}
     return discovery, tried, samples
+
+
+async def _store(session_factory, run_id, now, built, first_seen):
+    """Write one refresh: its run, its issues, and the removal of runs past KEEP_DAYS. One transaction; nothing is left behind when it fails."""
+    async with session_factory() as db:
+        db.add(RadarRun(id=run_id, started_at=now, finished_at=datetime.utcnow(), state=built['state'], missing=built['missing'],
+                        provinces_read=built['provinces_read'], brief=built['brief'], raw=built['raw'], usage=built['usage']))
+        for issue in built['issues']:
+            db.add(RadarIssue(run_id=run_id, key=issue['key'], scope=issue['scope'], rank=issue['rank'], title=issue['title'], category=issue['category'],
+                              reason=issue['reason'], score=issue['score'], platforms=issue['platforms'], regions=issue['regions'], evidence=issue['evidence'],
+                              query=issue['query'], image=issue.get('image'), first_seen_at=first_seen.get(issue['key'], now)))
+        cutoff = now - timedelta(days=KEEP_DAYS)
+        await db.execute(delete(RadarIssue).where(RadarIssue.run_id.in_(select(RadarRun.id).where(RadarRun.started_at < cutoff))))
+        await db.execute(delete(RadarRun).where(RadarRun.started_at < cutoff))
+        await db.commit()
 
 
 async def refresh(session_factory, settings=None, *, ai=None, client=None, now=None, force=False, social=None, fresh_x=False):
@@ -382,18 +433,18 @@ async def refresh(session_factory, settings=None, *, ai=None, client=None, now=N
         built = await assemble(settings, now, previous=previous, ai=ai, client=client, social=paid)
         issues, first_seen = built['issues'], {row['key']: row['first_seen_at'] for row in previous}
         run_id = str(uuid.uuid4())
-        async with session_factory() as db:
-            db.add(RadarRun(id=run_id, started_at=now, finished_at=datetime.utcnow(), state=built['state'], missing=built['missing'],
-                            provinces_read=built['provinces_read'], brief=built['brief'], raw=built['raw'], usage=built['usage']))
-            for issue in issues:
-                db.add(RadarIssue(run_id=run_id, key=issue['key'], scope=issue['scope'], rank=issue['rank'], title=issue['title'], category=issue['category'],
-                                  reason=issue['reason'], score=issue['score'], platforms=issue['platforms'], regions=issue['regions'], evidence=issue['evidence'],
-                                  query=issue['query'], first_seen_at=first_seen.get(issue['key'], now)))
-            cutoff = now - timedelta(days=KEEP_DAYS)
-            await db.execute(delete(RadarIssue).where(RadarIssue.run_id.in_(select(RadarRun.id).where(RadarRun.started_at < cutoff))))
-            await db.execute(delete(RadarRun).where(RadarRun.started_at < cutoff))
-            await db.commit()
-        log.info('radar: %s, %s signals, %s issues, %s missing', built['state'], built['signals'], len(issues), len(built['missing']))
+        for attempt in range(WRITE_TRIES):
+            try:
+                await _store(session_factory, run_id, now, built, first_seen)
+                break
+            except OperationalError:        # "database is locked": another writer held it past the wait. Everything is in memory; try again
+                if attempt == WRITE_TRIES - 1:
+                    raise
+                log.warning('radar: the list could not be stored (database busy), trying again')
+                await asyncio.sleep(WRITE_PAUSE[attempt])
+        reasons = collections.Counter((built['usage'].get('why') or {}).values()).most_common(3)
+        log.info('radar: %s, %s signals, %s issues, %s missing%s', built['state'], built['signals'], len(issues), len(built['missing']),
+                 ' (' + ', '.join(f'{reason} {count}' for reason, count in reasons) + ')' if reasons else '')
         return {'state': built['state'], 'run_id': run_id}
     finally:
         await _release(session_factory, token)
@@ -416,8 +467,9 @@ async def radar_tick(now=None):
         last = max((when for when in (last, _ticked['at']) if when is not None), default=None)
         if policy.daily_limit == 0 or (last is not None and timedelta(0) <= now - last < timedelta(minutes=INTERVAL_MINUTES)):
             return
-        _ticked['at'] = now
-        await refresh(async_session, get_settings(), now=now)
+        before, _ticked['at'] = _ticked['at'], now
+        if (await refresh(async_session, get_settings(), now=now))['run_id'] is None:
+            _ticked['at'] = before        # told busy or off: nothing was started, so the next minute may try again
     except Exception:
         log.exception('radar: tick failed')
 
@@ -445,7 +497,7 @@ def _covering(issue, topics):
 
 def _for_reader(issue, movement=None, project=None):
     return {'key': issue.key, 'scope': issue.scope, 'rank': issue.rank, 'title': issue.title, 'category': issue.category, 'reason': issue.reason,
-            'platforms': issue.platforms or {}, 'regions': issue.regions or [],
+            'platforms': issue.platforms or {}, 'regions': issue.regions or [], 'image': _image(issue.image),
             'evidence_titles': [item['title'] for item in issue.evidence or [] if item.get('platform') in ('news', 'youtube')],     # headlines: where a place is read from
             'query': issue.query or {}, 'movement': movement, 'project': project}
 

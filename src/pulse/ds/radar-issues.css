@@ -8,8 +8,33 @@
 .pulse-standalone .rdl-brief { margin: 0 0 16px; max-width: 80ch; color: var(--ps-ink); font-size: 1rem; line-height: 1.6; text-wrap: pretty; }
 .pulse-standalone .rdl-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 
-.pulse-standalone .rdi-list { margin: 0; padding: 0; list-style: none; }
-.pulse-standalone .rdi-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: start; gap: 4px 12px; padding: 16px 0; border-top: 1px solid var(--ps-line); }
+/* The list: the three highest as cards across the top (a picture, then the issue), the rest as ranked rows with a small
+   picture. One ordered list, so the positions read in order whatever the layout. */
+.pulse-standalone .rdi-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 20px; margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .rdi-row { grid-column: 1 / -1; display: grid; grid-template-columns: 28px 56px minmax(0, 1fr) auto; align-items: start; gap: 4px 12px; padding: 16px 0; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rdi-list > .rdi-feature { grid-column: auto; display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding: 0 0 20px; border-top: 0; }      /* stretch: the row rule's start would shrink the body to its narrowest word */
+.pulse-standalone .rdi-list > .rdi-feature + .rdi-row:not(.rdi-feature) { border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rdi-feature > .rdi-body { flex: 1; }
+.pulse-standalone .rdi-feature .rdi-reason { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.pulse-standalone .rdi-feature > .rdi-action { min-height: 0; }
+.pulse-standalone .rdi-feature .rdi-rank { position: absolute; left: 8px; top: 8px; min-width: 28px; padding: 2px 8px; border-radius: 8px; background: var(--ps-panel); color: var(--ps-ink); font-size: .9375rem; line-height: 1.4; text-align: center; }
+.pulse-standalone .rdi-feature[data-selected] { background: none; box-shadow: none; }
+.pulse-standalone .rdi-feature[data-selected] .rdi-pic { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
+.pulse-standalone .rdi-feature[data-selected] .rdi-title { text-decoration: underline; text-underline-offset: 3px; }
+.pulse-standalone .rdi-credit { margin: 6px 0 0; color: var(--ps-muted); font-size: .75rem; }
+/* The figures of a card in words, one after another: the bars belong to the rows below, where they line up. */
+.pulse-standalone .rdi-meters[data-compact] { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.pulse-standalone .rdi-meters[data-compact] > li[data-platform] { display: inline-flex; align-items: center; gap: 6px; }
+
+/* A picture from the issue's own sources, at a fixed size so nothing moves when it arrives. Without one, the category. */
+.pulse-standalone .rdi-pic { position: relative; display: grid; place-items: center; flex: none; overflow: hidden; border-radius: 8px; background: var(--ps-soft); color: var(--ps-accent); cursor: pointer; }
+.pulse-standalone .rdi-pic > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pulse-standalone .rdi-pic-fallback { background: color-mix(in oklch, var(--ps-chart-1, var(--ps-accent)) 14%, var(--ps-panel)); }
+.pulse-standalone .rdi-pic[data-size="feature"] { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 10px; }
+.pulse-standalone .rdi-pic[data-size="row"] { width: 56px; height: 56px; }
+.pulse-standalone .rdi-pic[data-size="column"] { width: 40px; height: 40px; }
+.pulse-standalone .rdi-pic[data-size="column-wide"] { width: 64px; height: 36px; }
+.pulse-standalone .rdi-pic-play { position: absolute; right: 8px; bottom: 8px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background: color-mix(in oklch, var(--ps-ink) 72%, transparent); color: var(--ps-panel); }
 .pulse-standalone .rdi-row:first-child { padding-top: 0; border-top: 0; }
 .pulse-standalone .rdi-row:last-child { padding-bottom: 0; }
 .pulse-standalone .rdi-row[data-selected] { background: color-mix(in oklch, var(--ps-soft) 60%, transparent); box-shadow: -10px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent), 10px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent); }
@@ -58,12 +83,14 @@
 .pulse-standalone .rpt-card .pu-panel-heading h2 { display: flex; align-items: center; gap: 8px; font-size: 1rem; line-height: 1.35; }
 .pulse-standalone .rpt-card .pu-panel-heading h2 > svg { flex: none; color: var(--ps-muted); }
 .pulse-standalone .rpt-list { margin: 0; padding: 0; list-style: none; }
-.pulse-standalone .rpt-list > li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 0 10px; padding: 10px 0; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rpt-list > li { display: grid; grid-template-columns: 20px auto minmax(0, 1fr); align-items: start; gap: 0 10px; padding: 10px 0; border-top: 1px solid var(--ps-line); }
 .pulse-standalone .rpt-list > li:first-child { padding-top: 0; border-top: 0; }
 .pulse-standalone .rpt-list > li:last-child { padding-bottom: 0; }
 .pulse-standalone .rpt-list > li[data-selected] { background: color-mix(in oklch, var(--ps-soft) 60%, transparent); box-shadow: -8px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent), 8px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent); }
 .pulse-standalone .rpt-rank { color: var(--ps-muted); font-size: .9375rem; font-weight: 650; line-height: 1.4; font-variant-numeric: tabular-nums; text-align: right; }
-.pulse-standalone .rpt-body { min-width: 0; }
+.pulse-standalone .rpt-body { min-width: 0; container-type: inline-size; }
+/* A narrow column (the video one, beside its wide pictures, or four across) puts the figure under its bar rather than past the card's edge. */
+@container (max-width: 210px) { .pulse-standalone .rpt-body > .rpt-meter { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 .pulse-standalone.pulse-standalone .rpt-title { display: inline; height: auto; min-height: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ps-ink); font: inherit; font-size: .9375rem; font-weight: 600; line-height: 1.4; text-align: left; cursor: pointer; text-wrap: pretty; overflow-wrap: anywhere; }
 .pulse-standalone.pulse-standalone .rpt-title:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pulse-standalone.pulse-standalone .rpt-title:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
@@ -116,8 +143,10 @@
 }
 @media (max-width: 760px) {
   .pulse-standalone .rpt.rpt { grid-template-columns: minmax(0, 1fr); }
-  .pulse-standalone .rdi-row { grid-template-columns: 22px minmax(0, 1fr); }
-  .pulse-standalone .rdi-row > .rdi-action { grid-column: 2; }
+  .pulse-standalone .rdi-list { grid-template-columns: minmax(0, 1fr); }
+  .pulse-standalone .rdi-row { grid-template-columns: 22px 48px minmax(0, 1fr); }
+  .pulse-standalone .rdi-row .rdi-pic[data-size="row"] { width: 48px; height: 48px; }
+  .pulse-standalone .rdi-row > .rdi-action { grid-column: 3; }
   .pulse-standalone .rdi-row > .rdi-action:empty { display: none; }
 }
 @media print { .pulse-standalone .rdl-filters, .pulse-standalone .rdi-action, .pulse-standalone .rdl .pu-panel-actions { display: none; } }

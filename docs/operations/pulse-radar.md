@@ -82,6 +82,11 @@ Runs the paid steps whatever the switch says and prints, besides the usual lines
 | One sample of 20 rows | X about 7 credits and 4 to 6 s; TikTok about 5 and 5 to 8 s; Instagram about 17 and 7 s |
 | First whole round (nothing to reuse) | 412 s; 7 issues from X; 17 counts; 322 credits; AI USD 0.43 for the search and the grouping together |
 | Second round, 14 minutes later | 163 s; no search of X (the first one was carried); 17 counts and only the samples that were missing; 95 credits; AI USD 0.05 (grouping only); stored as ok |
+| Third round, an hour after the first | 209 s; search carried; every issue kept its keywords and its count moved by a few posts at most (357 to 359, 110 to 112); samples of eight issues reused, two issues sampled new; AI USD 0.08 |
+
+The credit figures are the account's balance before and after a round, and the projects' own collection draws on the same balance while a round runs (the third round read 334 credits although its own calls come to about 100). The per-call figures above are the ones to plan with.
+
+A search that matches no post is answered with `status: no_data` and a sentence, with no rows. That is an empty sample (remembered for three hours, no figure), not a lost answer; read as a failure it was reported as incomplete and paid for again at every refresh.
 
 In that first round one TikTok search and one X search gave no answer, and under the rule of that hour the platform was then left alone: six issues went without a TikTok sample and two without an X sample. Both searches answered in under 8 seconds when repeated. The rule was changed to the one above.
 
@@ -98,7 +103,13 @@ A day with the switch on, at 48 refreshes: the search of X about USD 0.39 (one s
 | "X belum lengkap", "TikTok belum lengkap", "Instagram belum lengkap" | Paid switch on, and that platform could not be asked everything: the search of X gave nothing and the last one is over 26 hours old, the supplier's lane is blocked or has no key, or answers were lost. | Monitor (is the supplier's lane blocked?), and the `radar:` lines of the API log. |
 | A hatched province | That province's trending list was not read. | The same. |
 
-Each refresh writes one log line: `radar: <state>, <n> signals, <n> issues, <n> missing`.
+Pictures: an issue keeps one picture link from its own sources (its trending video's thumbnail, or the picture the trending-search list shows), only from `i.ytimg.com` and `encrypted-tbn*.gstatic.com`, in `pulse_radar_issues.image`. Nothing is downloaded or stored; the page loads the picture straight from that host without a referrer. Issues found only in the news have none and show their category.
+
+Each refresh writes one log line: `radar: <state>, <n> signals, <n> issues, <n> missing (<reason> <n>, ...)`. The reasons are the most common kinds of failure among the sources that were not read: an HTTP status (`http_503`), a network error class (`ProxyError`, `ConnectError`, `ReadTimeout`), `not_a_feed`, `empty`, or `no_key` for videos. Each source's reason is kept in the run's `usage['why']` (server only).
+
+On 15 Nov every refresh failed for four hours with only "37 missing" in the log. The hosted AI (whose client ignores the environment's network settings) kept answering, so the cause was in what the list and supplier clients read from the environment (proxy or certificate settings, which on macOS include the system proxy), most likely around the laptop's sleep, not in the sources themselves. The exact cause was not confirmed; a restart of the API cleared it. A line full of `ProxyError` or `ConnectError` while the AI lane is fine points there: restart the API.
+
+The final write is tried up to four times (2, 5 and 10 seconds apart) when the database is busy: the installation's database has one writer at a time, and on 15 Nov a refresh lost its whole list to "database is locked". Each retry writes `radar: the list could not be stored (database busy), trying again`. A refresh that still stores nothing is not started again by the schedule until the next interval, and a lock left by a stopped process is taken over the minute it runs out.
 
 ## Where things are
 

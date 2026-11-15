@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
-from app.services.pulse_radar_signals import PROVINCES, collect, parse_news, parse_trending, plain
+from app.services.pulse_radar_signals import PROVINCES, collect, parse_news, parse_trending, picture_link, plain
 
 SETTINGS = SimpleNamespace(YOUTUBE_API_KEY='fake-key')
 
@@ -58,6 +58,8 @@ def transport(answers, seen=None):
             if host == 'www.googleapis.com':
                 return httpx.Response(200, json={'items': []})
             return httpx.Response(200, text=trending() if host == 'trends.google.com' else news())
+        if isinstance(answer, Exception):
+            raise answer
         if isinstance(answer, int):
             return httpx.Response(answer, text='no')
         return httpx.Response(200, json=answer) if isinstance(answer, dict) else httpx.Response(200, text=answer)
@@ -72,7 +74,7 @@ async def gather(answers, seen=None, settings=SETTINGS):
 def test_a_trending_feed_gives_terms_their_searches_and_news():
     rows = parse_trending(trending(('polda jawa timur', '200+', [('Judul berita', 'https://contoh.id/a', 'Contoh')]), ('bahan bakar', '1000+', [])))
     assert [(row['term'], row['searches']) for row in rows] == [('polda jawa timur', 200), ('bahan bakar', 1000)]
-    assert rows[0]['news'] == [{'title': 'Judul berita', 'url': 'https://contoh.id/a', 'source': 'Contoh'}]
+    assert rows[0]['news'] == [{'title': 'Judul berita', 'url': 'https://contoh.id/a', 'source': 'Contoh', 'picture': None}]
 
 
 def test_a_news_feed_gives_each_story_its_publisher_and_the_other_coverage_of_it():
@@ -96,7 +98,7 @@ async def test_one_term_on_several_province_lists_is_one_signal_with_each_provin
     assert set(terms) == {'bahan bakar', 'polda jawa timur'}
     assert terms['bahan bakar']['figure'] == 1000 and terms['bahan bakar']['provinces'] == {'ID-JK': 200, 'ID-JI': 500}
     assert terms['polda jawa timur']['figure'] is None and terms['polda jawa timur']['provinces'] == {'ID-JI': 200}
-    assert terms['polda jawa timur']['related'] == [{'title': 'Polda rilis kasus', 'url': 'https://contoh.id/p', 'source': 'Contoh'}]
+    assert terms['polda jawa timur']['related'] == [{'title': 'Polda rilis kasus', 'url': 'https://contoh.id/p', 'source': 'Contoh', 'picture': None}]
     ids = [signal['id'] for signal in result['signals']]
     assert ids == [f'S{number}' for number in range(1, len(ids) + 1)], 'signals are numbered in order, so an answer can cite them'
 
@@ -153,3 +155,59 @@ async def test_without_a_video_key_the_video_list_is_missing_and_nothing_is_aske
     seen = []
     result = await gather({}, seen, settings=SimpleNamespace(YOUTUBE_API_KEY=''))
     assert 'youtube' in result['missing'] and not [request for request in seen if request.url.host == 'www.googleapis.com']
+
+
+# ── Pictures: a search term and a video come with a picture of their own; it is kept only from the two hosts the lists use ──
+
+TBN = 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTugfr1cu8emfYk_iTF-0L9DL9rj7UL2adql'
+
+
+def with_pictures(xml, term=TBN, story='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStory0000000'):
+    return (xml.replace('<description/>', f'<description/><ht:picture>{term}</ht:picture><ht:picture_source>Kompas.com</ht:picture_source>')
+            .replace('<ht:news_item_snippet/>', f'<ht:news_item_snippet/><ht:news_item_picture>{story}</ht:news_item_picture>'))
+
+
+def test_a_trending_term_and_each_story_under_it_carry_their_picture():
+    row = parse_trending(with_pictures(trending(('gibran mundur', '5000+', [('Wapres mundur', 'https://news.example/a', 'Kompas')]))))[0]
+    assert row['picture'] == {'url': TBN, 'source': 'Kompas.com'}
+    assert row['news'][0]['picture'] == 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStory0000000'
+    bare = parse_trending(trending(('gibran mundur', '5000+', [('Wapres mundur', 'https://news.example/a', 'Kompas')])))[0]
+    assert bare['picture'] is None and bare['news'][0]['picture'] is None
+
+
+@pytest.mark.parametrize('link', ['http://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTugfr1cu8emfYk', 'https://evil.example/a.png', 'https://encrypted-tbn0.gstatic.com.evil.example/images?q=tbn:ANd9GcTugfr1cu8emfYk',
+                                  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTugfr1cu8emfYk"onerror="x', 'javascript:alert(1)', 'https://i.ytimg.com/vi/vid00000001/../../x.jpg', '', None, 7])
+def test_a_picture_link_from_anywhere_else_or_of_another_shape_is_not_kept(link):
+    assert picture_link(link) is None
+
+
+def test_the_two_hosts_the_lists_use_are_kept_as_they_are():
+    assert picture_link(TBN + '&amp;s') is None, 'an escaped link is not a link'
+    assert picture_link(TBN + '&s') == TBN + '&s' and picture_link('https://i.ytimg.com/vi/vid00000001/mqdefault.jpg') == 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg'
+
+
+@pytest.mark.asyncio
+async def test_a_search_signal_and_a_video_signal_carry_a_picture():
+    feed = with_pictures(trending(('gibran mundur', '5000+', [('Wapres mundur', 'https://news.example/a', 'Kompas')])))
+    result = await gather({'ID': feed, 'youtube': videos(('vid00000001', 'Wapres mundur, ini kata pakar', 'Kanal Berita', 2104721), ('bad id', 'Judul', 'Kanal', 5))})
+    term = next(signal for signal in result['signals'] if signal['platform'] == 'search')
+    assert term['picture'] == {'url': TBN, 'source': 'Kompas.com'} and term['related'][0]['picture'].startswith('https://encrypted-tbn0.gstatic.com/')
+    video = next(signal for signal in result['signals'] if signal['platform'] == 'youtube')
+    assert video['picture'] == {'url': 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg', 'source': 'Kanal Berita'}, 'the picture of a video follows from its id; nothing else is asked'
+    assert all(signal.get('picture') is None for signal in result['signals'] if signal['platform'] == 'news'), 'the news list carries no picture'
+
+
+@pytest.mark.asyncio
+async def test_each_source_that_could_not_be_read_says_why():
+    # On 15 Nov every refresh for four hours logged only "37 missing": the process could not reach the lists through
+    # its proxy settings, and nothing said so. Each missing source now carries the kind of failure, in our own words.
+    filled = trending(('gibran mundur', '5000+', []))
+    answers = {'ID': filled, 'news': httpx.ProxyError('refused'), 'ID-PA': 503, 'ID-MA': '<html>blocked</html>', 'ID-GO': trending(),
+               'ID-AC': httpx.ConnectError('no route'), 'youtube': 403}
+    result = await gather(answers)
+    named = {'news': 'ProxyError', 'ID-PA': 'http_503', 'ID-MA': 'not_a_feed', 'ID-GO': 'empty', 'ID-AC': 'ConnectError', 'youtube': 'http_403'}
+    assert {name: result['why'][name] for name in named} == named
+    assert {reason for name, reason in result['why'].items() if name not in named} == {'empty'}, 'the provinces nobody filled in answered an empty list'
+    assert set(result['why']) == set(result['missing']), 'every missing source has a reason, and nothing else does'
+    without_key = await gather({'ID': filled}, settings=SimpleNamespace(YOUTUBE_API_KEY=''))
+    assert without_key['why']['youtube'] == 'no_key'

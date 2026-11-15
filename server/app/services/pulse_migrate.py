@@ -9,6 +9,7 @@ ADDED_COLUMNS = (
     ('pulse_account_profiles', 'location', 'VARCHAR(200)'),
     ('pulse_account_profiles', 'based_in', 'VARCHAR(80)'),
     ('pulse_account_profiles', 'location_at', 'DATETIME'),
+    ('pulse_radar_issues', 'image', 'JSON'),
 )
 
 

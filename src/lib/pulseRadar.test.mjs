@@ -4,7 +4,7 @@ import {
   categoryCounts, figureLine, freshnessText, issueFootprint, movementText, projectHref, provinceCounts, provinceRows, radarCategories,
   radarPlatforms, searchHref, shadeOf, shadeRanges, updatedText, visibleIssues,
   categoryRows, homeHref, platformCoverage, platformMeters, provinceRanking, radarFigures,
-  attemptNotice, briefText, projectChange, projectTones, offeredPlatforms, platformFigure, platformTops,
+  attemptNotice, briefText, projectChange, projectTones, offeredPlatforms, platformFigure, platformTops, issueImage,
 } from './pulseRadar.js';
 
 const issue = (rank, title, category, platforms, more = {}) => ({
@@ -266,4 +266,18 @@ test('a top ten follows the category and the province of the page, holds ten row
   assert.deepEqual(platformTops(many, {})[0].rows.map(row => row.title), many.slice(0, 10).map(row => row.title));
   assert.deepEqual(platformTops(null, {}), []);
   assert.deepEqual(platformTops([issue(1, 'Hanya sampel', 'politik', { tiktok: { found: 3, capped: false }, x: { posts: 2 } })], {}), []);
+});
+
+test('an issue picture is shown only when it is a link from a host the lists use, and a column row carries it', () => {
+  const thumb = 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg', photo = 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTerm000000000';
+  assert.deepEqual(issueImage({ image: { url: thumb, source: 'Kanal Bola', kind: 'video' } }), { url: thumb, source: 'Kanal Bola', kind: 'video' });
+  assert.deepEqual(issueImage({ image: { url: photo, source: 7, kind: 'lain' } }), { url: photo, source: null, kind: 'photo' });
+  for (const url of ['https://evil.example/a.png', 'http://i.ytimg.com/vi/vid00000001/mqdefault.jpg', 'javascript:alert(1)', 'https://i.ytimg.com/vi/vid00000001/../x.jpg',
+    'https://encrypted-tbn2.gstatic.com.evil.example/images?q=tbn:ANd9GcTerm000000000', photo + '"onerror="x']) assert.equal(issueImage({ image: { url } }), null, url);
+  assert.equal(issueImage({}), null);
+  assert.equal(issueImage(null), null);
+  assert.equal(issueImage({ image: { url: photo, source: 'https://www.janalokajournal.id/' } }).source, 'janalokajournal.id', 'a source given as an address is named by its site');
+  assert.equal(issueImage({ image: { url: photo, source: 'javascript:alert(1)' } }).source, 'javascript:alert(1)', 'and anything else is text, never a link');
+  const row = platformTops([issue(1, 'A', 'olahraga', { news: { count: 4 } }, { image: { url: thumb, source: 'K', kind: 'video' } })], {})[0].rows[0];
+  assert.deepEqual([row.category, row.image], ['olahraga', { url: thumb, source: 'K', kind: 'video' }]);
 });

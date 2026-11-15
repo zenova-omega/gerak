@@ -227,6 +227,19 @@ async def test_a_stored_sample_that_cannot_be_read_is_bought_again_and_the_rest_
 
 
 @pytest.mark.asyncio
+async def test_the_suppliers_way_of_saying_nothing_found_is_an_empty_sample_not_a_lost_answer(supplier):
+    # Seen on a real round: a search with no post answers "status: no_data" and a sentence, with no rows at all. Read as
+    # a failure it was reported as incomplete and paid for again at every refresh.
+    nothing = {'content': [{'type': 'text', 'text': 'status: no_data\nmessage: No posts found for the query in this period'}]}
+    supplier.trouble = {4: nothing, 5: {'structuredContent': {'status': 'no_data', 'message': 'No posts found'}}}      # two counts, issue 1's X sample, then its TikTok and Instagram
+    out = await measure([issue(1), issue(2)], {}, key='fake', now=NOW, client=object())
+    assert out['missing'] == [] and len(supplier.calls) == 8
+    assert out['figures']['k1'] == {'x': {'count': 614}}, 'nothing on TikTok or Instagram: no figure'
+    assert out['sampled']['k1'] == {name: NOW.isoformat() for name in ('x', 'tiktok', 'instagram')}, 'and remembered, so it is not asked again for three hours'
+    assert out['figures']['k2']['tiktok'] == {'found': 20, 'capped': True}
+
+
+@pytest.mark.asyncio
 async def test_an_issue_without_a_usable_phrase_is_not_asked_about(supplier):
     out = await measure([issue(1, q='a, b'), issue(2)], {}, key='fake', now=NOW, client=object())
     assert 'k1' not in out['figures'] and out['figures']['k2']['x'] == {'count': 614}

@@ -102,7 +102,7 @@ class Watch:
         return Guard()
 
 
-def stand_ins(monkeypatch, watch=None, *, signals=SIGNALS, missing=(), composed='default', calls=None):
+def stand_ins(monkeypatch, watch=None, *, signals=SIGNALS, missing=(), composed='default', calls=None, why=None):
     """Replace the collection and the model. `composed` is what the model step returns."""
     if composed == 'default':
         composed = {'brief': 'Ringkas [1].', 'issues': [issue('Isu A', ['S1', 'S2', 'S3']), issue('Isu B', ['S5']), issue('Isu lokal', ['S6'], scope='local')]}
@@ -111,7 +111,7 @@ def stand_ins(monkeypatch, watch=None, *, signals=SIGNALS, missing=(), composed=
     async def fake_collect(settings, *, client=None, pause=0.3):
         calls.append('collect')
         assert watch is None or watch.open == 0, 'a session is open while the lists are being read'
-        return {'signals': list(signals), 'missing': list(missing), 'provinces_read': ['ID-BA', 'ID-JI']}
+        return {'signals': list(signals), 'missing': list(missing), 'provinces_read': ['ID-BA', 'ID-JI'], **({'why': dict(why)} if why is not None else {})}
 
     async def fake_compose(ai, rows, previous, **kw):
         calls.append(('compose', ai, [row['key'] for row in previous]))
@@ -213,7 +213,8 @@ async def test_when_the_answer_engine_gives_nothing_the_faster_engine_is_asked_o
 
 def test_the_lock_outlasts_the_longest_refresh():
     assert COMPOSE_SECONDS == 300, 'the answer engine needed 115 s on a real round; 120 s lost the refresh'
-    assert LEASE_SECONDS > COLLECT_SECONDS + DISCOVERY_SECONDS + COMPOSE_SECONDS + FALLBACK_SECONDS + MEASURE_SECONDS + 120, \
+    writing = pulse_radar.WRITE_TRIES * 30 + sum(pulse_radar.WRITE_PAUSE)      # each try may wait the database's 30 s for another writer
+    assert LEASE_SECONDS > COLLECT_SECONDS + DISCOVERY_SECONDS + COMPOSE_SECONDS + FALLBACK_SECONDS + MEASURE_SECONDS + writing + 60, \
         'reading the lists, the search of X, both waits, the measurement and the write all fit inside the lock'
 
 
@@ -648,3 +649,87 @@ async def test_keywords_that_cannot_be_counted_are_not_kept(store, monkeypatch):
     later = await refresh(store, PAID, ai=object(), now=NOW + timedelta(minutes=30), force=True, social=True)
     stored = {row.run_id: row.query['q'] for row in await rows_of(store, RadarIssue, RadarIssue.rank)}
     assert stored[later['run_id']] == 'manchester united', 'two-letter keywords give no phrase to count; keeping them would leave the issue uncounted for as long as it lives'
+
+
+@pytest.mark.asyncio
+async def test_a_tick_that_was_told_busy_tries_again_the_next_minute(store, monkeypatch):
+    # A lock left by a process that was stopped mid-refresh: the tick must take it over when it runs out, not half an hour later.
+    calls = stand_ins(monkeypatch)
+    monkeypatch.setattr(pulse_radar, 'async_session', store, raising=False)
+    monkeypatch.setattr(pulse_radar, 'get_settings', lambda: HOSTED, raising=False)
+    monkeypatch.setattr(pulse_radar, 'get_ai_service', lambda settings=None: object())
+    async with store() as db:
+        await pulse_radar.ensure_policy(db)
+        policy = await db.get(WorkerPolicy, PROVIDER)
+        policy.daily_limit, policy.lease_token, policy.lease_until = -1, 'dead', NOW + timedelta(minutes=3)
+        await db.commit()
+    for minutes in (0, 1, 2):
+        await pulse_radar.radar_tick(now=NOW + timedelta(minutes=minutes))
+    assert calls == [], 'held: nothing is read'
+    await pulse_radar.radar_tick(now=NOW + timedelta(minutes=3))
+    assert calls.count('collect') == 1, 'the lock ran out a minute ago and the refresh starts at once'
+    await pulse_radar.radar_tick(now=NOW + timedelta(minutes=4))
+    assert calls.count('collect') == 1
+
+
+@pytest.mark.asyncio
+async def test_a_busy_database_does_not_cost_the_refresh_its_list(store, monkeypatch):
+    # Seen live on 15 Nov: "database is locked" at the final write, and the whole refresh was gone. With the paid steps on,
+    # that is a search and samples paid for and thrown away.
+    from sqlalchemy.exc import OperationalError
+    stand_ins(monkeypatch)
+    real, tries = pulse_radar._store, []
+
+    async def busy_twice(*args, **kw):
+        tries.append(1)
+        if len(tries) < 3:
+            raise OperationalError('insert', {}, Exception('database is locked'))
+        return await real(*args, **kw)
+    monkeypatch.setattr(pulse_radar, '_store', busy_twice)
+    monkeypatch.setattr(pulse_radar, 'WRITE_PAUSE', (0, 0, 0))
+    assert (await refresh(store, HOSTED, ai=object(), now=NOW, force=True))['state'] == 'ok'
+    assert len(tries) == 3 and len(await rows_of(store, RadarRun, RadarRun.started_at)) == 1 and len(await rows_of(store, RadarIssue, RadarIssue.rank)) == 3
+
+    async def never(*args, **kw):
+        tries.append(1)
+        raise OperationalError('insert', {}, Exception('database is locked'))
+    monkeypatch.setattr(pulse_radar, '_store', never)
+    with pytest.raises(OperationalError):
+        await refresh(store, HOSTED, ai=object(), now=NOW + timedelta(minutes=30), force=True)
+    assert len(tries) == 3 + pulse_radar.WRITE_TRIES, 'it gives up after a few tries'
+    assert (await rows_of(store, WorkerPolicy, WorkerPolicy.provider))[0].lease_token is None, 'and does not keep the lock'
+
+
+# ── A picture for an issue, from its own sources ────────────────────────────────────────────────────────────────────
+
+def test_an_issue_takes_its_picture_from_its_own_sources_the_video_first():
+    thumb, photo, story = 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg', 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTerm000000000', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStory00000000'
+    signals = {**BY_ID,
+               'S2': {**BY_ID['S2'], 'picture': {'url': thumb, 'source': 'Kanal Bola'}},
+               'S3': {**BY_ID['S3'], 'picture': {'url': photo, 'source': 'Kompas.com'}},
+               'S4': {**BY_ID['S4'], 'related': [{'title': 'Liputan laga', 'url': 'https://news.example/x', 'source': 'Tempo', 'picture': story}]}}
+    assert attach(issue('Jepang lawan Brasil', ['S1', 'S2', 'S3']), signals)['image'] == {'url': thumb, 'source': 'Kanal Bola', 'kind': 'video'}
+    assert attach(issue('Hanya pencarian', ['S1', 'S3', 'S4']), signals)['image'] == {'url': photo, 'source': 'Kompas.com', 'kind': 'photo'}
+    assert attach(issue('Dari liputan di daftar pencarian', ['S4']), signals)['image'] == {'url': story, 'source': 'Tempo', 'kind': 'photo'}
+    assert attach(issue('Hanya berita', ['S1', 'S5']), signals)['image'] is None, 'the news list has no pictures: the page draws the category instead'
+    odd = {**signals, 'S3': {**BY_ID['S3'], 'picture': {'url': 'https://evil.example/a.png', 'source': 'x'}}}
+    assert attach(issue('Tautan lain', ['S3']), odd)['image'] is None
+
+
+@pytest.mark.asyncio
+async def test_the_picture_is_stored_with_the_issue(store, monkeypatch):
+    thumb = 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg'
+    stand_ins(monkeypatch, signals=[{**row, 'picture': {'url': thumb, 'source': 'Kanal Bola'}} if row['id'] == 'S2' else row for row in SIGNALS])
+    await refresh(store, HOSTED, ai=object(), now=NOW, force=True)
+    stored = {row.title: row.image for row in await rows_of(store, RadarIssue, RadarIssue.rank)}
+    assert stored == {'Isu A': {'url': thumb, 'source': 'Kanal Bola', 'kind': 'video'}, 'Isu B': None, 'Isu lokal': None}
+
+
+@pytest.mark.asyncio
+async def test_the_log_line_says_why_sources_were_not_read_and_the_run_keeps_it(store, monkeypatch, caplog):
+    import logging
+    caplog.set_level(logging.INFO, logger='uvicorn.error')
+    stand_ins(monkeypatch, missing=['news', 'ID-PA', 'ID-MA'], why={'news': 'ProxyError', 'ID-PA': 'ProxyError', 'ID-MA': 'http_503'})
+    assert (await refresh(store, HOSTED, ai=object(), now=NOW, force=True))['state'] == 'partial'
+    assert 'radar: partial, 6 signals, 3 issues, 3 missing (ProxyError 2, http_503 1)' in caplog.text
+    assert (await rows_of(store, RadarRun, RadarRun.started_at))[0].usage['why'] == {'news': 'ProxyError', 'ID-PA': 'ProxyError', 'ID-MA': 'http_503'}

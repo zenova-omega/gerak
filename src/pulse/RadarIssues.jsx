@@ -5,8 +5,9 @@ import { Button } from '../components/ui/shadcn/button';
 import { PulseButton } from '../components/ui/PulseUI';
 import { PulseTag } from '../components/ui/PulseTag';
 import { formatCount, safeSourceUrl } from '../lib/pulseData';
-import { categoryLabel, movementText, platformMeters, projectHref, provinceName, radarPlatforms, SAMPLED, searchHref, SOCIAL, visibleIssues } from '../lib/pulseRadar';
+import { categoryLabel, issueImage, movementText, platformMeters, projectHref, provinceName, radarPlatforms, SAMPLED, searchHref, SOCIAL, visibleIssues } from '../lib/pulseRadar';
 import AnalyticsPanel from './AnalyticsPanel';
+import IssuePicture from './IssuePicture';
 import './ds/radar-issues.css';
 
 const movementIcon = { new: Sparkle, up: ArrowUp, down: ArrowDown };
@@ -14,6 +15,7 @@ const interactions = figure => figure ? `${formatCount(figure)} interaksi` : '';
 const rawUnit = { news: figure => figure ? `${formatCount(figure)} liputan lain` : '', youtube: figure => figure ? `${formatCount(figure)} tayangan` : '', search: figure => figure ? `${formatCount(figure)}+ pencarian` : '',
   x: interactions, tiktok: interactions, instagram: interactions };
 const OWN_LISTS = ['news', 'youtube', 'search'];      // read whole at every refresh; X has a list only when it was searched
+const FEATURED = 3;      // the highest rows are drawn as cards with a large picture; the rest as rows with a small one
 
 /** A link that looks like the product's small button: to Pencarian cepat for a new project, or to the project that covers the issue. */
 export function IssueAction({ issue, canCreate, createLabel = 'Pantau' }) {
@@ -30,10 +32,11 @@ export function SourceRow({ platform, item }) {
 }
 
 /**
- * Beranda's issue list: at most ten rows for the scope and switches chosen in the first card. A row carries one meter
- * per platform the issue is on, drawn against the loudest listed issue on that platform; TikTok and Instagram are
- * samples, so they say what was found and draw no length. When the refresh could not be composed, the card shows the
- * head of each platform's list instead.
+ * Beranda's issue list: at most ten rows for the scope and switches chosen in the first card. The three highest are
+ * cards with a picture from the issue's own sources and their figures in words; the rest are rows with a small picture
+ * and one meter per platform the issue is on, drawn against the loudest listed issue on that platform. TikTok and
+ * Instagram are samples, so they say what was found and draw no length. Without a picture the category is drawn.
+ * When the refresh could not be composed, the card shows the head of each platform's list instead.
  * `onSelect(key)` opens an issue's evidence. `canCreate` is true for people who may create projects.
  */
 export default function RadarIssues({ payload, filters, onFilters, selectedKey = '', onSelect, canCreate = false }) {
@@ -61,8 +64,10 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
       // Movement belongs to the combined order: with one platform ordering the list it would point at another list.
       const move = platform ? null : movementText(issue.movement), MoveIcon = movementIcon[issue.movement?.kind];
       const meters = platformMeters(issue, rows), provinces = (issue.regions || []).length;
-      return <li className="rdi-row" key={issue.key} data-selected={selectedKey === issue.key ? '' : undefined}>
-        <span className="rdi-rank" aria-hidden="true">{index + 1}</span>
+      const featured = index < FEATURED, rank = <span className="rdi-rank" aria-hidden="true">{index + 1}</span>, credit = featured && issueImage(issue)?.source;
+      return <li className={featured ? 'rdi-row rdi-feature' : 'rdi-row'} key={issue.key} data-selected={selectedKey === issue.key ? '' : undefined}>
+        {featured ? <IssuePicture issue={issue} size="feature" onActivate={() => onSelect(issue.key)}>{rank}</IssuePicture>
+          : <>{rank}<IssuePicture issue={issue} size="row" onActivate={() => onSelect(issue.key)} /></>}
         <div className="rdi-body">
           <h3><button type="button" className="rdi-title" aria-pressed={selectedKey === issue.key} onClick={() => onSelect(issue.key)}>{issue.title}</button></h3>
           <p className="rdi-tags">
@@ -72,13 +77,14 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
             {issue.scope === 'local' && <PulseTag size="sm" variant="outline">{provinces > 1 ? `hanya ramai di ${provinces} provinsi` : 'hanya ramai di provinsi ini'}</PulseTag>}
           </p>
           {issue.reason && <p className="rdi-reason">{issue.reason}</p>}
-          {meters.length > 0 && <ul className="rdi-meters" aria-label="Angka per platform">{meters.map(meter => <li key={meter.id} data-platform={meter.id} data-plain={meter.ratio === null ? '' : undefined} title={meter.hint || meter.label}>
+          {meters.length > 0 && <ul className="rdi-meters" data-compact={featured ? '' : undefined} aria-label="Angka per platform">{meters.map(meter => <li key={meter.id} data-platform={meter.id} data-plain={meter.ratio === null || featured ? '' : undefined} title={meter.hint || meter.label}>
             <span className="rdi-meter-mark" aria-hidden="true">{meter.id === 'search' ? <Search size={14} /> : <PlatformIcon platform={meter.id} size={14} />}</span>
             <span className="rdi-meter-label pu-sr">{meter.label}</span>
-            {meter.ratio !== null && <span className="rdi-track" aria-hidden="true"><i style={{ width: `${Math.max(2, Math.round(meter.ratio * 1000) / 10)}%` }} /></span>}
+            {meter.ratio !== null && !featured && <span className="rdi-track" aria-hidden="true"><i style={{ width: `${Math.max(2, Math.round(meter.ratio * 1000) / 10)}%` }} /></span>}
             <span className="rdi-meter-text">{meter.text}</span>
           </li>)}</ul>}
           {provinces > 0 && issue.scope !== 'local' && <p className="rdi-spread">ramai di {provinces} provinsi</p>}
+          {credit && <p className="rdi-credit">Gambar dari {credit}</p>}
         </div>
         <div className="rdi-action"><IssueAction issue={issue} canCreate={canCreate} /></div>
       </li>;

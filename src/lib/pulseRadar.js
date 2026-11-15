@@ -26,6 +26,17 @@ export function platformFigure(issue, platform) {
   const value = platform === 'news' || platform === 'x' ? figures.count : platform === 'youtube' ? figures.views : platform === 'search' ? figures.searches : null;
   return Number.isFinite(value) ? value : null;
 }
+// A picture is shown only as a link from the two places the lists themselves use (the server keeps the same rule).
+const PICTURE = /^https:\/\/(?:encrypted-tbn\d\.gstatic\.com\/images\?q=tbn:[A-Za-z0-9_-]{10,200}(?:&[a-z]{1,10}(?:=[A-Za-z0-9_-]{0,40})?){0,4}|i\.ytimg\.com\/vi\/[A-Za-z0-9_-]{11}\/(?:mq|hq|sd)?default\.jpg)$/;
+/** An issue's picture as the page may show it, `{ url, source, kind }`, or null. */
+export function issueImage(issue) {
+  const image = issue?.image;
+  if (!image || typeof image.url !== 'string' || !PICTURE.test(image.url)) return null;
+  let source = typeof image.source === 'string' && image.source ? image.source : null;
+  // The search list sometimes names a picture's source by its address: it is shown as the site's name.
+  if (source && /^https?:\/\//i.test(source)) { try { source = new URL(source).hostname.replace(/^www\./, '') || source; } catch { /* keep the text */ } }
+  return { url: image.url, source, kind: image.kind === 'video' ? 'video' : 'photo' };
+}
 /** The platform choices worth offering: those with an issue in this refresh, and the one already chosen (so it can be dropped). */
 export function offeredPlatforms(issues, chosen = '') {
   const rows = Array.isArray(issues) ? issues : [];
@@ -242,7 +253,7 @@ export function platformTops(issues, { category = '', province = '' } = {}, limi
     const ordered = visibleIssues(issues, { category, province, platform: id }).filter(issue => platformFigure(issue, id) !== null).slice(0, limit);
     const most = ordered.length ? platformFigure(ordered[0], id) : 0;
     return { id, label: platformLabel(id), basis: topBasis[id],
-      rows: ordered.map(issue => ({ key: issue.key, title: issue.title, text: meterText[id](platformFigure(issue, id)), ratio: most > 0 ? platformFigure(issue, id) / most : 0,
+      rows: ordered.map(issue => ({ key: issue.key, title: issue.title, category: issue.category, image: issueImage(issue), text: meterText[id](platformFigure(issue, id)), ratio: most > 0 ? platformFigure(issue, id) / most : 0,
         ...(topHint[id] ? { hint: topHint[id](platformFigure(issue, id)) } : {}) })) };
   }).filter(top => top.rows.length);
 }

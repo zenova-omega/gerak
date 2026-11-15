@@ -37,7 +37,8 @@ async function render(props, path = '/src/pulse/RadarIssues.jsx', name = 'defaul
   } finally { await close(); }
 }
 const lead = props => render(props, '/src/pulse/RadarLead.jsx');
-const rows = html => (html.match(/<ol[^>]*class="rdi-list"[\s\S]*?<\/ol>/)?.[0] || '').split(/(?=<li[^>]*class="rdi-row")/).slice(1);
+// A row of the list, card or not: the three highest carry "rdi-row rdi-feature".
+const rows = html => (html.match(/<ol[^>]*class="rdi-list"[\s\S]*?<\/ol>/)?.[0] || '').split(/(?=<li[^>]*class="rdi-row[" ])/).slice(1);
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
 const group = (html, name) => html.match(new RegExp(`<div[^>]*role="group"[^>]*aria-label="${name}"[^>]*>[\\s\\S]*?</div>`))?.[0] || '';
 const buttons = markup => [...markup.matchAll(/<button[^>]*>([^<]*)</g)].map(match => match[1]);
@@ -114,8 +115,9 @@ test('ten ordered rows, each with rank, title, category, movement, reason, a met
   assert.match(text(list[2]), /Olahraga Turun 2/);
   assert.match(list[0], /<button[^>]*class="rdi-title"[^>]*>Pengunduran diri Wapres<\/button>/, 'the title opens the evidence');
   assert.match(html, /<h2[^>]*>Isu teratas<\/h2>/);
-  const meters = [...list[0].matchAll(/<i[^>]*style="width:([\d.]+)%"/g)].map(match => Number(match[1]));
-  assert.deepEqual(meters, [100, 50], 'each meter is drawn against the loudest listed issue on that platform');
+  assert.doesNotMatch(list.slice(0, 3).join(''), /rdi-track/, 'the three cards state their figures in words, without bars');
+  const meters = [...list[3].matchAll(/<i[^>]*style="width:([\d.]+)%"/g)].map(match => Number(match[1]));
+  assert.deepEqual(meters, [4.2], 'from the fourth row each meter is drawn against the loudest listed issue on that platform');
   assert.match(list[0], /<ul[^>]*class="rdi-meters"[^>]*aria-label="Angka per platform"/);
 });
 
@@ -214,7 +216,9 @@ const socialIssues = [
 const socialPayload = { ...payload, signals: { news: 122, search: 54, youtube: 51, x: 7 }, issues: socialIssues };
 
 test('a row shows X with a bar when it was counted, and TikTok and Instagram as found, without a bar', async () => {
-  const list = rows(await render({ payload: socialPayload }));
+  // Three plain issues first, so the social ones are rows with bars rather than the three cards.
+  const plain = [101, 102, 103].map(rank => issue(rank, 'Isu ' + rank, 'politik', { news: { count: 1 } }));
+  const list = rows(await render({ payload: { ...socialPayload, issues: [...plain, ...socialIssues] } })).slice(3);
   assert.match(text(list[0]), /Berita 40 artikel X 625\+ posting TikTok 20\+ ditemukan Instagram 12 ditemukan/);
   const meter = name => list[0].match(new RegExp(`<li[^>]*data-platform="${name}"[\\s\\S]*?</li>`))?.[0] || '';
   assert.match(meter('x'), /title="X: sedikitnya 625 posting terpantau sejak kemarin"/);
@@ -305,4 +309,46 @@ test('with X counted there are four columns; an issue opened elsewhere is marked
   assert.doesNotMatch(four, /Teratas di (TikTok|Instagram)/, 'a sample has no order');
   assert.deepEqual(columns(await tops({ filters: { ...none, category: 'olahraga' } })).map(card => topRows(card).map(text)), [['1 Timnas Indonesia 10.000+ pencarian']]);
   assert.equal(await tops({ issues: [] }), '', 'nothing to rank: no row at all');
+});
+
+// ── Pictures: the three highest as cards, the rest with a small picture, from the issue's own sources ───────────────
+
+const THUMB = 'https://i.ytimg.com/vi/vid00000001/mqdefault.jpg';
+const PHOTO = 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTerm000000000';
+
+test('the three highest are cards with a picture from their own sources, and the rest are rows with a small one', async () => {
+  const pictured = issues.map((row, index) => index === 0 ? { ...row, image: { url: THUMB, source: 'Kanal Bola', kind: 'video' } }
+    : index === 3 ? { ...row, image: { url: PHOTO, source: 'Kompas.com', kind: 'photo' } } : row);
+  const list = rows(await render({ payload: { ...payload, issues: pictured } }));
+  assert.equal(list.length, 10);
+  assert.deepEqual(list.map(row => /^<li[^>]*class="rdi-row rdi-feature"/.test(row)), [true, true, true, false, false, false, false, false, false, false]);
+  const img = list[0].match(/<img[^>]*>/)?.[0] || '';
+  assert.match(img, /src="https:\/\/i\.ytimg\.com\/vi\/vid00000001\/mqdefault\.jpg"/);
+  for (const attribute of [/alt=""/, /loading="lazy"/, /decoding="async"/, /referrerPolicy="no-referrer"/i, /width="\d+"/, /height="\d+"/]) assert.match(img, attribute);
+  assert.match(list[0], /class="rdi-pic"[^>]*data-size="feature"[^>]*data-kind="video"/, 'a video says so with a play mark');
+  assert.match(text(list[0]), /Gambar dari Kanal Bola/, 'a large picture names where it is from');
+  assert.match(list[1], /class="rdi-pic rdi-pic-fallback"[^>]*data-size="feature"/, 'no picture: the category is drawn instead');
+  assert.doesNotMatch(list[1], /<img/);
+  assert.match(list[3], /<span class="rdi-pic"[^>]*data-size="row"[^>]*title="Gambar dari Kompas\.com"[\s\S]*?<img[^>]*src="https:\/\/encrypted-tbn2\.gstatic\.com\/images\?q=tbn:ANd9GcTerm000000000"/);
+  assert.doesNotMatch(text(list[3]), /Gambar dari/, 'a small picture carries its source on hover, not as a line');
+  assert.match(list[4], /class="rdi-pic rdi-pic-fallback"[^>]*data-size="row"/);
+  assert.match(text(list[0]), /^1 Pengunduran diri Wapres Politik Naik 4/, 'the position stays first, the picture adds no words');
+});
+
+test('a picture link from anywhere else is never put on the page', async () => {
+  const html = await render({ payload: { ...payload, issues: [{ ...issues[0], image: { url: 'https://evil.example/a.png', source: 'x', kind: 'photo' } }] } });
+  assert.doesNotMatch(html, /evil\.example/);
+  assert.match(html, /rdi-pic-fallback/);
+});
+
+test('a column of the top ten per platform carries the same small picture, wide in the video column', async () => {
+  const pictured = [{ ...issues[0], image: { url: THUMB, source: 'Kanal Bola', kind: 'video' } }, ...issues.slice(1),
+    issue(20, 'Video viral', 'hiburan', { youtube: { count: 2, views: 5000000 } }, { image: { url: THUMB, source: 'Kanal Bola', kind: 'video' } })];
+  const cards = columns(await tops({ issues: pictured }));
+  const news = topRows(cards[0]);
+  assert.match(news[0], /<span class="rdi-pic"[^>]*data-size="column"[\s\S]*?<img[^>]*src="https:\/\/i\.ytimg\.com/);
+  assert.match(news[1], /rdi-pic-fallback/);
+  assert.equal(text(news[0]), '1 Pengunduran diri Wapres 212 artikel', 'the picture adds no words');
+  const videos = topRows(cards.find(card => /Teratas di YouTube/.test(card)));
+  assert.match(videos[0], /data-size="column-wide"/, 'video pictures keep their shape in the video column');
 });

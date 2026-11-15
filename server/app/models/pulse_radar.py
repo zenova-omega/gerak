@@ -42,4 +42,6 @@ class RadarIssue(Base):
     regions: Mapped[list] = mapped_column(JSON, default=list)
     evidence: Mapped[list] = mapped_column(JSON, default=list)
     query: Mapped[dict] = mapped_column(JSON, default=dict)
+    # One picture from the issue's own sources ({'url', 'source', 'kind'}), or nothing: a link, never the picture itself.
+    image: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     first_seen_at: Mapped[datetime] = mapped_column(DateTime)
