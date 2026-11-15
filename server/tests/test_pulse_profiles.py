@@ -119,7 +119,7 @@ async def test_lookup_stores_profiles_charges_the_policy_and_analytics_attaches_
              {'platform': 'x', 'author': '@dua', 'metrics': {'author_id': '222'}}]
     await service.attach_profiles(db, posts)
     assert posts[0]['metrics'] == {'author_id': '111', 'profile_image_url': 'https://pbs.twimg.com/a_200x200.jpg', 'author_followers': 500,
-                                   'author_location': ''}      # asked together with the picture; this owner wrote no location
+                                   'author_location': '', 'author_based_in': ''}      # asked together with the picture; this owner wrote no location
     assert posts[1]['metrics'] == {'profile_image_url': 'https://asset.kompas.com/touch.png'}
     assert posts[2]['metrics']['profile_image_url'] == 'https://yt3.ggpht.com/c.jpg' and 'author_followers' not in posts[2]['metrics']
     assert posts[3]['metrics']['profile_image_url'] == 'https://cdn.example.com/own.jpg' and 'profile_image_url' not in posts[4]['metrics']
@@ -189,6 +189,12 @@ async def test_the_profile_location_of_x_accounts_is_stored_attached_and_filled_
     assert posts[0]['metrics']['author_location'] == 'Bandung, Jawa Barat'
     assert posts[1]['metrics']['author_location'] == '' and posts[2]['metrics']['author_location'] == ''      # asked: the owner wrote none
     assert 'author_location' not in posts[3]['metrics']                                                     # not asked yet
+    assert posts[0]['metrics']['author_based_in'] == 'Indonesia' and posts[1]['metrics']['author_based_in'] == ''   # the country the platform names
+    assert 'author_based_in' not in posts[3]['metrics']
+    await db.execute(PulseAccountProfile.__table__.update().where(PulseAccountProfile.key == '333').values(based_in='Southeast Asia'))
+    again = [{'platform': 'x', 'author': '@kosong', 'metrics': {'author_id': '333'}}]
+    await service.attach_profiles(db, again)
+    assert again[0]['metrics']['author_based_in'] == 'Southeast Asia'
 
 
 def test_new_profile_columns_are_added_to_a_database_that_predates_them():

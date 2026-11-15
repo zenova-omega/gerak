@@ -168,6 +168,7 @@ async def attach_profiles(db, posts):
                         # What the owner wrote on the profile. An empty text means it was asked and there is none;
                         # no key at all means the account has not been asked yet.
                         metrics['author_location'] = row.location or ''
+                        metrics['author_based_in'] = row.based_in or ''
     await _attach_commenters(db, posts)
 
 

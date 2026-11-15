@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from ..models.pulse import Issue, SourceItem, WatchTopic
 from ..models.pulse_monitor import MetricSnapshot, PulseAlert
-from ..models.pulse_profiles import PulseAccountProfile
+from .pulse_demography import account_origin
 from .pulse_places import context_lines as place_lines, location_summary, place_summary
 from .pulse_growth import _interval, _values
 from . import pulse_measures
@@ -251,19 +251,14 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
 
     alerts = (await db.scalars(select(PulseAlert).where(PulseAlert.topic_id == topic_id)
                                .order_by(PulseAlert.created_at.desc()).limit(4))).all()
-    # Where the X accounts in scope say they are: the location text of their profile, '' when they wrote none,
-    # None while the account has not been asked (or the post carries no account id to ask with).
-    locations = {}
-    for item in items:
-        if item.platform == 'x':
-            account = (item.metrics or {}).get('author_id')
-            if account or item.author:
-                locations.setdefault(str(account) if account else f'name:{item.author}', None)
-    asked = [key for key in locations if not key.startswith('name:')]
-    for at in range(0, len(asked), 500):
-        for key, location in (await db.execute(select(PulseAccountProfile.key, PulseAccountProfile.location).where(
-                PulseAccountProfile.platform == 'x', PulseAccountProfile.key.in_(asked[at:at + 500]), PulseAccountProfile.location_at.isnot(None)))).all():
-            locations[key] = location or ''
+    # Where the X accounts in scope say they are: account_origin_v1 over the X posts, with what their stored profiles
+    # say (attach_profiles), the rule the map and the Jaringan card count by. The metrics are copies: the stored rows
+    # are never changed.
+    from .pulse_profiles import attach_profiles
+    x_posts = [{'id': item.id, 'platform': item.platform, 'author': item.author, 'published_at': item.published_at,
+                'crawled_at': item.crawled_at, 'metrics': {key: value for key, value in (item.metrics or {}).items() if key != 'comment_snapshot'}}
+               for item in items if item.platform == 'x']
+    await attach_profiles(db, x_posts)
     context = {
         'project': {'name': topic.label, 'query': topic.query},
         'now_wib': _wib(clock),
@@ -284,7 +279,7 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
                         'conversation_groups': issue_rows(week)},
         'conversation_groups_in_scope': issue_rows(items, 4),
         # The same reading as the spread map: provinces the posts name, and provinces the X profiles name.
-        'places': {'named': place_summary(items), 'profiles': location_summary(locations)},
+        'places': {'named': place_summary(items), 'profiles': location_summary(account_origin(x_posts))},
         'evidence_posts': posts,
         'alerts': [{'kind': alert.kind, 'title': alert.title[:160], 'created_at': _wib(alert.created_at),
                     'window': [_wib(alert.window_start), _wib(alert.window_end)]} for alert in alerts],

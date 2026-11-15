@@ -1,0 +1,78 @@
+/* "Siapa yang bicara" (WhoIsSpeaking.jsx), the first block of Akun & sumber. One grid of rows, not cards: the group
+   with its top accounts, then accounts, the share of posts, the share of interactions and the tone. The two shares are
+   two chart series (set inline from pulseChartTheme, with the key above the grid); the tone bar takes the sentiment
+   colours of the Sentimen page. Every bar has its figure in words beside it. Each row is one button that opens its
+   posts; the hover is painted on the row. The origin of X accounts below uses the same columns, set apart by a rule.
+   Colours, radii and weights come from the --ps-* tokens, so both themes follow without a rule here. On a phone each
+   row becomes one block with its figures stacked under the group, and nothing scrolls sideways. */
+.pws { --pws-columns: minmax(0, 1.3fr) 4.5rem minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); display: grid; gap: 14px; min-width: 0; color: var(--ps-ink); }
+.pws:not([data-tone]) { --pws-columns: minmax(0, 1.3fr) 4.5rem minmax(0, 1fr) minmax(0, 1fr); }
+.pws p { margin: 0; max-width: none; }
+
+/* The answer first: the sentences of group_lead_v1, the percentages in ink. */
+.pws-lead { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: .875rem; line-height: 1.5; color: var(--ps-ink); text-wrap: pretty; }
+.pws-lead > li:first-child { font-size: 1rem; }
+.pws-lead b { font-weight: var(--ps-weight-strong); font-variant-numeric: tabular-nums; }
+.pws-note { font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+
+/* The key: one swatch per share series and the three tone dots, each with the base its share is over. */
+.pws-keys { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
+.pws-keys > li { display: inline-flex; align-items: center; gap: 6px; }
+.pws-dots { display: inline-flex; gap: 3px; }
+
+/* ---------- The grid ---------- */
+.pws-grid { display: grid; min-width: 0; }
+.pws-head { display: grid; grid-template-columns: var(--pws-columns); column-gap: 16px; padding: 0 8px 6px; border-bottom: 1px solid var(--ps-line); font-size: .75rem; font-weight: var(--ps-weight-label); line-height: 1.4; color: var(--ps-muted); }
+.pws-rows { display: grid; margin: 0; padding: 0; list-style: none; }
+.pws-rows > li + li { border-top: 1px solid var(--ps-line); }
+
+/* Page styles give every button a frame, a fill and padding; a row takes none of them. */
+.pulse-standalone .pws button:is(.pws-row, .pws-place) { display: grid; grid-template-columns: var(--pws-columns); column-gap: 16px; row-gap: 4px; align-items: start; width: 100%; min-height: 44px; margin: 0; padding: 10px 8px; border: 0; border-radius: var(--ps-radius-control); background: transparent; box-shadow: none; color: var(--ps-ink); font: inherit; font-size: .8125rem; line-height: 1.4; text-align: left; cursor: pointer; }
+.pulse-standalone .pws button:is(.pws-row, .pws-place):hover { background: var(--ps-soft); }
+.pulse-standalone .pws button:is(.pws-row, .pws-place):focus-visible { outline: var(--ps-control-focus); outline-offset: 0; }
+.pulse-standalone .pws button.pws-place > [data-cell=accounts] { grid-column: 2 / 5; }
+
+.pws-cell { display: grid; gap: 3px; align-content: start; min-width: 0; }
+.pws-cell > small { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
+.pws-cell b { font-weight: var(--ps-weight-strong); color: var(--ps-ink); font-variant-numeric: tabular-nums; }
+.pws-label { display: none; font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
+.pws-cell > strong { font-size: .875rem; font-weight: var(--ps-weight-strong); line-height: 1.4; overflow-wrap: anywhere; }
+.pws-cell[data-cell=accounts] > b { font-size: .875rem; line-height: 1.4; }
+
+/* A group's top accounts, drawn the one way accounts are drawn: picture or initials with the platform mark, then the name. */
+.pws-top { display: flex; flex-wrap: wrap; gap: 4px 12px; min-width: 0; font-size: .75rem; color: var(--ps-muted); }
+.pws-who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; }
+.pws-name { min-width: 0; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A share: a bar on a track of the whole, its percent beside it. A share nobody can state is a dash, without a track. */
+.pws-meter { display: grid; grid-template-columns: minmax(0, 1fr) 2.75rem; align-items: center; column-gap: 8px; min-height: 20px; }
+.pws-meter > b { grid-column: 2; font-size: .875rem; text-align: right; }
+.pws-track { display: block; height: 8px; border-radius: 999px; background: var(--ps-soft); overflow: hidden; }
+.pws-track > i { display: block; height: 100%; min-width: 2px; border-radius: inherit; }
+
+/* Tone: one proportion bar in the sentiment colours (negative, neutral, positive, as on Sentimen), every share in words. */
+.pws-tone-bar { display: flex; gap: 2px; height: 8px; margin-block: 6px; border-radius: 999px; background: var(--ps-soft); overflow: hidden; }
+.pws-tone-bar > i { flex-basis: 0; min-width: 4px; }
+.pws-tone-text { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
+
+/* ---------- Where the X accounts are ---------- */
+.pws-origin { display: grid; gap: 10px; min-width: 0; padding-top: 16px; border-top: 1px solid var(--ps-line); }
+.pws-origin h3 { margin: 0; font-size: .875rem; font-weight: var(--ps-weight-strong); line-height: 1.4; }
+.pws-origin .pws-sub { margin: 6px 0 0; font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1.4; color: var(--ps-ink); }
+.pws-map { justify-self: start; display: inline-flex; align-items: center; min-height: 32px; border-radius: var(--ps-radius-mark); color: var(--ps-accent); font-size: .8125rem; font-weight: var(--ps-weight-label); text-decoration: underline; text-underline-offset: 3px; }
+.pws-map:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+
+/* ---------- Phones: one block per group, its figures stacked, each with its name ---------- */
+@media (max-width: 700px) {
+  .pws-head { display: none; }
+  .pulse-standalone .pws button:is(.pws-row, .pws-place) { grid-template-columns: minmax(0, 1fr); row-gap: 8px; padding: 12px 4px; }
+  .pulse-standalone .pws button.pws-place > [data-cell=accounts] { grid-column: auto; }
+  .pws-cell:not([data-cell=group], [data-cell=place]) { grid-template-columns: 5rem minmax(0, 1fr); column-gap: 12px; row-gap: 2px; }
+  .pws-cell:not([data-cell=group], [data-cell=place]) > .pws-label { display: block; grid-column: 1; }
+  .pws-cell:not([data-cell=group], [data-cell=place]) > :not(.pws-label) { grid-column: 2; }
+  .pws-map { min-height: 44px; }
+}
+@media print {
+  .pws-map { display: none; }
+  .pws-track > i, .pws-tone-bar > i, .pws-keys .pu-swatch { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

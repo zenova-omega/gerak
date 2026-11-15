@@ -156,25 +156,18 @@ def place_summary(items):
     return {'posts': total, 'named': named, 'provinces': _ranked(rows, 'posts')}
 
 
-def location_summary(locations):
-    """Where X accounts say they are. `locations` maps an account to its profile location text: '' when the owner
-    wrote none, None while the account has not been asked. Returns {accounts, asked, located, named, provinces}."""
-    rows, asked, located, named = {}, 0, 0, 0
-    for text in locations.values():
-        if text is None:
-            continue
-        asked += 1
-        if not text.strip():
-            continue
-        located += 1
-        where = province_of_location(text)
-        if not where:
-            continue
-        named += 1
-        row = rows.setdefault(where['code'], [0, Counter()])
-        row[0] += 1
-        row[1][where['place']] += 1
-    return {'accounts': len(locations), 'asked': asked, 'located': located, 'named': named, 'provinces': _ranked(rows, 'accounts')}
+def location_summary(origin):
+    """Where X accounts say they are, from the account_origin_v1 reading (`pulse_demography.account_origin`), the rule
+    the map and the Jaringan card count by. Returns {accounts, asked, located, named, provinces}: every X account, those
+    the profile job has asked, those with a location text, those whose location names a province, and the provinces by
+    accounts, then name, with the place names behind each (equal counts by name)."""
+    rows = {}
+    for row in sorted((row for row in origin['rows'] if row['province']), key=lambda row: row['province']['place']):
+        entry = rows.setdefault(row['province']['code'], [0, Counter()])
+        entry[0] += 1
+        entry[1][row['province']['place']] += 1
+    return {'accounts': origin['accounts'], 'asked': origin['accounts'] - origin['unasked'], 'located': origin['with_location'],
+            'named': origin['province_read'], 'provinces': _ranked(rows, 'accounts')}
 
 
 _LINE_ROWS, _LINE_NAMES = 8, 3

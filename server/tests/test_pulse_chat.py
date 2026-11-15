@@ -476,6 +476,23 @@ async def test_a_response_plan_question_uses_the_response_prompt_and_stores_its_
     bad = await client.post('/api/admin/pulse/chat', headers=headers, json={'topic_id': 'chat-topic', 'question': 'Apa isu utama?', 'mode': 'x'})
     assert bad.status_code == 422
 
+@pytest.mark.asyncio
+async def test_the_account_location_line_counts_x_accounts_by_account_origin_v1(db):
+    """The same rule as the map and the Jaringan card (account_origin_v1): an X handle written two ways is one account,
+    and its location is read from its post whose account the profile job has asked."""
+    from app.models.pulse_profiles import PulseAccountProfile
+    db.add(WatchTopic(id='origin-topic', label='Asal akun', query='asal', is_active=False)); await db.flush()
+    def post(id, author, metrics, hours):
+        return SourceItem(id=id, topic_id='origin-topic', source='t', platform='x', url=f'https://example.com/{id}', title='', text='tanpa tempat',
+                          author=author, published_at=NOW - timedelta(hours=hours), metrics=metrics)
+    db.add_all([post('origin-1', '@Budi', {'author_id': '701'}, 5), post('origin-2', 'budi', {}, 4),
+                PulseAccountProfile(platform='x', key='701', location='Bandung', location_at=NOW, checked_at=NOW)])
+    await db.flush()
+    context = (await chat.build_context(db, 'origin-topic', NOW))['context']
+    assert context['places']['profiles']['accounts'] == 1
+    assert ('LOKASI PROFIL AKUN X (keterangan pemilik akun, BUKAN posisi saat memposting): 1 dari 1 akun X bisa dipetakan | Jawa Barat 1 akun (Bandung 1)'
+            in chat.data_block(context))
+
 
 
 @pytest.mark.asyncio

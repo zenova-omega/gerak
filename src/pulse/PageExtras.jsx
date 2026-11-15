@@ -5,6 +5,7 @@ import {useLocation,useSearchParams} from 'react-router-dom';
 import AnalyticsPanel from './AnalyticsPanel';
 import NarrativePanel from './NarrativePanel';
 import AccountConcentration from './AccountConcentration';
+import WhoIsSpeaking from './WhoIsSpeaking';
 import GrowthEvidence from './GrowthEvidence';
 import {EvidenceSheet} from './EvidencePosts';
 import {TagPanel} from './OverviewInsights';
@@ -30,6 +31,8 @@ import './overview-analytics.css';
 const RegionSpreadSummary = lazy(() => import('./RegionSpreadSummary'));
 
 const useTopic=topic=>{const [params]=useSearchParams();return {params,id:topic?.id||params.get('topic')||''};};
+/** A link to another page of the project that keeps this page's query (carried sentiment and the like), with `set` on top. */
+const pageLink=(params,id,view,set={})=>{const search=new URLSearchParams(params);search.set('topic',id);for(const [key,value] of Object.entries(set))search.set(key,value);return '/pulse/'+view+'?'+search;};
 
 /** Jaringan: the main narratives as a bubble chart and a list, and when each platform first carried the conversation. */
 export function NetworkNarratives({posts=[]}){
@@ -37,7 +40,7 @@ export function NetworkNarratives({posts=[]}){
  const [selection,setSelection]=useState(null);
  const r=overviewEvidence(posts);
  const open=(title,rows,options)=>setSelection({title,posts:rows,...options});
- const link=view=>{const search=new URLSearchParams(params);search.set('topic',id);return '/pulse/'+view+'?'+search;};
+ const link=view=>pageLink(params,id,view);
  return <>
   <NarrativePanel narratives={r.narratives} onOpen={open} postsLink={link('posts')}/>
   <AnalyticsPanel title="Penyebaran percakapan" description="Urutan publikasi paling awal yang tersedia pada setiap platform.">
@@ -50,14 +53,18 @@ export function NetworkNarratives({posts=[]}){
  </>;
 }
 
-/** Akun & sumber: how concentrated the speaking is, where it happens, what kinds of interaction it earns, and how fast they grew. */
+/** Akun & sumber: who is speaking, how concentrated the speaking is, where it happens, what kinds of interaction it earns, and how fast they grew. */
 export function AccountsInsights({posts=[],topic,period}){
- const {id}=useTopic(topic);
+ const {params,id}=useTopic(topic);
  const [selection,setSelection]=useState(null);
  const extra=useOverviewEvidence(id,period,posts);
  const r=overviewEvidence(posts);
  const open=(title,rows,options)=>setSelection({title,posts:rows,...options});
+ // The page counts one sentiment only when the address carries one it applies, as PulseDashboard scopes Akun & sumber.
+ const sentimentFiltered=Boolean(sentimentLabels[params.get('sentiment')]);
  return <>
+  {/* The page's own list (the same posts as r.posts), so the readings are worked out once per list. */}
+  <WhoIsSpeaking posts={posts} onOpen={open} sentimentFiltered={sentimentFiltered} mapLink={pageLink(params,id,'network',{focus:'map',layer:'accounts'})}/>
   <AccountConcentration posts={r.posts} onOpen={open}/>
   <div className="lay-grid">
    <div className="lay-4"><AnalyticsPanel title="Sumber percakapan" description="Jumlah posting per platform, bukan estimasi audiens.">

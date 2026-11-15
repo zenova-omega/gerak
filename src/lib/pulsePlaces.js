@@ -6,6 +6,8 @@
 // because that is where the outlines draw them. Pure: no clock, no network.
 import { sentimentDate } from './pulseSentiment.js';
 import { postInteractions } from './pulseEngagement.js';
+// A cycle (pulseDemography reads provinceOfLocation from here) that is safe: neither module calls the other at load.
+import { accountOrigin } from './pulseDemography.js';
 
 // Marks after a name:  ?  also an ordinary word or a person's name: counts with a capital letter or after a place word
 //                      !  mostly something else: counts only after a place word (see STRONG and WEAK below)
@@ -239,7 +241,7 @@ export function spreadByDay(posts = []) {
  */
 export function spreadFrame(spread, day) {
   const upTo = byDay => Object.entries(byDay || {}).reduce((sum, [date, count]) => date <= day ? sum + count : sum, 0);
-  const rows = (spread?.provinces || []).filter(row => row.first <= day)
+  const rows = (spread?.provinces || []).filter(row => row.first !== null && row.first <= day)
     .map(row => ({ code: row.code, name: row.name, count: upTo(row.byDay), today: row.byDay[day] || 0, fresh: row.first === day }))
     .sort((a, b) => b.count - a.count);
   return { day, rows, named: upTo(spread?.namedByDay), posts: upTo(spread?.postsByDay) };
@@ -286,80 +288,67 @@ export function placeSnippet(post, names = [], width = 220) {
 }
 
 /**
- * X accounts by the province their profile location names, over time. The shape follows `spreadByDay`, so
- * `spreadFrame` reads it as it is, but everything is counted in accounts: an account joins on the day (WIB) of its
- * first post, and stays. A post carries its author's profile location as `metrics.author_location`: a text, '' when
- * the owner wrote none, and no key at all while the account has not been asked yet.
+ * X accounts by the province their profile location names, over time: the map's account view and the Jaringan card,
+ * read from `accountOrigin` (account_origin_v1 in pulseDemography.js), so they count exactly what the Demografi
+ * section counts. The shape follows `spreadByDay`, so `spreadFrame` reads it as it is, but everything is counted in
+ * accounts (account_v1): an account joins on the day (day_v1) of its first dated post, and stays. An account without
+ * a dated post is in every total and on no day.
  * @param {object[]} posts posts already scoped to the project's period and platforms (other platforms are skipped)
  * @returns {{
  *   total: number, located: number, named: number, unasked: number, days: string[],
  *   postsByDay: Record<string, number>, namedByDay: Record<string, number>,
- *   provinces: {code: string, name: string, total: number, first: string, byDay: Record<string, number>, places: [string, number][],
- *     accounts: {author: string, platform: 'x', location: string, place: string, first: string, posts: number, interactions: number|null, followers: number|null, post: object}[]}[],
+ *   provinces: {code: string, name: string, total: number, first: string|null, byDay: Record<string, number>, places: [string, number][],
+ *     accounts: {author: string, platform: 'x', location: string, place: string, first: string|null, posts: number, interactions: number|null, followers: number|null, post: object}[]}[],
  * }}
- *   `total` X accounts with a dated post, `located` those with a location text, `named` those on the map, `unasked`
- *   those not asked yet. `postsByDay` and `namedByDay` count accounts by the day they join. `days` spans every dated
- *   post given, of any platform, so the map's two views share one timeline. Accounts are sorted by interactions.
+ *   `total` every X account, `located` those with a location text, `named` those whose location names a province,
+ *   `unasked` those not asked yet. `postsByDay` and `namedByDay` count accounts by the day they join. `days` spans every
+ *   dated post given, of any platform, so the map's two views share one timeline. A province's `first` is null when
+ *   none of its accounts has a dated post; such provinces come last. Accounts are in the reading's order: by known
+ *   interactions, larger first, unknown last.
  */
 export function accountSpread(posts = []) {
-  const accounts = new Map();
   let first = null, last = null;
-  for (const post of posts) {
+  for (const post of posts || []) {
     const day = sentimentDate(post);
     if (!day) continue;
     if (!first || day < first) first = day;
     if (!last || day > last) last = day;
-    if (post.platform !== 'x') continue;
-    const key = String(post.metrics?.author_id ?? post.author ?? '');
-    if (!key) continue;
-    const row = accounts.get(key) || { author: post.author || '', platform: 'x', location: undefined, first: day, posts: 0, interactions: null, followers: null, post, newest: '' };
-    row.posts++;
-    if (day < row.first) row.first = day;
-    const stamp = String(post.published_at);
-    if (stamp >= row.newest) { row.newest = stamp; row.post = post; row.author = post.author || row.author; }
-    const value = postInteractions(post.metrics);
-    if (Number.isFinite(value)) row.interactions = (row.interactions || 0) + value;
-    if (typeof post.metrics?.author_location === 'string') row.location = post.metrics.author_location;
-    if (Number.isFinite(post.metrics?.author_followers)) row.followers = post.metrics.author_followers;
-    accounts.set(key, row);
   }
-  const rows = new Map(), postsByDay = {}, namedByDay = {};
-  let located = 0, named = 0, unasked = 0;
-  for (const { newest, ...account } of accounts.values()) {
-    void newest;
-    postsByDay[account.first] = (postsByDay[account.first] || 0) + 1;
-    if (account.location === undefined) { unasked++; continue; }
-    if (!account.location.trim()) continue;
-    located++;
-    const where = provinceOfLocation(account.location);
-    if (!where) continue;
-    named++;
-    namedByDay[account.first] = (namedByDay[account.first] || 0) + 1;
-    const row = rows.get(where.code) || { code: where.code, name: where.name, total: 0, first: account.first, byDay: {}, places: new Map(), accounts: [] };
+  const origin = accountOrigin(posts), rows = new Map(), postsByDay = {}, namedByDay = {};
+  for (const account of origin.rows) {
+    const day = account.first_day;
+    if (day) postsByDay[day] = (postsByDay[day] || 0) + 1;
+    if (!account.province) continue;
+    const { code, name, place } = account.province;
+    const row = rows.get(code) || { code, name, total: 0, first: null, byDay: {}, places: new Map(), accounts: [] };
     row.total++;
-    row.byDay[account.first] = (row.byDay[account.first] || 0) + 1;
-    if (account.first < row.first) row.first = account.first;
-    row.places.set(where.place, (row.places.get(where.place) || 0) + 1);
-    row.accounts.push({ ...account, place: where.place });
-    rows.set(where.code, row);
+    if (day) {
+      namedByDay[day] = (namedByDay[day] || 0) + 1;
+      row.byDay[day] = (row.byDay[day] || 0) + 1;
+      if (row.first === null || day < row.first) row.first = day;
+    }
+    row.places.set(place, (row.places.get(place) || 0) + 1);
+    row.accounts.push({ author: account.author, platform: 'x', location: account.location, place, first: day, posts: account.posts,
+      interactions: account.interactions.value, followers: account.followers, post: account.post });
+    rows.set(code, row);
   }
   const days = [];
   if (first) for (let day = addDays(first, MAX_DAYS) < last ? addDays(last, -MAX_DAYS) : first; day <= last; day = addDays(day, 1)) days.push(day);
-  const provinces = [...rows.values()].map(row => ({ ...row,
-    places: [...row.places.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
-    accounts: row.accounts.sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1) || b.posts - a.posts || a.author.localeCompare(b.author)),
-  })).sort((a, b) => a.first.localeCompare(b.first) || b.byDay[b.first] - a.byDay[a.first] || b.total - a.total || a.name.localeCompare(b.name));
-  return { total: accounts.size, located, named, unasked, days, postsByDay, namedByDay, provinces };
+  const provinces = [...rows.values()].map(row => ({ ...row, places: [...row.places.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) }))
+    .sort((a, b) => (a.first === null) - (b.first === null) || (a.first ?? '').localeCompare(b.first ?? '') || (b.byDay[b.first] || 0) - (a.byDay[a.first] || 0)
+      || b.total - a.total || a.name.localeCompare(b.name));
+  return { total: origin.accounts, located: origin.with_location, named: origin.province_read, unasked: origin.unasked, days, postsByDay, namedByDay, provinces };
 }
 
 /**
  * One province of `accountSpread` at one day: the accounts that had posted by then and the names their profiles use.
+ * An account without a dated post is on no day, so it is never listed here.
  * @returns {{code: string, name: string, first: string|null, accounts: object[], places: [string, number][]} | null} null for a code that is not drawn
  */
 export function accountDetail(spread, code, day) {
   if (!provinceNames[code]) return null;
   const row = (spread?.provinces || []).find(item => item.code === code);
-  const accounts = row ? row.accounts.filter(account => account.first <= day) : [], names = new Map();
+  const accounts = row ? row.accounts.filter(account => account.first !== null && account.first <= day) : [], names = new Map();
   for (const account of accounts) names.set(account.place, (names.get(account.place) || 0) + 1);
   return { code, name: provinceNames[code], first: row ? row.first : null, accounts, places: [...names.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) };
 }

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { accountDetail, accountSpread, namesProvince, placeAliases, placeTables, placeSnippet, placesIn, postPlaces, provinceDetail, provinceNames, provinceOfLocation, spreadByDay, spreadFrame, spreadTotals } from './pulsePlaces.js';
+import { accountOrigin } from './pulseDemography.js';
 
 const codes = text => placesIn(text).map(row => row.code);
 const outline = JSON.parse(readFileSync(new URL('../pulse/indonesia-provinces.json', import.meta.url), 'utf8'));
@@ -234,14 +235,25 @@ const accountPosts = [
   xpost('6', '2026-11-05T07:00:00Z', '@e', undefined),         // not asked yet
   xpost('7', '2026-11-06T07:00:00Z', '@f', 'Surabaya'),
   { id: '8', published_at: '2026-11-07T07:00:00Z', platform: 'news', author: 'Media', title: 'Di Medan', metrics: { author_location: 'Medan' } },   // not an X account
-  xpost('9', null, '@g', 'Medan'),                             // no date: cannot join the timeline
+  xpost('9', null, '@g', 'Medan'),                             // no date: counted, but on no day of the timeline
 ];
 
 test('X accounts are counted by the province their profile names, joining on the day of their first post', () => {
   const spread = accountSpread(accountPosts);
   assert.deepEqual(spread.days, ['2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07'], 'the same days as the posts, so both views of the map share one timeline');
-  assert.deepEqual([spread.total, spread.located, spread.named, spread.unasked], [6, 4, 3, 1], 'X accounts, with a location text, on the map, not asked yet');
-  assert.deepEqual(spread.provinces.map(row => [row.code, row.first, row.total]), [['ID-JB', '2026-11-03', 2], ['ID-JI', '2026-11-06', 1]]);
+  assert.deepEqual([spread.total, spread.located, spread.named, spread.unasked], [7, 5, 4, 1], 'X accounts, with a location text, whose location names a province, not asked yet (account_origin_v1)');
+  assert.deepEqual(spread.provinces.map(row => [row.code, row.first, row.total]), [['ID-JB', '2026-11-03', 2], ['ID-JI', '2026-11-06', 1], ['ID-SU', null, 1]]);
+  // An account without a dated post is in the totals and on no day.
+  const sum = byDay => Object.values(byDay).reduce((total, value) => total + value, 0);
+  assert.deepEqual([sum(spread.postsByDay), sum(spread.namedByDay)], [6, 3]);
+  assert.deepEqual(spread.provinces[2].byDay, {});
+  assert.deepEqual(spreadFrame(spread, '2026-11-07').rows.map(row => row.code), ['ID-JB', 'ID-JI']);
+  assert.deepEqual(accountDetail(spread, 'ID-SU', '2026-11-07'), { code: 'ID-SU', name: 'Sumatera Utara', first: null, accounts: [], places: [] });
+  // One account (account_v1) whatever way its handle is written.
+  const twoWays = accountSpread([xpost('b1', '2026-11-03T05:00:00Z', '@Budi', 'Bandung', { likes: 2 }), xpost('b2', '2026-11-04T05:00:00Z', 'budi', 'Bandung', { likes: 3 })]);
+  assert.deepEqual([twoWays.total, twoWays.located, twoWays.named, twoWays.unasked], [1, 1, 1, 0]);
+  assert.deepEqual(twoWays.postsByDay, { '2026-11-03': 1 });
+  assert.deepEqual(twoWays.provinces[0].accounts.map(row => [row.author, row.platform, row.posts, row.interactions, row.first, row.post.id]), [['budi', 'x', 2, 5, '2026-11-03', 'b2']]);
   assert.deepEqual(spread.provinces[0].byDay, { '2026-11-03': 1, '2026-11-04': 1 });
   assert.deepEqual(spread.provinces[0].places, [['Bandung', 2]]);
   assert.deepEqual(spread.provinces[0].accounts.map(row => [row.author, row.posts, row.interactions, row.followers, row.location, row.place, row.first]),
@@ -267,7 +279,7 @@ test('the totals of a spread rank the provinces for a summary, with the names be
     { code: 'ID-JB', name: 'Jawa Barat', count: 2, first: '2026-11-03', places: [['Bandung', 2], ['Bekasi', 1]] },
     { code: 'ID-JI', name: 'Jawa Timur', count: 2, first: '2026-11-04', places: [['Surabaya', 2]] },
   ], 'most first; equal counts by name');
-  assert.deepEqual(spreadTotals(accountSpread(accountPosts)).map(row => [row.name, row.count]), [['Jawa Barat', 2], ['Jawa Timur', 1]]);
+  assert.deepEqual(spreadTotals(accountSpread(accountPosts)).map(row => [row.name, row.count]), [['Jawa Barat', 2], ['Jawa Timur', 1], ['Sumatera Utara', 1]], 'an account without a dated post counts here too');
   assert.deepEqual(spreadTotals(spreadByDay([])), []);
   assert.deepEqual(spreadTotals(null), []);
 });
@@ -280,6 +292,24 @@ test('posts can be narrowed to the ones that name a province', () => {
   assert.deepEqual(ids('ID-PA'), []);
   assert.deepEqual(ids(''), ['a', 'b', 'c'], 'no province: no narrowing');
 });
+
+// account_origin_v1 is the one rule the map and the Jaringan card count by: on every shared origin case, the spread's
+// totals and province counts are the origin reading's own (the server checks location_summary the same way).
+const demography = JSON.parse(readFileSync(new URL('../../shared/pulse-demography.cases.json', import.meta.url), 'utf8'));
+const expand = rows => rows.flatMap(row => Array.from({ length: row.times ?? 1 }, (_, index) => {
+  const { times, ...post } = row;
+  if (typeof post.author === 'string') post.author = post.author.replace('{i}', String(index + 1).padStart(2, '0'));
+  return post;
+}));
+for (const item of demography.origin) {
+  test(`accountSpread counts by account_origin_v1: ${item.note}`, () => {
+    const rows = expand(item.in), spread = accountSpread(rows), origin = accountOrigin(rows);
+    assert.deepEqual({ total: spread.total, located: spread.located, named: spread.named, unasked: spread.unasked },
+      { total: origin.accounts, located: origin.with_location, named: origin.province_read, unasked: origin.unasked });
+    assert.equal(spread.provinces.reduce((sum, row) => sum + row.total, 0), origin.province_read);
+    for (const province of origin.provinces) assert.equal(spread.provinces.find(row => row.code === province.code)?.total, province.accounts, province.code);
+  });
+}
 
 // ── The server's twin ───────────────────────────────────────────────────────────────────────────────────────────────
 
