@@ -42,6 +42,41 @@ async def test_summary_input_names_the_earliest_posts_negative_posts_and_top_com
 
 
 @pytest.mark.asyncio
+async def test_summary_input_reads_unknown_interactions_as_unknown_never_zero(db):
+    """interactions_v1 in the summary: a post whose source reports no interaction is unknown, in the data the model
+    reads and in the facts the infographics draw; known interactions rank first, as everywhere else."""
+    topic = WatchTopic(label='Ringkas tanpa angka', query='ringkas')
+    db.add(topic)
+    await db.flush()
+    db.add_all([
+        SourceItem(topic_id=topic.id, source='news', platform='news', url='https://berita.example/a', author='Portal', text='Berita pertama',
+                   published_at=datetime(2026, 11, 1, 2), metrics={'sentiment': {'label': 'negative', 'reason': 'kritik'}}),
+        SourceItem(topic_id=topic.id, source='x', platform='x', url='https://x.com/b/status/2', author='akun_kecil', text='Tidak setuju',
+                   published_at=datetime(2026, 11, 2, 2), metrics={'likes': 4, 'sentiment': {'label': 'negative', 'reason': 'kecewa'}}),
+    ])
+    await db.flush()
+    built = await service.build_summary_input(db, topic.id, datetime(2026, 11, 5))
+    data, facts = built['data'], built['facts']
+    assert '- A1 Portal | news | terbit' in data and '- A1 Portal' in data
+    assert [line for line in data.splitlines() if line.startswith('- A1 ')][0].count('interaksi tidak diketahui') == 1
+    assert 'interaksi 0' not in data
+    # The post with known interactions comes first among the negative ones, however small its number.
+    assert data.index('- N1 akun_kecil') < data.index('- N2 Portal')
+    assert facts['totals']['interactions'] == 4
+    assert [row['interactions'] for row in facts['triggers']] == [4, None]
+    assert [(row['author'], row['interactions']) for row in facts['accounts']] == [('akun_kecil', 4), ('Portal', None)]
+    assert 'Portal (news) 1 posting, interaksi tidak diketahui' in data
+
+    nothing = WatchTopic(label='Tanpa interaksi', query='kosong')
+    db.add(nothing)
+    await db.flush()
+    db.add(SourceItem(topic_id=nothing.id, source='news', platform='news', url='https://berita.example/z', author='Portal', text='Berita',
+                      published_at=datetime(2026, 11, 1, 2), metrics={}))
+    await db.flush()
+    assert (await service.build_summary_input(db, nothing.id, datetime(2026, 11, 5)))['facts']['totals']['interactions'] is None
+
+
+@pytest.mark.asyncio
 async def test_summary_route_stores_the_latest_version_and_never_calls_the_model_on_read(client, admin_token, db, monkeypatch):
     from app.services import ai
     # The route ends its transaction before the model answers; tests share one database file, so that commit is not made here.

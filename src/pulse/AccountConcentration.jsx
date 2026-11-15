@@ -1,6 +1,7 @@
 import AnalyticsPanel from './AnalyticsPanel';
 import {PulsePanelEmpty} from '../components/ui/PulseAnalytics';
 import {platformLabel} from '../components/admin/pulse/PlatformIcon';
+import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 import {accountConcentration} from '../lib/pulseInsightMetrics';
 import {leadingAccounts} from '../lib/pulseReadings';
 import {postMeasures} from '../lib/pulseMeasures';
@@ -11,7 +12,7 @@ import './ds/narrative-panel.css';
 import './ds/concentration-curve.css';
 
 /** One bar: the top rows in their own colours, everything else in the neutral rest segment. `rows` carry `share` (0 to 1).
- * A row with `open` is a button that opens its posts. */
+ * Each named row shows its account the way every page does (`AccountAvatar`). A row with `open` is a button that opens its posts. */
 function Split({rows,label,total}){
  const rest=Math.max(0,1-rows.reduce((sum,row)=>sum+row.share,0));
  return <>
@@ -19,7 +20,7 @@ function Split({rows,label,total}){
    {rows.map((row,index)=><i key={row.key} style={{flexGrow:row.share,background:chartSeries[index]}}/>)}{rest>0.005&&<i style={{flexGrow:rest,background:'var(--ps-soft)'}}/>}
   </div>
   <ul className="ac-rows" data-open={rows.some(row=>row.open)?'':undefined}>{rows.map((row,index)=><li key={row.key}><i style={{background:chartSeries[index]}}/>
-    {row.open?<button type="button" className="ac-open" title={row.name} aria-label={`Lihat posting ${row.name}`} onClick={row.open}>{row.name}</button>:<span title={row.name}>{row.name}</span>}<b>{percentLabel(row.share)}</b></li>)}
+    <div className="ac-who"><AccountAvatar author={row.author} platform={row.platform} size="xs"/>{row.open?<button type="button" className="ac-open" title={row.name} aria-label={`Lihat posting ${row.name}`} onClick={row.open}>{row.name}</button>:<span title={row.name}>{row.name}</span>}</div><b>{percentLabel(row.share)}</b></li>)}
    {rest>0.005&&<li className="ac-rest"><i/><span>{total}</span><b>{percentLabel(rest)}</b></li>}</ul>
  </>;
 }
@@ -89,8 +90,8 @@ function Curve({reading,onOpen}){
 export default function AccountConcentration({posts=[],onOpen}){
  const c=accountConcentration(posts);
  const behind=keys=>posts.filter(post=>keys.has(postMeasures(post).account));
- const accountRows=c.topAccounts.map(row=>{const name=`${row.author} · ${platformLabel(row.platform)}`;return {key:row.key,name,share:row.share,open:onOpen&&(()=>onOpen(name,behind(new Set([row.key]))))};});
- const postRows=c.topPosts.map(row=>{const name=`${row.author||'Tanpa nama'} · ${platformLabel(row.platform)}`;return {key:row.id,name,share:row.share,open:onOpen&&(()=>onOpen('Posting '+name,posts.filter(post=>post.id===row.id)))};});
+ const accountRows=c.topAccounts.map(row=>{const name=`${row.author} · ${platformLabel(row.platform)}`;return {key:row.key,name,author:row.author,platform:row.platform,share:row.share,open:onOpen&&(()=>onOpen(name,behind(new Set([row.key]))))};});
+ const postRows=c.topPosts.map(row=>{const name=`${row.author||'Tanpa nama'} · ${platformLabel(row.platform)}`;return {key:row.id,name,author:row.author,platform:row.platform,share:row.share,open:onOpen&&(()=>onOpen('Posting '+name,posts.filter(post=>post.id===row.id)))};});
  return <AnalyticsPanel title="Konsentrasi percakapan" description="Seberapa besar percakapan bertumpu pada segelintir akun dan posting."
   footer="Akun dihitung per platform. Konsentrasi tinggi bisa wajar, misalnya media yang rutin menulis, dan bukan bukti akun terkoordinasi. Interaksi adalah angka terakhir yang tercatat, hanya dari posting yang membawanya.">
   {c.posts?<div className="ac-grid ac-grid-curve">

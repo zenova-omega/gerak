@@ -9,9 +9,9 @@ import re
 from collections import Counter, defaultdict
 from sqlalchemy import select
 from ..models.pulse import SourceItem
-from .pulse_chat import _engagement, _sentiment, _wib, _wib_day, build_context, render_context
+from .pulse_chat import _engagement, _known_interactions, _sentiment, _wib, _wib_day, build_context, render_context
+from .pulse_measures import interaction_sort_key
 from .pulse_places import post_places
-from .pulse_spikes import FLOORS, RULE_ID, daily_series, keyed_spikes
 
 CONTEXT_TOKENS = 8192
 ANSWER_TOKENS = 520
@@ -66,6 +66,16 @@ def whole_shares(counts: dict) -> dict:
     return shares
 
 
+def _said(value):
+    """interactions_v1 in a line of the data: a number, or \"interaksi tidak diketahui\" when the source reports none."""
+    return 'interaksi tidak diketahui' if value is None else f'interaksi {value}'
+
+
+def _ranked(item):
+    """Known interactions first, larger first; the one ordering of pulse_measures."""
+    return interaction_sort_key(_engagement(item.metrics), item.published_at, item.id)
+
+
 def _clean(value, limit):
     return re.sub(r'\s+', ' ', value or '').strip()[:limit]
 
@@ -93,17 +103,21 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
     earliest = sorted((item for item in items if item.published_at), key=lambda item: item.published_at)[:5]
     for index, item in enumerate(earliest, 1):
         add(f'A{index}', item)
-        lines.append(f"- A{index} {item.author or 'tanpa nama'} | {item.platform} | terbit {_wib(item.published_at)} | interaksi {_engagement(item.metrics) or 0} | teks: {_clean(item.title or item.text, 140)}")
+        lines.append(f"- A{index} {item.author or 'tanpa nama'} | {item.platform} | terbit {_wib(item.published_at)} | {_said(_engagement(item.metrics))} | teks: {_clean(item.title or item.text, 140)}")
     if not earliest:
         lines.append('- tidak ada posting bertanggal')
 
-    accounts = defaultdict(lambda: [0, 0])
+    # An account's interactions are the sum over its posts whose interactions are known; None when none of them is.
+    accounts = defaultdict(lambda: [0, None])
     for item in items:
         if item.author:
-            accounts[(item.author, item.platform or 'unknown')][0] += 1
-            accounts[(item.author, item.platform or 'unknown')][1] += _engagement(item.metrics) or 0
-    lines.append('AKUN DENGAN INTERAKSI TERBESAR: ' + ('; '.join(f'{author} ({platform}) {posts} posting, {total} interaksi'
-                 for (author, platform), (posts, total) in sorted(accounts.items(), key=lambda pair: -pair[1][1])[:6]) or '-'))
+            row, own = accounts[(item.author, item.platform or 'unknown')], _engagement(item.metrics)
+            row[0] += 1
+            if own is not None:
+                row[1] = (row[1] or 0) + own
+    by_interactions = sorted(accounts.items(), key=lambda pair: (pair[1][1] is None, -(pair[1][1] or 0)))
+    lines.append('AKUN DENGAN INTERAKSI TERBESAR: ' + ('; '.join(f'{author} ({platform}) {posts} posting, ' + ('interaksi tidak diketahui' if total is None else f'{total} interaksi')
+                 for (author, platform), (posts, total) in by_interactions[:6]) or '-'))
 
     emotions = Counter(((item.metrics or {}).get('emotion') or {}).get('label') for item in items if isinstance((item.metrics or {}).get('emotion'), dict))
     emotions.pop(None, None)
@@ -111,11 +125,11 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
         lines.append('EMOSI DALAM POSTING: ' + ', '.join(f'{label} {count}' for label, count in emotions.most_common(7)))
 
     lines.append('POSTING NEGATIF DENGAN INTERAKSI TERTINGGI:')
-    negative = sorted((item for item in items if _sentiment(item.metrics) == 'negative'), key=lambda item: -(_engagement(item.metrics) or 0))[:5]
+    negative = sorted((item for item in items if _sentiment(item.metrics) == 'negative'), key=_ranked)[:5]
     for index, item in enumerate(negative, 1):
         add(f'N{index}', item)
         reason = _clean(((item.metrics or {}).get('sentiment') or {}).get('reason'), 100)
-        lines.append(f"- N{index} {item.author or 'tanpa nama'} | {item.platform} | {_wib(item.published_at) or 'tanpa tanggal'} | interaksi {_engagement(item.metrics) or 0} | teks: {_clean(item.title or item.text, 150)}" + (f' | catatan analisis: {reason}' if reason else ''))
+        lines.append(f"- N{index} {item.author or 'tanpa nama'} | {item.platform} | {_wib(item.published_at) or 'tanpa tanggal'} | {_said(_engagement(item.metrics))} | teks: {_clean(item.title or item.text, 150)}" + (f' | catatan analisis: {reason}' if reason else ''))
     if not negative:
         lines.append('- tidak ada posting berlabel negatif')
 
@@ -128,9 +142,9 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
             naming = [item for item in items if any(place['code'] == province['code'] for place in post_places(item.title, item.text, item.author))]
             if not naming:
                 continue      # the context read a wider or newer set of rows than this one
-            item = max(naming, key=lambda row: _engagement(row.metrics) or 0)
+            item = min(naming, key=_ranked)
             add(f'T{index}', item)
-            lines.append(f"- T{index} {province['name']} ({province['posts']} posting) | {item.author or 'tanpa nama'} | {item.platform} | terbit {_wib(item.published_at) or 'tanpa tanggal'} | interaksi {_engagement(item.metrics) or 0} | teks: {_clean(item.title or item.text, 140)}")
+            lines.append(f"- T{index} {province['name']} ({province['posts']} posting) | {item.author or 'tanpa nama'} | {item.platform} | terbit {_wib(item.published_at) or 'tanpa tanggal'} | {_said(_engagement(item.metrics))} | teks: {_clean(item.title or item.text, 140)}")
 
     comments = []
     for item in items:
@@ -155,18 +169,14 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
     context = built['context']
     by_day = Counter(_wib_day(item.published_at) for item in items if item.published_at)
     peak = max(by_day.items(), key=lambda pair: pair[1]) if by_day else None
-    # Spike days by the product's one rule (pulse_spikes), read over the days the trend chart draws for the same
-    # scope: a day without posts counts as zero and a chosen period is covered in full. The busiest day (`peak_day`)
-    # is another thing: every scope has one, and it is a spike only when the rule says so.
-    spike_days = [{'date': spike['key'], 'posts': spike['value'], 'usual': spike['usual'], 'times': spike['times']}
-                  for spike in keyed_spikes(daily_series(by_day, _wib_day(start) if start else None, _wib_day(end) if end else None), FLOORS['posts'])]
-    lines.append('HARI LONJAKAN POSTING (hari yang jumlah postingnya jauh di atas hari biasa pada cakupan ini): ' + ('; '.join(
-        f"{row['date']} {row['posts']} posting, " + (f"{row['times']:.1f} kali hari biasa".replace('.', ',') if row['times'] else 'hari lain umumnya kosong')
-        for row in spike_days) or 'tidak ada'))
+    # Spike days come from the context (pulse_chat.build_context), where the one rule (pulse_spikes) reads the days the
+    # trend chart draws; its line is already in the rendered DATA. The busiest day (`peak_day`) is another thing: every
+    # scope has one, and it is a spike only when the rule says so.
+    spike_days = context['spikes']['days']
     surges = [post for post in context['evidence_posts'] if post['observed_growth']['fastest_interval']]
     surge = max(surges, key=lambda post: post['observed_growth']['fastest_interval']['rate_per_hour']) if surges else None
     facts = {
-        'totals': {'posts': len(items), 'accounts': len(accounts), 'interactions': sum(_engagement(item.metrics) or 0 for item in items),
+        'totals': {'posts': len(items), 'accounts': len(accounts), 'interactions': _known_interactions(items)[0],
                    'comments': len(comments), 'days': len(by_day)},
         'sentiment': {'positive': tone['positive'], 'neutral': tone['neutral'], 'negative': tone['negative'], 'unknown': tone['unknown'], 'analysed': labelled},
         'platforms': [{'platform': platform, 'posts': count} for platform, count in Counter(item.platform or 'unknown' for item in items).most_common(6)],
@@ -174,17 +184,17 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
         'first': {'code': 'A1', 'author': earliest[0].author, 'platform': earliest[0].platform or 'unknown', 'published_at': earliest[0].published_at.isoformat() + 'Z',
                   'text': _clean(earliest[0].title or earliest[0].text, 140)} if earliest else None,
         'peak_day': {'date': peak[0], 'posts': peak[1]} if peak else None,
-        'spikes': {'rule': RULE_ID, 'days': spike_days},
+        'spikes': {'rule': context['spikes']['rule'], 'days': spike_days},
         'surge': {'code': surge['code'], 'author': surge['author'], 'platform': surge['platform'], 'added': surge['observed_growth']['fastest_interval']['added_interactions'],
                   'rate_per_hour': surge['observed_growth']['fastest_interval']['rate_per_hour'], 'from': surge['observed_growth']['fastest_interval']['from'],
                   'to': surge['observed_growth']['fastest_interval']['to'], 'interactions': surge['interactions']} if surge else None,
         'top_post': {'code': context['evidence_posts'][0]['code'], 'author': context['evidence_posts'][0]['author'], 'platform': context['evidence_posts'][0]['platform'],
                      'interactions': context['evidence_posts'][0]['interactions']} if context['evidence_posts'] else None,
         'accounts': [{'author': author, 'platform': platform, 'posts': posts, 'interactions': total}
-                     for (author, platform), (posts, total) in sorted(accounts.items(), key=lambda pair: -pair[1][1])[:4]],
+                     for (author, platform), (posts, total) in by_interactions[:4]],
         'groups': [{'code': row['code'], 'title': row['title'][:90], 'posts': row['posts'], 'accounts': row['accounts']} for row in context['conversation_groups_in_scope'][:4]],
         'quotes': [{'code': f'K{index}', 'text': _clean(comment['text'], 160), 'author': comment.get('author'), 'likes': likes} for index, (likes, comment, item) in enumerate(comments[:3], 1)],
-        'triggers': [{'code': f'N{index}', 'author': item.author, 'platform': item.platform or 'unknown', 'interactions': _engagement(item.metrics) or 0,
+        'triggers': [{'code': f'N{index}', 'author': item.author, 'platform': item.platform or 'unknown', 'interactions': _engagement(item.metrics),
                       'text': _clean(item.title or item.text, 140), 'reason': _clean(((item.metrics or {}).get('sentiment') or {}).get('reason'), 100)}
                      for index, item in enumerate(negative[:3], 1)],
         'emotions': [{'label': label, 'posts': count} for label, count in emotions.most_common(4)],

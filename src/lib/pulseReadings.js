@@ -143,6 +143,16 @@ export function termShift(postsNow, postsBefore) {
   return { posts_now: n, posts_before: m, rising: list(1), falling: list(-1) };
 }
 
+const weekdayOf = ms => (new Date(ms).getUTCDay() + 6) % 7;
+/** Where a post falls in the hour grid: its day and its hour on the zone's wall clock, or why it has no cell. */
+function gridSlot(post) {
+  const figures = postMeasures(post);
+  if (dayStart(figures.day) === null) return 'undated';
+  // The hour comes from the one place that knows the zone.
+  const moment = figures.clock === true ? localTime(post?.published_at) : null;
+  return moment === null ? 'date_only' : { day: figures.day, hour: new Date(moment).getUTCHours() };
+}
+
 /**
  * hour_grid_v1: when the posts were published. A cell counts the posts with a clock of one row and one hour of the
  * installation's zone. Rows are the days themselves, first to last day that has such a post, when those are 14
@@ -156,19 +166,17 @@ export function hourGrid(posts) {
   let total = 0, clocked = 0, dateOnly = 0, undated = 0;
   for (const post of posts || []) {
     total++;
-    const figures = postMeasures(post);
-    if (dayStart(figures.day) === null) { undated++; continue; }
-    // The hour on the zone's wall clock, from the one place that knows the zone.
-    const moment = figures.clock === true ? localTime(post?.published_at) : null;
-    if (moment === null) { dateOnly++; continue; }
-    if (!days.has(figures.day)) days.set(figures.day, Array(24).fill(0));
-    days.get(figures.day)[new Date(moment).getUTCHours()]++;
+    const slot = gridSlot(post);
+    if (slot === 'undated') { undated++; continue; }
+    if (slot === 'date_only') { dateOnly++; continue; }
+    if (!days.has(slot.day)) days.set(slot.day, Array(24).fill(0));
+    days.get(slot.day)[slot.hour]++;
     clocked++;
   }
   if (!clocked) return { mode: null, from: null, to: null, rows: [], max: 0, clocked, date_only: dateOnly, undated, total };
   const seen = [...days.keys()].sort(), from = seen[0], to = seen.at(-1);
   const first = dayStart(from), span = (dayStart(to) - first) / DAY + 1;
-  const weekday = ms => (new Date(ms).getUTCDay() + 6) % 7;
+  const weekday = weekdayOf;
   const row = (day, weekdayOf, cells) => ({ day, weekday: weekdayOf, cells, total: cells.reduce((sum, value) => sum + value, 0) });
   let rows;
   if (span <= GRID_DAY_ROWS) {
@@ -251,4 +259,12 @@ export function leadingAccounts(posts, count) {
     if (typeof key === 'string' && key.includes(':')) byPosts.set(key, (byPosts.get(key) || 0) + 1);
   }
   return new Set(inRank(byPosts).slice(0, Math.max(0, count)).map(([key]) => key));
+}
+
+/** The posts one cell of `hourGrid` counts, for the list that opens from it. `row` is a row of the grid. */
+export function postsInCell(posts, row, hour) {
+  return (posts || []).filter(post => {
+    const slot = gridSlot(post);
+    return typeof slot === 'object' && slot.hour === hour && (row.day ? slot.day === row.day : weekdayOf(dayStart(slot.day)) === row.weekday);
+  });
 }

@@ -1,4 +1,5 @@
-import { formatCount, hasClock, pulseDate } from './pulseData.js';
+import { formatCount, pulseDate } from './pulseData.js';
+import { localDay, readTime } from './pulseMeasures.js';
 
 // Inbox page transitions are guarded while acknowledgement/config writes run.
 export function canChangeAlertPage(page,total,busy,delta) {
@@ -30,10 +31,8 @@ export const monitorExtras = [
 export const intervalChoices = [15, 30, 60, 120, 180, 360, 720, 1440];
 export const defaultInterval = platform => ['instagram', 'tiktok', 'reddit'].includes(platform) ? 1440 : 60;
 
-const instant = value => {
-  if (typeof value !== 'string' || !value) return NaN;
-  return Date.parse(/(z|[+-]\d\d:?\d\d)$/i.test(value) || !/[T ]\d\d:/.test(value) ? value : value + 'Z');
-};
+// An instant as the calculation dictionary reads it (a time without a zone is UTC); NaN when it cannot be read.
+const instant = value => readTime(value) ?? NaN;
 const latest = values => values.filter(value => Number.isFinite(instant(value))).sort((a, b) => instant(b) - instant(a))[0] || null;
 const earliest = values => values.filter(value => Number.isFinite(instant(value))).sort((a, b) => instant(a) - instant(b))[0] || null;
 
@@ -56,12 +55,9 @@ export function runShare(runs) {
   return { planned, succeeded, failed, waiting: Math.max(0, planned - succeeded - failed), percent };
 }
 
-/** The calendar day a post was published on, as a reader in WIB sees it. A date the source gave without a clock stays that date. */
+/** The calendar day a post was published on (day_v1 in the calculation dictionary). */
 export function publishedDay(value) {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(value)) return null;
-  if (!hasClock(value)) return value.slice(0, 10);
-  const time = instant(value);
-  return Number.isFinite(time) ? new Date(time + 7 * 3600000).toISOString().slice(0, 10) : null;
+  return typeof value === 'string' ? localDay(value) : null;     // day_v1: the installation's zone; a date without a clock stays that date
 }
 
 /** First to last publication day of the stored posts: `{from, to, days, text}`. Null when no post carries a date. */

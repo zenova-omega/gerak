@@ -140,3 +140,17 @@ test('the six hours are told as one combined reading, in order of time and witho
   assert.doesNotMatch(lines.join(' '), /karena|penyebab|dipicu|memicu/i);
   assert.deepEqual(onsetLines(null), []);
 });
+
+test('the six hours are read in the installation zone, not in a fixed seven hours', async () => {
+  const { spikeOnset, onsetLines } = await import('./pulseTrendSpikes.js');
+  const { setZone, zone } = await import('./pulseMeasures.js');
+  const usual = zone();
+  assert.equal(spikeOnset(dayPosts(), spikeDay).zone, 'WIB');
+  try {
+    setZone({ offset_minutes: 480, name: 'WITA' });          // one hour ahead of WIB: every post is an hour later on the clock
+    const onset = spikeOnset(dayPosts(), spikeDay);
+    assert.deepEqual([onset.startHour, onset.endHour, onset.peakHour, onset.zone], [13, 19, 17, 'WITA']);
+    assert.equal(onset.starter.time, '14.04');
+    assert.match(onsetLines(onset, { platformName: name })[0], /^Awal lonjakan, 13\.00 sampai 19\.00 WITA:/);
+  } finally { setZone(usual); }
+});

@@ -1,0 +1,40 @@
+/* Term shift (TermShift.jsx), the second view of the word panel: which words gained and lost ground against the
+   period before. One row per term: its name, a bar that runs right of a centre line when the term rose and left
+   when it fell, and the figures in words. One hue for both sides, because a word that rises is neither good nor
+   bad news; the side, the group heading and the word "naik" or "turun" say which way it went. Rows are buttons:
+   choosing one lists its posts in the word panel's own list. */
+.pts { display: grid; gap: 14px; min-width: 0; margin-block: 18px; padding-block: 18px; border-block: 1px solid var(--ps-line); }
+.pts p { margin: 0; max-width: none; }
+.pts-versus { font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+.pts-versus b { color: var(--ps-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pts-group { display: grid; gap: 4px; min-width: 0; }
+.pi-panel .pts-group h4 { margin: 0; font-size: .75rem; font-weight: 600; color: var(--ps-muted); }
+.pts-rows { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.pi-panel .pts-rows { margin: 0; }
+.pulse-standalone .pi-panel button.pts-row { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(72px, 1fr) 17rem; align-items: center; gap: 4px 14px; width: 100%; height: auto; min-height: 36px; padding: 4px 8px; margin: 0; border: 1px solid transparent; border-radius: var(--ps-radius-control, 8px); background: transparent; box-shadow: none; color: var(--ps-ink); font: inherit; font-size: .875rem; text-align: left; cursor: pointer; }
+.pulse-standalone .pi-panel button.pts-row:hover { background: var(--ps-soft); }
+.pulse-standalone .pi-panel button.pts-row[aria-pressed=true] { background: var(--ps-selected); border-color: var(--ps-control-line); }
+.pulse-standalone .pi-panel button.pts-row:focus-visible { outline: var(--ps-control-focus); outline-offset: 1px; }
+.pts-term { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.pts-track { position: relative; height: 12px; }
+.pts-track::before { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--ps-control-line); }
+.pts-bar { position: absolute; top: 0; bottom: 0; min-width: 2px; border-radius: 0 3px 3px 0; background: var(--ps-chart-1); }
+.pts-bar[data-side=down] { border-radius: 3px 0 0 3px; background: color-mix(in oklab, var(--ps-chart-1) 55%, var(--ps-panel)); }
+.pts-figures { display: grid; grid-template-columns: minmax(0, 7.25rem) minmax(0, 1fr); align-items: baseline; gap: 0 8px; min-width: 0; font-variant-numeric: tabular-nums; text-align: right; }
+.pts-figures b { font-weight: 600; white-space: nowrap; }
+.pi-panel .pts-figures small { font-size: .75rem; font-weight: 400; color: var(--ps-muted); white-space: nowrap; }
+.pts-axis { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(72px, 1fr) 17rem; gap: 0 14px; padding: 0 9px; font-size: .75rem; color: var(--ps-muted); }
+.pts-axis > span { grid-column: 2; display: flex; justify-content: space-between; }
+.pts-empty { padding: 18px; border-radius: 6px; background: var(--ps-soft); color: var(--ps-muted); font-size: .8125rem; line-height: 1.7; }
+.pts-empty strong { display: block; color: var(--ps-ink); font-weight: 600; }
+.pts-empty .pu-button { margin-top: 10px; }
+.pts-wait { min-height: 9rem; }
+.pulse-standalone .pi-head > .pts-switch { margin-bottom: 14px; }
+
+@media (max-width: 620px) {
+  .pulse-standalone .pi-panel button.pts-row { grid-template-columns: minmax(0, 1fr) auto; min-height: 44px; }
+  .pts-track { grid-column: 1 / -1; grid-row: 2; margin-bottom: 4px; }
+  .pts-figures { grid-column: 2; grid-row: 1; grid-template-columns: minmax(0, 1fr); }
+  .pts-axis { grid-template-columns: minmax(0, 1fr); }
+  .pts-axis > span { grid-column: 1; }
+}

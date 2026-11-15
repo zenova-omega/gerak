@@ -245,7 +245,7 @@ function Chat({ topicId }) {
             <PulseButton type="submit" variant="primary" disabled={closed || draft.trim().length < 2} busy={Boolean(pending)} busyLabel="Menjawab…"><SendHorizontal size={16} />Kirim</PulseButton>
           </div>
           {error && <p className="pc-error" role="alert">{error}</p>}
-          <p id="pc-note" className="pc-note">Enter untuk mengirim, Shift+Enter untuk baris baru. Jawaban dirangkai AI dari data tersimpan; periksa posting yang dirujuk sebelum dipakai. Waktu lonjakan adalah waktu pengamatan crawler, bukan waktu pasti kejadian. Percakapan tersimpan untuk akun Anda dan dapat dihapus dari riwayat.</p>
+          <p id="pc-note" className="pc-note">Enter untuk mengirim, Shift+Enter untuk baris baru. Jawaban dirangkai AI dari data tersimpan; periksa posting yang dirujuk sebelum dipakai. Waktu kenaikan interaksi adalah waktu pengamatan crawler, bukan waktu pasti kejadian. Percakapan tersimpan untuk akun Anda dan dapat dihapus dari riwayat.</p>
         </form>
       </div>
       <ChatHistory history={history} open={open} linkTo={linkTo} shell={shell} onNew={() => startNew()} onRemoved={removed}

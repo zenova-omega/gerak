@@ -7,7 +7,7 @@
 // which posts), so a reader can open the day and judge for themselves. Pure: no clock, no network.
 import { bucketPosts } from './pulseTrendSeries.js';
 import { postInteractions } from './pulseEngagement.js';
-import { hasClock } from './pulseData.js';
+import { hasClock, readTime, zone } from './pulseMeasures.js';
 import { sourceText } from './pulseOverview.js';
 
 const QUOTE = 80;                                   // characters of a post's text quoted in a hint
@@ -123,13 +123,14 @@ export function spikeLines(facts, spike, key = 'posts', { unit = 'day', platform
 }
 
 // ── How a spike began ───────────────────────────────────────────────────────────────────────────────────────────────
-const WIB = 7 * 3600000;
+// The wall clock of the installation's zone (day_v1 in the calculation dictionary), never a fixed seven hours.
+const local = time => new Date(time + zone().offset_minutes * 60000);
 const ONSET_HOURS = 6;        // the window that is read: long enough to hold the rise, short enough to say who was first
 const RISING = 0.15;          // an hour belongs to the rise when it reaches this part of the peak hour
 const ENOUGH_TIMED = 10;      // posts of the day that carry a clock; with fewer an hourly reading says nothing
 const A_GROUP = 3;            // posts of one conversation group inside the window before it is named
 const two = value => String(value).padStart(2, '0');
-const clock = time => { const local = new Date(time + WIB); return `${two(local.getUTCHours())}.${two(local.getUTCMinutes())}`; };
+const clock = time => `${two(local(time).getUTCHours())}.${two(local(time).getUTCMinutes())}`;
 
 /**
  * How the spike of one day began, read in six hours and as one picture: when the posts started to rise, on which
@@ -138,7 +139,8 @@ const clock = time => { const local = new Date(time + WIB); return `${two(local.
  * The rise is the unbroken run of hours up to the day's peak hour in which every hour reaches 15% of the peak. The
  * window opens one hour before that run, so whoever moved first is inside it, and lasts six hours. Only posts whose
  * source gave a clock time take part: a post that carries a date alone (most Instagram and TikTok posts) cannot be
- * put in an hour, and is counted in `dateOnly` instead. Hours are WIB.
+ * put in an hour, and is counted in `dateOnly` instead. Hours are those of the installation's zone, which the answer
+ * names in `zone`.
  * @returns {null | {startHour: number, endHour: number, peakHour: number, hours: {hour: number, count: number}[],
  *   posts: number, timed: number, dateOnly: number, early: {platform: string, count: number, of: number} | null,
  *   platforms: {id: string, count: number, share: number}[],
@@ -151,8 +153,8 @@ export function spikeOnset(posts = [], row) {
   const inside = bucketPosts(posts, row), timed = [];
   for (const post of inside) {
     if (!hasClock(post.published_at)) continue;
-    const time = Date.parse(/[Zz]$|[+-]\d{2}:?\d{2}$/.test(post.published_at) ? post.published_at : post.published_at + 'Z');
-    if (Number.isFinite(time)) timed.push({ post, time, hour: new Date(time + WIB).getUTCHours() });
+    const time = readTime(post.published_at);
+    if (time !== null) timed.push({ post, time, hour: local(time).getUTCHours() });
   }
   if (timed.length < ENOUGH_TIMED) return null;
   const perHour = Array(24).fill(0);
@@ -180,7 +182,7 @@ export function spikeOnset(posts = [], row) {
   const starter = [...named].sort((a, b) => a.at - b.at)[0] || null;
   const biggest = [...named].sort((a, b) => b.count - a.count || a.at - b.at)[0] || null;
   return {
-    startHour, endHour, peakHour, hours: Array.from({ length: ONSET_HOURS }, (_, index) => ({ hour: startHour + index, count: perHour[startHour + index] })),
+    zone: zone().name, startHour, endHour, peakHour, hours: Array.from({ length: ONSET_HOURS }, (_, index) => ({ hour: startHour + index, count: perHour[startHour + index] })),
     posts: windowed.length, timed: timed.length, dateOnly: inside.length - timed.length,
     early: lead ? { platform: lead[0], count: lead[1], of: opening.length } : null,
     platforms: count(windowed, item => item.post.platform || '').map(([id, total]) => ({ id, count: total, share: total / windowed.length })),
@@ -194,7 +196,7 @@ export function spikeOnset(posts = [], row) {
 export function onsetLines(onset, { platformName = name => name } = {}) {
   if (!onset) return [];
   const hour = value => `${two(value)}.00`;
-  const lines = [`Awal lonjakan, ${hour(onset.startHour)} sampai ${hour(onset.endHour)} WIB: ${whole.format(onset.posts)} dari ${whole.format(onset.timed)} posting berjam hari itu, tertinggi pukul ${hour(onset.peakHour)}.`];
+  const lines = [`Awal lonjakan, ${hour(onset.startHour)} sampai ${hour(onset.endHour)} ${onset.zone || zone().name}: ${whole.format(onset.posts)} dari ${whole.format(onset.timed)} posting berjam hari itu, tertinggi pukul ${hour(onset.peakHour)}.`];
   const [most] = onset.platforms;
   if (onset.early && most) lines.push(`Lebih dulu ramai di ${platformName(onset.early.platform)} (${whole.format(onset.early.count)} dari ${whole.format(onset.early.of)} posting pada dua jam pertama); selama enam jam terbanyak dari ${platformName(most.id)} (${percent(most.share)}).`);
   const said = group => quote(group.title) || 'tanpa teks';

@@ -1,4 +1,5 @@
-import { PlatformIcon, platformLabel } from '../components/admin/pulse/PlatformIcon';
+import { platformLabel } from '../components/admin/pulse/PlatformIcon';
+import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 import { spikeAuthor, spikeSegments } from '../lib/pulseTrendSpikes';
 import { formatCount } from '../lib/pulseData';
 
@@ -30,7 +31,7 @@ function Onset({ onset, brief }) {
   const platformTone = part => PLATFORMS.includes(part.id) ? `var(--ps-plat-${part.id})` : 'var(--ps-control-line)';
   return <>
     <div className="tsp-block">
-      <p className="tsp-label">Awal lonjakan, {hour(onset.startHour)}.00 sampai {hour(onset.endHour)}.00 WIB</p>
+      <p className="tsp-label">Awal lonjakan, {hour(onset.startHour)}.00 sampai {hour(onset.endHour)}.00 {onset.zone}</p>
       <ol className="tsp-hours" aria-hidden="true">{onset.hours.map(item => <li key={item.hour} data-peak={item.hour === onset.peakHour ? '' : undefined}>
         <b>{formatCount(item.count)}</b><i style={{ height: `${Math.max(4, item.count / peak * 100)}%` }} /><span>{hour(item.hour)}</span>
       </li>)}</ol>
@@ -56,7 +57,9 @@ function Onset({ onset, brief }) {
 }
 
 function Who({ item }) {
-  return <span className="tsp-who"><PlatformIcon platform={item.platform} size={12} /><span>{spikeAuthor(item)}</span></span>;
+  // The account as it is shown everywhere: its picture (initials when none is known) with the platform mark. Loaded at
+  // once, because the card is only on screen while the pointer rests on the chart.
+  return <span className="tsp-who"><AccountAvatar author={item.author} platform={item.platform} size="xs" eager /><span>{spikeAuthor(item)}</span></span>;
 }
 
 /**

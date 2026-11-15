@@ -1,13 +1,15 @@
 import { Sparkline } from '../components/ui/PulseAnalytics';
 import { PulseBeat, PulseLike } from '../components/ui/PulseMetricIcons';
 import { formatCount } from '../lib/pulseData';
+import { hasClock, localTime, readTime } from '../lib/pulseMeasures';
 import { sentimentColor } from '../lib/pulseChartTheme';
 import { sentimentLabels } from '../lib/pulsePostFilters';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 
 // One small graphic per kind of summary section. Every figure comes from `facts`, which the server
 // counts from stored posts; none is read out of the model's sentences.
-const day = value => { const date = new Date(/T/.test(value) ? value : value + 'T00:00:00Z'); return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: /T/.test(value) ? 'Asia/Jakarta' : 'UTC' }); };
+// A date as the calculation dictionary reads it: in the installation's zone, and a date without a clock stays that date.
+const day = value => { const ms = hasClock(value) ? localTime(value) : readTime(value); return ms === null ? value : new Date(ms).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
 const pct = (value, whole) => whole ? Math.round(value / whole * 100) : 0;
 
 function Figure({ value, label }) { return <div className="sig-figure"><strong>{value}</strong><span>{label}</span></div>; }

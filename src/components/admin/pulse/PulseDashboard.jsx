@@ -38,7 +38,7 @@ import {scopeProjectData,projectPlatformOptions} from '../../../lib/pulseProject
 import ResponseAnalysisPanel, { ResponseAnalysisSummary } from '../../../pulse/ResponseAnalysisPanel';
 import { PulsePanelEmpty, PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
 import { PlatformTag, PulseTag, SentimentTag } from '../../ui/PulseTag';
-import { ProjectPostsContext } from '../../../pulse/projectPosts';
+import { ProjectPostsContext, shareProjectPosts } from '../../../pulse/projectPosts';
 import AccountAvatar from './AccountAvatar';
 import { accountPageSize, accountPlatforms, accountRanking, isAccountFiltered, pageOf, platformFacets, readAccountFilters, socialPlatforms, togglePlatform, withFollowers, withoutAccountFilters, writeAccountFilters } from '../../../lib/pulseAccountFilters';
 import '../../../pulse/ds/accounts-filter.css';
@@ -228,6 +228,9 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const toggleFlagged = on => { const next = new URLSearchParams(searchParams); if (on) next.set('tidakrelevan', '1'); else next.delete('tidakrelevan'); setSearchParams(next, { replace: true }); };
   const scopedData=useMemo(()=>analytics.data&&standalone?scopeProjectData(analytics.data,{from:period.from,to:period.to,platforms:JSON.parse(platformKey),sentiments:carriedSentiment?[carriedSentiment]:null,excludedIds:flaggedSet}):analytics.data,[analytics.data,standalone,period.from,period.to,platformKey,carriedSentiment,flaggedSet]);
   const dropSentiment = () => { const next = new URLSearchParams(searchParams); next.delete('sentiment'); setSearchParams(next); };
+  // The project bar sits above this page and counts from the same posts (its coverage badge): hand them up once loaded.
+  const loadedPosts = standalone && !alertId ? analytics.data?.posts : null;
+  useEffect(() => { if (loadedPosts) shareProjectPosts(topicId, { from: period.from, to: period.to }, loadedPosts); }, [loadedPosts, topicId, period.from, period.to]);
   const availablePlatforms=[...new Set([...projectPlatformOptions,...(analytics.data?.posts||[]).map(p=>p.platform),...(selectedPlatforms||[])])];
   useEffect(() => {
     if (!alertId || !analytics.data) return;

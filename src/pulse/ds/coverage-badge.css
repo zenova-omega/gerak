@@ -1,0 +1,75 @@
+/* Coverage badge (CoverageBadge.jsx): how much of the project bar's selection each kind of figure rests on.
+   One line under the bar's controls: the row of controls is full at a laptop width, and a badge among them would
+   push the buttons to a second row. The strip's room (.pcv-band) is kept whether or not a figure is known, so
+   nothing moves when the figure arrives. The badge is a link to Sumber & Cakupan; the card behind it follows the
+   hover preview pattern (opens after 350ms on hover and on keyboard focus, never on touch, and holds no path that
+   the badge itself does not give). The level is a word and a three-step mark in the accent, not a colour of praise
+   or alarm: it says which figures rest on fewer posts, not how good the project is. */
+.pcv-band { display: flex; align-items: center; min-width: 0; min-height: 20px; margin: 6px 0 -6px; }
+.pcv-band:not(:last-child) { margin-bottom: 6px; }
+.pcv { position: relative; display: inline-flex; min-width: 0; max-width: 100%; }
+.pulse-standalone a.pcv-badge { position: relative; display: inline-flex; align-items: center; gap: 8px; min-width: 0; min-height: 20px; border-radius: 4px; color: var(--ps-muted); font-size: .75rem; line-height: 1.35; text-decoration: none; }
+/* The line is 20px tall; its target is 32px, reaching into the empty space under it. */
+.pulse-standalone a.pcv-badge::after { content: ""; position: absolute; inset: -4px -6px -8px; }
+.pulse-standalone a.pcv-badge:hover .pcv-level { text-decoration: underline; text-underline-offset: 3px; }
+.pulse-standalone a.pcv-badge:focus-visible { outline: var(--ps-control-focus); outline-offset: 3px; }
+.pcv-label { flex: none; white-space: nowrap; }
+.pcv-level { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ps-ink); font-variant-numeric: tabular-nums; }
+.pcv-level b { font-weight: 650; }
+/* Three steps, filled from the left: one for Terbatas, two for Cukup, three for Lengkap. */
+.pcv-mark { display: inline-flex; align-items: flex-end; gap: 2px; flex: none; height: 12px; }
+.pcv-mark > i { width: 3px; border-radius: 1px; border: 1px solid var(--ps-control-line); box-sizing: border-box; }
+.pcv-mark > i:nth-child(1) { height: 6px; }
+.pcv-mark > i:nth-child(2) { height: 9px; }
+.pcv-mark > i:nth-child(3) { height: 12px; }
+.pcv-mark > i[data-on] { border-color: var(--ps-accent); background: var(--ps-accent); }
+
+.pcv-card { position: absolute; z-index: var(--ps-z-dropdown); left: 0; top: calc(100% + 8px); width: min(31rem, calc(100vw - 48px)); padding: 14px 16px; border: 1px solid var(--ps-control-line); border-radius: var(--ps-surface-radius); background: var(--ps-panel); box-shadow: var(--ps-shadow-overlay); color: var(--ps-ink); white-space: normal; visibility: hidden; opacity: 0; transform: translateY(-4px); transition: opacity var(--ps-motion) var(--ps-ease), transform var(--ps-motion) var(--ps-ease), visibility 0s linear var(--ps-motion); }
+.pcv:is(:hover, :focus-within) > .pcv-card { visibility: visible; opacity: 1; transform: none; transition-delay: .35s, .35s, .35s; }
+.pcv-card > strong { display: block; margin-bottom: 6px; font-size: .875rem; font-weight: 650; }
+.pulse-standalone .pcv-card > a { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: .8125rem; font-weight: 600; color: var(--ps-ink); }
+
+.pcv-detail { display: grid; gap: 10px; min-width: 0; }
+.pcv-detail p { margin: 0; max-width: 75ch; font-size: .8125rem; line-height: 1.55; color: var(--ps-muted); }
+.pcv-detail .pcv-says b { color: var(--ps-ink); font-weight: 650; }
+.pcv-scroll { overflow-x: auto; }
+.pulse-standalone .pcv-table, .pcv-table { width: 100%; border-collapse: collapse; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+/* Page styles pad every table cell; this table sets its own. */
+.pulse-standalone .pcv-detail .pcv-table :is(th, td) { padding: 6px 12px 6px 0; border: 0; border-bottom: 1px solid var(--ps-line); background: transparent; text-align: left; font-weight: 400; vertical-align: middle; }
+.pulse-standalone .pcv-detail .pcv-table :is(th, td):last-child { padding-right: 0; }
+.pulse-standalone .pcv-detail .pcv-table thead th { color: var(--ps-muted); font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.pulse-standalone .pcv-detail .pcv-table thead th[data-lowest] { color: var(--ps-ink); }
+.pulse-standalone .pcv-detail .pcv-table tbody th { color: var(--ps-ink); white-space: nowrap; }
+.pulse-standalone .pcv-detail .pcv-table tr.pcv-all :is(th, td) { font-weight: 650; }
+.pulse-standalone .pcv-detail .pcv-table tbody tr:last-child :is(th, td) { border-bottom: 0; }
+.pcv-platform { display: inline-flex; align-items: center; gap: 6px; }
+.pcv-share { display: inline-flex; align-items: center; gap: 8px; }
+.pcv-bar { flex: none; width: 3.5rem; height: 6px; border-radius: 999px; background: var(--ps-soft); overflow: hidden; }
+.pcv-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--ps-accent); }
+.pcv-share > span:last-child { min-width: 2.5rem; }
+.pcv-detail[data-compact] .pcv-bar { width: 2.25rem; }
+.pcv-detail[data-compact] .pcv-share > span:last-child { min-width: 2.25rem; }
+.pcv-detail[data-compact] p { font-size: .75rem; }
+.pcv-short { display: none; }
+/* At phone width the table drops its bars and takes the short column names, so the three shares that set the level
+   fit beside the platform; the dated share, which sets nothing, is the one that may need a sideways scroll. */
+@media (max-width: 520px) {
+  .pcv-detail .pcv-bar { display: none; }
+  .pcv-long { display: none; }
+  .pcv-short { display: inline; }
+  .pcv-share > span:last-child { min-width: 0; }
+  .pulse-standalone .pcv-detail .pcv-table :is(th, td) { padding-right: 10px; }
+  .pulse-standalone .pcv-detail .pcv-table thead th, .pulse-standalone .pcv-detail .pcv-table tr.pcv-all th { white-space: normal; }
+}
+
+/* On Sumber & Cakupan the same detail sits under the source list, in the frame the list uses. */
+.pcv-section { display: grid; gap: 10px; margin-top: 24px; }
+.pcv-section > h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.pcv-section > .pcv-frame { padding: 16px 22px; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-panel); background: var(--ps-panel); min-height: 9.5rem; }
+
+@media (hover: none) { .pcv-card { display: none; } }
+@media (prefers-reduced-motion: reduce) { .pcv-card { transition: none; transform: none; } }
+/* At phone width the card is not opened either: it would be wider than the screen allows, a pointer left resting
+   after a tap in the menu would open it over the buttons below the bar, and the badge already leads to the detail. */
+@media (max-width: 700px) { .pcv-card { display: none; } .pcv-band { min-height: 44px; margin: 0; } .pulse-standalone a.pcv-badge { min-height: 44px; } .pulse-standalone a.pcv-badge::after { content: none; } .pcv-label { display: none; } .pcv-section > .pcv-frame { padding: 14px 16px; } }
+@media print { .pcv-card, .pcv-mark { display: none; } }

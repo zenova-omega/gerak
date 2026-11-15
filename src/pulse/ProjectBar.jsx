@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useInRouterContext, useNavigate, useSearchParams } from 'react-router-dom';
 import { FolderOpen, SlidersHorizontal, Plus, Search, ArrowRight, CalendarDays, Layers, ChevronDown } from 'lucide-react';
 import { useTopics } from '../hooks/usePulse';
@@ -19,6 +19,9 @@ import useProjectPlatforms from './useProjectPlatforms';
 import { PulseTag, PlatformTag } from '../components/ui/PulseTag';
 import InfoTip from './InfoTip';
 import {projectPlatformOptions} from '../lib/pulseProjectFilters';
+import {coverage} from '../lib/pulseReadings';
+import CoverageBadge from './CoverageBadge';
+import useProjectSelection from './useProjectSelection';
 
 export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly }) {
   const [label, setLabel] = useState(topic?.label || '');
@@ -146,6 +149,11 @@ export default function ProjectBar({ readOnly = false }) {
   function togglePlatform(platform){ const current=platforms||[]; const next=current.includes(platform)?current.filter(p=>p!==platform):[...current,platform]; setPlatforms(!next.length||platformChoices.every(p=>next.includes(p))?null:next); }
   const [period] = useProjectPeriod(id);
   const [scopeOpen, setScopeOpen] = useState(false);
+  // coverage_v1 of this bar's selection, from the posts the page below has loaded. The bar fetches nothing for it:
+  // while no page has loaded the posts, there is no badge. The badge is a strip under the controls, whose row is
+  // full; the strip's room is always there, so nothing moves when the figure arrives.
+  const selection = useProjectSelection(topic ? id : '');
+  const coverageReading = useMemo(() => (selection.posts ? coverage(selection.posts) : null), [selection.posts]);
   const filtered = Boolean(period.from || period.to) || platforms !== null;
   const platformSummary = platforms === null ? 'Semua platform' : platforms.length <= 2 ? platforms.map(platform => platform === 'unknown' ? 'Lainnya' : platformLabel(platform)).join(', ') || 'Tanpa platform' : `${platforms.length} platform`;
   function findInProject(event) {
@@ -170,6 +178,7 @@ export default function ProjectBar({ readOnly = false }) {
       </form>}
       <div className="ps-project-actions">{topic && <PulseButton aria-expanded={mode === 'edit'} onClick={() => setMode(mode === 'edit' ? '' : 'edit')}><SlidersHorizontal size={16} />Pengaturan</PulseButton>}{!topic && <Link className="ps-project-search-link" to={'/pulse/search' + (params.get('q') ? '?' + new URLSearchParams({q:params.get('q')}) : '')}><Search size={16} aria-hidden="true"/>Pencarian cepat</Link>}{!readOnly && <PulseButton aria-expanded={mode === 'new'} onClick={() => setMode(mode === 'new' ? '' : 'new')}><Plus size={16} />Project baru</PulseButton>}</div>
     </div>
+    {topic && <div className="pcv-band"><CoverageBadge reading={coverageReading} to={'/pulse/sources?' + new URLSearchParams({ topic: id })} /></div>}
     {resource.error ? <PulseNotice role="alert" tone="warning">Daftar project gagal dimuat. <PulseButton onClick={resource.refetch}>Coba lagi</PulseButton></PulseNotice> : topic ? null : <div className="ps-project-start">
       <p className="ps-project-help">Pilih project atau mulai dengan keyword baru melalui Pencarian cepat.</p>
       {resource.loading ? <p role="status">Memuat daftar project…</p> : <>

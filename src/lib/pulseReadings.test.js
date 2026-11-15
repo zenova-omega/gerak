@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { RULES, RULE_TEXT, words, postTerms, periodBefore, coverage, termShift, hourGrid, concentration, postsWithTerm, leadingAccounts } from './pulseReadings.js';
+import { RULES, RULE_TEXT, words, postTerms, periodBefore, coverage, termShift, hourGrid, concentration, postsWithTerm, leadingAccounts, postsInCell } from './pulseReadings.js';
 import { RULES as MEASURES, setZone } from './pulseMeasures.js';
 import { STOPWORDS, wordFrequency } from './pulseInfographics.js';
 import { previousPeriod } from './pulseOverview.js';
@@ -95,4 +95,17 @@ test('the accounts behind a figure are the first of the same ranking', () => {
     if (reading.posts.reach80) assert.equal(leadingAccounts(rows, reading.posts.reach80.accounts).size, reading.posts.reach80.accounts);
   }
   assert.equal(leadingAccounts(null, 3).size, 0);
+});
+
+test('the posts behind a cell of the hour grid are the ones the cell counts', () => {
+  for (const item of CASES.hour_grid) inZone(item, () => {
+    const rows = posts(item.in).map((post, index) => ({ ...post, id: index })), grid = hourGrid(rows);
+    let seen = 0;
+    for (const row of grid.rows) row.cells.forEach((count, hour) => {
+      const behind = postsInCell(rows, row, hour);
+      assert.equal(behind.length, count, `${item.note}: ${row.day ?? row.weekday} ${hour}`);
+      seen += behind.length;
+    });
+    assert.equal(seen, grid.clocked, item.note);
+  });
 });

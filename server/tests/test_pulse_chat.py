@@ -297,7 +297,7 @@ async def test_the_answer_is_shaped_once_on_the_server_tags_out_charts_and_cited
     shaped = chat.shape_answer(raw, context)
     assert shaped['answer'] == 'Isu utamanya **pengunduran diri** [P1].\n\n- Kelompok terbesar [I1] berisi **1 posting**.\n- Sentimen didominasi netral.'
     assert [chart['key'] for chart in shaped['charts']] == ['sentimen', 'platform'], 'at most two, each once, unknown names dropped'
-    assert shaped['groups'] == [{'code': 'I1', 'title': 'Kelompok utama', 'posts': 1, 'accounts': 1, 'interactions': 1000, 'first_published_at': context['last_7_days']['conversation_groups'][0]['first_published_at']}]
+    assert shaped['groups'] == [{'code': 'I1', 'title': 'Kelompok utama', 'posts': 1, 'accounts': 1, 'interactions': 1000, 'interaction_posts': 1, 'first_published_at': context['last_7_days']['conversation_groups'][0]['first_published_at']}]
     plain = chat.shape_answer('  Jawaban tanpa tanda apa pun [I9].  ', context)
     assert plain == {'answer': 'Jawaban tanpa tanda apa pun [I9].', 'charts': [], 'groups': []}, 'a code the data does not hold cites nothing'
     for wanted in ('**', '"- "', '[GRAFIK:', 'sentimen7', '12 Nov'):
@@ -362,3 +362,64 @@ async def test_prompt_and_data_block_name_the_installation_zone(db, monkeypatch)
     prompt = chat.build_prompt(context, 'Apa yang ramai?', [])
     assert 'WIT\nPERTANYAAN ANALIS' in prompt and ' WIB' not in prompt
     assert chat.chart_data(context, 'harian')['title'] == 'Posting per hari (WIT)'
+
+
+@pytest.mark.asyncio
+async def test_data_block_follows_interactions_v1_and_never_reads_unknown_as_zero(db):
+    """Review Focus 3 and 4 on Tanya AI's data block: a digit string counts, a float, a negative number and true do
+    not; a post with nothing reported and no stored total is unknown ("—"), and a group or total with no known
+    interaction is unknown too. Ordering: known first, larger first, then earlier publication, then id."""
+    topic = WatchTopic(id='iv-topic', label='Interaksi', query='interaksi', is_active=False)
+    issue = Issue(id='iv-issue', topic_id='iv-topic', title='Tanpa angka')
+    db.add_all([topic, issue]); await db.flush()
+    def post(id, metrics, hours, issue_id=None):
+        return SourceItem(id=id, topic_id='iv-topic', issue_id=issue_id, source='xpoz', platform='x', url=f'https://x.example/{id}',
+                          text=f'posting {id}', author=f'akun_{id}', published_at=NOW - timedelta(hours=hours), metrics=metrics)
+    db.add_all([post('none', {'likes': True, 'comments': 2.5, 'shares': -1, 'views': 50}, 30, 'iv-issue'),
+                post('late', {'likes': '7'}, 5), post('early', {'likes': 7}, 10), post('stored', {'views': 9, 'engagement': 3}, 20)])
+    await db.flush()
+    built = await chat.build_context(db, 'iv-topic', NOW)
+    context = built['context']
+    posts = {p['author']: p for p in context['evidence_posts']}
+    assert posts['akun_none']['interactions'] is None and posts['akun_none']['likes'] is None
+    assert posts['akun_late']['interactions'] == 7 and posts['akun_late']['likes'] == 7
+    assert posts['akun_stored']['interactions'] == 3
+    assert [p['author'] for p in context['evidence_posts']] == ['akun_early', 'akun_late', 'akun_stored', 'akun_none']
+    assert context['totals']['interactions'] == 17 and context['totals']['interaction_posts'] == 3
+    group = context['last_7_days']['conversation_groups'][0]
+    assert group['interactions'] is None
+    text = chat.render_context(context)
+    assert 'TOTAL: interaksi 17 dari 3 posting' in text
+    assert 'interaksi None' not in text
+    assert any('akun_none' in line and 'interaksi —' in line for line in text.splitlines())
+    assert any('"Tanpa angka"' in line and 'interaksi —' in line for line in text.splitlines())
+
+
+@pytest.mark.asyncio
+async def test_data_block_groups_carry_their_post_count_and_an_all_unknown_project_keeps_publication_order(db):
+    """Review Focus 4 on Tanya AI: no post reports an interaction, so every total is unknown and the evidence posts
+    follow publication order (earlier first, then id)."""
+    topic = WatchTopic(id='nu-topic', label='Kosong', query='kosong', is_active=False)
+    issue = Issue(id='nu-issue', topic_id='nu-topic', title='Kelompok kosong')
+    db.add_all([topic, issue]); await db.flush()
+    def post(id, hours, metrics):
+        return SourceItem(id=id, topic_id='nu-topic', issue_id='nu-issue', source='xpoz', platform='x', url=f'https://x.example/{id}',
+                          text=f'posting {id}', author=f'akun_{id}', published_at=NOW - timedelta(hours=hours), metrics=metrics)
+    db.add_all([post('b', 10, {'views': 3}), post('c', 10, {}), post('a', 30, {'likes': True}), post('d', 5, {'comments': -2})])
+    await db.flush()
+    context = (await chat.build_context(db, 'nu-topic', NOW))['context']
+    assert [p['author'] for p in context['evidence_posts']] == ['akun_a', 'akun_b', 'akun_c', 'akun_d']
+    assert (context['totals']['interactions'], context['totals']['interaction_posts']) == (None, 0)
+    group = context['conversation_groups_in_scope'][0]
+    assert (group['interactions'], group['interaction_posts']) == (None, 0)
+    text = chat.render_context(context)
+    assert 'TOTAL: interaksi — |' in text
+
+
+@pytest.mark.asyncio
+async def test_data_block_group_total_says_over_how_many_posts(db):
+    await seeded(db)
+    context = (await chat.build_context(db, 'chat-topic', NOW))['context']
+    group = context['last_7_days']['conversation_groups'][0]
+    assert (group['interactions'], group['interaction_posts']) == (1000, 1)
+    assert any('"Kelompok utama"' in line and 'interaksi 1000 dari 1 posting' in line for line in chat.render_context(context).splitlines())

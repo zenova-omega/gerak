@@ -15,8 +15,9 @@ from ..models.pulse import Issue, SourceItem, WatchTopic
 from ..models.pulse_monitor import MetricSnapshot, PulseAlert
 from ..models.pulse_profiles import PulseAccountProfile
 from .pulse_places import context_lines as place_lines, location_summary, place_summary
-from .pulse_growth import ENGAGEMENT, _interval, _values
+from .pulse_growth import _interval, _values
 from . import pulse_measures
+from .pulse_spikes import FLOORS, RULE_ID, daily_series, keyed_spikes
 from .pulse_measures import has_clock, local_day, local_time
 
 EVIDENCE_POSTS = 8
@@ -36,8 +37,10 @@ _SYSTEM = (
     'Grafik digambar sistem dari DATA, jadi jangan menulis ulang semua angkanya. '
     'Rujuk bukti dengan kode seperti [P1] untuk posting atau [I1] untuk kelompok percakapan; jangan mengarang kode. '
     'Jika DATA tidak cukup untuk menjawab, katakan apa yang tidak tersedia dan data apa yang diperlukan. '
-    'Waktu lonjakan adalah waktu PENGAMATAN crawler, bukan waktu pasti kejadian; katakan itu bila relevan. '
-    '"Viral" di sini berarti lonjakan interaksi tercepat yang teramati antara dua pengamatan, bukan klaim terverifikasi. '
+    'Waktu kenaikan interaksi adalah waktu PENGAMATAN crawler, bukan waktu pasti kejadian; katakan itu bila relevan. '
+    '"Viral" di sini berarti kenaikan interaksi tercepat pada satu posting yang teramati antara dua pengamatan, bukan klaim terverifikasi. '
+    '"Lonjakan" hanya dipakai untuk hari pada baris HARI LONJAKAN POSTING: hari yang jumlah postingnya jauh di atas hari biasa pada cakupan ini. '
+    'Bila baris itu berisi "tidak ada", jangan menyebut lonjakan; hari dengan posting terbanyak disebut hari teramai. '
     'Jangan menyimpulkan sebab-akibat, koordinasi, jumlah orang unik, atau jangkauan. Tanpa format tabel.'
     ' Baris TEMPAT YANG DISEBUT adalah tempat yang dibicarakan dalam teks, bukan lokasi penulis atau asal penyebaran; '
     'baris LOKASI PROFIL adalah keterangan pemilik akun X, bukan posisi saat memposting. Sebutkan batas itu bila menjawab soal daerah.'
@@ -79,15 +82,27 @@ def _published(value):
 
 
 def _number(metrics, key):
-    value = (metrics or {}).get(key)
-    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+    return pulse_measures.reported((metrics or {}).get(key))
 
 
 def _engagement(metrics):
-    parts = [_number(metrics, key) for key in ENGAGEMENT]
-    if all(part is None for part in parts):
-        return _number(metrics, 'engagement')
-    return sum(part for part in parts if part is not None)
+    """interactions_v1; the name stays because pulse_summary imports it."""
+    return pulse_measures.interactions(metrics)
+
+
+def _known_interactions(items):
+    """interactions_v1 over posts: (sum over the posts whose interactions are known, how many); (None, 0) when none is."""
+    known = [n for n in (_engagement(item.metrics) for item in items) if n is not None]
+    return (sum(known) if known else None), len(known)
+
+
+def _by_interactions(item):
+    return pulse_measures.interaction_sort_key(_engagement(item.metrics), item.published_at, item.id)
+
+
+def _figure(value):
+    """A figure for the data block: unknown is "—", never 0 or None."""
+    return '—' if value is None else value
 
 
 def _sentiment(metrics):
@@ -154,8 +169,8 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
                 titles[issue.id] = issue.title
 
     # Evidence posts: the focus post, then highest interaction overall and within the last 7 days.
-    ranked = sorted(items, key=lambda item: (_engagement(item.metrics) or -1), reverse=True)
-    recent_ranked = sorted(week, key=lambda item: (_engagement(item.metrics) or -1), reverse=True)
+    ranked = sorted(items, key=_by_interactions)
+    recent_ranked = sorted(week, key=_by_interactions)
     chosen = []
     focus = next((item for item in items if item.id == post_id), None) if post_id else None
     if post_id and focus is None:
@@ -197,7 +212,7 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
                         'posts': len(members), 'accounts': len({(item.platform, item.author) for item in members if item.author}),
                         'platforms': sorted({item.platform or 'unknown' for item in members}),
                         'first_published_at': _published(first), 'peak_day': by_day.most_common(1)[0][0] if by_day else None,
-                        'interactions': sum(_engagement(item.metrics) or 0 for item in members),
+                        'interactions': _known_interactions(members)[0], 'interaction_posts': _known_interactions(members)[1],
                         'sentiment': dict(Counter(_sentiment(item.metrics) for item in members)),
                         'example_posts': [code[item.id] for item in members if item.id in code][:3]})
         for index, row in enumerate(out, 1):
@@ -224,10 +239,14 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
         'now_wib': _wib(clock),
         'scope': {'from': _wib(start), 'to': _wib(end), 'platforms': platforms or 'all',
                   'posts': len(items), 'posts_without_date': len(items) - len(dated), 'truncated': truncated},
-        'totals': {'interactions': sum(_engagement(item.metrics) or 0 for item in items),
+        'totals': {'interactions': _known_interactions(items)[0], 'interaction_posts': _known_interactions(items)[1],
                    'platforms': dict(Counter(item.platform or 'unknown' for item in items)),
                    'sentiment': dict(Counter(_sentiment(item.metrics) for item in items))},
         'posts_per_day_wib': dict(sorted(days.items())[-21:]),
+        # Spike days by the product's one rule (pulse_spikes), read over the days the trend chart draws for the same
+        # scope: a day without posts counts as zero and a chosen period is covered in full. The summary reads them from here.
+        'spikes': {'rule': RULE_ID, 'days': [{'date': spike['key'], 'posts': spike['value'], 'usual': spike['usual'], 'times': spike['times']}
+                                             for spike in keyed_spikes(daily_series(days, _wib_day(start) if start else None, _wib_day(end) if end else None), FLOORS['posts'])]},
         'last_7_days': {'from': _wib(week_start), 'to': _wib(now), 'posts': len(week),
                         'platforms': dict(Counter(item.platform or 'unknown' for item in week)),
                         'sentiment': dict(Counter(_sentiment(item.metrics) for item in week)),
@@ -258,6 +277,13 @@ def _tones(mapping):
     return _counts({TONE_WORDS.get(key, key): value for key, value in mapping.items()})
 
 
+def spike_days_line(days):
+    """The spike days as one line of DATA. The system text tells the model that "lonjakan" means these days and nothing else."""
+    return 'HARI LONJAKAN POSTING (hari yang jumlah postingnya jauh di atas hari biasa pada cakupan ini): ' + ('; '.join(
+        f"{row['date']} {row['posts']} posting, " + (f"{row['times']:.1f} kali hari biasa".replace('.', ',') if row['times'] else 'hari lain umumnya kosong')
+        for row in days) or 'tidak ada')
+
+
 def render_context(context):
     """Plain lines instead of JSON: the same facts in roughly a third of the tokens.
 
@@ -270,24 +296,25 @@ def render_context(context):
         f"PROJECT: {context['project']['name']} | query: {context['project']['query']}",
         f"CAKUPAN: {scope['posts']} posting | periode {scope['from'] or 'awal data'} s.d. {scope['to'] or 'akhir data'} | platform {scope['platforms'] if isinstance(scope['platforms'], str) else ', '.join(scope['platforms'])}"
         + (f" | {scope['posts_without_date']} tanpa tanggal" if scope['posts_without_date'] else '') + (' | dibatasi posting terbaru' if scope['truncated'] else ''),
-        f"TOTAL: interaksi {context['totals']['interactions']} | platform: {_counts(context['totals']['platforms'])} | sentimen: {_tones(context['totals']['sentiment'])}",
+        f"TOTAL: interaksi {_figure(context['totals']['interactions'])}" + (f" dari {context['totals']['interaction_posts']} posting" if context['totals'].get('interaction_posts') else '') + f" | platform: {_counts(context['totals']['platforms'])} | sentimen: {_tones(context['totals']['sentiment'])}",
         f"POSTING PER HARI ({_zone_name()}): {_counts(context['posts_per_day_wib'])}",
+        spike_days_line(context['spikes']['days']),
         f"7 HARI TERAKHIR ({week['from']} s.d. {week['to']}): {week['posts']} posting | platform: {_counts(week['platforms'])} | sentimen: {_tones(week['sentiment'])}",
     ]
     def groups(title, rows):
         lines.append(title)
         for row in rows:
-            lines.append(f"- {row['code']} \"{row['title']}\" | {row['posts']} posting, {row['accounts']} akun | {'/'.join(row['platforms'])} | mulai {row['first_published_at']} | puncak {row['peak_day']} | interaksi {row['interactions']} | sentimen: {_tones(row['sentiment'])}"
+            lines.append(f"- {row['code']} \"{row['title']}\" | {row['posts']} posting, {row['accounts']} akun | {'/'.join(row['platforms'])} | mulai {row['first_published_at']} | hari teramai {row['peak_day']} | interaksi {_figure(row['interactions'])}{f" dari {row['interaction_posts']} posting" if row.get('interaction_posts') else ''} | sentimen: {_tones(row['sentiment'])}"
                          + (f" | contoh {' '.join(row['example_posts'])}" if row['example_posts'] else ''))
         if not rows:
             lines.append('- tidak ada')
     groups('KELOMPOK PERCAKAPAN 7 HARI TERAKHIR:', week['conversation_groups'])
-    lines.append('POSTING BUKTI (interaksi tertinggi; "naik" = lonjakan tercepat antara dua pengamatan crawler):')
+    lines.append('POSTING BUKTI (interaksi tertinggi; "naik" = kenaikan interaksi tercepat antara dua pengamatan crawler):')
     for post in context['evidence_posts']:
         growth, fastest = post['observed_growth'], post['observed_growth']['fastest_interval']
         metrics = ' '.join(f"{label} {post[key]}" for key, label in (('likes', 'suka'), ('comments', 'komentar'), ('shares', 'bagikan'), ('views', 'tayangan')) if post[key] is not None)
-        lines.append(f"- {post['code']}{' (POSTING FOKUS)' if post['focus'] else ''} {post['author'] or 'tanpa nama'} | {post['platform']} | terbit {post['published_at']} | interaksi {post['interactions']} ({metrics or 'rincian tidak tersedia'}) | sentimen {TONE_WORDS.get(post['sentiment'], post['sentiment'])}"
-                     + (f" | naik +{fastest['added_interactions']} antara {fastest['from']} dan {fastest['to']} ({fastest['rate_per_hour']}/jam)" if fastest else f" | riwayat metrik: {growth['observations']} pengamatan, lonjakan belum dapat dihitung")
+        lines.append(f"- {post['code']}{' (POSTING FOKUS)' if post['focus'] else ''} {post['author'] or 'tanpa nama'} | {post['platform']} | terbit {post['published_at']} | interaksi {_figure(post['interactions'])} ({metrics or 'rincian tidak tersedia'}) | sentimen {TONE_WORDS.get(post['sentiment'], post['sentiment'])}"
+                     + (f" | naik +{fastest['added_interactions']} antara {fastest['from']} dan {fastest['to']} ({fastest['rate_per_hour']}/jam)" if fastest else f" | riwayat metrik: {growth['observations']} pengamatan, kenaikan belum dapat dihitung")
                      + (f" | pertumbuhan pertama teramati {growth['first_growth_observed_at']}" if growth['first_growth_observed_at'] else '')
                      + f" | teks: {post['text']}")
     lines.extend(place_lines(context['places']['named'], context['places']['profiles']))
@@ -364,7 +391,7 @@ def shape_answer(answer, context):
         row = by_code.get(code)
         if row and all(group['code'] != code for group in groups):
             groups.append({'code': code, 'title': row['title'], 'posts': row['posts'], 'accounts': row['accounts'],
-                           'interactions': row['interactions'], 'first_published_at': row['first_published_at']})
+                           'interactions': row['interactions'], 'interaction_posts': row.get('interaction_posts'), 'first_published_at': row['first_published_at']})
     return {'answer': text, 'charts': charts, 'groups': groups}
 
 

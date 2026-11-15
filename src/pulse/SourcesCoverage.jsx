@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { pageMeta } from './pageMeta';
 import { PulsePageHead } from '../components/ui/PulsePatterns';
 import { useSearchParams } from 'react-router-dom';
@@ -9,6 +9,9 @@ import { balanceAgeHours, canManageSources, collectionBlock, collectionResult, f
 import './sources-coverage.css';
 import { PulseBadge, PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import SourceDisclosure from './SourceDisclosure';
+import { CoverageDetail } from './CoverageBadge';
+import useProjectSelection from './useProjectSelection';
+import { coverage } from '../lib/pulseReadings';
 
 const names = { x: 'X', instagram: 'Instagram', tiktok: 'TikTok', youtube: 'YouTube', news: 'Berita', threads:'Threads', reddit:'Reddit' };
 export default function SourcesCoverage({ user, readOnly = false, projectPicker = true }) {
@@ -43,6 +46,10 @@ export default function SourcesCoverage({ user, readOnly = false, projectPicker 
     return () => { active = false; requests.current++; };
   }, [topicId, reload]);
   const visible = state.topicId === topicId ? state : { loading: true, data: null, error: null };
+  // coverage_v1 of the project bar's selection. This page holds no posts of its own, so it takes the ones a project
+  // page shared, or loads them once the way those pages do.
+  const selection = useProjectSelection(topicId, { load: true });
+  const coverageReading = useMemo(() => (selection.posts ? coverage(selection.posts) : null), [selection.posts]);
   const data = visible.data;
   const busy = Boolean(action) || visible.loading;
 
@@ -94,7 +101,14 @@ export default function SourcesCoverage({ user, readOnly = false, projectPicker 
         {data.account?.error && <PulseNotice tone="warning">Metadata akun belum dapat diverifikasi. Hubungi administrator.</PulseNotice>}
         {data.budget?.blocked_reason && <PulseNotice tone="warning" role="status">Pengumpulan diblokir. Minta administrator memeriksa status pengumpulan di Monitor.</PulseNotice>}
       </section>
-      <section aria-labelledby="sc-coverage-heading"><div className="sc-section-heading"><h2 id="sc-coverage-heading">Cakupan sumber</h2><span>{data.sources?.length || 0} sumber</span></div><p className="sc-description">Buka sumber untuk melihat kelengkapan metrik, akses, dan riwayat pengambilan.</p><div className="sc-source-list">{(data.sources || []).map(source => <SourceDisclosure key={`${topicId}:${source.platform}`} source={source} budget={data.budget} topicId={!topics.error && !topics.loading ? selectedTopic?.id : null} readOnly={isReadOnly} busy={busy} onCollect={runAction} />)}</div>{!data.sources?.length && <PulseNotice>Belum ada informasi sumber. Perbarui tampilan atau minta admin memeriksa koneksi.</PulseNotice>}<p className="sc-footnote">Cakupan: {selectedTopic?.label || (topicId ? 'Topik tidak tersedia' : 'Semua topik')}. Data tersimpan bukan keseluruhan percakapan publik. Membuka detail tidak memakai kuota.</p></section>
+      <section aria-labelledby="sc-coverage-heading"><div className="sc-section-heading"><h2 id="sc-coverage-heading">Cakupan sumber</h2><span>{data.sources?.length || 0} sumber</span></div><p className="sc-description">Buka sumber untuk melihat kelengkapan metrik, akses, dan riwayat pengambilan.</p><div className="sc-source-list">{(data.sources || []).map(source => <SourceDisclosure key={`${topicId}:${source.platform}`} source={source} budget={data.budget} topicId={!topics.error && !topics.loading ? selectedTopic?.id : null} readOnly={isReadOnly} busy={busy} onCollect={runAction} />)}</div>{!data.sources?.length && <PulseNotice>Belum ada informasi sumber. Perbarui tampilan atau minta admin memeriksa koneksi.</PulseNotice>}<p className="sc-footnote">Cakupan: {selectedTopic?.label || (topicId ? 'Topik tidak tersedia' : 'Semua topik')}. Data tersimpan bukan keseluruhan percakapan publik. Membuka detail tidak memakai kuota.</p>
+        {topicId && <div className="pcv-section" role="group" aria-labelledby="sc-selection-heading"><h3 id="sc-selection-heading">Kelengkapan data pada pilihan ini</h3>
+          <p className="sc-description">Dihitung dari posting pada periode dan platform yang dipilih di bilah project, bukan dari seluruh posting tersimpan.</p>
+          <div className="pcv-frame">{coverageReading?.level ? <CoverageDetail reading={coverageReading} />
+            : selection.status === 'error' ? <p className="sc-small" role="alert">Posting pada pilihan ini belum dapat dimuat. Perbarui tampilan untuk mencoba lagi.</p>
+            : selection.status === 'ready' ? <p className="sc-small">Belum ada posting pada pilihan ini.</p>
+            : <p className="sc-small" role="status">Menghitung kelengkapan dari posting pada pilihan ini…</p>}</div>
+        </div>}</section>
     </>}
   </section>;
 }

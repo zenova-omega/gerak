@@ -262,3 +262,32 @@ def test_the_model_is_told_which_days_the_word_lonjakan_is_for():
     told = pulse_summary.BASE + ''.join(text for _, text in pulse_summary.FORMATS.values())
     # The post whose interactions grew fastest is its own thing and is no longer called a "lonjakan".
     assert 'lonjakan interaksi' not in told and 'lonjakan tercepat' not in told
+
+
+# ── Tanya AI reads the same rule ────────────────────────────────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_tanya_ai_is_given_the_spike_days_by_the_rule_and_the_summary_carries_that_line_once(db):
+    from datetime import datetime
+    from app.services import pulse_chat, pulse_summary
+    topic = await project_with_posts_per_day(db, 'Tanya lonjakan', {8: 2, 9: 3, 10: 12, 11: 4, 12: 3})
+    built = await pulse_chat.build_context(db, topic.id, datetime(2026, 11, 13))
+    assert built['context']['spikes'] == {'rule': 'spike_v1', 'days': [{'date': '2026-11-10', 'posts': 12, 'usual': 3, 'times': 4}]}
+    text = pulse_chat.render_context(built['context'])
+    assert spike_line(text).endswith(': 2026-11-10 12 posting, 4,0 kali hari biasa')
+    # In the data the busiest day of a group and the fastest growth of a post have their own words.
+    assert 'puncak' not in text.lower()
+    assert '"naik" = kenaikan interaksi tercepat antara dua pengamatan crawler' in text
+    assert 'lonjakan belum dapat dihitung' not in text
+    # The summary is built on the same context: it reads the line from there and does not write a second one.
+    data = (await pulse_summary.build_summary_input(db, topic.id, datetime(2026, 11, 13)))['data']
+    assert data.count('HARI LONJAKAN POSTING') == 1
+
+
+def test_tanya_ai_keeps_the_word_lonjakan_for_what_the_rule_found():
+    from app.services import pulse_chat
+    told = pulse_chat.system_prompt()
+    assert 'HARI LONJAKAN POSTING' in told and 'hari teramai' in told
+    assert 'lonjakan interaksi' not in told and 'Waktu lonjakan' not in told
+    assert 'Waktu kenaikan interaksi adalah waktu PENGAMATAN crawler' in told
+    assert 'WIB' not in told.split('Waktu kenaikan interaksi')[1][:400], 'the zone is named by the installation, not written into the sentence'

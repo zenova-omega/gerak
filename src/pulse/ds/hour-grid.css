@@ -1,0 +1,50 @@
+/* Hour grid (HourGrid.jsx): when posts were published, one row per day or weekday and one column per hour of the
+   installation's zone. One hue only, from soft to the full accent, because there is one quantity; the key under the
+   grid says in numbers what each step stands for, every cell names its own count, and the busiest cell is written
+   out as a sentence, so nothing rests on telling two shades apart. The grid is a real table: its headers are the
+   text alternative. On a narrow panel it scrolls sideways inside itself and the row names stay in view. */
+.phg { display: grid; gap: 12px; min-width: 0;
+  --phg-1: color-mix(in oklab, var(--ps-accent) 22%, var(--ps-panel));
+  --phg-2: color-mix(in oklab, var(--ps-accent) 46%, var(--ps-panel));
+  --phg-3: color-mix(in oklab, var(--ps-accent) 72%, var(--ps-panel));
+  --phg-4: var(--ps-accent); }
+.pi-layout > .pi-hours[data-grid] { grid-column: 1 / -1; }
+.phg p { margin: 0; max-width: none; }
+.phg-says { font-size: .875rem; line-height: 1.5; color: var(--ps-muted); }
+.phg-says b { color: var(--ps-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.phg-scroll { overflow-x: auto; padding: 2px 2px 6px; margin: -2px; border-radius: var(--ps-radius-control, 8px); }
+.phg-scroll:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .phg .phg-grid, .phg-grid { width: 100%; min-width: 660px; table-layout: fixed; border-collapse: separate; border-spacing: 3px; font-size: .75rem; font-variant-numeric: tabular-nums; }
+/* Page styles give every table cell padding and a rule, and every button a fill; the grid's cells take neither. */
+.pulse-standalone .phg .phg-grid :is(th, td) { padding: 0; border: 0; }
+.pulse-standalone .phg .phg-grid thead th { height: 20px; overflow: visible; text-align: left; white-space: nowrap; font-weight: 400; color: var(--ps-muted); background: transparent; }
+.pulse-standalone .phg .phg-grid th.phg-row { position: sticky; left: 0; z-index: 1; width: 6rem; padding-right: 8px; overflow: hidden; text-overflow: ellipsis; text-align: left; white-space: nowrap; font-weight: 400; color: var(--ps-ink); background: var(--ps-surface-bg, var(--ps-panel)); }
+.pulse-standalone .phg .phg-grid thead th.phg-row { color: var(--ps-muted); }
+.pulse-standalone .phg .phg-grid .phg-sum { width: 3.5rem; padding-left: 8px; text-align: right; color: var(--ps-ink); font-weight: 600; }
+.pulse-standalone .phg .phg-grid thead .phg-sum { color: var(--ps-muted); font-weight: 400; }
+
+.phg .phg-cell { display: block; width: 100%; height: 24px; border-radius: var(--ps-radius-mark, 3px); background: var(--ps-soft); }
+.phg .phg-cell[data-level="1"] { background: var(--phg-1); }
+.phg .phg-cell[data-level="2"] { background: var(--phg-2); }
+.phg .phg-cell[data-level="3"] { background: var(--phg-3); }
+.phg .phg-cell[data-level="4"] { background: var(--phg-4); }
+.pulse-standalone button.phg-cell { min-width: 0; min-height: 0; padding: 0; border: 0; box-shadow: none; color: inherit; cursor: pointer; }
+.pulse-standalone button.phg-cell[aria-disabled=true] { cursor: default; }
+.pulse-standalone button.phg-cell:not([aria-disabled=true]):hover { outline: 2px solid var(--ps-ink); outline-offset: 0; }
+.pulse-standalone button.phg-cell:focus-visible { outline: var(--ps-control-focus); outline-offset: 1px; }
+
+.phg-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.phg-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: .75rem; color: var(--ps-muted); }
+.phg-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0; list-style: none; font-variant-numeric: tabular-nums; }
+.phg-legend li { display: inline-flex; align-items: center; gap: 5px; }
+.phg-legend i { flex: none; width: 14px; height: 14px; border-radius: var(--ps-radius-mark, 3px); background: var(--ps-soft); }
+.phg-legend i[data-level="1"] { background: var(--phg-1); }
+.phg-legend i[data-level="2"] { background: var(--phg-2); }
+.phg-legend i[data-level="3"] { background: var(--phg-3); }
+.phg-legend i[data-level="4"] { background: var(--phg-4); }
+.phg-note { font-size: .75rem; line-height: 1.6; color: var(--ps-muted); }
+.phg-empty { padding: 18px; border-radius: 6px; background: var(--ps-soft); color: var(--ps-muted); font-size: .8125rem; line-height: 1.7; }
+
+@media (max-width: 700px) { .phg .phg-cell { height: 44px; } .pulse-standalone .phg .phg-grid { min-width: 1180px; } .pulse-standalone .phg .phg-grid th.phg-row { width: 5.25rem; } }
+@media print { .phg-scroll { overflow: visible; } .pulse-standalone .phg .phg-grid { min-width: 0; } }

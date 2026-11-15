@@ -109,3 +109,14 @@ test('a share that exists never prints as 0%', async () => {
   assert.match(block, /<th scope="row">1<\/th><td>&lt;1%<\/td><td>&lt;1%<\/td>/);
   assert.doesNotMatch(text(block.match(/<table[\s\S]*?<\/table>/)[0]), / 0%/);
 });
+
+test('an account is shown the one way accounts are shown: its picture (or initials) with the platform mark, beside its name', async () => {
+  const html = await render({ posts: twelve(2) });
+  const rows = [...html.matchAll(/<ul class="ac-rows"[^>]*>([\s\S]*?)<\/ul>/g)].map(match => match[1]);
+  assert.equal(rows.length, 2);
+  for (const list of rows) {
+    assert.equal((list.match(/class="ps-profile-avatar psi-avatar psi-xs"/g) || []).length, 3, 'one per named row');
+    assert.doesNotMatch(list.match(/<li class="ac-rest">[\s\S]*?<\/li>/)[0], /psi-avatar/, 'the rest is nobody');
+  }
+  assert.match(rows[0], /psi-avatar[\s\S]*?a01 · X/, 'the picture comes before the name, and the name stays in words');
+});

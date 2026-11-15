@@ -50,10 +50,15 @@
 .acc-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 24px; padding-top: 8px; }
 .acc-tables table { width: 100%; border-collapse: collapse; font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .acc-tables caption { padding-bottom: 4px; text-align: left; font-weight: 600; color: var(--ps-ink); }
-.acc-tables :is(th, td) { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--ps-line); text-align: right; font-weight: 400; }
-.acc-tables thead th { color: var(--ps-muted); font-weight: 600; white-space: nowrap; }
-.acc-tables :is(th, td):first-child { text-align: left; }
-.acc-tables tr[data-reach] :is(th, td) { color: var(--ps-ink); font-weight: 600; }
+.pulse-standalone .acc-tables :is(th, td) { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--ps-line); text-align: right; font-weight: 400; }
+.pulse-standalone .acc-tables thead th { background: transparent; color: var(--ps-muted); font-weight: 600; white-space: nowrap; }
+.pulse-standalone .acc-tables :is(th, td):first-child { text-align: left; }
+.pulse-standalone .acc-tables tr[data-reach] :is(th, td) { color: var(--ps-ink); font-weight: 600; }
+
+/* A named row shows its account as every page does: picture or initials with the platform mark, then the name. */
+.ac-who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ac-who > :is(span, button):last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-rows .ac-who .psi-avatar, .ac-rows .ac-who .psi-avatar span { overflow: visible; }
 
 /* A figure that opens its posts: the name in a row of the two bars, and the accounts behind the 80% point. */
 .ac-rows[data-open] { gap: 0; }
