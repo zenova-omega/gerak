@@ -21,8 +21,6 @@ const EXEMPT = {
   'server/app/services/pulse_summary.py': { kinds: ['account'], note: `${RESERVED}; accounts keyed by (author, platform) in the summary context` },
   'src/lib/pulseTrendSpikes.js': { kinds: ['account'], note: `${RESERVED}; spike accounts keyed by platform + ':' + author` },
   'src/lib/pulseRadar.js': { kinds: ['zone'], note: `${RESERVED}; radar dates printed in Asia/Jakarta` },
-  'server/app/services/pulse_chat.py': { kinds: ['account'], note: `${RESERVED}; the X account-location lines key accounts by author_id or name until the demografi commit replaces them with account_origin` },
-  'src/lib/pulsePlaces.js': { kinds: ['account'], note: `${RESERVED}; account places keyed by author_id or name until the demografi commit replaces them` },
   'server/app/pulse_measures_report.py': { kinds: ['interactions', 'account'], note: 'the old rules, kept only to print the before/after table (calculation dictionary, Task 7)' },
 };
 
