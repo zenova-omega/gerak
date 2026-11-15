@@ -231,3 +231,14 @@ def test_response_dates_are_whole_days_of_the_installation_zone(monkeypatch):
     assert date_bound('2026-11-11') == datetime(2026, 11, 10, 15)
     assert date_bound('2026-11-11', True) == datetime(2026, 11, 11, 15), 'the end is the next local midnight, exclusive'
     assert date_bound(None) is None
+
+
+def test_response_dates_and_basis_name_the_installation_zone(monkeypatch):
+    from fastapi import HTTPException
+    from app.services import pulse_measures
+    from app.services.pulse_response_analysis import date_basis, date_bound
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    with pytest.raises(HTTPException) as refused:
+        date_bound('11-11-2026')
+    assert 'WIT' in refused.value.detail and 'WIB' not in refused.value.detail
+    assert date_basis() == 'parent_post_publication_WIT'

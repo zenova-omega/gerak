@@ -108,7 +108,7 @@ async def test_wib_inclusive_published_dates_and_platform_scope(evaluation):
     body = response.json()
     assert body['paired_count'] == 2
     assert {s['post_id'] for s in body['samples']} == {'start', 'end'}
-    assert body['period']['timezone'] == 'Asia/Jakarta'
+    assert body['period']['timezone'] == 'WIB'   # the installation zone's name (was a hand-written 'Asia/Jakarta')
     assert (await get(client, platforms='')).json()['paired_count'] == 0
     assert (await get(client)).json()['paired_count'] == 6
     assert (await get(client, platforms=' x, instagram,x ')).json()['paired_count'] == 6
@@ -183,3 +183,10 @@ def test_evaluation_dates_are_whole_days_of_the_installation_zone(monkeypatch):
     monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
     assert date_bound('2026-11-11', 'from_date')[1] == datetime(2026, 11, 10, 15)
     assert date_bound('2026-11-11', 'to_date', end=True)[1] == datetime(2026, 11, 11, 14, 59, 59, 999999)
+
+
+def test_evaluation_period_names_the_installation_zone(monkeypatch):
+    from app.routers import pulse_evaluation
+    from app.services import pulse_measures
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    assert pulse_evaluation.period_label('2026-11-11', '2026-11-12') == {'from': '2026-11-11', 'to': '2026-11-12', 'timezone': 'WIT', 'basis': 'published_at'}

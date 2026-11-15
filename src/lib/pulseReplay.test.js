@@ -43,3 +43,11 @@ test('replayTime is the shared reader: a space, fractions and a zone without a c
   assert.equal(replay.replayTime('2026-11-10T08:00:00.5+0700'), Date.parse('2026-11-10T01:00:00.500Z'));
   assert.equal(replay.replayTime('2026-02-30T10:00:00Z'), null, 'an impossible date is not a time');
 });
+test('replay events put date-only posts after the timed ones, never among them by 00.00 UTC', () => {
+  const events = replay.replayEvents({ accounts: [{ id: 'x:a', evidence: [
+    { id: 'late', published_at: '2026-11-10T09:00:00Z' },
+    { id: 'date-only', published_at: '2026-11-10T00:00:00' },
+    { id: 'early', published_at: '2026-11-10T03:00:00Z' },
+  ] }] });
+  assert.deepEqual(events.map(e => [e.id, e.clock]), [['early', true], ['late', true], ['date-only', false]]);
+});

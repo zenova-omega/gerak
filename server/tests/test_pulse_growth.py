@@ -142,7 +142,7 @@ async def test_router_auth_validation_and_wib_period(growth_db):
         response = await client.get('/admin/pulse/growth', headers=headers, params={'topic_id': 'a', 'from': '2026-11-10', 'to': '2026-11-10'})
         assert response.status_code == 200
         assert [r['id'] for r in response.json()['posts']] == ['p']
-        assert response.json()['period'] == {'from': '2026-11-10', 'to': '2026-11-10', 'timezone': 'Asia/Jakarta', 'basis': 'published_at'}
+        assert response.json()['period'] == {'from': '2026-11-10', 'to': '2026-11-10', 'timezone': 'WIB', 'basis': 'published_at'}  # the installation zone's name (was a hand-written 'Asia/Jakarta')
         for params in [{'from': 'bad'}, {'from': '2026-11-11', 'to': '2026-11-10'}]:
             assert (await client.get('/admin/pulse/growth', headers=headers, params=params)).status_code == 422
         assert (await client.get('/admin/pulse/growth', headers=headers, params={'topic_id': 'missing'})).status_code == 404
@@ -167,3 +167,4 @@ async def test_router_period_follows_the_installation_zone(growth_db, monkeypatc
         headers = {'Authorization': f'Bearer {create_access_token("admin-growth-zone", "admin")}'}
         response = await client.get('/admin/pulse/growth', headers=headers, params={'topic_id': 'a', 'from': '2026-11-11', 'to': '2026-11-11'})
         assert [r['id'] for r in response.json()['posts']] == ['first']
+        assert response.json()['period']['timezone'] == 'WIT', 'the period names the installation zone'

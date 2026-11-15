@@ -47,10 +47,23 @@ test('analysis navigation preserves selected project and alert evidence scope', 
   } finally { await server.close(); }
 });
 
-test('the dashboard takes the installation zone from the analytics payload before anything counts days', async () => {
-  const { readFileSync } = await import('node:fs');
-  const source = readFileSync(new URL('../components/admin/pulse/PulseDashboard.jsx', import.meta.url), 'utf8');
-  const fetched = source.indexOf('usePulseAnalytics(topicId'), zoned = source.indexOf('setZone(analytics.data.measures.zone)');
-  const scoped = source.indexOf('const scopedData=useMemo(');
-  assert.ok(fetched > 0 && zoned > fetched && zoned < scoped, 'setZone runs as soon as the payload is there, before the scoped data is counted');
+test('the analytics hook sets the installation zone from every payload it receives, on every page that reads it', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { default: api } = await server.ssrLoadModule('/src/lib/api.js');
+    const { usePulseAnalytics } = await server.ssrLoadModule('/src/hooks/usePulse.js');
+    const { zone, setZone } = await server.ssrLoadModule('/src/lib/pulseMeasures.js');
+    const requested = [];
+    const get = api.get;
+    api.get = async (path, params) => { requested.push(path); return { posts: [], measures: { zone: { offset_minutes: 540, name: 'WIT' }, rules: {} } }; };
+    try {
+      let hook = null;
+      const Probe = () => { hook = usePulseAnalytics('t', null, {}); return null; };
+      renderToStaticMarkup(React.createElement(Probe));
+      assert.equal(zone().offset_minutes, 420);
+      await hook.refetch().catch(() => {});   // the server renderer may refuse the state update; the payload is read first
+      assert.deepEqual(requested, ['/admin/pulse/analytics']);
+      assert.deepEqual(zone(), { offset_minutes: 540, name: 'WIT' });
+    } finally { api.get = get; setZone({ offset_minutes: 420, name: 'WIB' }); }
+  } finally { await server.close(); }
 });

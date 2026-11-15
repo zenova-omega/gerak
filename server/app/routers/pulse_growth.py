@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..models.pulse import WatchTopic
 from ..services.pulse_growth import pulse_growth
+from ..services import pulse_measures
 from ..services.pulse_measures import period_closed_bounds
 from ..services.pulse_identity import require_pulse_access
 
@@ -86,5 +87,5 @@ async def get_growth(
     result = await pulse_growth(db, topic_id, start=start, end=end)
     result['period'] = {'from': date_from.isoformat() if date_from else None,
                         'to': date_to.isoformat() if date_to else None,
-                        'timezone': 'Asia/Jakarta', 'basis': 'published_at'}
+                        'timezone': pulse_measures.zone()[1], 'basis': 'published_at'}
     return result

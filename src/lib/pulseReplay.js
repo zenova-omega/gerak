@@ -1,16 +1,23 @@
-import { readTime } from './pulseMeasures.js';
+import { hasClock, readTime } from './pulseMeasures.js';
 
 /** A publication time in milliseconds, read by the shared reader (day_v1); null when there is none. */
 export function replayTime(value) {
   return typeof value === 'string' ? readTime(value) : null;
 }
+/** The order of publication (clock_v1): a post whose source gave a date only never takes part in the order by time.
+ * Timed posts come first by time, then date-only posts by their date, then posts without a date; ties by id.
+ * Rows carry `time` (ms or null) and `clock`. */
+export function byPublication(a, b) {
+  const place = row => (row.time === null ? 2 : row.clock ? 0 : 1);
+  return place(a) - place(b) || (a.time ?? 0) - (b.time ?? 0) || String(a.id).localeCompare(String(b.id));
+}
 export function replayEvents(data) {
   const seen = new Map();
   for (const a of data.accounts || []) for (const p of a.evidence || []) {
     const time = replayTime(p.published_at);
-    if (time !== null && !seen.has(p.id)) seen.set(p.id, { ...p, accountId: a.id, time });
+    if (time !== null && !seen.has(p.id)) seen.set(p.id, { ...p, accountId: a.id, time, clock: hasClock(p.published_at) });
   }
-  return [...seen.values()].sort((a,b)=>a.time-b.time || String(a.id).localeCompare(String(b.id)));
+  return [...seen.values()].sort(byPublication);
 }
 export function replayFrame(data, cutoff = Infinity) {
   const visible = p => cutoff === Infinity || (replayTime(p.published_at) !== null && replayTime(p.published_at) <= cutoff);

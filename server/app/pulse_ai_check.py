@@ -33,7 +33,7 @@ async def _timed(what, call, read):
 async def measure(session_factory, labels, answers, posts=2):
     """Run the trial calls. Returns {'calls': [...], 'queue': {...}}; reads the database, never writes it."""
     from .services import pulse_response_analysis as comments_worker
-    from .services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, SYSTEM, build_context, build_prompt
+    from .services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, system_prompt, build_context, build_prompt
     from .services.pulse_listening import parse_sentiment
     from .services.pulse_sentiment import PROMPT
     async with session_factory() as db:
@@ -65,7 +65,7 @@ async def measure(session_factory, labels, answers, posts=2):
                                   lambda text: f'{len(comments_worker.parse_batch(text, [False] * len(comment_texts), target))} dari {len(comment_texts)} terbaca'))
     if context:
         prompt = build_prompt(context['context'], 'Apa isu utama dalam 7 hari terakhir?', [])
-        calls.append(await _timed('jawaban Tanya AI', answers.generate_text(prompt, system=SYSTEM, max_tokens=ANSWER_TOKENS, context_tokens=CONTEXT_TOKENS),
+        calls.append(await _timed('jawaban Tanya AI', answers.generate_text(prompt, system=system_prompt(), max_tokens=ANSWER_TOKENS, context_tokens=CONTEXT_TOKENS),
                                   lambda text: f'{len(text.split())} kata'))
     post_calls = [row for row in calls if row['what'] == 'posting' and row['cost_usd'] > 0]
     batch = next((row for row in calls if row['what'].startswith('komentar') and row['cost_usd'] > 0), None)

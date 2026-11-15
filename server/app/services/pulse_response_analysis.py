@@ -16,6 +16,7 @@ from ..models.pulse import SourceItem, WatchTopic
 from ..models.pulse_sentiment import SentimentLane
 from ..models.pulse_response_analysis import ResponseAnalysisJob as Job, ResponseAnalysisCursor as Cursor
 from .pulse_monitor import insert_once
+from . import pulse_measures
 from .pulse_measures import period_bounds
 
 VERSION = 'response_v1'
@@ -348,9 +349,14 @@ def date_bound(value, end=False):
     try:
         day = date.fromisoformat(str(value))
     except ValueError:
-        raise HTTPException(422,'Use YYYY-MM-DD WIB dates')
+        raise HTTPException(422,f'Use YYYY-MM-DD {pulse_measures.zone()[1]} dates')
     start,after=period_bounds(day,day)
     return after if end else start
+
+
+def date_basis():
+    """Comments are dated by their parent post's publication day in the installation's zone."""
+    return 'parent_post_publication_'+pulse_measures.zone()[1]
 
 
 def stance_for_reader(stance):
@@ -402,7 +408,7 @@ async def results(db, topic_id, from_date=None, to_date=None, platform=None):
     return {'target':topic.label,'topic_id':topic_id,'posts':posts,'by_post':posts,'progress':progress,
             'coverage':{'posts':len(posts),'posts_with_snapshot':snapshots,
                         'available_comments':progress['comments']['total'],
-                        'scope':'available_snapshots_only','date_basis':'parent_post_publication_WIB'},
+                        'scope':'available_snapshots_only','date_basis':date_basis()},
             'semantics':'expressed_text_only_not_author_beliefs_or_fact_verification'}
 
 

@@ -59,7 +59,9 @@ function PostCard({ row, full, showAuthor = false }) {
   </li>;
 }
 export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }) {
-  const events = useMemo(()=>replayEvents(data),[data]);
+  // clock_v1: every dated post, timed ones first; the replay and its time labels run over the timed posts only.
+  const dated = useMemo(()=>replayEvents(data),[data]);
+  const events = useMemo(()=>dated.filter(event=>event.clock),[dated]);
   const [mode,setMode]=useState(initialMode);
   const [kind,setKind]=useState('all');
   const [includeIsolated,setIncludeIsolated]=useState(true);
@@ -138,7 +140,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
     const shape=edgeShape(projected[e.source],projected[e.target],reach(e.source),reach(e.target),mention?{bend:.14,head:5+width*1.5}:{});
     return shape&&{key:e.source+'>'+e.target+'>'+e.kind,kind:e.kind,width,shape,active:e.source===active?.id||e.target===active?.id};
   }).filter(Boolean).sort((a,b)=>a.active-b.active);   // the lines of the account in focus are drawn last, on top
-  const visibleEvents=events.filter(e=>e.time<=cutoff);
+  const visibleEvents=dated.filter(e=>e.time<=cutoff),dateOnlyShown=visibleEvents.filter(e=>!e.clock).length;
   const pages=Math.max(1,Math.ceil(visibleEvents.length/20));
   const safePage=Math.min(page,pages-1);
   const bins=useMemo(()=>{
@@ -173,7 +175,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
         <label className="nxe-kind">Hubungan <select value={kind} onChange={e=>{setKind(e.target.value);setPage(0)}} aria-label="Jenis hubungan explorer"><option value="all">Semua</option><option value="mention">Menyebut akun</option><option value="similarity">Kemiripan</option></select></label>
         <label className="nxe-switch"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeIsolated} onChange={e=>setIncludeIsolated(e.target.checked)}/>Akun tanpa hubungan</label>
       </div>
-      {mode==='chronology'?<ChronologyCards rows={chronology} page={page} onPageChange={setPage} selected={active?.id} onSelect={id=>{setSelected(id);document.getElementById(arrow+'-inspector')?.focus()}} firstTime={events.find(event=>hasClock(event.published_at))?.time}/>:mode==='timeline'?<div className="nx-event-list"><div className="nx-chronology-head"><h3>Urutan publikasi</h3><InfoTip label="Cara membaca urutan publikasi"><p>Posting diurutkan dari waktu terbit paling awal. Ini urutan waktu, bukan rantai repost.</p><p>Filter hubungan tidak membatasi daftar ini.</p></InfoTip></div><Sources rows={visibleEvents.slice(safePage*20,safePage*20+20)}/>{!visibleEvents.length&&<p>Belum ada posting bertanggal.</p>}<div className="nx-pagination"><button disabled={safePage===0} onClick={()=>setPage(safePage-1)}>Sebelumnya</button><span>{safePage+1} / {pages}</span><button disabled={safePage>=pages-1} onClick={()=>setPage(safePage+1)}>Berikutnya</button></div></div>:<>
+      {mode==='chronology'?<ChronologyCards rows={chronology} page={page} onPageChange={setPage} selected={active?.id} onSelect={id=>{setSelected(id);document.getElementById(arrow+'-inspector')?.focus()}} firstTime={events[0]?.time}/>:mode==='timeline'?<div className="nx-event-list"><div className="nx-chronology-head"><h3>Urutan publikasi</h3><InfoTip label="Cara membaca urutan publikasi"><p>Posting diurutkan dari waktu terbit paling awal. Ini urutan waktu, bukan rantai repost.</p><p>Filter hubungan tidak membatasi daftar ini.</p></InfoTip></div>{dateOnlyShown>0&&<p className="nx-chronology-note">{dateOnlyShown} posting hanya bertanggal tidak diurutkan menurut jam.</p>}<Sources rows={visibleEvents.slice(safePage*20,safePage*20+20)}/>{!visibleEvents.length&&<p>Belum ada posting bertanggal.</p>}<div className="nx-pagination"><button disabled={safePage===0} onClick={()=>setPage(safePage-1)}>Sebelumnya</button><span>{safePage+1} / {pages}</span><button disabled={safePage>=pages-1} onClick={()=>setPage(safePage+1)}>Berikutnya</button></div></div>:<>
         <svg viewBox="0 0 700 500" className="nx-graph" role="group" aria-label={mode==='3d'?'Grafik perspektif 3D akun':'Grafik Network 2D akun'}>
           <g className="nx-edges" aria-hidden="true" data-pointed={pointed?'':undefined} style={{'--nx-rest':Math.max(.28,Math.min(.5,.56-lines.length/500)).toFixed(2)}}>{lines.map(line=><g key={line.key} className="nx-edge" data-kind={line.kind} data-active={line.active?'':undefined}>
             <path d={line.shape.d} strokeWidth={line.width} strokeDasharray={line.kind==='similarity'?`${3+line.width*1.2} ${2.5+line.width}`:undefined}/>

@@ -1,4 +1,4 @@
-import { replayTime } from './pulseReplay.js';
+import { byPublication, replayTime } from './pulseReplay.js';
 import { hasClock } from './pulseMeasures.js';
 
 // Account IDs come only from the existing network; never join authors by name.
@@ -15,11 +15,8 @@ export function chronologyRows(frame, { kind = 'all', includeIsolated = true } =
       });
     }
   }
-  // clock_v1: a post whose source gave a date only never takes part in the order by time. Timed posts come first,
-  // then date-only posts by their date, then posts without a date.
-  const place = row => (row.time === null ? 2 : row.clock ? 0 : 1);
-  return [...seen.values()].sort((a, b) =>
-    place(a) - place(b) || (a.time ?? 0) - (b.time ?? 0) || String(a.id).localeCompare(String(b.id)));
+  // clock_v1: timed posts first, then date-only posts by their date, then posts without a date.
+  return [...seen.values()].sort(byPublication);
 }
 
 export function chronologyPage(rows, requestedPage = 0) {

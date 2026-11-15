@@ -44,7 +44,8 @@ test('2D opens on the whole period and offers a replay from the first publicatio
   const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
   try {
     const {default:Explorer}=await server.ssrLoadModule('/src/components/admin/pulse/NetworkExplorer.jsx');
-    const evidence=[{id:'late',title:'Later evidence',published_at:'2026-11-11T00:00:00Z'},{id:'early',title:'First evidence',published_at:'2026-11-10T00:00:00Z'}];
+    // Timed posts (clock_v1): 00:00:00Z would be a date-only post, which the replay leaves out of the order by time.
+    const evidence=[{id:'late',title:'Later evidence',published_at:'2026-11-11T01:00:00Z'},{id:'early',title:'First evidence',published_at:'2026-11-10T01:00:00Z'}];
     const html=renderToStaticMarkup(React.createElement(Explorer,{data:{nodes:[{id:'a',label:'Account A',observed:true}],accounts:[{id:'a',evidence}],edges:[],analyzed_posts:2}}));
     assert.match(html,/aria-label="Posisi replay"[^>]*max="1"[^>]*value="1"/);
     assert.match(html,/First evidence/);
@@ -102,5 +103,23 @@ test('the trail says how many date-only posts were left out of the order by time
     assert.equal((html.match(/class="nx-chronology-first"/g) || []).length, 1, 'only the timed post can be the earliest');
     const timedOnly = rows.filter(row => row.clock);
     assert.doesNotMatch(renderToStaticMarkup(React.createElement(ChronologyCards, { ...props, rows: timedOnly, firstTime: timedOnly[0].time })), /hanya bertanggal/);
+  } finally { await server.close(); }
+});
+
+test('Urutan publikasi lists timed posts by time, then date-only posts, says how many, and the replay spans timed posts only', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { default: NetworkExplorer } = await server.ssrLoadModule('/src/components/admin/pulse/NetworkExplorer.jsx');
+    const evidence = [
+      { id: 'timed-a', author: '@A', platform: 'x', title: 'Pagi', published_at: '2026-11-10T03:00:00Z', url: 'https://example.com/a' },
+      { id: 'date-only', author: '@A', platform: 'x', title: 'Tanggal saja', published_at: '2026-11-12T00:00:00', url: 'https://example.com/d' },
+      { id: 'timed-b', author: '@A', platform: 'x', title: 'Sore', published_at: '2026-11-10T09:00:00Z', url: 'https://example.com/b' },
+    ];
+    const data = { nodes: [{ id: 'x:a', label: '@A', platform: 'x', observed: true }], accounts: [{ id: 'x:a', evidence }], edges: [], analyzed_posts: 3 };
+    const html = renderToStaticMarkup(React.createElement(NetworkExplorer, { data, initialMode: 'timeline' }));
+    assert.match(html, /1 posting hanya bertanggal tidak diurutkan menurut jam\./);
+    assert.ok(html.indexOf('Sore') < html.indexOf('Tanggal saja') && html.indexOf('Pagi') < html.indexOf('Sore'), 'timed by time, then the date-only post');
+    const times = [...html.matchAll(/class="nxe-time">([^<]*)</g)].map(match => match[1]);
+    assert.deepEqual(times, ['10 Nov 2026, 10.00 WIB', '10 Nov 2026, 16.00 WIB'], 'the replay runs over timed posts only');
   } finally { await server.close(); }
 });

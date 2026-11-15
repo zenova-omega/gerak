@@ -53,3 +53,14 @@ test('the platform order reads publication times with the shared reader, whateve
   ]);
   assert.deepEqual(result.platformTimeline.map(row => row.platform), ['news', 'x']);
 });
+
+test('a date-only post never wins "Kanal pertama": it is ordered by its day after the timed channels of that day, and counted', () => {
+  const result = overviewEvidence([
+    { id: 'ig', platform: 'instagram', published_at: '2026-11-10T00:00:00', metrics: {} },   // date only, 10 Nov
+    { id: 'x1', platform: 'x', published_at: '2026-11-10T03:00:00', metrics: {} },           // 10.00 WIB, 10 Nov
+    { id: 'tt', platform: 'tiktok', published_at: '2026-11-09T00:00:00', metrics: {} },      // date only, a day earlier
+  ]);
+  assert.deepEqual(result.platformTimeline.map(row => row.platform), ['tiktok', 'x', 'instagram']);
+  assert.equal(result.platformTimelineDateOnly, 2, 'posts without a clock left out of the order by time');
+  assert.deepEqual(result.platformTimeline.map(row => row.dateOnly), [1, 0, 1]);
+});

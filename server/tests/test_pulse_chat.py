@@ -348,3 +348,17 @@ async def test_context_days_and_times_follow_day_v1_in_the_installation_zone(db,
     stamps = {p['author']: p['published_at'] for p in context['evidence_posts']}
     assert stamps == {'a': '2026-11-13 00:30', 'b': '2026-11-12'}, 'a post without a clock is given its date only'
     assert context['now_wib'] == '2026-11-14 14:00'
+
+
+@pytest.mark.asyncio
+async def test_prompt_and_data_block_name_the_installation_zone(db, monkeypatch):
+    from app.services import pulse_measures
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    await seeded(db)
+    context = (await chat.build_context(db, 'chat-topic', NOW))['context']
+    assert 'waktu (WIT)' in chat.SYSTEM and 'WIB' not in chat.SYSTEM
+    block = chat.data_block(context)
+    assert 'waktu dalam WIT' in block and 'POSTING PER HARI (WIT)' in block and 'WIB' not in block
+    prompt = chat.build_prompt(context, 'Apa yang ramai?', [])
+    assert 'WIT\nPERTANYAAN ANALIS' in prompt and ' WIB' not in prompt
+    assert chat.chart_data(context, 'harian')['title'] == 'Posting per hari (WIT)'

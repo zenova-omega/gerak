@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../lib/api';
+import { setZone } from '../lib/pulseMeasures';
 
 // No demo fallbacks: generations prevent older topic responses replacing newer data.
-function usePulseResource(path, topicId) {
+const asReceived = data => data;   // one function, so refetch keeps its identity between renders
+function usePulseResource(path, topicId, receive = asReceived) {
   const key = path + ':' + (topicId || '');
   const generation = useRef(0);
   const [state, setState] = useState({ key, data: null, loading: true, error: null });
@@ -10,12 +12,12 @@ function usePulseResource(path, topicId) {
     const request = ++generation.current;
     setState(previous => ({ key, data: previous.key === key ? previous.data : null, loading: options.background && previous.key === key && previous.data ? false : true, error: null }));
     try {
-      const data = await api.get(path, topicId ? { topic_id: topicId } : undefined);
+      const data = receive(await api.get(path, topicId ? { topic_id: topicId } : undefined));
       if (request === generation.current) setState({ key, data, loading: false, error: null });
     } catch (error) {
       if (request === generation.current) setState({ key, data: null, loading: false, error });
     }
-  }, [path, topicId, key]);
+  }, [path, topicId, key, receive]);
   useEffect(() => {
     let active = true;
     Promise.resolve().then(() => { if (active) refetch(); });
@@ -62,12 +64,18 @@ export function useIssues({ topicId } = {}) {
   const resource = usePulseResource('/admin/pulse/issues', topicId);
   return { ...resource, issues: resource.data || [] };
 }
+/** day_v1: an analytics payload carries the installation's zone; it is set as the payload arrives, before any page
+ * counts a day from it. */
+function receiveAnalytics(data) {
+  if (data?.measures?.zone) setZone(data.measures.zone);
+  return data;
+}
 export function usePulseAnalytics(topicId, alertId, period = {}) {
   const params=new URLSearchParams();
   if(period.from)params.set('from',period.from);
   if(period.to)params.set('to',period.to);
   const base=alertId ? '/admin/pulse/monitor/alerts/' + encodeURIComponent(alertId) + '/analysis' : '/admin/pulse/analytics';
-  return usePulseResource(base+(params.size?'?'+params:''), topicId);
+  return usePulseResource(base+(params.size?'?'+params:''), topicId, receiveAnalytics);
 }
 export function fetchIssueDetail(issueId) {
   return api.get('/admin/pulse/issues/' + encodeURIComponent(issueId));

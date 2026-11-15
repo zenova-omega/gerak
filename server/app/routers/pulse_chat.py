@@ -17,7 +17,7 @@ from ..config import get_settings
 from ..database import get_db
 from ..models.pulse import WatchTopic
 from ..models.pulse_chat import PulseChatConversation
-from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, SYSTEM, build_context, build_prompt, cited, data_block, shape_answer
+from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, system_prompt, build_context, build_prompt, cited, data_block, shape_answer
 from ..services.ai.priority import interactive
 from ..services.pulse_identity import require_pulse_access
 from ..services.pulse_measures import period_closed_bounds
@@ -134,7 +134,7 @@ async def prepare(req: PrepareRequest, db: AsyncSession = Depends(get_db)):
     async def warm():
         try:
             async with interactive():
-                await asyncio.wait_for(ai.generate_text(block + 'PERTANYAAN ANALIS: siap', system=SYSTEM,
+                await asyncio.wait_for(ai.generate_text(block + 'PERTANYAAN ANALIS: siap', system=system_prompt(),
                                                         max_tokens=1, context_tokens=CONTEXT_TOKENS), timeout=90)
         except Exception:
             pass  # warming is an optimisation; the question itself still works without it
@@ -210,7 +210,7 @@ async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db), user=Depend
         async with interactive():
             answer = await asyncio.wait_for(ai.generate_text(
                 build_prompt(built['context'], question, [turn.model_dump() for turn in req.history]),
-                system=SYSTEM, max_tokens=ANSWER_TOKENS, context_tokens=CONTEXT_TOKENS), timeout=115)
+                system=system_prompt(), max_tokens=ANSWER_TOKENS, context_tokens=CONTEXT_TOKENS), timeout=115)
     except Exception:
         # Never relay provider errors: they can carry request content or credentials.
         raise HTTPException(502, 'Model AI tidak menjawab. Coba lagi; tidak ada data yang berubah.')
