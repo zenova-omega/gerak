@@ -16,8 +16,9 @@ test('feed exposes inline media, original caption, safe links and truthful legac
     assert.match(embedded,/<iframe[^>]*title="Pemutar Video account"/);
     assert.match(embedded,/Lihat thumbnail/);
     const videoFeed=renderToStaticMarkup(React.createElement(PostFeed,{posts:[{id:'video',platform:'tiktok',url:'https://www.tiktok.com/@example/video/123',author:'Video account',metrics:{}}]}));
-    assert.match(videoFeed,/Putar video dari Video account/);
-    assert.doesNotMatch(videoFeed,/<iframe|<video/);
+    // A TikTok post with no thumbnail shows its player in the card, not an empty box (the owner asked for this, 15 Nov 2026).
+    assert.match(videoFeed,/<iframe[^>]*src="https:\/\/www\.tiktok\.com\/player\/v1\/123\?autoplay=0&amp;controls=1"[^>]*loading="lazy"/);
+    assert.doesNotMatch(videoFeed,/Thumbnail tidak tersedia|Video masih dapat dicoba/);
     const { default: ProjectPeriod } = await server.ssrLoadModule('/src/pulse/ProjectPeriod.jsx');
     const periodHtml = renderToStaticMarkup(React.createElement(ProjectPeriod,{topicId:'test'}));
     // The period is a row of presets; the two date fields appear only after "Kustom" is pressed.

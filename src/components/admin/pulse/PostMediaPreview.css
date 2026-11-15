@@ -23,3 +23,5 @@
 .pulse-post-copy .pulse-caption-details p { display: block; overflow: visible; white-space: pre-wrap; max-width: 70ch; color: var(--ps-ink); }
 .pulse-caption-details summary { padding-inline: 0; }
 .pulse-post-grid { align-items: start; }
+.pulse-media-inline .pulse-media-embed-inline{max-width:none;height:360px;min-height:0}
+.pulse-media-inline .pulse-media-video{max-height:360px}
