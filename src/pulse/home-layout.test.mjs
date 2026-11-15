@@ -37,7 +37,7 @@ const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replac
 const view = props => render('/src/pulse/Home.jsx', 'HomeView', { radar, projects, filters: none, canCreate: true, now, onFilters() {}, onSelect() {}, onRefresh() {}, ...props });
 const lead = props => render('/src/pulse/RadarLead.jsx', 'default', { payload: radar, filters: none, canCreate: true, now, onFilters() {}, ...props });
 const group = (html, name) => html.match(new RegExp(`<div[^>]*role="group"[^>]*aria-label="${name}"[^>]*>[\\s\\S]*?</div>`))?.[0] || '';
-const chips = markup => [...markup.matchAll(/<button[^>]*class="rdl-chip"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
+const chips = markup => [...markup.matchAll(/<button[^>]*class="pu-tag"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
 const source = name => readFileSync(new URL('./' + name, import.meta.url), 'utf8');
 
 test('Beranda reads top to bottom: the answer with its figures and filters, the list beside the map, the projects, then the columns per platform', async () => {
@@ -69,8 +69,8 @@ test('explanations sit behind info buttons, and their words are kept there', asy
 test('the filters: categories and platforms as chips with their counts and marks, a province picked from a list, and what a filter hides', async () => {
   const html = await lead({});
   assert.deepEqual(chips(group(html, 'Kategori isu')), ['Semua 12', 'Politik 11', 'Olahraga 1']);
-  assert.match(group(html, 'Kategori isu'), /<span class="rdl-count">11<\/span>/, 'the count is set apart from the name');
-  const platforms = [...group(html, 'Platform').matchAll(/<button[^>]*class="rdl-chip"[^>]*>([\s\S]*?)<\/button>/g)].map(match => match[1]);
+  assert.match(group(html, 'Kategori isu'), /<span class="pu-tag-count">11<\/span>/, 'the count is set apart from the name');
+  const platforms = [...group(html, 'Platform').matchAll(/<button[^>]*class="pu-tag"[^>]*>([\s\S]*?)<\/button>/g)].map(match => match[1]);
   assert.deepEqual(platforms.map(text), ['Semua platform', 'Berita', 'YouTube', 'Google']);
   assert.ok(platforms.slice(1).every(chip => /<svg/.test(chip)), 'each platform carries its mark');
   const select = html.match(/<select[^>]*aria-label="Wilayah"[^>]*>[\s\S]*?<\/select>/)?.[0] || '';
@@ -80,7 +80,7 @@ test('the filters: categories and platforms as chips with their counts and marks
   assert.match(chosen, /<option value="ID-JI" selected="">/);
   assert.match(chosen, /<h2[^>]*>Isu yang ramai di Jawa Timur/);
   const filtered = await lead({ filters: { ...none, category: 'olahraga' } });
-  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*class="rdl-chip"[^>]*aria-pressed="true"[^>]*>Olahraga/);
+  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*class="pu-tag"[^>]*aria-pressed="true"[^>]*>(?:<svg[\s\S]*?<\/svg>)?<span class="pu-tag-label">Olahraga/);
   assert.match(text(filtered), /Menampilkan 1 dari 12 isu Tampilkan semua isu/);
 });
 

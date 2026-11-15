@@ -1,5 +1,5 @@
 import { PulseButton } from '../../ui/PulseUI';
-import { PulseFilterBar, PulseFilterSelect } from '../../ui/PulseSurface';
+import { PulseCard, PulseFilterBar, PulseFilterSelect } from '../../ui/PulseSurface';
 import { PulseTag } from '../../ui/PulseTag';
 import { PulseStat, PulseStatGrid, PulseBreakdown } from '../../ui/PulseAnalytics';
 import { PlatformLabel, PlatformIcon } from "./PlatformIcon";
@@ -46,11 +46,11 @@ function NetworkInsights({ data, posts, onOpenNarrative }) {
   const mentions = kinds.mention || 0, similar = kinds.similarity || 0, links = mentions + similar;
   const repeated = [...data.narratives].sort((a, b) => b.account_count - a.account_count || b.post_count - a.post_count).slice(0, 5);
   return <div className="lay-grid pn-insights">
-    <div className="lay-6"><section className="pulse-panel pn-card" aria-label="Akun paling terhubung"><div className="pulse-panel-heading"><div><h2>Akun paling terhubung</h2></div></div>
+    <div className="lay-6"><PulseCard className="pulse-panel pn-card" aria-label="Akun paling terhubung" padding="none" level={2} title={<>Akun paling terhubung</>}>
       {hubs.length ? <PulseBreakdown scale="max" rows={hubs.map(node => ({ key: node.id, label: node.label, value: node.connections, color: platformColor(node.platform), leading: <AccountAvatar size="sm" author={node.label} platform={node.platform} /> }))} total={links || undefined} /> : <p className="pulse-analysis-note">Belum ada hubungan antar akun pada sampel ini.</p>}
       {links > 0 && <div className="pn-mix"><div className="sig-bar" role="img" aria-label={`${mentions} hubungan menyebut akun, ${similar} hubungan konten serupa`}>{mentions > 0 && <span style={{ flexGrow: mentions, background: 'var(--ps-chart-1)' }} />}{similar > 0 && <span style={{ flexGrow: similar, background: 'var(--ps-chart-3)' }} />}</div><ul><li><i style={{ background: 'var(--ps-chart-1)' }} /><strong>{formatCount(mentions)}</strong> menyebut akun</li><li><i style={{ background: 'var(--ps-chart-3)' }} /><strong>{formatCount(similar)}</strong> konten serupa</li></ul></div>}
-    </section></div>
-    <div className="lay-6"><section className="pulse-panel pn-card" aria-label="Konten yang paling banyak diulang"><div className="pulse-panel-heading"><div><h2>Konten yang paling banyak diulang<InfoTip label="Tentang konten berulang">Teks serupa di beberapa akun. Bukan bukti koordinasi.</InfoTip></h2></div></div>
+    </PulseCard></div>
+    <div className="lay-6"><PulseCard className="pulse-panel pn-card" aria-label="Konten yang paling banyak diulang" padding="none" level={2} title={<>Konten yang paling banyak diulang<InfoTip label="Tentang konten berulang">Teks serupa di beberapa akun. Bukan bukti koordinasi.</InfoTip></>}>
       {repeated.length ? <ol className="pn-repeated">{repeated.map(row => { const faces = repeatedAccounts(row, byId); return <li key={row.id}>
         <button type="button" className="pn-repeated-text" onClick={() => onOpenNarrative(row.id)} aria-label={`${row.account_count} akun mengulang: ${(row.title || '').slice(0, 80)}. Lihat urutannya.`}>{(row.title || 'Tanpa teks').slice(0, 110)}</button>
         <div className="pn-repeated-facts">
@@ -58,7 +58,7 @@ function NetworkInsights({ data, posts, onOpenNarrative }) {
           <PulseMetricRow hideEmpty metrics={row.metrics} label={`Interaksi gabungan ${formatCount(row.post_count)} posting dalam kelompok ini`} />
         </div>
       </li>; })}</ol> : <p className="pulse-analysis-note">Belum ada kelompok serupa.</p>}
-    </section></div>
+    </PulseCard></div>
   </div>;
 }
 
@@ -86,15 +86,15 @@ export default function NetworkAnalysis({ data, posts }) {
     {section==='map'&&<Suspense fallback={<PulseSkeleton label="Memuat peta sebaran…" stats={0} panels={1} rows={0} />}><RegionSpreadMap posts={posts} initialLayer={new URLSearchParams(typeof window==='undefined'?'':window.location.search).get('layer')==='accounts'?'accounts':undefined} /></Suspense>}
     {section==='network'&&<NetworkExplorer data={data} posts={posts} />}
     {section==='origins'&&<div className="pulse-narrative-grid">
-      <section className="pulse-panel"><div className="pulse-panel-heading"><div><h2><Clock size={18} /> Awal yang teramati</h2></div></div><Evidence rows={data.earliest} /></section>
-      <section className="pulse-panel"><div className="pulse-panel-heading"><div><h2>Pengulangan & amplifikasi potensial</h2></div></div>
+      <PulseCard className="pulse-panel" padding="none" level={2} title={<><Clock size={18} /> Awal yang teramati</>}><Evidence rows={data.earliest} /></PulseCard>
+      <PulseCard className="pulse-panel" padding="none" level={2} title={<>Pengulangan & amplifikasi potensial</>}>
         {narrative ? <><label className="pulse-narrative-select">Pilih kelompok narasi<select aria-label="Kelompok narasi" value={narrative.id} onChange={e => setNarrativeId(e.target.value)}>{data.narratives.map(n => <option key={n.id} value={n.id}>{n.account_count} akun · {(n.title || '').slice(0, 85)}</option>)}</select></label><div className="pulse-narrative-strip"><PulseStatGrid label="Ukuran kelompok narasi"><PulseStat label="Posting" value={narrative.post_count ?? null}/><PulseStat label="Akun" value={narrative.account_count ?? null}/><PulseStat label="Akun muncul kemudian" value={narrative.later_accounts ?? null}/></PulseStatGrid></div><p className="pulse-analysis-note">Paling awal: {narrative.first_observed?.author || 'waktu tidak tersedia'} · {pulseDate(narrative.first_observed?.published_at)}{narrative.tied_first_count > 1 ? ` · ${narrative.tied_first_count} posting berbagi waktu paling awal` : ''}</p><Evidence rows={narrative.timeline} /></> : <p className="pulse-empty">Belum ada kelompok serupa.</p>}
-      </section>
+      </PulseCard>
     </div>}
-    {section==='signals'&&<section className="pulse-panel pulse-account-signals"><div className="pulse-panel-heading"><div><h2><ScanSearch size={18} /> Akun yang perlu ditinjau<InfoTip label="Tentang sinyal akun">Satu pola berarti “perlu ditinjau”; dua atau lebih diberi tanda “Pola mirip buzzer”. Bukan penetapan bot, identitas, atau bayaran.</InfoTip></h2></div></div>
+    {section==='signals'&&<PulseCard className="pulse-panel pulse-account-signals" padding="none" level={2} title={<><ScanSearch size={18} /> Akun yang perlu ditinjau<InfoTip label="Tentang sinyal akun">Satu pola berarti “perlu ditinjau”; dua atau lebih diberi tanda “Pola mirip buzzer”. Bukan penetapan bot, identitas, atau bayaran.</InfoTip></>}>
       <label className="ps-signal-search">Cari nama akun<input type="search" value={accountSearch} onChange={e=>{setAccountSearch(e.target.value);setAccountLimit(20)}} placeholder="Contoh: Kompas"/></label>
       <PulseFilterBar label="Filter sinyal akun"><PulseFilterSelect label="Tampilkan akun" value={accountFilter} onChange={value => {setAccountFilter(value);setAccountLimit(20)}} options={[{value:'all',label:`Semua akun (${data.accounts.length})`},{value:'signals',label:`Dengan sinyal (${flagged})`},{value:'pattern',label:`Pola mirip buzzer (${patterned})`}]} /></PulseFilterBar><div className="pulse-signals-list">{accounts.slice(0,accountLimit).map(a => <details key={a.id}><summary><AccountAvatar size="sm" author={a.label} platform={a.platform} /><strong>{a.label}</strong>{a.pattern ? <PatternTag signals={a.signals} /> : a.signals.length > 0 && <AccountSignal kind="automation" compact />}<span><PlatformLabel platform={a.platform} /> · {a.posts} posting</span><PulseTag tone={(assessments[a.assessment]||['neutral'])[0]} dot={a.assessment==='review_signals'}>{(assessments[a.assessment]||[0,'Sinyal tidak teramati'])[1]}</PulseTag></summary>{a.signals.map(s => <p key={s.kind}>{s.detail}</p>)}{!a.signals.length && <p>Tidak ada sinyal pada sampel ini.</p>}<Evidence rows={a.evidence} /></details>)}{!accounts.length && <p className="pulse-analysis-note">Tidak ada akun yang cocok dengan filter.</p>}</div>
       <div className="pulse-pagination"><span role="status">{Math.min(accountLimit,accounts.length)} dari {accounts.length} akun cocok</span>{accounts.length>accountLimit&&<PulseButton onClick={()=>setAccountLimit(accountLimit+20)}>Tampilkan 20 akun berikutnya</PulseButton>}</div>
-    </section>}
+    </PulseCard>}
   </section>;
 }

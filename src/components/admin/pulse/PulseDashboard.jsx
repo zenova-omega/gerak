@@ -23,7 +23,7 @@ import '../../../pulse/pulse-tokens.css';
 import '../../../pulse/ds/analytics-kit.css';
 import '../../ui/pulse-patterns.css';
 import { PulseButton } from '../../ui/PulseUI';
-import { PulseCard } from '../../ui/PulseSurface';
+import { PulseCard, PulseFilterGroup, PulseFilterChip } from '../../ui/PulseSurface';
 import { pageMeta } from '../../../pulse/pageMeta';
 import { sentimentLabels } from '../../../lib/pulsePostFilters';
 import { PulsePageHead, PulseSkeleton } from '../../ui/PulsePatterns';
@@ -112,11 +112,11 @@ function AccountRanking({ accounts, posts }) {
         <label className="pu-search pa-filter-search"><Search aria-hidden="true" /><span className="pu-sr">Cari akun atau sumber</span><input type="search" value={query} maxLength={80} onChange={event => setQuery(event.target.value)} placeholder="Cari nama akun atau sumber" /></label>
         <div className="pa-filter-group pa-filter-sort" role="group" aria-label="Urutkan menurut"><span className="pa-filter-label" aria-hidden="true">Urutkan</span><div className="pm-view-switch">{accountSortChoices.map(([key, label]) => <PulseButton key={key} aria-pressed={sort === key} onClick={() => write({ query, sort: key })}>{label}</PulseButton>)}</div></div>
       </div>
-      {available.length > 1 && <div className="pa-filter-group" role="group" aria-label="Saring menurut platform"><span className="pa-filter-label" aria-hidden="true">Platform</span><div className="pu-tag-group">
-        <PulseTag size="lg" tone="accent" pressed={platforms === null} count={formatCount(matchCount())} onClick={() => write({ query, platforms: null })}>Semua</PulseTag>
-        {social.length > 1 && social.length < available.length && <><PulseTag size="lg" tone="accent" pressed={socialOn} count={formatCount(matchCount(social))} onClick={() => write({ query, platforms: socialOn ? null : social })}>Media sosial</PulseTag><span className="pa-filter-divider" aria-hidden="true" /></>}
+      {available.length > 1 && <PulseFilterGroup label="Platform" className="pa-filter-group">
+        <PulseFilterChip active={platforms === null} count={formatCount(matchCount())} onClick={() => write({ query, platforms: null })}>Semua</PulseFilterChip>
+        {social.length > 1 && social.length < available.length && <><PulseFilterChip active={socialOn} count={formatCount(matchCount(social))} onClick={() => write({ query, platforms: socialOn ? null : social })}>Media sosial</PulseFilterChip><span className="pa-filter-divider" aria-hidden="true" /></>}
         {facets.map(({ platform, count }) => <PlatformTag key={platform} size="lg" platform={platform} count={formatCount(count)} pressed={platforms !== null && platforms.includes(platform)} onClick={() => write({ query, platforms: togglePlatform(platforms, platform, available) })}>{platform === 'unknown' ? 'Lainnya' : undefined}</PlatformTag>)}
-      </div></div>}
+      </PulseFilterGroup>}
       <div className="pa-filter-result"><p ref={resultStatus} tabIndex={-1} role="status"><strong>{formatCount(ranking.rows.length)}</strong> dari {formatCount(ranking.total)} akun{sort === 'followers' && ranking.rows.length > 0 && <span>{followersKnown ? ` · pengikut tercatat pada ${formatCount(followersKnown)} akun` : ' · belum ada data pengikut'}</span>}</p><InfoTip label="Tentang angka ranking">Interaksi dan pengikut adalah angka terakhir tercatat, bukan jangkauan atau skor pengaruh. “—” berarti tidak tersedia, bukan nol.</InfoTip>{filtered && <PulseButton variant="quiet" size="sm" onClick={clear}><X aria-hidden="true" />Hapus semua filter</PulseButton>}</div>
     </div>}
     {leaders.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + sortName}>{leaders.map(row => <PulseStat key={row.rank} media={<AccountAvatar author={row.author} platform={row.platform} />} label={`#${formatCount(row.rank)} · ${platformLabel(row.platform)}`} value={row[sort]} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {sortUnit}</>} />)}</PulseStatGrid></div>}

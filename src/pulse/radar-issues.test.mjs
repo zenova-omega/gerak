@@ -43,7 +43,7 @@ const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replac
 const group = (html, name) => html.match(new RegExp(`<div[^>]*role="group"[^>]*aria-label="${name}"[^>]*>[\\s\\S]*?</div>`))?.[0] || '';
 const buttons = markup => [...markup.matchAll(/<button[^>]*>([^<]*)</g)].map(match => match[1]);
 // A chip of the first card: its name and, apart from it, its count.
-const chips = markup => [...markup.matchAll(/<button[^>]*class="rdl-chip"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
+const chips = markup => [...markup.matchAll(/<button[^>]*class="pu-tag"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
 // The figures of the refresh, one entry of the line each.
 const figures = html => [...html.matchAll(/<div><dt>[\s\S]*?<\/dd><\/div>/g)].map(match => text(match[0]));
 
@@ -65,7 +65,7 @@ test('the first card names the scope, says when the list was made, carries the b
 
 test('a filter is shown as pressed, takes the row numbers out of the brief, and a province is chosen from a list that can go back to the whole country', async () => {
   const filtered = await lead({ payload, filters: { ...none, category: 'politik' } });
-  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*aria-pressed="true"[^>]*>Politik<span class="rdl-count">11</);
+  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*aria-pressed="true"[^>]*><span class="pu-tag-label">Politik<\/span><span class="pu-tag-count">11</);
   assert.match(text(filtered), /Pengunduran diri Wapres mendominasi\./);
   assert.doesNotMatch(text(filtered), /\[1\]/);
   const province = await lead({ payload, filters: { ...none, province: 'ID-JI' } });

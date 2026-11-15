@@ -17,7 +17,8 @@ function tokens(pattern) {
   for (const css of tokenSheets) for (const [, body] of css.matchAll(pattern)) for (const [, name, value] of body.matchAll(/(--ps-[a-z0-9-]+)\s*:\s*([^;]+);/g)) found[name] = value.trim();
   return found;
 }
-const light = tokens(/\.pulse-standalone\s*\{([^}]*)\}/g);
+// The light token blocks are written for PULSE and for the admin dashboard outside it (`.pulse-dashboard:not(.pulse-standalone *)`).
+const light = tokens(/(?:\.pulse-standalone|:is\(\.pulse-standalone, \.pulse-dashboard:not\(\.pulse-standalone \*\)\)|\.pulse-standalone,\s*\.pulse-dashboard:not\(\.pulse-standalone \*\))\s*\{([^}]*)\}/g);
 const dark = { ...light, ...tokens(/\.pulse-standalone\[data-theme=dark\]\s*\{([^}]*)\}/g) };
 function value(theme, name, depth = 0) {
   const raw = theme['--ps-' + name], reference = raw?.match(/^var\(--ps-([a-z0-9-]+)\)$/);

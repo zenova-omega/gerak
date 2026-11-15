@@ -1,5 +1,6 @@
 import { commentNeedsReview } from '../../../lib/pulseCommentReview';
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { PulseCard } from '../../ui/PulseSurface';
 import { useSearchParams } from 'react-router-dom';
 import { postInteractions } from '../../../lib/pulseEngagement';
 import api from '../../../lib/api';
@@ -9,6 +10,7 @@ import { MessageCircle, Heart, ExternalLink } from 'lucide-react';
 import { formatCount, safeSourceUrl, pulseDate } from '../../../lib/pulseData';
 import {analysedShares,responseEvidence,stanceLabels,stanceShort} from '../../../lib/pulseResponse';
 import { commentPostRows, postCaption } from '../../../lib/pulseCommentPosts';
+import { MORE, PAGE, nextShown, outsideTop } from '../../../lib/pulseCommentsBrowse';
 import { topEmoji } from '../../../lib/pulseEmoji';
 import useResponseAnalysis from '../../../pulse/useResponseAnalysis';
 import { PulseTag, SentimentTag } from '../../ui/PulseTag';
@@ -91,11 +93,8 @@ export function PostComments({ post }) {
 
 const postTitle = post => (postCaption(post).slice(0, 70) || 'Tanpa teks');
 /** First page of cards and each further step: both fill whole rows at one, two and three columns. */
-const PAGE = 12, MORE = 24;
 const tones = [['positive', 'Positif'], ['neutral', 'Netral'], ['negative', 'Negatif']];
 const percentText = value => formatCount(Math.round(value * 10) / 10) + '%';
-/** How many cards to show after one more step: the next MORE, never past the list. */
-export const nextShown = (shown, total) => Math.min(total, shown + MORE);
 /** Cards that scrolling alone brings in. Past them only the button adds more, so what sits under the list can be reached. */
 const SCROLL_UNTIL = PAGE + 4 * MORE;
 
@@ -107,7 +106,8 @@ const SCROLL_UNTIL = PAGE + 4 * MORE;
  */
 export function MoreComments({ shown, total, analysedOnly = false, onMore }) {
   const mark = useRef(null), latest = useRef(onMore);
-  latest.current = onMore;
+  // The newest handler for the watcher, set after each render rather than during it.
+  useEffect(() => { latest.current = onMore; });
   const watched = shown < SCROLL_UNTIL;
   // A new watcher after each step: if the end is still near (short cards, a tall screen), the next step follows.
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function CommentsPanel({ posts = [], topicId }) {
   const pick = id => { setSelected(id); setLimit(PAGE); };
   // The way back lives in a bar that disappears once used, so focus goes to the picker instead of being dropped.
   const pickerButton = useId(), backToAll = () => { pick('all'); document.getElementById(pickerButton)?.focus(); };
-  return <section id="pulse-comments" className="pulse-panel pulse-comments-panel" aria-label="Komentar pada posting project"><div className="pulse-panel-heading"><div><h2>Suara di kolom komentar</h2><p>{one ? `${formatCount(total)} komentar pada satu posting pilihan` : `${formatCount(total)} komentar dari ${formatCount(withComments.length)} posting`}</p></div><MessageCircle size={24} /></div>
+  return <PulseCard id="pulse-comments" className="pulse-panel pulse-comments-panel" aria-label="Komentar pada posting project" padding="none" level={2} title={<>Suara di kolom komentar</>} description={<>{one ? `${formatCount(total)} komentar pada satu posting pilihan` : `${formatCount(total)} komentar dari ${formatCount(withComments.length)} posting`}</>} actions={<MessageCircle size={24} />}>
     <div className="pcb">
       {withComments.length > 0 && <div className="pcb-toolbar" role="group" aria-label="Pilih posting dan urutkan komentar">
         <CommentPostPicker rows={pickerRows} value={chosen} onChange={pick} buttonId={pickerButton} />
@@ -224,10 +224,10 @@ export default function CommentsPanel({ posts = [], topicId }) {
       {/* One line under the list instead of the progress of the automatic lane (the owner, 15 Nov 2026). */}
       {total > 0 && <AnalysedLine analysed={labelled} total={total} reading={!analysis.loaded ? 'loading' : analysis.error ? 'failed' : null} />}
       {(coverage?.waiting > 0 || collect.note || collect.error) && <div className="pc-coverage" aria-live="polite">
-        {coverage && coverage.waiting > 0 && <details className="pcm-more"><summary>Ambil di luar 100 besar</summary><p>{formatCount(coverage.waiting)} posting lain belum punya komentar.{coverage.not_requestable > 0 ? ` ${formatCount(coverage.not_requestable)} posting tanpa kolom komentar.` : ''}</p><PulseButton size="sm" onClick={collectNext} busy={collect.busy} busyLabel="Mengambil komentar…">Ambil 10 posting berikutnya</PulseButton></details>}
+        {coverage && coverage.waiting > 0 && <details className="pcm-more"><summary>{outsideTop(coverage)}</summary><p>{formatCount(coverage.waiting)} posting lain belum punya komentar.{coverage.not_requestable > 0 ? ` ${formatCount(coverage.not_requestable)} posting tanpa kolom komentar.` : ''}</p><PulseButton size="sm" onClick={collectNext} busy={collect.busy} busyLabel="Mengambil komentar…">Ambil 10 posting berikutnya</PulseButton></details>}
         {collect.note && <p className="pc-coverage-note" role="status">{collect.note}</p>}
         {collect.error && <p className="pc-coverage-note pc-coverage-error" role="alert">{collect.error}</p>}
       </div>}
     </div>
-  </section>;
+  </PulseCard>;
 }

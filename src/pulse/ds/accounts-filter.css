@@ -8,7 +8,7 @@
 .pa-filter-search > input { width: 100%; padding-left: 40px; }
 .pa-filter-group { display: flex; align-items: flex-start; gap: var(--ps-space-2, 8px) var(--ps-space-3, 12px); min-width: 0; }
 .pa-filter-sort { align-items: center; }
-.pa-filter-label { display: inline-flex; align-items: center; flex: 0 0 auto; min-height: var(--ps-control-sm, 36px); font-size: var(--ps-text-small, .75rem); font-weight: var(--ps-weight-label, 600); color: var(--ps-muted); }
+.pa-filter-label, .pa-filter-group > .pu-filter-label { display: inline-flex; align-items: center; flex: 0 0 auto; min-height: var(--ps-control-sm, 36px); font-size: var(--ps-text-small, .75rem); font-weight: var(--ps-weight-label, 600); color: var(--ps-muted); }
 .pa-filter-divider { align-self: stretch; flex: 0 0 1px; margin: 6px 4px; background: var(--ps-line); }
 /* A pressed chip is lavender in both themes; its platform glyph takes the chip's ink so it stays visible on it. */
 .pa-filter button.pu-tag[data-platform][aria-pressed=true] { --tag-mark: var(--ps-accent-ink); }

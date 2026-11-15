@@ -2,6 +2,7 @@ import { RefreshCw, Search } from 'lucide-react';
 import { PlatformIcon } from '../components/admin/pulse/PlatformIcon';
 import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import { PulseSkeleton } from '../components/ui/PulsePatterns';
+import { PulseFilterChip } from '../components/ui/PulseSurface';
 import { attemptNotice, briefText, categoryCounts, freshnessText, offeredPlatforms, provinceName, provinceRanking, radarCategories, matchingIssues, visibleIssues } from '../lib/pulseRadar';
 import AnalyticsPanel from './AnalyticsPanel';
 import InfoTip from './InfoTip';
@@ -11,7 +12,7 @@ import './ds/radar-issues.css';
 /** A row of chips that set one choice. Pressed shows the choice; the count, where there is one, is set apart from the name. */
 function Chips({ label, choices, value, onChange }) {
   return <div className="rdl-chips" role="group" aria-label={label}>{choices.map(({ id, text, count, mark }) =>
-    <button key={id} type="button" className="rdl-chip" aria-pressed={value === id} onClick={() => onChange(id)}>{mark}{text}{count !== undefined && <span className="rdl-count">{count}</span>}</button>)}</div>;
+    <PulseFilterChip key={id} active={value === id} leading={mark} count={count} onClick={() => onChange(id)}>{text}</PulseFilterChip>)}</div>;
 }
 
 /** One choice the page makes, with its name in words beside the options. The group keeps its own accessible name. */
