@@ -320,6 +320,14 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pu-eng[data-compact] dd { font-size: 1rem; }
 @media (max-width: 900px) { .pu-eng { grid-template-columns: minmax(0, 1fr); } .pu-eng-kpis { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--ps-line); } }
 @media (max-width: 480px) { .pu-eng-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* The breakdown inside an opened post card follows the card's width, not the screen's: a card in a grid column is
+   narrow on a wide screen (the owner, 16 Nov 2026), so the four counts go two by two and the ratios go under them. */
+.pulse-standalone .pm-post-detail { container-type: inline-size; container-name: post-detail; }
+@container post-detail (max-width: 560px) {
+  .pu-eng { grid-template-columns: minmax(0, 1fr); }
+  .pu-eng-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pu-eng-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--ps-line); }
+}
 
 /* ---------- Evidence and post cards: one rule per break, never two ---------- */
 .pulse-standalone .pse-card .pse-insights { border-bottom: 0; padding-bottom: 0; }
@@ -637,6 +645,14 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pc-error { margin: 0; font-size: .8125rem; color: var(--ps-danger-ink); }
 .pc-note { margin: 0; max-width: 78ch; font-size: .75rem; line-height: 1.6; color: var(--ps-muted); }
 .pulse-standalone .pu-source-actions > a.pm-ask-ai { gap: 6px; padding: 0 12px; font-size: .8125rem; font-weight: 600; text-decoration: none; }
+/* The card's relevance button (RelevanceToggle): one symbol beside Tanya AI and the source link, the same size as both.
+   Pressed, it takes the warning tint, and the card carries the words "Tidak relevan" beside the tone. */
+.pulse-standalone .pu-source-actions > button.pm-relevance { display: inline-flex; align-items: center; justify-content: center; min-width: var(--ps-control-md); min-height: var(--ps-control-md); padding: 0; border: 1px solid var(--ps-control-line); border-radius: var(--ps-radius-control); background: transparent; color: var(--ps-muted); box-shadow: none; cursor: pointer; }
+.pulse-standalone .pu-source-actions > button.pm-relevance:hover { background: var(--ps-soft); color: var(--ps-ink); }
+.pulse-standalone .pu-source-actions > button.pm-relevance[aria-pressed=true] { background: var(--ps-peach); border-color: var(--ps-warning-ink); color: var(--ps-warning-ink); }
+.pulse-standalone .pu-source-actions > button.pm-relevance[data-error] { border-color: var(--ps-danger); }
+.pulse-standalone .pu-source-actions > button.pm-relevance:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .pu-source-actions > button.pm-relevance:disabled { opacity: .5; cursor: default; }
 @media (max-width: 600px) {
   .pc-composer-row { grid-template-columns: minmax(0, 1fr); }
   .pc-answer { padding: 16px; }
@@ -879,7 +895,7 @@ div.pu-hover-label { margin-bottom: 2px; }
 /* ── Grid media: a scannable wall of tiles ───────────────────────────────── */
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post-grid { grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 16px; align-items: stretch; }
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-.pulse-standalone .pm-workspace[data-layout=grid] .pulse-post[data-open] { grid-column: 1 / -1; }
+/* An opened card stays in its column (the owner, 16 Nov 2026); the packed grid (useMasonry) gives it the rows it needs. */
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post:not([data-open]) .pm-post-body { display: contents; }
 /* Picture first, edge to edge, same shape on every tile. */
 .pulse-standalone .pm-workspace[data-layout=grid] .pulse-post:not([data-open]) .pulse-media { order: -1; width: 100%; max-width: none; margin: 0; }

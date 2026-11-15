@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PulseArrow } from '../../ui/PulseArrow';
 import React, { createElement, useEffect, useRef, useState } from 'react';
 import api from '../../../lib/api';
-import ReviewPost from './ReviewPost';
+import ReviewPost, { RelevanceToggle } from './ReviewPost';
 import { ExternalLink, List, LayoutGrid, Sparkles, ChevronDown } from 'lucide-react';
 import { PulseLike, PulseComment, PulseShare, PulseView } from '../../ui/PulseMetricIcons';
 import { postInteractions } from '../../../lib/pulseEngagement';
@@ -41,7 +41,7 @@ function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
   const media = postMedia(post), total = postInteractions(post.metrics), detailId = 'pm-detail-' + post.id;
   const names = { x: { comments: 'Balasan', shares: 'Repost' }, threads: { comments: 'Balasan', shares: 'Repost' } }[post.platform] || {};
   return <article className="pulse-post" data-open={open ? '' : undefined}>
-    <PulseSourceHeading post={post} linkProfile><SentimentTag value={postSentiment(post)}/>{topicId&&<Link className="pm-ask-ai" to={'/pulse/chat?'+new URLSearchParams({topic:topicId,post:post.id})} aria-label={'Tanya AI tentang posting '+(post.author||'')}><Sparkles size={16} aria-hidden="true"/><span>Tanya AI</span></Link>}{media.postUrl&&<a href={media.postUrl} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting '+(post.author||'')}><ExternalLink size={18}/></a>}</PulseSourceHeading>
+    <PulseSourceHeading post={post} linkProfile><SentimentTag value={postSentiment(post)}/>{review?.relevance==='irrelevant'&&<PulseTag tone="warning">Tidak relevan</PulseTag>}{topicId&&<Link className="pm-ask-ai" to={'/pulse/chat?'+new URLSearchParams({topic:topicId,post:post.id})} aria-label={'Tanya AI tentang posting '+(post.author||'')}><Sparkles size={16} aria-hidden="true"/><span>Tanya AI</span></Link>}{topicId&&<RelevanceToggle postId={post.id} topicId={topicId} review={review} disabled={!reviewsReady} onSaved={onReviewSaved}/>}{media.postUrl&&<a href={media.postUrl} target="_blank" rel="noopener noreferrer" aria-label={'Buka posting '+(post.author||'')}><ExternalLink size={18}/></a>}</PulseSourceHeading>
     <div className={'pm-post-body'+(['instagram','tiktok'].includes(post.platform)&&(media.imageUrl||media.videoUrl||media.embedUrl)?' has-media':'')}>
       <PostMediaPreview post={post} links={false} />
       <PostCaption post={post}/>
