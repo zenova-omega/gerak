@@ -31,7 +31,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
  const [includeIrrelevant,setIncludeIrrelevant]=useState(false),[selection,setSelection]=useState(null);
  const extra=useOverviewEvidence(topic.id||params.get('topic'),period,data);
  const reviews=extra.reviews?.reviews||[];
- const excludedIds=includeIrrelevant?[]:reviews.filter(r=>r.relevance==='irrelevant').map(r=>r.post_id);
+ const flaggedIds=reviews.filter(r=>r.relevance==='irrelevant').map(r=>r.post_id),excludedIds=includeIrrelevant?[]:flaggedIds;
  const r=overviewEvidence(data.posts||[],{platforms,excludedIds,previousPosts:extra.previousPosts??null});
  const total=r.posts.length;
  const quality=reviewEvidence(r.posts,reviews);
@@ -75,7 +75,7 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
    {signals.length>0&&<ul className="po-signals" aria-label="Sorotan untuk diperiksa">{signals.map(s=><li key={s.key}><button type="button" onClick={s.onClick}><span className="po-signal-label">{s.label}</span><strong>{s.value}</strong><small>{s.note}</small><span className="po-signal-action">{s.action} <PulseArrow/></span></button></li>)}</ul>}
    <PlatformPie platforms={r.platforms} onOpen={id=>open(platformLabel(id),r.posts.filter(p=>p.platform===id))}/>
    <footer className="po-brief-foot">
-    <label className="po-relevance"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeIrrelevant} onChange={e=>{setIncludeIrrelevant(e.target.checked);setSelection(null);}}/> Sertakan posting yang ditandai tidak relevan</label>
+    <label className="po-relevance"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeIrrelevant} onChange={e=>{setIncludeIrrelevant(e.target.checked);setSelection(null);}}/> {flaggedIds.length?`Sertakan ${formatCount(flaggedIds.length)} posting yang ditandai tidak relevan`:'Sertakan posting yang ditandai tidak relevan'}<InfoTip label="Tentang posting tidak relevan">Ikhtisar tidak menghitung posting yang ditandai tidak relevan. Halaman Posting, Sentimen, Akun & sumber dan Jaringan masih menghitung semuanya, jadi angkanya bisa lebih besar di sana.</InfoTip></label>
     <span className="po-quality">{quality.paired?`${Math.round(quality.accuracy*100)}% sesuai penilaian analis · ${quality.correct}/${quality.paired} sampel`:'Belum ada sampel berlabel manual'} <InfoTip label="Tentang angka ringkasan">Kualitas analisis hanya dari sampel yang dinilai analis dalam pilihan ini; bukan ukuran akurasi seluruh data. Perlu ditinjau mencakup penilaian kurang yakin, perbedaan label, atau penandaan analis. Konten unik menggabungkan teks identik dengan perbedaan kapital dan spasi; kemiripan narasi tidak dihitung sebagai duplikat. Sentimen bersih = (positif − negatif) ÷ posting yang dianalisis; {hideUnknown?'posting belum dianalisis disembunyikan di halaman Sentimen, dan di sini juga tidak dihitung':'posting belum dianalisis tidak dihitung'}. Konsentrasi akun adalah porsi posting dari tiga akun paling aktif, bukan bukti akun terkoordinasi.</InfoTip></span>
     {extra.loaded&&!extra.reviews&&<small>Status koreksi analis belum tersedia; hasil belum disaring berdasarkan koreksi.</small>}
    </footer>

@@ -63,7 +63,7 @@ function GroupReach({ group }) {
   if (group.interactions === null && group.shares === null) return null;
   return <ul className="pcg-reach">
     <li><PulseBeat size={14} /><b>{group.interactions === null ? unknown : formatCount(group.interactions)}</b> interaksi</li>
-    <li><PulseShare size={14} />dibagikan <b>{group.shares === null ? unknown : formatCount(group.shares) + '×'}</b></li>
+    <li><PulseShare size={14} />konten dibagikan <b>{group.shares === null ? unknown : formatCount(group.shares) + '×'}</b></li>
   </ul>;
 }
 

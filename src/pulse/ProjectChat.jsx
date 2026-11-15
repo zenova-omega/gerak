@@ -19,10 +19,10 @@ import ChatAnswer from './ChatAnswer';
 import './ds/chat-history.css';
 
 const generalQuestions = [
-  'Apa isu utama dalam 7 hari terakhir?',
+  'Apa isu utama dalam cakupan ini?',
   'Posting mana yang paling cepat naik, dan kapan?',
   'Platform mana yang paling ramai membahas ini?',
-  'Bagaimana sentimen dalam 7 hari terakhir?',
+  'Bagaimana sentimen dalam cakupan ini?',
 ];
 const postQuestions = [
   'Kapan posting ini pertama kali viral?',
@@ -240,7 +240,7 @@ function Chat({ topicId }) {
         <form className="pc-composer" onSubmit={event => { event.preventDefault(); ask(draft); }}>
           <label htmlFor="pc-question">Pertanyaan Anda</label>
           <div className="pc-composer-row">
-            <textarea ref={input} id="pc-question" rows={2} maxLength={600} value={draft} disabled={closed} placeholder={postId ? 'Contoh: kapan posting ini pertama kali viral?' : 'Contoh: apa isu utama dalam 7 hari terakhir?'}
+            <textarea ref={input} id="pc-question" rows={2} maxLength={600} value={draft} disabled={closed} placeholder={postId ? 'Contoh: kapan posting ini pertama kali viral?' : 'Contoh: apa isu utama dalam cakupan ini?'}
               onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); ask(draft); } }} aria-describedby="pc-note" />
             <PulseButton type="submit" variant="primary" disabled={closed || draft.trim().length < 2} busy={Boolean(pending)} busyLabel="Menjawab…"><SendHorizontal size={16} />Kirim</PulseButton>
           </div>

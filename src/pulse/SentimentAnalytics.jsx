@@ -87,6 +87,7 @@ export default function SentimentAnalytics({data,topicId}) {
   const emojiBySentiment=['negative','neutral','positive'].map(key=>{const rows=posts.filter(post=>postSentiment(post)===key);return {key,posts:rows.length,emoji:topEmoji(rows.flatMap(post=>[`${post.title||''} ${post.text||''}`,...((post.metrics?.comment_snapshot?.items||[]).map(comment=>comment.text))]),14)};});
   return <div className="po-overview psa-page">
     <VoiceOverview posts={allPosts} opinion={opinion} loaded={analysis.loaded||!topicId} hideUnknown={hideUnknown} onHideUnknown={setHideUnknown} voice={voice} onVoice={setVoice} commentsLink={'/pulse/comments?'+params}/>
+    <p className="psa-scope-caption">Rincian untuk <strong>{voiceLabels[voice]}</strong>: jumlah posting dan perubahan porsinya</p>
     <PulseStatGrid label={`Jumlah posting per sentimen, ${voiceLabels[voice].toLowerCase()}`} className="psa-scope-stats">{shown.map(([key,label])=>{const change=key==='unknown'?null:recentShareChange(days,key);return <PulseStat key={key} as={Link} to={link({sentiment:key})} tone={sentimentTone[key]} label={label} value={counts[key]}
         share={base?counts[key]/base*100:null} shareLabel={hideUnknown?'dari yang dianalisis':'dari seluruh posting'}
         delta={change?.delta??null} deltaUnit=" poin" deltaIntent={deltaIntent(key,change?.delta)} deltaNote={change?`porsi dari yang dianalisis · ${change.days} hari terakhir vs ${change.days} hari sebelumnya`:undefined} trend={days.map(row=>row[key])}/>;})}</PulseStatGrid>

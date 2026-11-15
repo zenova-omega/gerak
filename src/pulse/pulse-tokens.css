@@ -172,3 +172,6 @@
 .pu-spinner { animation: pulse-ui-spin 1s linear infinite; }
 @keyframes pulse-ui-spin { to { transform: rotate(360deg); } }
 @media(prefers-reduced-motion:reduce) { .pu-spinner { animation: none; } .pulse-standalone .pu-button { transition:none; } }
+
+/* The sign-in panel is a fixed dark brand surface in both themes (DESIGN.md), so it has its own tokens that do not flip. */
+.pulse-standalone { --ps-brand-surface: oklch(27% 0.009 285); --ps-brand-ink: oklch(97% 0.004 285); --ps-brand-muted: oklch(79% 0.01 285); }

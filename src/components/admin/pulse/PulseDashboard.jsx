@@ -19,7 +19,6 @@ import MonitorRoom from './MonitorRoom';
 import InfographicsPanel from './InfographicsPanel';
 import './pulse.css';
 import { PulseButton } from '../../ui/PulseUI';
-import AnalysisNavigation from '../../../pulse/AnalysisNavigation';
 import { pageMeta } from '../../../pulse/pageMeta';
 import { sentimentLabels } from '../../../lib/pulsePostFilters';
 import { setZone } from '../../../lib/pulseMeasures';
@@ -306,7 +305,6 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
           <div className="pulse-filters"><PlatformCheckboxes platforms={issuePlatforms} value={platform} onChange={setPlatform} /><label>Urutkan<select value={sort} onChange={e => setSort(e.target.value)}><option value="score">Skor isu</option><option value="recent">Terbaru</option></select></label><span>Filter ini hanya berlaku untuk daftar isu.</span></div>
           {issues.loading ? <p className="pulse-loading" role="status">Memuat isu…</p> : issues.error ? <ErrorNotice standalone={standalone} error={issues.error} retry={issues.refetch} /> : filtered.length ? <div className="pulse-issue-list">{filtered.map(issue => <IssueCard key={issue.id + ':' + issue.last_seen_at + ':' + issue.item_count} issue={issue} platformFilter={platform ?? "all"} dateMode="absolute" />)}</div> : <Empty>{issues.issues.length ? 'Tidak ada isu yang cocok dengan filter platform.' : 'Belum ada isu tersimpan. Siapkan topik lalu jalankan crawl manual.'}</Empty>}
         </section>}
-        {standalone && view === 'overview' && <AnalysisNavigation />}
         <footer className="pulse-footer"><ShieldCheck size={14} />Sampel percakapan publik · bukan keseluruhan aktivitas media sosial</footer>
       </main>
     </div>

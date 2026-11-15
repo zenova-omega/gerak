@@ -127,7 +127,7 @@ function AlertRow({ alert, project, busy, onOpen, onAck, onSaved }) {
       {row.opens && <PulseButton size="sm" arrow onClick={() => onOpen(alert)} aria-label={`Lihat posting: ${row.title}`}>Lihat posting</PulseButton>}
       <PulseButton size="sm" variant="quiet" aria-expanded={following} aria-controls={following ? formId : undefined} onClick={() => setFollowing(value => !value)} aria-label={`Tindak lanjut: ${row.title}`}>Tindak lanjut</PulseButton>
       {row.unread
-        ? <PulseButton size="sm" variant="quiet" disabled={busy} onClick={() => onAck(alert.id)} aria-label={`Tandai dibaca: ${row.title}`}>Tandai dibaca</PulseButton>
+        ? <PulseButton size="sm" variant="quiet" iconOnly disabled={busy} onClick={() => onAck(alert.id)} aria-label={`Tandai dibaca: ${row.title}`} title="Tandai dibaca"><Check size={16} aria-hidden="true" /></PulseButton>
         : <span className="mo-alert-read"><Check size={14} aria-hidden="true" />Dibaca</span>}
     </div>
     {following && <FollowUpForm alert={alert} formId={formId} disabled={busy} onSaved={onSaved} onClose={() => setFollowing(false)} />}
@@ -137,7 +137,8 @@ function AlertRow({ alert, project, busy, onOpen, onAck, onSaved }) {
 function AlertInbox({ data, alerts, topicId, topics, page, setPage, busy, disabled, marking, notice, onAck, onAckAll, onOpen, onRefresh, onSaved }) {
   const [expanded, setExpanded] = useState(false);
   const unread = data.unread || 0, total = data.alert_total || 0;
-  const visible = expanded ? alerts : alerts.slice(0, SHOWN_ALERTS);
+  const faults = alerts.filter(alert => alert.kind === 'collection_error' && alertSummary(alert).unread), rest = faults.length ? alerts.filter(alert => !faults.includes(alert)) : alerts;
+  const visible = expanded ? rest : rest.slice(0, SHOWN_ALERTS);
   const pages = Math.max(1, Math.ceil(total / 50));
   const heading = unread ? `${formatCount(unread)} alert belum dibaca` : total ? 'Tidak ada alert baru' : 'Belum ada alert';
   return <section className="pulse-panel mo-panel mo-inbox" aria-labelledby="mo-alert-title">
@@ -157,11 +158,13 @@ function AlertInbox({ data, alerts, topicId, topics, page, setPage, busy, disabl
     <div aria-live="polite">{notice && <div className="mo-feedback"><PulseNotice tone={notice.tone} role={notice.tone === 'warning' ? 'alert' : 'status'}>{notice.text}</PulseNotice></div>}</div>
     {!alerts.length
       ? <div className="mo-empty"><PulsePanelEmpty title="Belum ada alert untuk project ini">Alert muncul di sini saat posting tentang satu isu melonjak, interaksi satu posting naik cepat, atau pengumpulan dari satu sumber gagal.</PulsePanelEmpty></div>
-      : <ul className="mo-alerts" aria-label="Daftar alert, terbaru di atas" aria-busy={(data.alert_offset ?? page * 50) !== page * 50 || undefined}>
+      : <>{faults.length > 0 && <div className="mo-faults"><h3>Gangguan pengumpulan <PulseTag tone="warning">{formatCount(faults.length)} belum dibaca</PulseTag></h3><p>Sumber yang gagal mengubah arti angka di halaman lain, jadi ditaruh di atas alert isu.</p>
+        <ul className="mo-alerts" aria-label="Gangguan pengumpulan">{faults.map(alert => <AlertRow key={alert.id} alert={alert} project={topicId ? null : topics.find(topic => topic.id === alert.topic_id)?.label || null} busy={busy || disabled} onOpen={onOpen} onAck={onAck} onSaved={onSaved} />)}</ul></div>}
+        <ul className="mo-alerts" aria-label="Daftar alert, terbaru di atas" aria-busy={(data.alert_offset ?? page * 50) !== page * 50 || undefined}>
         {visible.map(alert => <AlertRow key={alert.id} alert={alert} project={topicId ? null : topics.find(topic => topic.id === alert.topic_id)?.label || null} busy={busy || disabled} onOpen={onOpen} onAck={onAck} onSaved={onSaved} />)}
-      </ul>}
-    {(alerts.length > SHOWN_ALERTS || pages > 1) && <footer className="mo-inbox-foot">
-      {alerts.length > SHOWN_ALERTS && <PulseButton size="sm" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? 'Ringkas daftar' : `Tampilkan ${formatCount(alerts.length - SHOWN_ALERTS)} alert lainnya`}</PulseButton>}
+      </ul></>}
+    {(rest.length > SHOWN_ALERTS || pages > 1) && <footer className="mo-inbox-foot">
+      {rest.length > SHOWN_ALERTS && <PulseButton size="sm" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? 'Ringkas daftar' : `Tampilkan ${formatCount(rest.length - SHOWN_ALERTS)} alert lainnya`}</PulseButton>}
       {pages > 1 && <nav className="mo-pages" aria-label="Halaman alert">
         <PulseButton size="sm" disabled={!canChangeAlertPage(page, total, busy, -1)} onClick={() => setPage(page - 1)}>Lebih baru</PulseButton>
         <span>Halaman {formatCount(page + 1)} dari {formatCount(pages)}</span>

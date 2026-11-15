@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chatStore, chatTurn, pulseUI } from './test-support/pulse-ui-fixture.mjs';
 
-const FIRST = 'Apa isu utama dalam 7 hari terakhir?';
+const FIRST = 'Apa isu utama dalam cakupan ini?';
 const SECOND = 'Platform mana yang paling ramai membahas ini?';
 const LONG = 'Bagaimana_perkembangan_percakapan_tentang_perbaikan_jalan_rusak_tanpa_spasi_sama_sekali';
 const stored = () => chatStore([

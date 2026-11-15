@@ -18,15 +18,18 @@ const stanceNote='Mendukung atau menolak berarti sikap yang dinyatakan dalam tek
 
 const num=value=>value.toLocaleString('id-ID');
 /** One breakdown card. Shares are read over the analysed rows; the rows still waiting are shown as a count, without a share. */
-function Breakdown({title,counts,labels,onSelect,printable}){
+function Breakdown({title,counts,labels,onSelect,printable,foldUniform=false}){
  const shares=analysedShares(counts),noun=title.includes('posting')?'posting':'komentar';
- return <Card className="pra-breakdown"><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{shares.analysed<shares.total?`${num(shares.analysed)} dari ${num(shares.total)} ${noun} sudah dianalisis`:`${num(shares.total)} ${noun} dianalisis`}</CardDescription></CardHeader><CardContent>{Object.entries(labels).map(([key,label])=>{
+ const top=Object.keys(labels).filter(key=>key!=='unknown').sort((a,b)=>(counts[b]||0)-(counts[a]||0))[0],topShare=shares.analysed?(counts[top]||0)/shares.analysed:0;
+ const uniform=foldUniform&&!printable&&shares.analysed>=20&&topShare>=.95;
+ const card=<Card className="pra-breakdown"><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{shares.analysed<shares.total?`${num(shares.analysed)} dari ${num(shares.total)} ${noun} sudah dianalisis`:`${num(shares.total)} ${noun} dianalisis`}</CardDescription></CardHeader><CardContent>{Object.entries(labels).map(([key,label])=>{
   const value=counts[key]||0,percent=shares.percent(key),share=percent==null?null:percent.toLocaleString('id-ID',{maximumFractionDigits:1})+'%';
   if(key==='unknown'&&!value)return null;
   const content=<><span>{label}</span><strong>{num(value)}{share&&<> <small>{share}</small></>}</strong>{percent!=null&&<span className="pra-track" aria-hidden="true"><i style={{width:`${percent}%`}}/></span>}</>;
   const spoken=`${label}: ${num(value)}${share?`, ${share} dari yang sudah dianalisis`:''}`;
   return printable?<div className={'pra-row '+key} key={key}>{content}</div>:<button type="button" aria-label={`${spoken}. Lihat sumber`} className={'pra-row '+key} key={key} onClick={()=>onSelect(key)}>{content}</button>;
  })}</CardContent>{!printable&&<CardFooter><span className="pra-chart-hint">{shares.analysed?'Persentase dari yang sudah dianalisis. ':''}Klik kategori untuk membaca sumber <PulseArrow/></span></CardFooter>}</Card>;
+ return uniform?<details className="pra-uniform"><summary><strong>{title}</strong><span>{Math.round(topShare*100)}% {labels[top].toLowerCase()}; tidak ada perbedaan sikap yang terbaca</span></summary>{card}</details>:card;
 }
 export function ResponseAnalysisView({posts=[],response,loaded=false,error=false,printable=false}){
  const [choice,setChoice]=useState(null);
@@ -43,8 +46,8 @@ export function ResponseAnalysisView({posts=[],response,loaded=false,error=false
   {progress&&(progress.pending||progress.running||progress.failed)?<p className="pra-status">Analisis berjalan otomatis: {num((progress.pending||0)+(progress.running||0))} menunggu giliran{progress.failed?`, ${num(progress.failed)} perlu diulang`:''}. Angka di bawah mengikuti posting dalam filter.</p>:null}
   <div className="pra-columns">
    <Breakdown title="Sentimen komentar" counts={r.commentCounts} labels={commentLabels} printable={printable} onSelect={label=>select('sentiment',label)}/>
-   <Breakdown title="Sikap dalam posting" counts={r.stanceCounts} labels={stanceLabels} printable={printable} onSelect={label=>select('post',label)}/>
-   <Breakdown title="Sikap dalam komentar" counts={r.commentStanceCounts} labels={stanceLabels} printable={printable} onSelect={label=>select('comment',label)}/>
+   <Breakdown title="Sikap dalam posting" counts={r.stanceCounts} labels={stanceLabels} printable={printable} foldUniform onSelect={label=>select('post',label)}/>
+   <Breakdown title="Sikap dalam komentar" counts={r.commentStanceCounts} labels={stanceLabels} printable={printable} foldUniform onSelect={label=>select('comment',label)}/>
   </div>
   {!total&&<p>Belum ada isi komentar pada posting yang dipilih. Statistik jumlah komentar tidak menggantikan teks komentar.</p>}
   {printable&&<><p className="pra-note">{scopeNote}</p><p className="pra-note">{stanceNote}</p></>}
