@@ -64,6 +64,31 @@ export function useIssues({ topicId } = {}) {
   const resource = usePulseResource('/admin/pulse/issues', topicId);
   return { ...resource, issues: resource.data || [] };
 }
+/** day_v1: the installation's zone, read from GET /admin/pulse/measures once per page load. Resolves true when it was
+ * set, false when the request failed: the default zone then stays, and the next call asks again. Never throws. */
+let zoneRequest = null, zoneSettled = false;
+export function loadZone() {
+  zoneRequest ||= api.get('/admin/pulse/measures').then(
+    body => { setZone(body?.zone); zoneSettled = true; return true; },
+    () => { zoneSettled = true; zoneRequest = null; return false; });
+  return zoneRequest;
+}
+const ZONE_WAIT_MS = 1500;
+/** The PULSE shell's zone: true once the zone is set, the request failed, or `wait` ms passed, so the signed-in pages
+ * count their days in the installation's zone and are never held by a failed or slow answer (a late one still sets
+ * it). `active` is false until someone is signed in. */
+export function useInstallationZone(active, wait = ZONE_WAIT_MS) {
+  const [settled, setSettled] = useState(zoneSettled);
+  useEffect(() => {
+    if (!active) return undefined;
+    let live = true;
+    const done = () => { if (live) setSettled(true); };
+    const timer = setTimeout(done, wait);
+    loadZone().then(done);
+    return () => { live = false; clearTimeout(timer); };
+  }, [active, wait]);
+  return settled;
+}
 /** day_v1: an analytics payload carries the installation's zone; it is set as the payload arrives, before any page
  * counts a day from it. */
 function receiveAnalytics(data) {

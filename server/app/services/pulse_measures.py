@@ -193,6 +193,15 @@ def interaction_sort_key(interactions, published_at, post_id) -> tuple:
             '' if post_id is None else str(post_id))
 
 
+def first_sort_key(published_at, post_id) -> tuple:
+    """clock_v1 order of "who was first": by day; on one day a post with a clock comes before one whose source gave a
+    date only, which never takes part in the order by time; then time, then id. No readable date comes last."""
+    day = local_day(published_at)
+    clock = day is not None and has_clock(published_at)
+    return (day is None, day or '', not clock, read_time(published_at) if clock else datetime.min,
+            '' if post_id is None else str(post_id))
+
+
 def tone(metrics: dict | None) -> str:
     stored = (metrics or {}).get('sentiment') if isinstance(metrics, dict) else None
     label = stored.get('label') if isinstance(stored, dict) else stored

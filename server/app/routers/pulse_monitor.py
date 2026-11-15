@@ -63,14 +63,18 @@ async def collection_overview(db,topic_id,now):
             'runs':{name:{'planned':0,'succeeded':0,'failed':0,'waiting':0} for name,_ in OVERVIEW_WINDOWS}})
     stored=select(SourceItem.platform,func.count(),func.min(SourceItem.published_at),func.max(SourceItem.published_at),
         func.max(SourceItem.crawled_at)).where(SourceItem.platform.is_not(None))
-    # Days with posts are days of the installation's zone (day_v1), counted from each distinct publication time.
-    stamps=select(SourceItem.platform,SourceItem.published_at).where(SourceItem.platform.is_not(None),SourceItem.published_at.is_not(None)).distinct()
+    # Days with posts are days of the installation's zone (day_v1). The database answers one row per source and UTC
+    # date, its first and last publication time: within one UTC date a post's zone day never goes down as its time goes
+    # up (a date-only post, 00.00 UTC, keeps that date; from 24 h minus the offset it is the next date), so those two
+    # name every zone day of that date. This route is polled, so it never reads one row per post.
+    stamps=select(SourceItem.platform,func.min(SourceItem.published_at),func.max(SourceItem.published_at)).where(
+        SourceItem.platform.is_not(None),SourceItem.published_at.is_not(None)).group_by(SourceItem.platform,func.date(SourceItem.published_at))
     if topic_id:
         stored=stored.where(SourceItem.topic_id==topic_id)
         stamps=stamps.where(SourceItem.topic_id==topic_id)
     days={}
-    for platform,published in (await db.execute(stamps)).all():
-        days.setdefault(platform,set()).add(local_day(published))
+    for platform,first,last in (await db.execute(stamps)).all():
+        days.setdefault(platform,set()).update((local_day(first),local_day(last)))
     for platform,posts,first,last,collected in (await db.execute(stored.group_by(SourceItem.platform))).all():
         row(platform).update(posts=posts,first_published_at=first,last_published_at=last,days_with_posts=len(days.get(platform,())),last_collected_at=collected)
     for name,span in OVERVIEW_WINDOWS:

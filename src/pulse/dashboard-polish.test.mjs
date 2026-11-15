@@ -67,3 +67,38 @@ test('the analytics hook sets the installation zone from every payload it receiv
     } finally { api.get = get; setZone({ offset_minutes: 420, name: 'WIB' }); }
   } finally { await server.close(); }
 });
+
+test('the PULSE shell reads the installation zone once, before its pages, and a failed answer keeps the default', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { default: api } = await server.ssrLoadModule('/src/lib/api.js');
+    const { loadZone, useInstallationZone } = await server.ssrLoadModule('/src/hooks/usePulse.js');
+    const { zone, setZone } = await server.ssrLoadModule('/src/lib/pulseMeasures.js');
+    const requested = [], get = api.get;
+    let fail = true;
+    api.get = async path => {
+      requested.push(path);
+      if (fail) throw Object.assign(new Error('Tidak dapat terhubung'), { status: 0 });
+      return { zone: { offset_minutes: 540, name: 'WIT' }, rules: [] };
+    };
+    try {
+      let ready = null;
+      const Probe = () => { ready = useInstallationZone(true); return null; };
+      renderToStaticMarkup(React.createElement(Probe));
+      assert.equal(ready, false, 'the signed-in pages wait for the answer');
+      assert.equal(await loadZone(), false, 'a failed answer never throws');
+      assert.deepEqual(zone(), { offset_minutes: 420, name: 'WIB' }, 'the default zone stays');
+      renderToStaticMarkup(React.createElement(Probe));
+      assert.equal(ready, true, 'and a failed answer never holds the pages');
+      fail = false;
+      assert.equal(await loadZone(), true, 'asked again on the next sign-in');
+      assert.deepEqual(zone(), { offset_minutes: 540, name: 'WIT' });
+      await loadZone();
+      assert.deepEqual(requested, ['/admin/pulse/measures', '/admin/pulse/measures'], 'once answered, asked once per page load');
+    } finally { api.get = get; setZone({ offset_minutes: 420, name: 'WIB' }); }
+    const { readFileSync } = await import('node:fs');
+    const app = readFileSync(new URL('./PulseApp.jsx', import.meta.url), 'utf8');
+    assert.match(app, /const zoneReady = useInstallationZone\(Boolean\(session\.user\)\);/);
+    assert.match(app, /\{session\.loading \|\| \(session\.user && !zoneReady\) \? <main className="ps-loading">/, 'the workspace mounts once the zone is known');
+  } finally { await server.close(); }
+});

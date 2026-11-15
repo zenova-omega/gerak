@@ -122,3 +122,47 @@ def test_interaction_totals_carry_their_post_count_and_stay_unknown_when_none_is
     assert (accounts['Early']['engagement'], accounts['Early']['interaction_posts']) == (12, 1)
     quiet = analyze_network([post(str(i), f'Media {i}', text) | {'metrics': {'views': 3}} for i in range(3)])['narratives'][0]
     assert (quiet['engagement'], quiet['interaction_posts']) == (None, 0)
+
+
+def test_who_was_first_never_reads_a_date_only_post_as_published_at_midnight():
+    """clock_v1 in "who was first": by day first; on one day a post with a clock comes before one whose source gave a
+    date only (stored at 00:00:00 UTC), which never takes part in a time tie or in "later". The narrative says how many
+    of its posts have a date only."""
+    text = 'laporan investigasi penting tentang keamanan komunikasi publik sedang dibahas bersama'
+    rows = [post('D', 'DateOnly', text, '2026-11-10T00:00:00'), post('E', 'DateOnly2', text, '2026-11-10T00:00:00Z'),
+            post('T2', 'Timed2', text, '2026-11-10T03:00:00'), post('T', 'Timed', text, '2026-11-10T03:00:00'),
+            post('L', 'Later', text, '2026-11-11T05:00:00')]
+    data = analyze_network(rows)
+    narrative = data['narratives'][0]
+    assert narrative['first_observed']['id'] == 'T'
+    assert narrative['tied_first_count'] == 2, 'the two posts at 03:00; the date-only posts share no time with them'
+    assert narrative['later_accounts'] == 1, 'only the post of the next day; a date-only post of the same day is not later'
+    assert narrative['date_only_posts'] == 2
+    assert [row['id'] for row in narrative['timeline']] == ['T', 'T2', 'D', 'E', 'L']
+    assert [row['id'] for row in data['earliest']] == ['T', 'T2', 'D', 'E', 'L']
+    # A date-only post is still first when no post of its day has a clock, and it ties with nobody by time.
+    alone = analyze_network([post('D', 'DateOnly', text, '2026-11-10T00:00:00'), post('L', 'Later', text, '2026-11-11T05:00:00'),
+                             post('M', 'More', text, '2026-11-10T00:00:00')])['narratives'][0]
+    assert alone['first_observed']['id'] == 'D'
+    assert alone['tied_first_count'] == 1
+    assert alone['later_accounts'] == 1
+    assert alone['date_only_posts'] == 2
+
+
+def test_a_burst_counts_posts_with_a_clock_only_and_says_how_many_were_left_out():
+    rows = [post(f't{i}', 'A', f'kabar {i}', f'2026-11-10T00:0{i}:00') for i in range(1, 4)]
+    rows += [post(f'd{i}', 'A', f'catatan {i}', '2026-11-10T00:00:00') for i in range(2)]
+    account = analyze_network(rows)['accounts'][0]
+    assert [s['kind'] for s in account['signals']] == [], 'three timed posts in ten minutes is no burst'
+    assert account['date_only_posts'] == 2
+    assert account['first_seen'] == '2026-11-10T00:01:00+00:00', 'the first post with a clock on that day'
+    quiet = analyze_network([post('x', 'B', 'kabar', '2026-11-10T08:00:00')])['accounts'][0]
+    assert quiet['date_only_posts'] == 0
+
+
+def test_timestamp_stays_an_aware_utc_reader():
+    from datetime import datetime, timezone
+    from app.services.pulse_network import timestamp
+    assert timestamp('2026-11-10T08:00:00+07:00') == datetime(2026, 11, 10, 1, tzinfo=timezone.utc)
+    assert timestamp('2026-11-10T08:00:00Z').isoformat() == '2026-11-10T08:00:00+00:00'
+    assert timestamp('bukan tanggal') is None and timestamp(None) is None

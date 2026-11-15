@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
-import { networkPositions, replayEvents, replayFrame, topViralAccounts } from '../../../lib/pulseReplay';
+import { eventsUntil, networkPositions, replayEvents, replayFrame, topViralAccounts } from '../../../lib/pulseReplay';
 import { formatCount, pulseDate, safeSourceUrl } from '../../../lib/pulseData';
 import AccountSignal, { PatternTag } from './AccountSignal';
 import ChronologyCards from './ChronologyCards';
@@ -142,7 +142,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
     const shape=edgeShape(projected[e.source],projected[e.target],reach(e.source),reach(e.target),mention?{bend:.14,head:5+width*1.5}:{});
     return shape&&{key:e.source+'>'+e.target+'>'+e.kind,kind:e.kind,width,shape,active:e.source===active?.id||e.target===active?.id};
   }).filter(Boolean).sort((a,b)=>a.active-b.active);   // the lines of the account in focus are drawn last, on top
-  const visibleEvents=dated.filter(e=>e.time<=cutoff),dateOnlyShown=visibleEvents.filter(e=>!e.clock).length;
+  const visibleEvents=eventsUntil(dated,cutoff),dateOnlyShown=visibleEvents.filter(e=>!e.clock).length;
   const pages=Math.max(1,Math.ceil(visibleEvents.length/20));
   const safePage=Math.min(page,pages-1);
   const bins=useMemo(()=>{

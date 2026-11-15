@@ -123,3 +123,16 @@ async def test_a_filed_report_records_the_rule_versions_it_was_filed_under(archi
     assert later['snapshot']['rules']['day']=='day_v2'
     again=(await client.get(f"/api/admin/pulse/reports/{created.json()['id']}?topic_id=a")).json()
     assert again['snapshot']['rules']['day']=='day_v1','opening a report never rewrites what it was filed under'
+
+@pytest.mark.asyncio
+async def test_a_report_is_filed_without_the_measures_of_the_day(archive_env):
+    # Decision 7: a report is counted under the rules in force when it is opened, so a post is filed with its own
+    # inputs only. The figures the server sent with it that day (`measures`) are not kept.
+    client,headers=archive_env
+    body=payload()
+    body['snapshot']['posts'][0]['measures']={'day':'2020-01-01','clock':True,'interactions':999,'account':'news:old','tone':'positive'}
+    created=await client.post('/api/admin/pulse/reports',headers=headers,json=body)
+    assert created.status_code==201,created.text
+    saved=(await client.get(f"/api/admin/pulse/reports/{created.json()['id']}?topic_id=a")).json()
+    assert 'measures' not in saved['snapshot']['posts'][0]
+    assert saved['snapshot']['posts'][0]['text']=='Original caption'

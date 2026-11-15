@@ -132,3 +132,17 @@ test('a scoped project keeps a channel whose post has no name, and reads the key
  const out=filters.scopeProjectData({posts:rows},{}).influencers;
  assert.deepEqual(Object.fromEntries(out.map(row=>[row.key,[row.author,row.mentions]])),{'youtube:UC1':['Kanal',2],'youtube:UC9':[null,1],'x:dikirim':['Lain',1]});
 });
+
+test('a narrowed network orders its earliest posts as the server does: by day, a post with a clock before a date-only one',()=>{
+ // clock_v1: a date-only post (stored at 00:00:00 UTC) is not published at midnight; on its day it comes after the
+ // posts with a clock, and the posts of the day before still come first.
+ const rows=[
+  {id:'d',platform:'x',author:'D',published_at:'2026-11-10T00:00:00Z',metrics:{}},
+  {id:'t',platform:'x',author:'T',published_at:'2026-11-10T03:00:00Z',metrics:{}},
+  {id:'prev',platform:'x',author:'P',published_at:'2026-11-09T16:00:00Z',metrics:{}},
+  {id:'next',platform:'x',author:'N',published_at:'2026-11-10T18:00:00Z',metrics:{}},
+  {id:'ig',platform:'instagram',author:'I',published_at:'2026-11-09T00:00:00Z',metrics:{}},
+ ];
+ const result=filters.scopeProjectData({posts:rows,network:{accounts:[],nodes:[],edges:[]}},{platforms:['x']}).network;
+ assert.deepEqual(result.earliest.map(p=>p.id),['prev','t','d','next']);
+});

@@ -146,6 +146,32 @@
       "out": ["q", "p"]
     }
   ],
+  "first_order": [
+    {
+      "note": "who was first: by day; on one day a post with a clock before a date-only one, then by time, then id; no readable date last",
+      "in": [
+        {"id": "n", "published_at": null},
+        {"id": "d2", "published_at": "2026-11-10T00:00:00Z"},
+        {"id": "z", "published_at": "2026-11-10T18:00:00"},
+        {"id": "d1", "published_at": "2026-11-10T00:00:00"},
+        {"id": "t2", "published_at": "2026-11-10T03:00:00"},
+        {"id": "bad", "published_at": "bukan tanggal"},
+        {"id": "t1", "published_at": "2026-11-10T10:00:00+07:00"},
+        {"id": "e", "published_at": "2026-11-09T23:30:00"},
+        {"id": "y", "published_at": "2026-11-09T00:00:00"},
+        {"id": "x", "published_at": "2026-11-09T16:00:00"}
+      ],
+      "out": ["x", "y", "e", "t1", "t2", "d1", "d2", "z", "bad", "n"]
+    },
+    {
+      "note": "a date-only post is first when no post of its day has a clock",
+      "in": [
+        {"id": "b", "published_at": "2026-11-11T01:00:00"},
+        {"id": "a", "published_at": "2026-11-10T00:00:00"}
+      ],
+      "out": ["a", "b"]
+    }
+  ],
   "tone": [
     {"note": "stored object", "in": {"sentiment": {"label": "positive"}}, "out": "positive"},
     {"note": "stored plain string", "in": {"sentiment": "negative"}, "out": "negative"},

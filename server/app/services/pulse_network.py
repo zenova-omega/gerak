@@ -2,17 +2,31 @@
 import math
 import re
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import timezone
 
-from .pulse_measures import account_key, account_name, content_shares, interactions_total, post_account, reported
+from .pulse_measures import (account_key, account_name, content_shares, first_sort_key, has_clock, interactions_total,
+                              local_day, post_account, read_time, reported)
 
 
 def timestamp(value):
-    try:
-        dt = value if isinstance(value, datetime) else datetime.fromisoformat(value.replace('Z', '+00:00'))
-        return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
-    except (ValueError, TypeError, AttributeError):
-        return None
+    """A time as an aware UTC datetime, read by `read_time`; None when it cannot be read."""
+    moment = read_time(value)
+    return None if moment is None else moment.replace(tzinfo=timezone.utc)
+
+
+def first_order(post):
+    """The order of "who was first" (clock_v1), see `first_sort_key`."""
+    return first_sort_key(post.get('published_at'), post['id'])
+
+
+def is_later(post, first):
+    """Published after `first`: on a later day, or the same day with both clocks and a later time. A date-only post of
+    the first post's day is not known to be later."""
+    day, first_day = local_day(post.get('published_at')), local_day(first.get('published_at'))
+    if day is None or first_day is None or day != first_day:
+        return day is not None and first_day is not None and day > first_day
+    return has_clock(post.get('published_at')) and has_clock(first.get('published_at')) and \
+        read_time(post['published_at']) > read_time(first['published_at'])
 
 
 def normalized(post):
@@ -79,7 +93,7 @@ def analyze_network(posts):
 
     # Greedy representative-based lexical clusters: no transitive similarity chains.
     groups = []
-    for p in sorted(sample, key=lambda x: (timestamp(x.get('published_at')) or datetime.max.replace(tzinfo=timezone.utc), str(x['id']))):
+    for p in sorted(sample, key=first_order):
         tokens = set(normalized(p).split())
         if len(tokens) < 8:
             continue
@@ -100,8 +114,11 @@ def analyze_network(posts):
         if len(authors) >= 3:
             shared.update(authors)
         dated = [p for p in rows if timestamp(p.get('published_at'))]
-        first = dated[0] if dated else None
-        later = {post_account(p) for p in dated if first and timestamp(p['published_at']) > timestamp(first['published_at']) and post_account(p) != post_account(first)} - {None}
+        first = dated[0] if dated else None   # rows come in first_order (clock_v1)
+        later = {post_account(p) for p in dated if first and is_later(p, first) and post_account(p) != post_account(first)} - {None}
+        # A time tie counts posts with a clock only; a date-only first post ties with nobody by time.
+        tied = 0 if not first else 1 if not has_clock(first['published_at']) else \
+            sum(has_clock(p['published_at']) and read_time(p['published_at']) == read_time(first['published_at']) for p in dated)
         # Similarity edges have no causal direction and point to evidence on both sides.
         anchor = next((p for p in rows if post_account(p)), None)
         for p in rows:
@@ -111,14 +128,19 @@ def analyze_network(posts):
         narratives.append({'id': str(rows[0]['id']), 'title': rows[0].get('title') or rows[0].get('text', '')[:160],
                            'post_count': len(rows), 'account_count': len(authors), 'later_accounts': len(later),
                            'first_observed': evidence(first) if first else None,
-                           'tied_first_count': sum(timestamp(p.get('published_at')) == timestamp(first.get('published_at')) for p in dated) if first else 0,
+                           'tied_first_count': tied,
+                           # Posts whose source gave a date only: they take part in "who was first" by their day only.
+                           'date_only_posts': sum(not has_clock(p['published_at']) for p in dated),
                            'timeline': [evidence(p) for p in rows],
                            'engagement': interactions_total(rows)['value'], 'interaction_posts': interactions_total(rows)['posts'],
                            # Last recorded numbers of every post in the group, added up. None when no post reports that number.
                            'metrics': {key: observed_total(rows, key) for key in ('likes', 'comments', 'shares', 'views')}})
     accounts = []
     for key, rows in by_account.items():
-        dates = sorted(timestamp(p.get('published_at')) for p in rows if timestamp(p.get('published_at')))
+        # The 10-minute window reads posts with a clock only (clock_v1); date-only posts are counted as left out.
+        dates = sorted(read_time(p['published_at']) for p in rows if has_clock(p.get('published_at')))
+        date_only = sum(1 for p in rows if timestamp(p.get('published_at')) and not has_clock(p.get('published_at')))
+        firsts = sorted((p for p in rows if timestamp(p.get('published_at'))), key=first_order)
         texts = Counter(normalized(p) for p in rows if len(normalized(p).split()) >= 8)
         repeated = max(texts.values(), default=0)
         peak, left = 0, 0
@@ -137,7 +159,8 @@ def analyze_network(posts):
         # account did in this sample; it is not a probability and says nothing about who runs the account.
         accounts.append({**nodes[key], 'posts': len(rows), 'signals': signals, 'pattern': 'amplification' if len(signals) >= 2 else None,
                          'assessment': 'review_signals' if signals else 'insufficient_data' if len(rows) < 5 else 'no_signals_observed',
-                         'first_seen': dates[0].isoformat() if dates else None,
+                         'first_seen': timestamp(firsts[0]['published_at']).isoformat() if firsts else None,
+                         'date_only_posts': date_only,
                          'engagement': interactions_total(rows)['value'], 'interaction_posts': interactions_total(rows)['posts'],
                          'followers': known_followers(rows),
                          'evidence': [evidence(p) for p in rows]})
@@ -150,7 +173,7 @@ def analyze_network(posts):
         node['posts'] = len(by_account[node['id']])
         # The map sizes a circle by this. Accounts that were only mentioned have no post, so no count.
         node['followers'] = known_followers(by_account[node['id']])
-    ordered = sorted((p for p in sample if timestamp(p.get('published_at'))), key=lambda p: (timestamp(p['published_at']), str(p['id'])))
+    ordered = sorted((p for p in sample if timestamp(p.get('published_at'))), key=first_order)
     return {'nodes': list(nodes.values()), 'edges': list(edges.values()),
             'narratives': sorted(narratives, key=lambda n: (-n['account_count'], -n['post_count'])),
             'earliest': [evidence(p) for p in ordered[:10]],

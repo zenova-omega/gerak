@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   RULES, setZone, zone, readTime, hasClock, localDay, localTime, weekStart, inPeriod, reported, interactions,
-  sharesTotal, contentShares, interactionsTotal, byInteractions, tone, toneShares, accountKey, accountName, postAccount, accountCount, postMeasures,
+  sharesTotal, contentShares, interactionsTotal, byInteractions, byFirstPublished, tone, toneShares, accountKey, accountName, postAccount, accountCount, postMeasures,
 } from './pulseMeasures.js';
 
 const CASES = JSON.parse(readFileSync(new URL('../../shared/pulse-measures.cases.json', import.meta.url), 'utf8'));
@@ -62,6 +62,7 @@ each('interactions_total', item => assert.deepEqual(interactionsTotal(item.in.ma
 each('shares_total', item => assert.equal(sharesTotal(item.in.map(metrics => ({ metrics }))), item.out));
 each('content_shares', item => assert.equal(contentShares(item.in.map(metrics => ({ metrics }))), item.out));
 each('interaction_order', item => assert.deepEqual([...item.in].sort(byInteractions).map(post => post.id), item.out));
+each('first_order', item => assert.deepEqual([...item.in].sort(byFirstPublished).map(post => post.id), item.out));
 each('tone', item => assert.equal(tone({ metrics: item.in }), item.out));
 each('tone_shares', item => assert.deepEqual(toneShares(item.in), item.out));
 each('account', item => assert.equal(accountKey(item.in), item.out));

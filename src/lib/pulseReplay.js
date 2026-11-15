@@ -1,4 +1,4 @@
-import { hasClock, postAccount, postMeasures, readTime } from './pulseMeasures.js';
+import { hasClock, postAccount, postMeasures, readTime, zone } from './pulseMeasures.js';
 
 /** A publication time in milliseconds, read by the shared reader (day_v1); null when there is none. */
 export function replayTime(value) {
@@ -19,8 +19,21 @@ export function replayEvents(data) {
   }
   return [...seen.values()].sort(byPublication);
 }
+/** Whether a post is shown at the replay's cutoff (clock_v1). A post with a clock is, from its time on. A post whose
+ * source gave a date only has no hour, so it is shown once the cutoff passes the end of its day in the installation's
+ * zone. The whole period (Infinity) shows every post. */
+export function publishedBy(value, cutoff) {
+  if (cutoff === Infinity) return true;
+  const time = replayTime(value);
+  if (time === null) return false;
+  return (hasClock(value) ? time : time + 86400000 - zone().offset_minutes * 60000) <= cutoff;
+}
+/** The replay's list of posts (rows of replayEvents) shown at a cutoff. */
+export function eventsUntil(events, cutoff) {
+  return events.filter(event => publishedBy(event.published_at, cutoff));
+}
 export function replayFrame(data, cutoff = Infinity) {
-  const visible = p => cutoff === Infinity || (replayTime(p.published_at) !== null && replayTime(p.published_at) <= cutoff);
+  const visible = p => publishedBy(p.published_at, cutoff);
   const ids = new Set();
   const accounts = (data.accounts || []).map(a=>({...a,evidence:(a.evidence || []).filter(visible)})).filter(a=>a.evidence.length);
   accounts.forEach(a=>ids.add(a.id));

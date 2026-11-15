@@ -2,8 +2,7 @@
 // draws as zero instead of a line that skips it. Pure: no dates are read from the clock.
 import { sentimentDate } from './pulseSentiment.js';
 import { postSentiment } from './pulsePostFilters.js';
-import { postInteractions } from './pulseEngagement.js';
-import { weekStart } from './pulseMeasures.js';
+import { interactionsTotal, weekStart } from './pulseMeasures.js';
 
 export const trendUnits = ['day', 'week', 'month'];
 const MAX_DAYS = 1100;   // three years of days: a guard against a stray date drawing an endless axis
@@ -34,9 +33,11 @@ function span(posts, range = {}) {
  * @param {object[]} posts posts already scoped to the project's period and platforms
  * @param {'day'|'week'|'month'} unit
  * @param {{from?: string, to?: string}} range the chosen period, YYYY-MM-DD in WIB
- * @returns {{key:string, from:string, to:string, posts:number, interactions:number, positive:number, neutral:number, negative:number, unknown:number}[]}
+ * @returns {{key:string, from:string, to:string, posts:number, interactions:number|null, interaction_posts:number, positive:number, neutral:number, negative:number, unknown:number}[]}
  *   oldest first. `from` and `to` never reach outside the covered days, so a bucket can be used as a date filter as it is.
- *   `interactions` adds only what the source reported: a post without metrics adds nothing.
+ *   `interactions` is interactions_v1 over the bucket's posts: the sum over the posts whose interactions are known, with
+ *   their count in `interaction_posts`. A bucket whose posts report none is null (unknown, never 0); a bucket without
+ *   posts is 0.
  */
 export function trendSeries(posts = [], unit = 'day', range = {}) {
   const covered = span(posts, range);
@@ -45,17 +46,21 @@ export function trendSeries(posts = [], unit = 'day', range = {}) {
   for (let day = first; day <= last; ) {
     const [start, end] = bounds(day, unit);
     const from = start < first ? first : start, to = end > last ? last : end;
-    rows.set(start, { key: from, from, to, posts: 0, interactions: 0, positive: 0, neutral: 0, negative: 0, unknown: 0 });
+    rows.set(start, { key: from, from, to, posts: 0, interactions: 0, interaction_posts: 0, positive: 0, neutral: 0, negative: 0, unknown: 0 });
     day = addDays(end, 1);
   }
+  const inside = new Map();
   for (const post of posts) {
     const date = sentimentDate(post);
     if (!date || date < first || date > last) continue;
-    const row = rows.get(bounds(date, unit)[0]);
+    const key = bounds(date, unit)[0], row = rows.get(key);
     row.posts++;
     row[postSentiment(post)]++;
-    const interactions = postInteractions(post.metrics);
-    if (Number.isFinite(interactions)) row.interactions += interactions;
+    inside.set(key, [...(inside.get(key) || []), post]);
+  }
+  for (const [key, list] of inside) {
+    const total = interactionsTotal(list);
+    Object.assign(rows.get(key), { interactions: total.value, interaction_posts: total.posts });
   }
   return [...rows.values()];
 }

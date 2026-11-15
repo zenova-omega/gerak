@@ -148,6 +148,12 @@ def test_interaction_order(case):
     assert [p['id'] for p in ordered] == case['out']
 
 
+@pytest.mark.parametrize('case', cases('first_order'))
+def test_first_order(case):
+    ordered = sorted(case['in'], key=lambda p: m.first_sort_key(p['published_at'], p['id']))
+    assert [p['id'] for p in ordered] == case['out']
+
+
 @pytest.mark.parametrize('case', cases('tone'))
 def test_tone(case):
     assert m.tone(case['in']) == case['out']

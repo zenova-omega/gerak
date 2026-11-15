@@ -3,6 +3,7 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-r
 import { PulsePageHead } from '../components/ui/PulsePatterns';
 import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Settings, LogOut, Moon, Sun, Users, Database, Sparkles, Search, HeartPulse, FileText, ChartPie } from 'lucide-react';
 import api from '../lib/api';
+import { useInstallationZone } from '../hooks/usePulse';
 import PulseDashboard from '../components/admin/pulse/PulseDashboard';
 import { MonitorNavBadge } from '../components/admin/pulse/MonitorRoom';
 import SourcesCoverage from './SourcesCoverage.jsx';
@@ -149,6 +150,8 @@ export default function PulseApp() {
   const pageId = location.pathname === '/pulse' ? 'home' : location.pathname.replace(/^\/pulse\//, '').split('/')[0];
   const pageTitle = pageId === 'settings' ? 'Pengaturan' : pageMeta[pageId]?.title || null;
   usePulseHead({ theme, page: session.loading ? null : !session.user ? 'Masuk' : pageTitle });
+  // day_v1: every signed-in page counts its days in the installation's zone, read once before the workspace mounts.
+  const zoneReady = useInstallationZone(Boolean(session.user));
   useEffect(() => {
     let active = true;
     let revalidation = 0;
@@ -206,7 +209,7 @@ export default function PulseApp() {
   }
   const themeButton = <PulseButton className="ps-theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Gunakan tema terang' : 'Gunakan tema gelap'}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}<span>Tema {theme === 'dark' ? 'terang' : 'gelap'}</span></PulseButton>;
   return <div className="pulse-standalone" data-theme={theme} ref={shell}>
-    {session.loading ? <main className="ps-loading"><Brand /><PulseLoader size="lg" label="Memeriksa sesi PULSE…" /></main> : session.error ? <main className="ps-loading"><Brand /><p role="alert">{session.error}</p><PulseButton onClick={() => { setSession({ loading: true, user: null }); setAttempt(value => value + 1); }}>Coba lagi</PulseButton></main> : !session.user ? <><div className="ps-login-theme">{themeButton}</div><Login message={message} onLogin={user => { setSession({ user, loading: false }); setMessage(''); if (location.pathname === '/pulse/login') navigate('/pulse', { replace: true }); }} /></> : <div className="ps-workspace" key={`${session.user.id}:${session.user.csrf_token}`}>
+    {session.loading || (session.user && !zoneReady) ? <main className="ps-loading"><Brand /><PulseLoader size="lg" label="Memeriksa sesi PULSE…" /></main> : session.error ? <main className="ps-loading"><Brand /><p role="alert">{session.error}</p><PulseButton onClick={() => { setSession({ loading: true, user: null }); setAttempt(value => value + 1); }}>Coba lagi</PulseButton></main> : !session.user ? <><div className="ps-login-theme">{themeButton}</div><Login message={message} onLogin={user => { setSession({ user, loading: false }); setMessage(''); if (location.pathname === '/pulse/login') navigate('/pulse', { replace: true }); }} /></> : <div className="ps-workspace" key={`${session.user.id}:${session.user.csrf_token}`}>
       <a className="ps-skip" href="#ps-content">Lewati ke konten</a>
       <WorkspaceNavigation key={location.pathname} brand={<Brand />} label={sections.find(([id]) => location.pathname === `/pulse/${id}`)?.[1] || (location.pathname === '/pulse/settings' ? 'Pengaturan' : location.pathname === '/pulse/search' ? 'Pencarian cepat' : pageMeta.home.title)}>
         <nav aria-label="Navigasi PULSE"><Link to="/pulse" aria-current={location.pathname === '/pulse' ? 'page' : undefined}>{createElement(pageMeta.home.icon, { size: 19 })}{pageMeta.home.title}</Link><Link to="/pulse/search" aria-current={location.pathname === '/pulse/search' ? 'page' : undefined}>{createElement(pageMeta.search.icon, { size: 19 })}{pageMeta.search.title}</Link>{pageGroups.map(([group, ids]) => <div className="ps-nav-group" key={group} role="group" aria-label={group}><span className="ps-nav-group-label" aria-hidden="true">{group}</span>{ids.map(id => [id, pageMeta[id].title, pageMeta[id].icon]).map(([id, label, icon]) => <Link key={id} to={`/pulse/${id}${navigationSearch}`} aria-current={location.pathname === `/pulse/${id}` ? 'page' : undefined}>{createElement(icon, { size: 19 })}{label}{id === 'monitor' && <MonitorNavBadge />}</Link>)}</div>)}</nav><div className="ps-sidebar-bottom"><Link to={`/pulse/settings${location.search}`} aria-current={location.pathname === '/pulse/settings' ? 'page' : undefined}><Settings size={19} />Pengaturan</Link>{themeButton}<div className="ps-user"><strong>{session.user.name || session.user.email}</strong><span>{session.user.role}</span></div><PulseButton onClick={logout} disabled={logoutBusy}><LogOut size={18} />{logoutBusy ? 'Keluar…' : 'Keluar'}</PulseButton>{logoutError && <p role="alert" className="ps-error">{logoutError}</p>}</div>

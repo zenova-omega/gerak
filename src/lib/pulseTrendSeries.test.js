@@ -13,10 +13,24 @@ test('days run without gaps from the first to the last post, counted in WIB', ()
   ], 'day');
   assert.deepEqual(rows.map(row => row.key), ['2026-11-04', '2026-11-05', '2026-11-06']);
   assert.deepEqual(rows.map(row => row.posts), [2, 0, 1]);
-  assert.deepEqual(rows[0], { key: '2026-11-04', from: '2026-11-04', to: '2026-11-04', posts: 2, interactions: 16,
+  assert.deepEqual(rows[0], { key: '2026-11-04', from: '2026-11-04', to: '2026-11-04', posts: 2, interactions: 16, interaction_posts: 2,
     positive: 1, neutral: 0, negative: 1, unknown: 0 });
   assert.equal(rows[2].unknown, 1);
-  assert.equal(rows[2].interactions, 0);
+  assert.equal(rows[2].interactions, null, 'its one post reports no interactions: unknown, never 0');
+});
+
+test('each bucket totals interactions by interactions_v1: known posts only, with their count; unknown is never 0', () => {
+  const rows = trendSeries([
+    post('2026-11-04T01:00:00Z', null, { likes: 3, views: 900 }),
+    post('2026-11-04T02:00:00Z', null, {}),
+    post('2026-11-04T03:00:00Z', null, { engagement: 7 }),
+    post('2026-11-06T05:00:00Z', null, { views: 40 }),
+    { id: 'sent', published_at: '2026-11-07T05:00:00Z', platform: 'x', metrics: {}, measures: { day: '2026-11-07', clock: true, interactions: 5, account: 'x:a', tone: 'unknown' } },
+  ], 'day');
+  assert.deepEqual(rows.map(row => [row.key, row.posts, row.interactions, row.interaction_posts]), [
+    ['2026-11-04', 3, 10, 2], ['2026-11-05', 0, 0, 0], ['2026-11-06', 1, null, 0], ['2026-11-07', 1, 5, 1]]);
+  const weeks = trendSeries([post('2026-11-04T01:00:00Z', null, {}), post('2026-11-10T01:00:00Z', null, { shares: 2 })], 'week');
+  assert.deepEqual(weeks.map(row => [row.interactions, row.interaction_posts]), [[null, 0], [2, 1]]);
 });
 
 test('weeks start on Monday and never claim days outside the data', () => {

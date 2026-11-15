@@ -141,3 +141,51 @@ async def test_days_with_posts_are_days_of_the_installation_zone(db, client, adm
     await db.flush()
     rows = by_platform(await get_overview(client, admin_token, topic_id='overview-zone'))
     assert rows['news']['days_with_posts'] == 3, '1 Nov (17.00 WIB), 2 Nov (06.30 WIB) and 3 Nov (the date-only post)'
+
+
+@pytest.mark.asyncio
+async def test_days_with_posts_are_counted_in_the_database_per_day_not_per_post(db):
+    """GET /monitor is polled: the days with posts are folded from at most a few rows per source and UTC date, never
+    from one row per post. 50 posts on 2 UTC dates come back as no more than 4 rows from any query."""
+    from app.routers.pulse_monitor import collection_overview
+
+    class Counting:
+        def __init__(self, session):
+            self.session, self.rows = session, []
+
+        async def execute(self, statement, *args, **kwargs):
+            frozen = (await self.session.execute(statement, *args, **kwargs)).freeze()
+            self.rows.append(len(frozen.data))
+            return frozen()
+
+    db.add(WatchTopic(id='overview-many', label='Many', query='many'))
+    await db.flush()
+    stamps = [datetime(2026, 11, 1, 1) + timedelta(minutes=i) for i in range(25)]
+    stamps += [datetime(2026, 11, 5, 2) + timedelta(minutes=i) for i in range(24)] + [datetime(2026, 11, 5)]   # one date-only
+    for index, published in enumerate(stamps):
+        db.add(SourceItem(id=f'overview-many-{index}', topic_id='overview-many', source='test', platform='news',
+                          url=f'https://example.test/many/{index}', published_at=published, crawled_at=datetime.utcnow()))
+    await db.flush()
+    counting = Counting(db)
+    overview = await collection_overview(counting, 'overview-many', datetime.utcnow())
+    assert by_platform(overview)['news']['days_with_posts'] == 2
+    assert by_platform(overview)['news']['posts'] == 50
+    assert max(counting.rows) <= 4, counting.rows
+
+
+@pytest.mark.asyncio
+async def test_days_with_posts_fold_one_utc_date_into_its_two_local_days(db, client, admin_token):
+    """On one UTC date, a date-only post and a morning post are that date in WIB; a post at or after 17.00 UTC is the
+    next date. Posts on the next UTC date before 17.00 UTC fall on that same next date."""
+    db.add(WatchTopic(id='overview-fold', label='Fold', query='fold'))
+    await db.flush()
+    for name, published in [('date-only', datetime(2026, 11, 1)), ('morning', datetime(2026, 11, 1, 3)),
+                            ('edge', datetime(2026, 11, 1, 17)), ('next', datetime(2026, 11, 2, 1)),
+                            ('before-edge', datetime(2026, 11, 2, 16, 59, 59)), ('x-late', datetime(2026, 11, 2, 18))]:
+        db.add(SourceItem(id=f'overview-fold-{name}', topic_id='overview-fold', source='test',
+                          platform='x' if name.startswith('x-') else 'news',
+                          url=f'https://example.test/fold/{name}', published_at=published, crawled_at=datetime.utcnow()))
+    await db.flush()
+    rows = by_platform(await get_overview(client, admin_token, topic_id='overview-fold'))
+    assert rows['news']['days_with_posts'] == 2, '1 Nov (date-only, 10.00 WIB) and 2 Nov (00.00, 08.00, 23.59 WIB)'
+    assert rows['x']['days_with_posts'] == 1, '3 Nov 01.00 WIB'

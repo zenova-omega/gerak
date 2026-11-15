@@ -141,6 +141,7 @@ export async function pulseUI(t, { authenticated = true } = {}) {
     else if (method === 'GET' && path === '/api/admin/pulse/issues') body = [];
     else if (method === 'GET' && path === '/api/admin/pulse/sources/balance') body = state.balance;
     else if (method === 'GET' && path === '/api/admin/pulse/monitor') body = state.monitor;   // the unread-alert badge on the Monitor nav item
+    else if (method === 'GET' && path === '/api/admin/pulse/measures') body = { zone: { offset_minutes: 420, name: 'WIB' }, rules: [] };   // the shell's zone
     else if (method === 'POST' && path === SPIKES) {
       // The trend chart asks which of its buckets are spikes. `state.spikes` is what the server answers per line
       // (none unless a test says so) and `state.spikesStatus` makes the call fail; every question is kept.

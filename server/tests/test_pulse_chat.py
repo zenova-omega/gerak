@@ -425,7 +425,6 @@ async def test_data_block_group_total_says_over_how_many_posts(db):
     assert any('"Kelompok utama"' in line and 'interaksi 1000 dari 1 posting' in line for line in chat.render_context(context).splitlines())
 
 
-
 @pytest.mark.asyncio
 async def test_data_block_groups_count_accounts_by_account_v1(db):
     """account_v1: an X handle written two ways and a Threads account with an id on one row only are one account each."""
@@ -476,6 +475,7 @@ async def test_a_response_plan_question_uses_the_response_prompt_and_stores_its_
     bad = await client.post('/api/admin/pulse/chat', headers=headers, json={'topic_id': 'chat-topic', 'question': 'Apa isu utama?', 'mode': 'x'})
     assert bad.status_code == 422
 
+
 @pytest.mark.asyncio
 async def test_the_account_location_line_counts_x_accounts_by_account_origin_v1(db):
     """The same rule as the map and the Jaringan card (account_origin_v1): an X handle written two ways is one account,
@@ -494,7 +494,6 @@ async def test_the_account_location_line_counts_x_accounts_by_account_origin_v1(
             in chat.data_block(context))
 
 
-
 @pytest.mark.asyncio
 async def test_data_block_reads_a_post_tone_by_tone_share_v1_in_either_stored_form(db):
     """tone_share_v1 on Tanya AI's data block: a label stored as a plain string or as an object, in any letter case, is
@@ -510,4 +509,3 @@ async def test_data_block_reads_a_post_tone_by_tone_share_v1_in_either_stored_fo
     assert context['totals']['sentiment'] == {'negative': 2, 'positive': 1, 'unknown': 2}
     assert {p['author']: p['sentiment'] for p in context['evidence_posts']}['akun_plain'] == 'negative'
     assert chat._sentiment({'sentiment': 'neutral'}) == chat._sentiment({'sentiment': {'label': 'neutral'}}) == 'neutral'
-

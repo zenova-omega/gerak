@@ -1,5 +1,5 @@
 import {filterPosts, dailyPostCounts} from './pulsePostFilters.js';
-import { accountName, interactionsTotal, postAccount, reported, sharesTotal } from './pulseMeasures.js';
+import { accountName, byFirstPublished, interactionsTotal, localDay, postAccount, reported, sharesTotal } from './pulseMeasures.js';
 
 export const projectPlatformOptions=['x','instagram','tiktok','reddit','threads','youtube','facebook','news','unknown'];
 export function createPlatformStore(storage) {
@@ -43,7 +43,7 @@ function scopeNetwork(network, posts, platforms) {
   // Do not retain a narrative's full-sample claims after removing its evidence.
   const narratives=(network.narratives||[]).filter(n=>n.timeline?.length&&n.timeline.every(keep));
   const sampleIds=new Set((network.accounts||[]).flatMap(a=>(a.evidence||[]).map(p=>p.id)));
-  return {...network,nodes,edges,accounts,narratives,earliest:filterPosts(posts,{}).filter(p=>p.published_at).slice(0,10),total_posts:posts.length,analyzed_posts:posts.filter(p=>sampleIds.has(p.id)).length};
+  return {...network,nodes,edges,accounts,narratives,earliest:posts.filter(p=>localDay(p.published_at)!==null).sort(byFirstPublished).slice(0,10),total_posts:posts.length,analyzed_posts:posts.filter(p=>sampleIds.has(p.id)).length};
 }
 
 export function scopeProjectData(data,{platforms=null,from='',to='',sentiments=null,excludedIds=null}={}) {

@@ -110,6 +110,8 @@ class ArchiveCreate(BaseModel):
         # Keep only the versioned source inputs. Derived totals are rebuilt on read by UI.
         # A report is handed around, so it is filed without the engine behind its labels.
         self.snapshot=without_engine({k:s[k] for k in ('topic','period','generatedAt','posts','responseAnalysis')})
+        # A post's `measures` are the figures of the day it was sent; an opened report is counted under the rules in force.
+        self.snapshot['posts']=[{k:v for k,v in p.items() if k!='measures'} for p in self.snapshot['posts']]
         self.snapshot['selectedPlatforms']=platforms
         # The calculation rules in force at filing, written by the server. A report is rebuilt with the rules of the day
         # it is opened; the page compares these with the current ones and says when its figures were recounted.

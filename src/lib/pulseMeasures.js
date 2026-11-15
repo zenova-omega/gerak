@@ -141,6 +141,21 @@ export function byInteractions(a, b) {
   return p < q ? -1 : p > q ? 1 : 0;
 }
 
+/** clock_v1 order of "who was first": by day; on one day a post with a clock comes before one whose source gave a
+ * date only, which never takes part in the order by time; then time, then id. No readable date comes last. */
+export function byFirstPublished(a, b) {
+  const [x, y] = [localDay(a?.published_at), localDay(b?.published_at)];
+  if ((x === null) !== (y === null)) return x === null ? 1 : -1;
+  if (x !== y) return x < y ? -1 : 1;
+  if (x !== null) {
+    const [s, t] = [hasClock(a.published_at), hasClock(b.published_at)];
+    if (s !== t) return s ? -1 : 1;
+    if (s && readTime(a.published_at) !== readTime(b.published_at)) return readTime(a.published_at) - readTime(b.published_at);
+  }
+  const [p, q] = [String(a?.id ?? ''), String(b?.id ?? '')];
+  return p < q ? -1 : p > q ? 1 : 0;
+}
+
 /** A post's tone from its stored label, in either stored form; anything else is 'unknown' (belum dianalisis). */
 export function tone(post) {
   const stored = post?.metrics?.sentiment;

@@ -70,3 +70,31 @@ test('top account badge counts a post without a name for its channel by id', () 
   const rows=[{platform:'youtube',author:'',metrics:{author_id:'UC9',likes:9}},{platform:'youtube',author:'Kanal',metrics:{author_id:'UC1',likes:2}}];
   assert.deepEqual([...replay.topViralAccounts(rows,1)],['youtube:UC9']);
 });
+test('while the replay is scrubbed, a date-only post appears once the cutoff passes the end of its local day', async () => {
+  // clock_v1: a post stored at 00:00:00 UTC has a date and no hour, so it is not published at midnight UTC. In WIB its
+  // day 2026-11-10 ends at 2026-11-10T17:00:00Z; until then the replay does not show it, in the frame or in the list.
+  const { setZone, zone } = await import('./pulseMeasures.js');
+  const dateOnly = { id: 'd', published_at: '2026-11-10T00:00:00' };
+  const timed = { id: 't', published_at: '2026-11-10T03:00:00Z' };
+  const at = text => Date.parse(text);
+  assert.equal(replay.publishedBy(dateOnly.published_at, at('2026-11-10T03:00:00Z')), false);
+  assert.equal(replay.publishedBy(dateOnly.published_at, at('2026-11-10T16:59:59Z')), false);
+  assert.equal(replay.publishedBy(dateOnly.published_at, at('2026-11-10T17:00:00Z')), true);
+  assert.equal(replay.publishedBy(dateOnly.published_at, Infinity), true);
+  assert.equal(replay.publishedBy(timed.published_at, at('2026-11-10T03:00:00Z')), true);
+  assert.equal(replay.publishedBy(timed.published_at, at('2026-11-10T02:59:59Z')), false);
+  assert.equal(replay.publishedBy(null, at('2026-11-10T03:00:00Z')), false);
+  const sample = { nodes: [{ id: 'x:d' }, { id: 'x:t' }], accounts: [{ id: 'x:d', evidence: [dateOnly] }, { id: 'x:t', evidence: [timed] }], edges: [] };
+  assert.deepEqual(replay.replayFrame(sample, at('2026-11-10T03:00:00Z')).nodes.map(n => n.id), ['x:t']);
+  assert.deepEqual(replay.replayFrame(sample, at('2026-11-10T17:00:00Z')).nodes.map(n => n.id), ['x:d', 'x:t']);
+  const events = replay.replayEvents(sample);
+  assert.deepEqual(replay.eventsUntil(events, at('2026-11-10T03:00:00Z')).map(e => e.id), ['t']);
+  assert.deepEqual(replay.eventsUntil(events, at('2026-11-10T17:00:00Z')).map(e => e.id), ['t', 'd']);
+  assert.deepEqual(replay.eventsUntil(events, Infinity).map(e => e.id), ['t', 'd']);
+  const before = zone();
+  setZone({ offset_minutes: 540, name: 'WIT' });
+  try {
+    assert.equal(replay.publishedBy(dateOnly.published_at, at('2026-11-10T14:59:59Z')), false);
+    assert.equal(replay.publishedBy(dateOnly.published_at, at('2026-11-10T15:00:00Z')), true);
+  } finally { setZone(before); }
+});
