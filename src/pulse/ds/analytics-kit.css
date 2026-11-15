@@ -2125,12 +2125,12 @@ div.pu-hover-label { margin-bottom: 2px; }
 }
 
 /* Project bar: compact and frozen at the top so the chosen project stays in view while scrolling. */
-.pulse-standalone .ps-project-bar { position: sticky; top: 0; z-index: 20; margin: 0 0 12px; padding: 8px 0 6px; background: var(--ps-bg); border-bottom: 1px solid var(--ps-line); max-height: 100dvh; overflow-y: auto; }
-.pulse-standalone .ps-project-bar .ps-project-pick select,
-.pulse-standalone .ps-project-bar .ps-scope-toggle,
-.pulse-standalone .ps-project-bar .ps-global-search input { min-height: 36px; padding-block: 4px; }
-.pulse-standalone .ps-project-bar .ps-project-actions button,
-.pulse-standalone .ps-project-bar .ps-project-actions a { min-height: 36px; }
-.pulse-standalone .ps-project-bar .pcv-band { margin-top: 4px; font-size: 12px; line-height: 1.3; }
-.pulse-standalone .ps-project-bar .pcv-band :is(svg) { width: 14px; height: 14px; }
-@media (max-width: 700px) { .pulse-standalone .ps-project-bar { position: static; } }
+.pulse-standalone.pulse-standalone .ps-project-bar { position: sticky; top: 0; z-index: 20; margin: 0 0 12px; padding: 8px 0 6px; background: var(--ps-bg); border-radius: 0; border-inline: 0; border-top: 0; border-bottom: 1px solid var(--ps-line); max-height: 100dvh; overflow-y: auto; }
+.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-pick select,
+.pulse-standalone.pulse-standalone .ps-project-bar .ps-scope-toggle,
+.pulse-standalone.pulse-standalone .ps-project-bar .ps-global-search input { min-height: 36px; padding-block: 4px; }
+.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-actions button,
+.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-actions a { min-height: 36px; }
+.pulse-standalone.pulse-standalone .ps-project-bar .pcv-band { margin-top: 4px; font-size: 12px; line-height: 1.3; }
+.pulse-standalone.pulse-standalone .ps-project-bar .pcv-band :is(svg) { width: 14px; height: 14px; }
+@media (max-width: 700px) { .pulse-standalone.pulse-standalone .ps-project-bar { position: static; } }
