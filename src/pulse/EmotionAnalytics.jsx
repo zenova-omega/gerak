@@ -24,16 +24,18 @@ const percent = share => Math.round(share * 100) + '%';
 const dayLabel = date => bucketLabel({ from: date, to: date });
 
 /** One day under the cursor: the emotions stated that day, most first, then what stated none. */
-function DayTip({ active, payload }) {
+/** The hover card of one day: the product's one floating card (`pu-hover-card`), with the emotions stated that day
+ * as one bar and as rows, largest first. Posts without a clear emotion are counted in the foot, not drawn. */
+export function DayTip({ active, payload }) {
   const row = active && payload?.[0]?.payload;
   if (!row) return null;
   const stated = STACK.map(key => ({ key, count: row[key] || 0 })).filter(item => item.count > 0).sort((a, b) => b.count - a.count);
   const total = stated.reduce((sum, item) => sum + item.count, 0);
-  return <div className="pea-tip">
-    <p className="pea-tip-day"><strong>{dayLabel(row.date)}</strong><span>{formatCount(total)} posting beremosi</span></p>
-    {stated.length > 0 && <ul>{stated.map(item => <li key={item.key}><i style={{ background: `var(--emotion-${item.key})` }} aria-hidden="true" />
-      <span aria-hidden="true">{emotionFaces[item.key]}</span>{emotionLabels[item.key]}<b>{formatCount(item.count)}</b></li>)}</ul>}
-    {row.none > 0 && <p className="pea-tip-none">Tanpa emosi jelas<b>{formatCount(row.none)}</b></p>}
+  return <div className="pu-hover-card pea-tip">
+    <header className="pu-hover-head"><strong>{dayLabel(row.date)}</strong><span><b>{formatCount(total)}</b> posting beremosi</span></header>
+    {stated.length > 0 && <span className="pu-hover-bar" aria-hidden="true">{stated.map(item => <i key={item.key} style={{ flexGrow: item.count, '--swatch': `var(--emotion-${item.key})` }} />)}</span>}
+    {stated.length > 0 && <ul className="pu-hover-rows">{stated.map(item => <li key={item.key}><span className="pu-swatch" style={{ '--swatch': `var(--emotion-${item.key})` }} aria-hidden="true" /><span aria-hidden="true">{emotionFaces[item.key]}</span>{emotionLabels[item.key]}<b>{formatCount(item.count)}</b></li>)}</ul>}
+    {row.none > 0 && <p className="pu-hover-foot">Tanpa emosi jelas<b>{formatCount(row.none)}</b></p>}
   </div>;
 }
 

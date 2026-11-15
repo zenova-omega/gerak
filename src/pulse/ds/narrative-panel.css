@@ -8,9 +8,8 @@
 .np-zones { position: absolute; inset: 8px 8px 8px 52px; display: flex; flex-direction: column; justify-content: space-between; margin: 0; pointer-events: none; font-size:.75rem; color: var(--ps-muted); }
 .np-zones span:last-child { align-self: flex-start; }
 .np-zones span:first-child { align-self: flex-start; }
-.np-tip { display: grid; gap: 2px; max-width: 280px; padding: 10px 12px; border: 1px solid var(--ps-line); border-radius: 10px; background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; box-shadow: var(--ps-shadow-pop, 0 6px 20px rgba(0, 0, 0, .12)); }
-.np-tip strong { font-size: .8125rem; line-height: 1.4; }
-.np-tip span { color: var(--ps-muted); }
+/* A bubble's hover card is the shared one (.pu-hover-card in ds/analytics-kit.css); only its width is its own. */
+.np-tip { width: max-content; min-width: 208px; max-width: min(280px, 86vw); }
 
 .ac-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 @media (max-width: 720px) { .ac-grid { grid-template-columns: 1fr; } }

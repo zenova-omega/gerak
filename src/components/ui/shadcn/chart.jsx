@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils"
 // shadcn/ui chart (Recharts 2). `config` names each series once: { posts: { label: 'Posting', color: 'var(--ps-chart-1)' } }.
 // The container publishes every colour as `--color-<key>`, so marks, tooltip and legend read the same value.
 // PULSE loads Tailwind utilities without preflight, so borders carry `border-solid` here.
+// The tooltip's frame, label, series name and value are the product's hover card (`.pu-hover-*` in
+// src/pulse/ds/analytics-kit.css), the same card every other chart shows under the pointer.
 const ChartContext = React.createContext(null)
 
 function useChart() {
@@ -70,12 +72,12 @@ const ChartTooltipContent = React.forwardRef(
       const itemConfig = getPayloadConfigFromPayload(config, item, key)
       const value = !labelKey && typeof label === "string" ? config[label]?.label || label : itemConfig?.label
       if (labelFormatter) {
-        return <div className={cn("font-medium", labelClassName)}>{labelFormatter(value, payload)}</div>
+        return <div className={cn("pu-hover-label", labelClassName)}>{labelFormatter(value, payload)}</div>
       }
       if (!value) {
         return null
       }
-      return <div className={cn("font-medium", labelClassName)}>{value}</div>
+      return <div className={cn("pu-hover-label", labelClassName)}>{value}</div>
     }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey])
 
     if (!active || !payload?.length) {
@@ -86,7 +88,7 @@ const ChartTooltipContent = React.forwardRef(
       <div
         ref={ref}
         className={cn(
-          "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-solid border-border bg-background px-2.5 py-1.5 text-xs text-foreground shadow-xl",
+          "pu-hover-card grid min-w-[8rem] items-start gap-1.5",
           className
         )}
       >
@@ -117,9 +119,9 @@ const ChartTooltipContent = React.forwardRef(
                       )
                     )}
                     <div className="flex flex-1 items-center justify-between gap-4 leading-none">
-                      <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
+                      <span className="pu-hover-name">{itemConfig?.label || item.name}</span>
                       {item.value !== undefined && item.value !== null && (
-                        <span className="font-medium tabular-nums text-foreground">{item.value.toLocaleString("id-ID")}</span>
+                        <span className="pu-hover-value">{item.value.toLocaleString("id-ID")}</span>
                       )}
                     </div>
                   </>

@@ -32,13 +32,20 @@ function Bubble({cx,cy,size,payload,onPick}){
   <text x={cx} y={cy} className="np-bubble-rank" textAnchor="middle" dominantBaseline="central">{payload.rank}</text>
  </g>;
 }
-function Tip({active,payload}){
+const toneWords={negative:'condong negatif',neutral:'campuran',positive:'condong positif'};
+/** The hover card of one bubble: the product's one floating card (`pu-hover-card`), the narrative on top and one figure a row. */
+export function NarrativeTip({active,payload}){
  const point=active&&payload?.[0]?.payload;
  if(!point)return null;
- return <div className="np-tip"><strong>{point.rank}. {point.title.slice(0,90)}{point.title.length>90?'…':''}</strong>
-  <span>{formatCount(point.count)} posting · {formatCount(point.accounts)} akun</span>
-  <span>Sentimen bersih {signed(point.net)} ({{negative:'condong negatif',neutral:'campuran',positive:'condong positif'}[tone(point.net)]})</span>
-  <span>{point.interactions==null?'Interaksi tidak dilaporkan sumber':`${formatCount(point.interactions)} interaksi`}</span></div>;
+ return <div className="pu-hover-card np-tip">
+  <p className="pu-hover-title">{point.rank}. {point.title.slice(0,90)}{point.title.length>90?'…':''}</p>
+  <ul className="pu-hover-rows">
+   <li>Posting<b>{formatCount(point.count)}</b></li>
+   <li>Akun<b>{formatCount(point.accounts)}</b></li>
+   <li>Sentimen bersih<small>{toneWords[tone(point.net)]}</small><b>{signed(point.net)}</b></li>
+   <li>Interaksi{point.interactions==null?<em>tidak dilaporkan sumber</em>:<b>{formatCount(point.interactions)}</b>}</li>
+  </ul>
+ </div>;
 }
 
 /** Narasi utama: a bubble chart of the narratives (x posts, y net sentiment, size interactions), then the same narratives as a list.
@@ -58,7 +65,7 @@ export default function NarrativePanel({narratives=[],onOpen,postsLink}){
      <YAxis type="number" dataKey="net" name="Sentimen bersih" domain={[-100,100]} ticks={[-100,-50,0,50,100]} width={44} tickLine={false} axisLine={false} tickFormatter={signed}/>
      <ZAxis type="number" dataKey="size" range={[260,2200]}/>
      <ReferenceLine y={0} stroke="var(--ps-ink)" strokeDasharray="4 4"/>
-     <ChartTooltip cursor={false} content={<Tip/>} wrapperStyle={{zIndex:'var(--ps-z-tooltip)'}}/>
+     <ChartTooltip cursor={false} content={<NarrativeTip/>} wrapperStyle={{zIndex:'var(--ps-z-tooltip)'}}/>
      <Scatter data={ranked} isAnimationActive={false} shape={props=><Bubble {...props} onPick={open}/>}/>
     </ScatterChart></ChartContainer>
     <p className="np-zones" aria-hidden="true"><span>▲ condong positif</span><span>▼ condong negatif</span></p></div>}

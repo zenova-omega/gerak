@@ -71,14 +71,14 @@ export function PulseChartTooltip({ active, payload, label, labelFormatter, tota
   const sum = rows.reduce((value, row) => value + row.value, 0);
   const hatched = row => row.payload?.__hatch === row.dataKey || row.dataKey === 'unknown' ? '' : undefined;
   const list = top ? top(label) : [];
-  return <div className="pu-chart-tooltip">
-    <header className="pu-chart-tip-head"><strong>{labelFormatter ? labelFormatter(label) : label}</strong>{total && rows.length > 1 && <span>Total <b>{formatCount(sum)}</b></span>}</header>
-    {percent && sum > 0 && <span className="pu-chart-tip-bar" aria-hidden="true">{rows.filter(row => row.value > 0).map(row => <i key={row.dataKey} data-hatch={hatched(row)} style={{ flexGrow: row.value, '--swatch': row.color || row.fill }} />)}</span>}
-    <ul>{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={hatched(row)} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}</b>{percent && sum > 0 && <em>{Math.round(row.value / sum * 100)}%</em>}</li>)}</ul>
-    {note && <small>{note}</small>}
+  return <div className="pu-hover-card pu-chart-tooltip">
+    <header className="pu-hover-head"><strong>{labelFormatter ? labelFormatter(label) : label}</strong>{total && rows.length > 1 && <span>Total <b>{formatCount(sum)}</b></span>}</header>
+    {percent && sum > 0 && <span className="pu-hover-bar" aria-hidden="true">{rows.filter(row => row.value > 0).map(row => <i key={row.dataKey} data-hatch={hatched(row)} style={{ flexGrow: row.value, '--swatch': row.color || row.fill }} />)}</span>}
+    <ul className="pu-hover-rows">{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={hatched(row)} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}</b>{percent && sum > 0 && <em>{Math.round(row.value / sum * 100)}%</em>}</li>)}</ul>
+    {note && <p className="pu-hover-foot">{note}</p>}
     {list.length > 0 && <section className="pu-chart-top-wrap">
       <p className="pu-chart-top-head"><span>{topTitle}</span>{topUnit && <span>{topUnit}</span>}</p>
-      <ol className="pu-chart-top" aria-label={topTitle}>{list.map(row => <li key={row.id}><AccountAvatar size="sm" author={row.author} platform={row.platform} photo={row.photo} /><span className="pu-chart-top-who"><b>{row.author || 'Tanpa nama'}</b><span>{row.text}</span></span><i>{row.value == null ? '—' : formatCount(row.value)}</i></li>)}</ol>
+      <ol className="pu-chart-top" aria-label={topTitle}>{list.map(row => <li key={row.id}><AccountAvatar size="sm" eager author={row.author} platform={row.platform} photo={row.photo} /><span className="pu-chart-top-who"><b>{row.author || 'Tanpa nama'}</b><span>{row.text}</span></span><i>{row.value == null ? '—' : formatCount(row.value)}</i></li>)}</ol>
     </section>}
   </div>;
 }

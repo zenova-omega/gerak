@@ -116,13 +116,13 @@ async function tipHtml(props = {}) {
 
 test('tooltip: the date and the total share the head, so the total is not a row of its own', async () => {
   const markup = await tipHtml();
-  assert.match(markup, /<header class="pu-chart-tip-head"><strong>10 Nov<\/strong><span>Total <b>1\.224<\/b><\/span><\/header>/);
+  assert.match(markup, /<header class="pu-hover-head"><strong>10 Nov<\/strong><span>Total <b>1\.224<\/b><\/span><\/header>/);
   assert.doesNotMatch(markup, /<small>Total/);
 });
 
 test('tooltip: the shares are drawn as one bar and each row keeps its count and its share apart', async () => {
   const markup = await tipHtml();
-  const bar = markup.match(/<span class="pu-chart-tip-bar"[^>]*>([\s\S]*?)<\/span>/)?.[1] || '';
+  const bar = markup.match(/<span class="pu-hover-bar"[^>]*>([\s\S]*?)<\/span>/)?.[1] || '';
   assert.equal((bar.match(/<i /g) || []).length, 3);
   assert.match(bar, /flex-grow:648/);
   assert.match(markup, /Negatif<b>648<\/b><em>53%<\/em>/);
@@ -131,7 +131,7 @@ test('tooltip: the shares are drawn as one bar and each row keeps its count and 
 
 test('tooltip: without shares there is no bar and no percent', async () => {
   const markup = await tipHtml({ percent: false });
-  assert.doesNotMatch(markup, /pu-chart-tip-bar/);
+  assert.doesNotMatch(markup, /pu-hover-bar/);
   assert.doesNotMatch(markup, /<em>/);
 });
 
@@ -141,6 +141,7 @@ test('tooltip: the top posts say what their number counts and show the account p
   const list = markup.match(/<ol class="pu-chart-top"[\s\S]*?<\/ol>/)?.[0] || '';
   const [first, second] = list.split(/(?=<li)/).slice(1);
   assert.match(first, /<img[^>]+class="psi-photo"[^>]+gibran_200x200\.jpg/);
+  assert.match(first, /<img[^>]+loading="eager"/, 'a card that appears under the pointer does not wait to fetch its pictures');
   assert.match(first, /<b>rianfahardhi<\/b><span>wapres gibran ajukan pengunduran diri\?<\/span>/);
   assert.match(first, /<i>199\.190<\/i>/);
   assert.match(second, /psi-fallback/);
@@ -151,7 +152,7 @@ test('tooltip: the top posts say what their number counts and show the account p
 test('tooltip: the name in a top post is not pushed to the right by the rule for the count column', () => {
   const css = readFileSync(new URL('./ds/analytics-kit.css', import.meta.url), 'utf8');
   assert.doesNotMatch(css, /\.pu-chart-tooltip li > b\s*\{[^}]*margin-left:\s*auto/, 'that selector also matches the account name in the list of top posts');
-  assert.match(css, /\.pu-chart-tooltip > ul > li > b\s*\{[^}]*margin-left:\s*auto/);
+  assert.match(css, /\.pu-hover-rows > li > b[^{]*\{[^}]*margin-left:\s*auto/);
 });
 
 test('sentiment chart hands the tooltip the platform and the picture of each top post', () => {
@@ -163,6 +164,11 @@ test('sentiment chart hands the tooltip the platform and the picture of each top
 });
 
 const comment = more => ({ id: 'c1', author: 'sagitariussssgirls', text: 'semangat pak', likes: 3, replies: 0, published_at: '2026-11-14T10:00:00Z', url: 'https://www.tiktok.com/@a/video/1', ...more });
+
+test('an account picture in the page itself is still fetched only when it comes into view', async () => {
+  const { default: PostAvatar } = await load('/src/components/admin/pulse/PostAvatar.jsx');
+  assert.match(html(React.createElement(PostAvatar, { post: { author: 'a', platform: 'x', profile_image_url: photo } })), /<img[^>]+loading="lazy"/);
+});
 
 test('a comment shows the picture stored with it', async () => {
   const { Comment } = await load('/src/components/admin/pulse/CommentsPanel.jsx');

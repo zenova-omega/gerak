@@ -30,16 +30,8 @@
 /* Day by day. */
 .pea-trend{margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--ps-line)}
 .pea-chart{height:260px;width:100%;margin-top:1rem}
-.pea-tip{display:grid;gap:.4rem;min-width:11rem;padding:.6rem .75rem;border:1px solid var(--ps-line);border-radius:var(--ps-radius-control);background:var(--ps-panel);color:var(--ps-ink);font-size:.75rem;box-shadow:0 10px 24px -12px color-mix(in oklab,var(--ps-ink) 45%,transparent)}
-.pea-tip p{margin:0}
-.pea-tip-day{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
-.pea-tip-day strong{font-weight:600}
-.pea-tip-day span,.pea-tip-none{color:var(--ps-muted)}
-.pea-tip ul{display:grid;gap:.3rem;margin:0;padding:0;list-style:none}
-.pea-tip li{display:flex;align-items:center;gap:.4rem}
-.pea-tip li i{flex:none;width:8px;height:8px;border-radius:2px}
-.pea-tip b{margin-left:auto;padding-left:1rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ps-ink)}
-.pea-tip-none{display:flex;padding-top:.4rem;border-top:1px solid var(--ps-line)}
+/* The day's hover card is the shared one (.pu-hover-card in ds/analytics-kit.css); only its width is its own. */
+.pea-tip{min-width:13rem}
 
 /* The six emotions: the chart's key and its filter. Largest first; the bar is the share among posts that state one. */
 .pea-pick{margin-top:1.75rem}

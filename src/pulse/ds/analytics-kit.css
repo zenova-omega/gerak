@@ -192,21 +192,33 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pu-legend strong { color: var(--ps-ink); font-variant-numeric: tabular-nums; }
 .pu-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; background: var(--swatch, var(--ps-muted)); }
 .pu-swatch[data-hatch] { background: repeating-linear-gradient(135deg, var(--ps-sent-unknown) 0 2px, transparent 2px 4px); outline: 1px solid var(--ps-control-line); outline-offset: -1px; }
-/* Chart tooltip: a small floating card. Head (what is hovered, and its total), the shares as one bar, one row per
-   series with count and share in their own columns, then what is behind the bar. */
-.pu-chart-tooltip { width: max-content; min-width: 208px; max-width: min(320px, 86vw); padding: 12px 14px; border: 1px solid var(--ps-control-line); border-radius: var(--ps-surface-radius, 12px); background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; line-height: 1.4; box-shadow: var(--ps-shadow-overlay); }
-.pu-chart-tip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
-.pu-chart-tip-head > strong { font-size: .875rem; font-weight: 650; }
-.pu-chart-tip-head > span { color: var(--ps-muted); white-space: nowrap; }
-.pu-chart-tip-head > span > b { color: var(--ps-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
-.pu-chart-tip-bar { display: flex; gap: 2px; height: 6px; margin-bottom: 10px; }
-.pu-chart-tip-bar > i { flex-basis: 0; min-width: 3px; border-radius: 2px; background: var(--swatch, var(--ps-muted)); }
-.pu-chart-tip-bar > i[data-hatch] { background: repeating-linear-gradient(135deg, var(--ps-sent-unknown) 0 2px, transparent 2px 4px); outline: 1px solid var(--ps-control-line); outline-offset: -1px; }
-.pu-chart-tooltip > ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.pu-chart-tooltip > ul > li { display: flex; align-items: center; gap: 8px; }
-.pu-chart-tooltip > ul > li > b { margin-left: auto; padding-left: 16px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.pu-chart-tooltip > ul > li > em { min-width: 4ch; font-style: normal; text-align: right; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
-.pu-chart-tooltip > small { display: block; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ps-line); color: var(--ps-muted); }
+/* Hover card: the one floating card every chart shows under the pointer (sentiment, emotion, narratives, trend).
+   The frame is written once, here. A chart adds its own class beside `pu-hover-card` only for what is its own
+   (a width, a list of posts); it never draws a second frame. `div.` lifts the rule just above a utility class and
+   keeps it below a chart's own two-class rule. */
+div.pu-hover-card { box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--ps-control-line); border-radius: var(--ps-surface-radius, 12px); background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; line-height: 1.4; box-shadow: var(--ps-shadow-overlay); }
+.pu-hover-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 10px; }
+.pu-hover-head > strong, .pu-hover-title, div.pu-hover-label { font-size: .875rem; font-weight: 650; line-height: 1.35; color: var(--ps-ink); }
+.pu-hover-head > span { color: var(--ps-muted); white-space: nowrap; }
+.pu-hover-head > span > b { color: var(--ps-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+div.pu-hover-card > .pu-hover-title { margin: 0 0 10px; overflow-wrap: anywhere; }
+div.pu-hover-card > .pu-hover-foot { margin: 10px 0 0; }
+.pu-hover-bar { display: flex; gap: 2px; height: 6px; margin-bottom: 10px; }
+.pu-hover-bar > i { flex-basis: 0; min-width: 3px; border-radius: 2px; background: var(--swatch, var(--ps-muted)); }
+.pu-hover-bar > i[data-hatch] { background: repeating-linear-gradient(135deg, var(--ps-sent-unknown) 0 2px, transparent 2px 4px); outline: 1px solid var(--ps-control-line); outline-offset: -1px; }
+.pu-hover-rows { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pu-hover-rows > li { display: flex; align-items: center; gap: 8px; }
+.pu-hover-rows > li > small { font-size: inherit; color: var(--ps-muted); }
+.pu-hover-rows > li > b, .pu-hover-foot > b { margin-left: auto; padding-left: 16px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ps-ink); }
+.pu-hover-rows > li > em { min-width: 4ch; font-style: normal; text-align: right; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pu-hover-rows > li > em:only-child, .pu-hover-rows > li > em:first-of-type:last-child { margin-left: auto; padding-left: 16px; }
+.pu-hover-foot { display: flex; align-items: center; margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--ps-line); color: var(--ps-muted); }
+/* The line charts' tooltip (shadcn chart) names its parts instead of styling them with utilities. */
+div.pu-hover-label { margin-bottom: 2px; }
+.pu-hover-name { color: var(--ps-ink); }
+.pu-hover-value { font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ps-ink); }
+/* Sentiment's own: its width, and the posts behind the bar (further down). */
+.pu-chart-tooltip { width: max-content; min-width: 208px; max-width: min(320px, 86vw); }
 .pulse-standalone .recharts-cartesian-axis-tick-value { fill: var(--ps-chart-axis); font-size:12px; }
 .pulse-standalone .recharts-cartesian-grid line { stroke: var(--ps-chart-grid); }
 
