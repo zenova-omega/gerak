@@ -165,6 +165,13 @@ def _metrics(item) -> dict:
     return inner if isinstance(inner, dict) else ({} if 'metrics' in item else item)
 
 
+def interactions_total(metrics_list) -> dict:
+    """interactions_v1 over posts (metrics dicts, or posts that carry them): the sum over the posts whose interactions
+    are known, with how many posts that is. Unknown (None, 0 posts) when none is known; never 0 for unknown."""
+    known = [n for n in (interactions(_metrics(m)) for m in metrics_list or []) if n is not None]
+    return {'value': sum(known) if known else None, 'posts': len(known)}
+
+
 def shares_total(metrics_list) -> int | None:
     own = [n for n in (reported(_metrics(m).get('shares')) for m in metrics_list or []) if n is not None]
     return sum(own) if own else None

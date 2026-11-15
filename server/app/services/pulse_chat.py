@@ -92,8 +92,8 @@ def _engagement(metrics):
 
 def _known_interactions(items):
     """interactions_v1 over posts: (sum over the posts whose interactions are known, how many); (None, 0) when none is."""
-    known = [n for n in (_engagement(item.metrics) for item in items) if n is not None]
-    return (sum(known) if known else None), len(known)
+    total = pulse_measures.interactions_total([item.metrics for item in items])
+    return total['value'], total['posts']
 
 
 def _by_interactions(item):

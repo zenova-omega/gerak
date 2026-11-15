@@ -64,3 +64,17 @@ test('a date-only post never wins "Kanal pertama": it is ordered by its day afte
   assert.equal(result.platformTimelineDateOnly, 2, 'posts without a clock left out of the order by time');
   assert.deepEqual(result.platformTimeline.map(row => row.dateOnly), [1, 0, 1]);
 });
+
+test('top posts follow the interactions order and a project without any reported interaction reads unknown', () => {
+  const rows=[
+    {id:'late',platform:'x',published_at:'2026-11-12T10:00:00Z',metrics:{likes:5}},
+    {id:'none',platform:'x',published_at:'2026-11-01T10:00:00Z',metrics:{likes:true,comments:-1}},
+    {id:'early',platform:'x',published_at:'2026-11-11T10:00:00Z',metrics:{likes:'5'}},
+  ];
+  const r=overviewEvidence(rows);
+  assert.deepEqual(r.topPosts.map(p=>p.id),['early','late','none']);
+  assert.equal(r.engagement,10);assert.equal(r.engagementCoverage,2);
+  const unknown=overviewEvidence([{id:'b',platform:'x',published_at:'2026-11-12T10:00:00Z',metrics:{views:4}},{id:'a',platform:'x',published_at:'2026-11-11T10:00:00Z',metrics:{}}]);
+  assert.equal(unknown.engagement,null);assert.equal(unknown.engagementCoverage,0);
+  assert.deepEqual(unknown.topPosts.map(p=>p.id),['a','b'],'nothing known: publication order');
+});

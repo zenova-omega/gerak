@@ -51,3 +51,9 @@ test('replay events put date-only posts after the timed ones, never among them b
   ] }] });
   assert.deepEqual(events.map(e => [e.id, e.clock]), [['early', true], ['late', true], ['date-only', false]]);
 });
+test('viral accounts rank by interactions_v1: parts first, a digit string counts, unknown is left out', () => {
+  const rows=[{platform:'x',author:'A',metrics:{likes:'30',engagement:1}},{platform:'x',author:'B',metrics:{likes:true,comments:2.5,engagement:20}},{platform:'x',author:'C',metrics:{likes:-5,engagement:null}}];
+  assert.deepEqual([...replay.topViralAccounts(rows,1)],['x:a'],'the reported likes, not the stale stored total');
+  assert.deepEqual([...replay.topViralAccounts(rows,2)].sort(),['x:a','x:b'],'nothing reported: the stored total stands in');
+  assert.deepEqual([...replay.topViralAccounts([{platform:'x',author:'C',metrics:{views:9}}],3)],[],'no interaction known: no viral account');
+});

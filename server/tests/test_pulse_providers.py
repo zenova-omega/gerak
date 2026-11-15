@@ -47,7 +47,7 @@ async def test_analytics_observed_engagement_and_unknown_locations(client, db, a
     assert data["total_mentions"] == 2
     assert data["timeline"] == [{"date": "2026-01-02", "count": 2}]
     assert data["platforms"] == [{"platform": "x", "count": 1}, {"platform": "youtube", "count": 1}]
-    assert data["influencers"][0] == {"author": "B", "platform": "x", "mentions": 1, "engagement": 10, "url": "https://x.com/i/status/2"}
+    assert data["influencers"][0] == {"author": "B", "platform": "x", "mentions": 1, "engagement": 10, "interaction_posts": 1, "url": "https://x.com/i/status/2"}
     assert data["influencers"][1]["engagement"] == 3
     assert data["locations"] == [] and data["unknown_location_count"] == 2
 
@@ -349,3 +349,83 @@ async def test_project_crawl_collects_instagram_and_tiktok_with_the_shared_provi
     assert calls == [("isu contoh", "fake", "instagram", 300), ("isu contoh", "fake", "tiktok", ["end", "start"])]   # TikTok: the wide search over the last week
     assert manual["providers"]["instagram"]["status"] == manual["providers"]["tiktok"]["status"] == "success"
     assert (await crawl_topic_run(db, t, SimpleNamespace(XPOZ_API_KEY=""), manual=True))["providers"]["tiktok"]["status"] == "not_configured"
+
+
+@pytest.mark.asyncio
+async def test_interactions_follow_the_measures_rule_in_analytics_and_issue_card(client, db, admin_token):
+    """interactions_v1 on the server paths: a digit string counts; a float, a negative number and `true` are not
+    reported; the source's own total stands in only when none of the three is reported; unknown is never 0."""
+    from app.services.ingest.common import observed_engagement
+    t = WatchTopic(label="measures", query="measures")
+    db.add(t)
+    await db.flush()
+    await ingest_items(db, t, [
+        {"source": "xpoz", "platform": "x", "url": "https://x.com/i/status/31", "author": "A", "title": "satu",
+         "metrics": {"likes": "12", "comments": 2.5, "shares": -1, "views": 99}},
+        {"source": "xpoz", "platform": "x", "url": "https://x.com/i/status/32", "author": "B", "title": "dua",
+         "metrics": {"likes": True, "comments": -3, "shares": 1.5}},
+        {"source": "youtube", "platform": "youtube", "url": "https://youtube.com/watch?v=33", "author": "C", "title": "tiga",
+         "metrics": {"author_id": "UC3", "views": 10, "engagement": 40}},
+    ])
+    assert observed_engagement({"likes": "12", "comments": 2.5, "shares": -1}) == 12
+    assert observed_engagement({"likes": True, "comments": -3, "shares": 1.5}) is None
+    assert observed_engagement({"views": 10, "engagement": 40}) == 40
+    h = {"Authorization": f"Bearer {admin_token}"}
+    data = (await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id}, headers=h)).json()
+    posts = {post["author"]: post for post in data["posts"]}
+    assert [posts[name]["metrics"]["engagement"] for name in "ABC"] == [12, None, 40]
+    assert [posts[name]["measures"]["interactions"] for name in "ABC"] == [12, None, 40]
+    assert data["metric_totals"]["engagement"] == {"value": 52, "coverage": 2}
+    assert data["metric_totals"]["shares"] == {"value": None, "coverage": 0}
+    assert {row["author"]: row["engagement"] for row in data["influencers"]} == {"A": 12, "B": None, "C": 40}
+    issues = (await client.get("/api/admin/pulse/issues", params={"topic_id": t.id}, headers=h)).json()
+    by_title = {issue["title"]: issue for issue in issues}
+    assert by_title["dua"]["engagement_total"] is None, "nothing reported and no stored total: unknown in the issue card"
+    assert by_title["tiga"]["engagement_total"] == 40
+
+
+@pytest.mark.asyncio
+async def test_project_without_any_reported_interaction_reads_unknown(client, db, admin_token):
+    """Review Focus 4: no post reports an interaction. Totals are unknown, never 0, in analytics and the network."""
+    t = WatchTopic(label="nothing", query="nothing")
+    db.add(t)
+    await db.flush()
+    await ingest_items(db, t, [
+        {"source": "xpoz", "platform": "x", "url": f"https://x.com/i/status/4{index}", "author": "Sama",
+         "title": f"posting {index}", "metrics": {"views": 5}} for index in range(2)])
+    data = (await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id},
+                             headers={"Authorization": f"Bearer {admin_token}"})).json()
+    assert data["metric_totals"]["engagement"] == {"value": None, "coverage": 0}
+    assert data["influencers"][0]["engagement"] is None
+    assert [account["engagement"] for account in data["network"]["accounts"]] == [None]
+
+
+@pytest.mark.asyncio
+async def test_interaction_totals_in_issue_card_and_influencers_carry_their_post_count(client, db, admin_token):
+    t = WatchTopic(label="counted", query="counted")
+    db.add(t)
+    await db.flush()
+    rows = [{"source": "xpoz", "platform": "x", "url": f"https://x.com/i/status/5{index}", "author": "Sama", "title": "judul sama",
+             "metrics": metrics} for index, metrics in enumerate([{"likes": "4"}, {"views": 2, "engagement": 6}, {"likes": True}])]
+    await ingest_items(db, t, rows)
+    h = {"Authorization": f"Bearer {admin_token}"}
+    issue = (await client.get("/api/admin/pulse/issues", params={"topic_id": t.id}, headers=h)).json()[0]
+    assert (issue["engagement_total"], issue["interaction_posts"]) == (10, 2)
+    data = (await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id}, headers=h)).json()
+    assert (data["influencers"][0]["engagement"], data["influencers"][0]["interaction_posts"]) == (10, 2)
+
+
+@pytest.mark.asyncio
+async def test_snapshot_figures_follow_the_reported_rule_at_ingest(db):
+    """A whole-number float is stored as a whole number; '²' and '٣' are not digits of a reported figure and do not
+    stop the ingest."""
+    from app.models.pulse_monitor import MetricSnapshot
+    from app.services.pulse import snapshot_metrics
+    assert snapshot_metrics({"likes": 5.0, "comments": "²", "shares": "٣", "views": "7"}) == {"likes": 5, "comments": None, "shares": None, "views": 7}
+    t = WatchTopic(label="snap", query="snap")
+    db.add(t)
+    await db.flush()
+    assert await ingest_items(db, t, [{"source": "xpoz", "platform": "x", "url": "https://x.com/i/status/61", "author": "A",
+                                       "metrics": {"likes": 5.0, "comments": "²", "shares": "٣"}}]) == 1
+    snapshot = (await db.execute(select(MetricSnapshot).where(MetricSnapshot.topic_id == t.id))).scalar_one()
+    assert snapshot.metrics == {"likes": 5, "comments": None, "shares": None, "views": None}

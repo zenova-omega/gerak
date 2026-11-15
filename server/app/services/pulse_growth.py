@@ -11,6 +11,7 @@ from sqlalchemy import and_, select
 
 from ..models.pulse import SourceItem
 from ..models.pulse_monitor import MetricSnapshot
+from .pulse_measures import reported
 
 METRICS = ('likes', 'comments', 'shares', 'views')
 ENGAGEMENT = METRICS[:3]
@@ -24,9 +25,7 @@ def _stamp(value):
 
 def _values(raw):
     raw = raw if isinstance(raw, dict) else {}
-    return {key: int(raw[key]) if not isinstance(raw.get(key), bool)
-            and str(raw.get(key, '')).isascii() and str(raw.get(key, '')).isdigit()
-            else None for key in METRICS}
+    return {key: reported(raw.get(key)) for key in METRICS}
 
 
 def _interval(before, after):

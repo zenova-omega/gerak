@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   RULES, setZone, zone, readTime, hasClock, localDay, localTime, weekStart, inPeriod, reported, interactions,
-  sharesTotal, contentShares, byInteractions, tone, toneShares, accountKey, postMeasures,
+  sharesTotal, contentShares, interactionsTotal, byInteractions, tone, toneShares, accountKey, postMeasures,
 } from './pulseMeasures.js';
 
 const CASES = JSON.parse(readFileSync(new URL('../../shared/pulse-measures.cases.json', import.meta.url), 'utf8'));
@@ -58,6 +58,7 @@ each('in_period', item => {
 });
 each('reported', item => assert.equal(reported(item.in), item.out));
 each('interactions', item => assert.equal(interactions(item.in), item.out));
+each('interactions_total', item => assert.deepEqual(interactionsTotal(item.in.map(metrics => ({ metrics }))), item.out));
 each('shares_total', item => assert.equal(sharesTotal(item.in.map(metrics => ({ metrics }))), item.out));
 each('content_shares', item => assert.equal(contentShares(item.in.map(metrics => ({ metrics }))), item.out));
 each('interaction_order', item => assert.deepEqual([...item.in].sort(byInteractions).map(post => post.id), item.out));

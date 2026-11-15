@@ -1,6 +1,8 @@
 """Conservative normalization for observed provider data."""
 from datetime import datetime, timezone
 
+from ..pulse_measures import interactions
+
 
 def count(value) -> int:
     try:
@@ -10,9 +12,8 @@ def count(value) -> int:
 
 
 def observed_engagement(metrics: dict | None) -> int | None:
-    values = [(metrics or {}).get(key) for key in ("likes", "comments", "shares")]
-    observed = [v for v in values if v is not None and str(v).isdigit()]
-    return sum(count(v) for v in observed) if observed else None
+    """interactions_v1, kept under this name for its many callers."""
+    return interactions(metrics)
 
 
 def mark_repost(metrics: dict) -> dict:

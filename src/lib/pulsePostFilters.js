@@ -1,6 +1,6 @@
 import { postMedia } from './pulseMedia.js';
 import { postInteractions } from './pulseEngagement.js';
-import { inPeriod, localDay, readTime } from './pulseMeasures.js';
+import { byInteractions, inPeriod, localDay, readTime } from './pulseMeasures.js';
 // `province` is applied by the Posting page with `namesProvince` (pulsePlaces.js), not by filterPosts: the place reader
 // depends on this module's neighbours, and a filter here would close an import circle.
 export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',province:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
@@ -30,7 +30,7 @@ const postTime = raw => readTime(raw) ?? -Infinity;
 export function filterPosts(posts, filters) {
   // The Posting page opens on the largest interactions; callers that pass no sort keep chronological order.
   const f = { ...defaultPostFilters, sort:'oldest', ...filters };
-  const rank = post => f.sort === 'engagement' ? postInteractions(post.metrics) ?? -1 : post.metrics?.[f.sort] ?? -1;
+  const rank = post => post.metrics?.[f.sort] ?? -1;
   const platforms = filters?.platforms === undefined && filters?.platform && filters.platform !== 'all' ? [filters.platform] : f.platforms;
   return posts.filter(p => {
     const media = Boolean(postMedia(p).imageUrl);
@@ -42,7 +42,7 @@ export function filterPosts(posts, filters) {
       && inPeriod(p.published_at, f.from, f.to)
       && (f.minEngagement === '' || (postInteractions(p.metrics) != null && postInteractions(p.metrics) >= Number(f.minEngagement)))
       && (f.media === 'all' || (f.media === 'available' ? media : !media));
-  }).sort((a,b)=>f.sort === 'oldest' ? ((Number.isFinite(postTime(a.published_at))?postTime(a.published_at):Infinity)-(Number.isFinite(postTime(b.published_at))?postTime(b.published_at):Infinity) || 0) : f.sort === 'recent' ? (postTime(b.published_at)-postTime(a.published_at) || 0) : rank(b)-rank(a) || (postTime(b.published_at)-postTime(a.published_at) || 0));
+  }).sort((a,b)=>f.sort === 'oldest' ? ((Number.isFinite(postTime(a.published_at))?postTime(a.published_at):Infinity)-(Number.isFinite(postTime(b.published_at))?postTime(b.published_at):Infinity) || 0) : f.sort === 'recent' ? (postTime(b.published_at)-postTime(a.published_at) || 0) : f.sort === 'engagement' ? byInteractions(a,b) : rank(b)-rank(a) || (postTime(b.published_at)-postTime(a.published_at) || 0));
 }
 
 export function dailyPostCounts(posts) {

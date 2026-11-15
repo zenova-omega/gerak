@@ -50,3 +50,24 @@ test('the period and the daily counts read every written zone the same way (day_
   assert.deepEqual(postFilters.dailyPostCounts(rows), [{ date: '2026-11-10', count: 1 }, { date: '2026-11-11', count: 2 }]);
   assert.deepEqual(filterPosts(rows, { sort: 'oldest' }).map(p => p.id), ['colonless', 'late', 'date-only']);
 });
+
+test('ordering by interactions follows interactions_v1: known first, larger first, then earlier publication, then id', () => {
+  const rows = [
+    { id: 'late-tie', published_at: '2026-11-12T10:00:00Z', metrics: { likes: 5 } },
+    { id: 'unknown', published_at: '2026-11-01T10:00:00Z', metrics: { likes: true, comments: 2.5, shares: -1 } },
+    { id: 'early-tie', published_at: '2026-11-11T10:00:00Z', metrics: { likes: '5' } },
+    { id: 'big', published_at: '2026-11-13T10:00:00Z', metrics: { likes: 9 } },
+    { id: 'zero', published_at: '2026-11-13T10:00:00Z', metrics: { likes: 0 } },
+  ];
+  assert.deepEqual(filterPosts(rows, { sort: 'engagement' }).map(p => p.id), ['big', 'early-tie', 'late-tie', 'zero', 'unknown']);
+  assert.deepEqual(filterPosts(rows, { sort: 'engagement', minEngagement: '5' }).map(p => p.id), ['big', 'early-tie', 'late-tie']);
+});
+
+test('a project where no post reports any interaction keeps publication order when ordered by interactions', () => {
+  const rows = [
+    { id: 'b', published_at: '2026-11-12T10:00:00Z', metrics: { views: 3 } },
+    { id: 'c', published_at: '2026-11-12T10:00:00Z', metrics: {} },
+    { id: 'a', published_at: '2026-11-11T10:00:00Z', metrics: { likes: true } },
+  ];
+  assert.deepEqual(filterPosts(rows, { sort: 'engagement' }).map(p => p.id), ['a', 'b', 'c']);
+});

@@ -64,3 +64,17 @@ test('report enforces its declared platform and date scope even on unfiltered in
   assert.deepEqual(r.selectedPlatforms,['x']);
   assert.equal(buildReport({posts},{},{},'2026-11-12',[]).posts.length,0);
 });
+
+test('report top posts follow the interactions order: ties by earlier publication, unknown last, digit strings count', () => {
+  const data={posts:[
+    {id:'late',author:'A',platform:'x',metrics:{likes:5},published_at:'2026-11-12T10:00:00Z'},
+    {id:'none',author:'B',platform:'x',metrics:{likes:true,shares:1.5},published_at:'2026-11-01T10:00:00Z'},
+    {id:'early',author:'C',platform:'x',metrics:{likes:'5'},published_at:'2026-11-11T10:00:00Z'},
+    {id:'twin-b',author:'D',platform:'x',metrics:{likes:7},published_at:'2026-11-11T09:00:00Z'},
+    {id:'twin-a',author:'D',platform:'x',metrics:{likes:7},published_at:'2026-11-11T09:00:00Z'},
+  ]};
+  const report=buildReport(data,{label:'T'},{},'2026-11-15T00:00:00Z');
+  assert.deepEqual(report.topPosts.map(p=>p.id),['twin-a','twin-b','early','late','none'],'same figure and same time: by id');
+  assert.equal(report.accounts.find(row=>row.author==='B').engagement,null);
+  assert.equal(report.accounts.find(row=>row.author==='C').engagement,5);
+});

@@ -126,6 +126,12 @@ def test_interactions(case):
     assert m.interactions(case['in']) == case['out']
 
 
+@pytest.mark.parametrize('case', cases('interactions_total'))
+def test_interactions_total(case):
+    assert m.interactions_total(case['in']) == case['out']
+    assert m.interactions_total([{'metrics': metrics} for metrics in case['in']]) == case['out']
+
+
 @pytest.mark.parametrize('case', cases('shares_total'))
 def test_shares_total(case):
     assert m.shares_total(case['in']) == case['out']

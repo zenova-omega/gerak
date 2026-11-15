@@ -1,4 +1,4 @@
-import { hasClock, readTime } from './pulseMeasures.js';
+import { hasClock, postMeasures, readTime } from './pulseMeasures.js';
 
 /** A publication time in milliseconds, read by the shared reader (day_v1); null when there is none. */
 export function replayTime(value) {
@@ -37,8 +37,8 @@ export function replayFrame(data, cutoff = Infinity) {
 export function topViralAccounts(posts, limit = 3) {
   const totals = new Map();
   for (const p of posts) {
-    const value=p.metrics?.engagement;
-    if (!p.author || !Number.isFinite(value) || value < 0) continue;
+    const value=postMeasures(p).interactions;
+    if (!p.author || value === null) continue;
     const identity=p.platform==='x'?p.author.replace(/^@/,'').toLowerCase():String(p.metrics?.author_id || p.author);
     const id=p.platform+':'+identity;
     totals.set(id,(totals.get(id)||0)+value);

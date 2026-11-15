@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.pulse import WatchTopic, Issue, SourceItem, PulseCrawlRun
 from .ingest.common import observed_engagement, credential, count
 from .pulse_public import metrics_for_reader
-from .pulse_measures import RULES, local_day, post_measures, zone
+from .pulse_measures import RULES, interactions, interactions_total, local_day, post_measures, reported, shares_total, zone
 import httpx
 from .dedup import simhash, is_near_duplicate
 from .ai import get_ai_service
@@ -17,14 +17,13 @@ NEAR_DUP_THRESHOLD = 3
 def snapshot_metrics(raw):
     values = raw or {}
     # Current observations only. Omitted fields are unknown, never carried forward.
-    return {key: int(values[key]) if not isinstance(values.get(key), bool) and str(values.get(key, '')).isdigit() else None
-            for key in ('likes', 'comments', 'shares', 'views')}
+    return {key: reported(values.get(key)) for key in ('likes', 'comments', 'shares', 'views')}
 
 
 def _engagement(metrics):
-    if any(k in (metrics or {}) for k in ("likes", "comments", "shares")):
-        return observed_engagement(metrics) or 0
-    return count((metrics or {}).get("engagement"))
+    """interactions_v1 for the stored issue score, which needs a number: the known value, else 0 for the score only.
+    The issue card's `engagement_total` is computed from the posts and stays unknown when nothing is known."""
+    return interactions(metrics) or 0
 
 
 async def _find_or_create_issue(db: AsyncSession, topic: WatchTopic, sh: str, title: str | None) -> Issue:
@@ -232,11 +231,12 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
         if item.author:
             key = ((item.metrics or {}).get("author_id") or item.author, platform)
             author = influencers.setdefault(key, {"author": item.author, "platform": platform,
-                                                  "mentions": 0, "engagement": None, "url": item.url})
+                                                  "mentions": 0, "engagement": None, "interaction_posts": 0, "url": item.url})
             author["mentions"] += 1
-            engagement = observed_engagement(item.metrics)
-            if engagement is not None:
-                author["engagement"] = (author["engagement"] or 0) + engagement
+            author.setdefault("_metrics", []).append(item.metrics)
+    for author in influencers.values():
+        total = interactions_total(author.pop("_metrics"))
+        author["engagement"], author["interaction_posts"] = total["value"], total["posts"]
     # No provider currently supplies verified point coordinates with provenance.
     # In particular, profile locations and place centroids are NOT observed locations.
     posts = [{"id": item.id, "issue_id": item.issue_id, "platform": item.platform or "unknown", "url": item.url,
@@ -252,10 +252,14 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
     from .pulse_profiles import attach_profiles
     await attach_profiles(db, posts)   # account pictures and follower counts looked up separately
     totals = {}
-    for metric in ("likes", "comments", "shares", "views", "engagement"):
-        values = [p["metrics"].get(metric) for p in posts]
-        values = [count(v) for v in values if v is not None and str(v).isdigit()]
+    for metric in ("likes", "comments", "views"):
+        values = [n for n in (reported(p["metrics"].get(metric)) for p in posts) if n is not None]
         totals[metric] = {"value": sum(values) if values else None, "coverage": len(values)}
+    # shares_total_v1: a repost carries none of its own, so nothing is counted twice.
+    totals["shares"] = {"value": shares_total(posts), "coverage": sum(reported(p["metrics"].get("shares")) is not None for p in posts)}
+    # interactions_v1 over the posts whose interactions are known, with how many posts that is.
+    known = interactions_total(posts)
+    totals["engagement"] = {"value": known["value"], "coverage": known["posts"]}
     from .pulse_network import analyze_network
     return {"total_mentions": len(items), "posts": posts, "metric_totals": totals, "network": analyze_network(posts),
             "platforms": [{"platform": p, "count": n} for p, n in sorted(platforms.items())],

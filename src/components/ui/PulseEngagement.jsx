@@ -25,7 +25,7 @@ export function PulseEngagement({ metrics, posts, platform, compact = false, lab
   const pct = shares(Object.fromEntries(shown.map(([key]) => [key, s.totals[key]])), shown.map(([key]) => key));
   return <section className="pu-eng" data-compact={compact ? '' : undefined} aria-label={label}>
     <div className="pu-eng-head">
-      <span className="pu-eng-total"><PulseBeat size={18} /><strong>{s.interactions == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(s.interactions)}</strong> interaksi</span>
+      <span className="pu-eng-total"><PulseBeat size={18} /><strong>{s.interactions == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(s.interactions)}</strong> interaksi{many && s.interactions != null && <small> dari {formatCount(s.interactionPosts)} posting</small>}</span>
       {s.interactions > 0 && <div className="pu-eng-split">
         <span className="pu-eng-bar" role="img" aria-label={'Pembagian interaksi: ' + shown.map(([key, name]) => `${name} ${pct[key]}%`).join(', ')}>{shown.map(([key]) => <i key={key} data-part={key} style={{ flexGrow: s.totals[key] }} />)}</span>
         {/* The bar alone is three unnamed colours: each segment is named here with its share of all interactions. */}

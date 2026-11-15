@@ -1,7 +1,7 @@
 import { sentimentCounts, postSentiment } from './pulsePostFilters.js';
 import { sentimentTimeline } from './pulseSentiment.js';
 import {postInteractions} from './pulseEngagement.js';
-import { hasClock, localDay, readTime } from './pulseMeasures.js';
+import { byInteractions, hasClock, localDay, readTime } from './pulseMeasures.js';
 
 // "Kanal pertama" (clock_v1): a channel's first post is found by its day; on that day a post with a clock comes before
 // one whose source gave a date only, which never takes part in the order by time.
@@ -60,7 +60,7 @@ export function overviewEvidence(input=[],{platforms=null,excludedIds=[],previou
     platformTimeline:[...sources.values()].sort((a,b)=>byFirst(a.firstPublished,b.firstPublished)),
     platformTimelineDateOnly:[...sources.values()].reduce((sum,source)=>sum+source.dateOnly,0),
     narratives:[...groups.values()].filter(g=>g.posts.length>1).sort((a,b)=>b.posts.length-a.posts.length),
-    days:sentimentTimeline(posts),topPosts:[...posts].sort((a,b)=>(postInteractions(b.metrics)??-1)-(postInteractions(a.metrics)??-1)).slice(0,5),
+    days:sentimentTimeline(posts),topPosts:[...posts].sort(byInteractions).slice(0,5),
     volumeChange:previous===null?null:{previous:previous.length,delta:posts.length-previous.length,percent:previous.length?(posts.length-previous.length)/previous.length*100:null}};
 }
 

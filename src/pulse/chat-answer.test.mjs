@@ -63,3 +63,11 @@ test('an answer without lists, charts or evidence is still a calm paragraph', as
   assert.match(html, /<p class="pca-lead">Data belum cukup untuk menjawab\.<\/p>/);
   assert.doesNotMatch(html, /pc-sources|pcc|pca-list/);
 });
+
+test('a cited group says over how many posts its interactions are counted, and an unknown total reads as a dash', async () => {
+  const counted = await render({ turn: { ...turn, groups: [{ ...turn.groups[0], interaction_posts: 30 }] }, index: 2 });
+  assert.match(text(counted), /39 posting · 12 akun · 157\.814 interaksi dari 30 posting · mulai/);
+  const unknown = await render({ turn: { ...turn, groups: [{ ...turn.groups[0], interactions: null, interaction_posts: 0 }] }, index: 2 });
+  assert.match(text(unknown), /12 akun · — interaksi · mulai/);
+  assert.doesNotMatch(text(unknown), /dari 0 posting/);
+});

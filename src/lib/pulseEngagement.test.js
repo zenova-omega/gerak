@@ -36,3 +36,28 @@ test('content shared by reposters counts the original post once', async () => {
   assert.equal(contentShares([{ metrics: {} }, { metrics: { likes: 3 } }]), null, 'no share figure at all stays unknown');
   assert.equal(contentShares([{ metrics: { shares: 0 } }]), 0);
 });
+
+test('a reported figure is a whole number or a digit string; floats, negatives and true are not reported', async () => {
+  const { postInteractions, contentShares } = await import('./pulseEngagement.js');
+  assert.equal(postInteractions({ likes: '12', comments: 2.5, shares: -1, views: 99 }), 12);
+  assert.equal(postInteractions({ likes: true, comments: -3, shares: 1.5 }), null, 'nothing reported and no stored total: unknown');
+  assert.equal(postInteractions({ likes: true, engagement: '40' }), 40, 'the stored total stands in');
+  assert.equal(contentShares([{ metrics: { shares: '3' } }, { metrics: { shares: 2.5 } }, { metrics: { shares: -4 } }]), 3);
+  const s = engagementSummary([{ metrics: { likes: '12', comments: 2.5, shares: '3' } }, { metrics: { likes: true, shares: -1 } }, { metrics: { engagement: 7 } }]);
+  assert.deepEqual(s.totals, { likes: 12, comments: null, shares: 3, views: null });
+  assert.equal(s.interactions, 22);
+  assert.equal(s.interactionPosts, 2, 'a total over posts says how many posts it covers');
+});
+
+test('a project where no post reports any interaction reads unknown, never 0', () => {
+  const s = engagementSummary([{ metrics: { views: 5 } }, { metrics: { likes: true } }]);
+  assert.equal(s.interactions, null);
+  assert.equal(s.interactionPosts, 0);
+  assert.equal(s.totals.shares, null);
+});
+
+test('a set\'s interaction total is the module\'s interactionsTotal: the server\'s measures are read when sent', () => {
+  const s = engagementSummary([{ metrics: {}, measures: { interactions: 9 } }, { metrics: { likes: 2 } }]);
+  assert.equal(s.interactions, 11);
+  assert.equal(s.interactionPosts, 2);
+});

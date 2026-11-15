@@ -78,7 +78,7 @@ export default function ChatAnswer({ turn, index = 0 }) {
       </> : <div className="pc-source-body">
         <span className="pu-account-line pca-group"><MessagesSquare size={16} aria-hidden="true" /><strong>Kelompok percakapan</strong></span>
         <p>{row.group.title}</p>
-        <span className="pc-source-meta">{formatCount(row.group.posts)} posting · {formatCount(row.group.accounts)} akun · {formatCount(row.group.interactions)} interaksi{row.group.first_published_at ? ` · mulai ${stamp(row.group.first_published_at)}` : ''}</span>
+        <span className="pc-source-meta">{formatCount(row.group.posts)} posting · {formatCount(row.group.accounts)} akun · {formatCount(row.group.interactions)} interaksi{row.group.interactions != null && row.group.interaction_posts ? ` dari ${formatCount(row.group.interaction_posts)} posting` : ''}{row.group.first_published_at ? ` · mulai ${stamp(row.group.first_published_at)}` : ''}</span>
       </div>}
     </li>)}</ol>}
   </>;

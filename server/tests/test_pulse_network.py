@@ -83,3 +83,21 @@ def test_follower_counts_that_are_not_counts_are_ignored():
     rows[0]['metrics'] = {'author_followers': 0}          # a reported zero is a count
     assert analyze_network(rows)['nodes'][0]['followers'] == 0
 
+
+
+def test_interaction_totals_carry_their_post_count_and_stay_unknown_when_none_is_known():
+    """interactions_v1 totals in the network payload: the sum over the posts whose interactions are known, with
+    `interaction_posts`; a narrative or account where no post reports any interaction is unknown, count 0."""
+    text = 'laporan investigasi penting tentang keamanan komunikasi publik sedang dibahas bersama'
+    rows = [post('1', 'Early', text), post('2', 'Later', text, '2026-11-10T12:00:00'), post('3', 'Third', text, '2026-11-10T13:00:00')]
+    rows[0]['metrics'] = {'likes': '12'}
+    rows[1]['metrics'] = {'views': 4, 'engagement': 8}
+    rows[2]['metrics'] = {'likes': True, 'comments': 2.5}
+    data = analyze_network(rows)
+    narrative = data['narratives'][0]
+    assert (narrative['engagement'], narrative['interaction_posts']) == (20, 2)
+    accounts = {a['label']: a for a in data['accounts']}
+    assert (accounts['Third']['engagement'], accounts['Third']['interaction_posts']) == (None, 0)
+    assert (accounts['Early']['engagement'], accounts['Early']['interaction_posts']) == (12, 1)
+    quiet = analyze_network([post(str(i), f'Media {i}', text) | {'metrics': {'views': 3}} for i in range(3)])['narratives'][0]
+    assert (quiet['engagement'], quiet['interaction_posts']) == (None, 0)

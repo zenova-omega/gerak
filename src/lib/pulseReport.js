@@ -3,6 +3,7 @@ import {sentimentTimeline} from './pulseSentiment.js';
 import {filterPosts} from './pulsePostFilters.js';
 import {projectPlatformOptions} from './pulseProjectFilters.js';
 import { postInteractions } from './pulseEngagement.js';
+import { byInteractions } from './pulseMeasures.js';
 
 export function freezeReport(draft,generatedAt=new Date().toISOString()) {
   if(!draft.responseAnalysis.loaded||draft.responseAnalysis.error)return null;
@@ -35,6 +36,6 @@ export function buildReport(data,topic={},period={},generatedAt=new Date().toISO
   }
   return {generatedAt,topic:{label:topic.label||'Project',query:topic.query||'',id:topic.id},period:{...period},selectedPlatforms:selectedPlatforms===null?null:[...selectedPlatforms],posts,counts,platforms,sourceCoverage,
     responseAnalysis:scopedResponse,analyzed:posts.length-counts.unknown,days:sentimentTimeline(posts),
-    topPosts:[...posts].sort((a,b)=>(postInteractions(b.metrics)??-1)-(postInteractions(a.metrics)??-1)).slice(0,10),
+    topPosts:[...posts].sort(byInteractions).slice(0,10),
     accounts:[...authors.values()].sort((a,b)=>(b.engagement??-1)-(a.engagement??-1)||b.mentions-a.mentions).slice(0,10)};
 }

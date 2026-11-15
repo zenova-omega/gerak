@@ -4,6 +4,8 @@ import re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
+from .pulse_measures import content_shares, interactions_total, reported
+
 
 def timestamp(value):
     try:
@@ -28,20 +30,14 @@ def account_key(post):
 
 
 def observed_total(rows, key):
-    """Sum of one metric over the posts that carry it; None when none does.
+    """Sum of one reported metric over the posts of one narrative; None when none reports it.
 
-    Shares are the exception. A repost has none of its own and brings the original post's count instead
-    (`original_shares`, see `mark_repost`). That count belongs to one post, so it is taken once, the largest
-    observation, and only where it exceeds what the collected posts add up to themselves."""
-    number = lambda value: isinstance(value, (int, float)) and not isinstance(value, bool)
-    metrics = [p.get('metrics') or {} for p in rows]
-    values = [m[key] for m in metrics if number(m.get(key))]
-    total = sum(values) if values else None
+    Shares are content_shares_v1, since a narrative is one piece of content: a repost's carried count
+    (`original_shares`, see `mark_repost`) is taken once, the largest, where it exceeds the posts' own."""
     if key == 'shares':
-        carried = max((m['original_shares'] for m in metrics if m.get('repost') and number(m.get('original_shares'))), default=0)
-        if carried:
-            total = max(total or 0, carried)
-    return total
+        return content_shares(rows)
+    values = [n for n in (reported((p.get('metrics') or {}).get(key)) for p in rows) if n is not None]
+    return sum(values) if values else None
 
 
 def known_followers(rows):
@@ -121,7 +117,7 @@ def analyze_network(posts):
                            'first_observed': evidence(first) if first else None,
                            'tied_first_count': sum(timestamp(p.get('published_at')) == timestamp(first.get('published_at')) for p in dated) if first else 0,
                            'timeline': [evidence(p) for p in rows],
-                           'engagement': sum((p.get('metrics') or {}).get('engagement') or 0 for p in rows),
+                           'engagement': interactions_total(rows)['value'], 'interaction_posts': interactions_total(rows)['posts'],
                            # Last recorded numbers of every post in the group, added up. None when no post reports that number.
                            'metrics': {key: observed_total(rows, key) for key in ('likes', 'comments', 'shares', 'views')}})
     accounts = []
@@ -146,7 +142,7 @@ def analyze_network(posts):
         accounts.append({**nodes[key], 'posts': len(rows), 'signals': signals, 'pattern': 'amplification' if len(signals) >= 2 else None,
                          'assessment': 'review_signals' if signals else 'insufficient_data' if len(rows) < 5 else 'no_signals_observed',
                          'first_seen': dates[0].isoformat() if dates else None,
-                         'engagement': sum((p.get('metrics') or {}).get('engagement') or 0 for p in rows),
+                         'engagement': interactions_total(rows)['value'], 'interaction_posts': interactions_total(rows)['posts'],
                          'followers': known_followers(rows),
                          'evidence': [evidence(p) for p in rows]})
     degree = Counter()

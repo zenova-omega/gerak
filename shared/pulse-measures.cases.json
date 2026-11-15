@@ -107,6 +107,12 @@
     {"note": "no post reports shares", "in": [{"likes": 1}, {}], "out": null},
     {"note": "empty set", "in": [], "out": null}
   ],
+  "interactions_total": [
+    {"note": "sum over the posts whose interactions are known, with how many posts that is", "in": [{"likes": 3, "comments": "2"}, {"likes": true, "comments": 1.5}, {"shares": 4}], "out": {"value": 9, "posts": 2}},
+    {"note": "a post with only the source's own total counts it", "in": [{"views": 9, "engagement": 40}, {"likes": 0}], "out": {"value": 40, "posts": 2}},
+    {"note": "none known: unknown, never 0", "in": [{"views": 5}, {"likes": -1}, {}], "out": {"value": null, "posts": 0}},
+    {"note": "empty set", "in": [], "out": {"value": null, "posts": 0}}
+  ],
   "content_shares": [
     {"note": "a repost carrying more than the collected posts", "in": [{"shares": 2}, {"repost": true, "shares": 0, "original_shares": 100}], "out": 100},
     {"note": "collected posts carrying more than the repost", "in": [{"shares": 150}, {"shares": 60}, {"repost": true, "shares": 0, "original_shares": 100}], "out": 210},

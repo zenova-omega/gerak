@@ -98,6 +98,13 @@ export function interactions(metrics) {
   return reported(metrics?.engagement);
 }
 
+/** interactions_v1 over posts: the sum over the posts whose interactions are known, with how many posts that is.
+ * `{value: null, posts: 0}` when none is known; unknown is never 0. */
+export function interactionsTotal(posts) {
+  const own = known((posts || []).map(post => postMeasures(post).interactions));
+  return { value: own.length ? own.reduce((sum, value) => sum + value, 0) : null, posts: own.length };
+}
+
 /** shares_total_v1: the posts' own shares over the posts that report them. A repost carries none of its own. */
 export function sharesTotal(posts) {
   const own = known((posts || []).map(post => reported(post?.metrics?.shares)));

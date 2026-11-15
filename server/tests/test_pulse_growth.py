@@ -168,3 +168,11 @@ async def test_router_period_follows_the_installation_zone(growth_db, monkeypatc
         response = await client.get('/admin/pulse/growth', headers=headers, params={'topic_id': 'a', 'from': '2026-11-11', 'to': '2026-11-11'})
         assert [r['id'] for r in response.json()['posts']] == ['first']
         assert response.json()['period']['timezone'] == 'WIT', 'the period names the installation zone'
+
+
+def test_snapshot_figures_follow_the_reported_rule():
+    """Review Focus 3 on the growth path: a digit string counts; a float, a negative number and true are not reported.
+    A whole-number float is a whole number (the browser cannot tell 5.0 from 5)."""
+    from app.services.pulse_growth import _values
+    assert _values({'likes': '12', 'comments': 2.5, 'shares': -1, 'views': True}) == {'likes': 12, 'comments': None, 'shares': None, 'views': None}
+    assert _values({'likes': 5.0, 'views': '٣'}) == {'likes': 5, 'comments': None, 'shares': None, 'views': None}

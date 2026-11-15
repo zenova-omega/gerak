@@ -17,7 +17,7 @@ from ..services.ingest.common import observed_engagement, count
 from ..services.pulse_lock import topic_crawl_guard, CrawlInProgress
 from ..services.pulse_comments import collect_top_comments
 from ..services.pulse_public import label_for_reader, lane_for_reader, lane_from_reader, lanes_for_reader, metrics_for_reader
-from ..services.pulse_measures import period_closed_bounds
+from ..services.pulse_measures import interactions_total, period_closed_bounds
 
 router = APIRouter()
 
@@ -148,15 +148,14 @@ def _topic_dict(t: WatchTopic) -> dict:
 
 
 def _issue_dict(i: Issue, items=()) -> dict:
-    engagements = [observed_engagement(s.metrics) for s in items]
-    engagements = [v for v in engagements if v is not None]
+    engagement = interactions_total([s.metrics for s in items])
     reaches = [(s.metrics or {}).get("reach") for s in items]
     reaches = [count(v) for v in reaches if v is not None and str(v).isdigit()]
     return {
         "id": i.id, "topic_id": i.topic_id, "title": i.title,
         "item_count": i.item_count, "score": i.score,
         "reach_total": sum(reaches) if reaches else None,
-        "engagement_total": sum(engagements) if engagements else None,
+        "engagement_total": engagement["value"], "interaction_posts": engagement["posts"],
         "platforms": i.platforms or [],
         "sentiment": i.sentiment, "summary": i.summary,
         "grouping": {"method": "simhash_64", "max_distance": 3,
