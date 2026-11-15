@@ -17,6 +17,7 @@ from ..services.ingest.common import observed_engagement, count
 from ..services.pulse_lock import topic_crawl_guard, CrawlInProgress
 from ..services.pulse_comments import collect_top_comments
 from ..services.pulse_public import label_for_reader, lane_for_reader, lane_from_reader, lanes_for_reader, metrics_for_reader
+from ..services.pulse_measures import period_closed_bounds
 
 router = APIRouter()
 
@@ -41,6 +42,15 @@ async def quick_search(q: str = Query('', max_length=200), keywords: str | None 
         })
     return {'query': term, 'keywords': groups, 'scope': 'stored_only', 'posts': list(posts.values()),
             'truncated': len(rows) > 500, 'limit': 500}
+
+
+@router.get('/measures')
+async def measures(admin: User = Depends(require_admin)):
+    # The rules every figure is computed by, so a reader of the API can see which rule produced a number.
+    from ..services.pulse_measures import RULES, RULE_TEXT, zone
+    offset, name = zone()
+    return {'zone': {'offset_minutes': offset, 'name': name},
+            'rules': [{'name': key, 'version': version, 'text': RULE_TEXT[key]} for key, version in RULES.items()]}
 
 
 @router.get('/sentiment/status')
@@ -246,8 +256,7 @@ async def analytics(topic_id: str | None = Query(None), db: AsyncSession = Depen
                     date_to: date | None = Query(None, alias='to')):
     if date_from and date_to and date_from > date_to:
         raise HTTPException(status_code=422, detail='Tanggal akhir harus sama atau setelah tanggal mulai.')
-    start = datetime.combine(date_from, time.min) - timedelta(hours=7) if date_from else None
-    end = datetime.combine(date_to, time.max) - timedelta(hours=7) if date_to else None
+    start, end = period_closed_bounds(date_from, date_to)
     data = await pulse_analytics(db, topic_id, start=start, end=end)
     return data
 

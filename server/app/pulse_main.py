@@ -15,6 +15,7 @@ from .routers import pulse_reports
 from .routers import pulse_evaluation
 from .routers import pulse_response_analysis
 from .routers import pulse_radar
+from .routers import pulse_spikes
 
 
 @asynccontextmanager
@@ -55,6 +56,7 @@ app.include_router(pulse_evaluation.router, prefix='/api/admin/pulse')
 app.include_router(pulse_response_analysis.router, prefix='/api/admin/pulse/response-analysis')
 app.include_router(pulse_chat.router, prefix='/api/admin/pulse')
 app.include_router(pulse_radar.router, prefix='/api/admin/pulse')
+app.include_router(pulse_spikes.router, prefix='/api/admin/pulse')
 app.include_router(pulse.router, prefix='/api/admin/pulse')
 app.include_router(pulse_monitor.router, prefix='/api/admin/pulse/monitor')
 

@@ -38,3 +38,8 @@ test('layout remains stable across replay frames and positions are finite', () =
   assert.ok(Object.values(positions).every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&Number.isFinite(p.z)));
   assert.equal(Object.keys(positions).length,3);
 });
+test('replayTime is the shared reader: a space, fractions and a zone without a colon read alike', () => {
+  assert.equal(replay.replayTime('2026-11-10 01:00:00'), Date.parse('2026-11-10T01:00:00Z'));
+  assert.equal(replay.replayTime('2026-11-10T08:00:00.5+0700'), Date.parse('2026-11-10T01:00:00.500Z'));
+  assert.equal(replay.replayTime('2026-02-30T10:00:00Z'), null, 'an impossible date is not a time');
+});

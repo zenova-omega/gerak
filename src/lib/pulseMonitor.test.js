@@ -139,6 +139,19 @@ test('an alert row shows one triggering figure and never a schedule key or error
   assert.equal(monitor.alertSummary({kind:'unknown_kind',title:'',detail:{}}).label,'Aktivitas baru');
 });
 
+test('a spike alert compares the window with the usual one, and alerts stored under the earlier rule still read',()=>{
+  const figure=detail=>monitor.alertSummary({kind:'volume_spike',title:'Isu contoh',issue_id:'i1',acknowledged_at:null,detail}).figure;
+  // The product's one spike rule: the latest 30 minutes against the usual window of the hours before.
+  assert.equal(figure({rule:'spike_v1',posts:32,usual_posts:8,ratio:4,window_minutes:30,baseline_windows:11,authors:12}),'32 posting dalam 30 menit, 4× dari biasanya');
+  assert.equal(figure({rule:'spike_v1',posts:25,usual_posts:13,ratio:1.92,window_minutes:30,baseline_windows:4,authors:9}),'25 posting dalam 30 menit, 1,9× dari biasanya');
+  // From silence to ten posts: nothing is so many times zero, so no ratio is stated.
+  assert.equal(figure({rule:'spike_v1',posts:10,usual_posts:0,ratio:null,window_minutes:30,baseline_windows:11,authors:4}),'10 posting dalam 30 menit, sebelumnya umumnya kosong');
+  // Stored before 15 Nov 2026 (volume_spike_v1): against the 30 minutes before, and said so.
+  assert.equal(figure({rule:'volume_spike_v1',posts:32,authors:12,previous_posts:8,ratio:4,window_minutes:30}),'32 posting dalam 30 menit, 4× dari sebelumnya');
+  assert.equal(figure({posts:32,previous_posts:8,ratio:4}),'32 posting dalam 30 menit, 4× dari sebelumnya');
+  assert.equal(figure({rule:'spike_v1',posts:12,window_minutes:30}),'12 posting dalam 30 menit','a detail without the comparison says only what it knows');
+});
+
 test('navigation badge: nothing for zero or a failed read, capped at two digits',()=>{
   assert.equal(monitor.unreadBadgeText(0),null);
   assert.equal(monitor.unreadBadgeText(null),null);

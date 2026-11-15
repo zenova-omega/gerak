@@ -16,6 +16,7 @@ from ..models.pulse import SourceItem, WatchTopic
 from ..models.pulse_sentiment import SentimentLane
 from ..models.pulse_response_analysis import ResponseAnalysisJob as Job, ResponseAnalysisCursor as Cursor
 from .pulse_monitor import insert_once
+from .pulse_measures import period_bounds
 
 VERSION = 'response_v1'
 PROMPT = '''Analyze only the supplied text, not author beliefs, affiliations or factual truth.
@@ -279,7 +280,8 @@ def parse_result(raw, kind, target, truncated=False):
 
 
 async def run_one(session_factory, ai, lane='local'):
-    from .ai.hosted import AIUnavailable
+    from .ai.hosted import AIUnavailable, set_lane
+    set_lane('labels_comments')
     unavailable = False
     async with session_factory() as db:
         picked = await claim(db,datetime.utcnow(),lane)
@@ -347,7 +349,8 @@ def date_bound(value, end=False):
         day = date.fromisoformat(str(value))
     except ValueError:
         raise HTTPException(422,'Use YYYY-MM-DD WIB dates')
-    return datetime.combine(day,time.min)-timedelta(hours=7)+timedelta(days=int(end))
+    start,after=period_bounds(day,day)
+    return after if end else start
 
 
 def stance_for_reader(stance):

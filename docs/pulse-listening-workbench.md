@@ -56,14 +56,26 @@ while queue progress intentionally covers all dates and is labeled accordingly.
 
 ## Alerts
 
-Existing activity-threshold alerts remain separate. New `volume_spike` alerts
-compare the current 30-minute publication window to the preceding 30 minutes
-within the same text group. Require >=10 posts, >=3 observed account names, >=3x
-the previous nonzero count, and at least one hour since schedule baseline.
-Historical initial imports are suppressed. Prior baseline posts must have been
-collected before the current window began. Each alert stores current and baseline
-evidence IDs; the existing analysis button opens the issue/window. A two-hour
-cooldown avoids repeat spike alerts for the same group.
+Existing activity-threshold alerts remain separate. Since 15 November 2026 a
+`volume_spike` alert is decided by the product's one spike rule, `spike_v1`
+(`server/app/services/pulse_spikes.py`), the same rule that marks the trend
+chart. The publications of one text group are counted per 30 minutes over the
+last six hours: the window that just ended and up to eleven before it. The alert
+fires when the latest window is a spike among them: it rose from the window
+before, holds >=10 posts, is >=1.5x the usual window (the median of the others;
+when that is 0, as for a group that goes from silence to ten posts, no ratio is
+stated) and reaches a tenth of the highest window. It also needs >=3 observed
+account names. Only windows that began after the schedule's baseline are read
+and at least two are needed (a full observed hour), so historical initial
+imports are suppressed. The windows are counted from what is stored when the
+alert is decided, whenever it was collected: a source collected every few hours
+brings the whole stretch at once, and its not-yet-collected hours must not read
+as silence. Each alert stores the rule, the window's posts, the usual window,
+the ratio, how many baseline windows were read, and current and baseline
+evidence IDs (at most 200 baseline IDs); the existing analysis button opens the
+issue/window. A two-hour cooldown avoids repeat spike alerts for the same group.
+Alerts stored before that date carry `volume_spike_v1` (>=3x the preceding 30
+minutes, nonzero) and are still shown with their own wording.
 
 This describes observed volume only. Sampling changes, missed collections, and
 source availability can bias it. It is not calibrated virality detection.

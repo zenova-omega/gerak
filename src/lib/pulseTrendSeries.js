@@ -3,17 +3,17 @@
 import { sentimentDate } from './pulseSentiment.js';
 import { postSentiment } from './pulsePostFilters.js';
 import { postInteractions } from './pulseEngagement.js';
+import { weekStart } from './pulseMeasures.js';
 
 export const trendUnits = ['day', 'week', 'month'];
 const MAX_DAYS = 1100;   // three years of days: a guard against a stray date drawing an endless axis
 
 const addDays = (date, count) => new Date(Date.parse(date + 'T00:00:00Z') + count * 86400000).toISOString().slice(0, 10);
-const weekday = date => (new Date(date + 'T00:00:00Z').getUTCDay() + 6) % 7;   // Monday is 0
 const monthEnd = date => { const [year, month] = date.split('-').map(Number); return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10); };
 
 /** First and last day of the bucket that holds `date`. */
 function bounds(date, unit) {
-  if (unit === 'week') { const start = addDays(date, -weekday(date)); return [start, addDays(start, 6)]; }
+  if (unit === 'week') { const start = weekStart(date); return [start, addDays(start, 6)]; }   // Monday to Sunday
   if (unit === 'month') return [date.slice(0, 8) + '01', monthEnd(date)];
   return [date, date];
 }

@@ -231,7 +231,7 @@ async def test_reading_never_starts_a_refresh_and_a_viewer_cannot_start_one(clie
     assert (await client.get(API + '/radar/issues/k-none', headers=auth(admin_token))).status_code == 404
     assert refreshes == []
     started = await client.post(API + '/radar/refresh', headers=auth(admin_token))
-    assert started.status_code == 200 and started.json() == {'state': 'started'} and refreshes == [{'force': True}]
+    assert started.status_code == 200 and started.json() == {'state': 'started'} and refreshes == [{'force': True, 'fresh_x': True}]
     await provision_user(db, 'radar-viewer@example.com', 'Viewer', 'initial long password', 'viewer')
     client.base_url = 'https://localhost'      # sign-in is only accepted on the installation's own address
     origin = {'Origin': 'http://localhost:5173'}
@@ -262,3 +262,34 @@ async def test_the_radar_switch_is_listed_in_monitor_and_can_be_turned_on_and_of
     assert worker['unlimited'] is True and (await read(client, admin_token))['enabled'] is True
     off = await client.put(API + '/monitor/workers/radar', headers=auth(admin_token), json={'daily_limit': 0})
     assert off.status_code == 200 and (await read(client, admin_token))['enabled'] is False
+
+
+@pytest.mark.asyncio
+async def test_the_paid_social_switch_is_listed_in_monitor_off_and_turning_it_on_does_not_start_the_radar(client, admin_token):
+    listed = (await client.get(API + '/monitor', headers=auth(admin_token))).json()['workers']
+    assert [worker for worker in listed if worker['provider'] == 'radar_social'][0]['daily_limit'] == 0, 'paid, so off until someone turns it on'
+    on = await client.put(API + '/monitor/workers/radar_social', headers=auth(admin_token), json={'daily_limit': -1})
+    assert on.status_code == 200 and on.json() == {'provider': 'radar_social', 'daily_limit': -1}
+    assert (await read(client, admin_token))['enabled'] is False
+    assert (await read(client, admin_token))['x_searched_at'] is None
+
+
+@pytest.mark.asyncio
+async def test_social_figures_and_sampled_posts_reach_the_page_without_what_the_server_keeps_for_itself(client, db, admin_token, now):
+    shown = run(db, now - timedelta(minutes=10))
+    shown.usage = {'signals': {'news': 3, 'x': 2}, 'seconds': 12.5, 'discovery': {'at': now.isoformat(), 'signals': []}, 'sampled': {'k-x': {'x': now.isoformat()}}}
+    await db.flush()
+    evidence = [{'platform': 'news', 'title': 'Harga BBM naik di Medan', 'url': 'https://news.example/b', 'source': 'Tempo', 'figure': 2},
+                {'platform': 'x', 'title': 'Antre BBM sejak subuh', 'url': 'https://x.com/i/status/33333', 'source': 'warga_medan', 'figure': 80},
+                {'platform': 'tiktok', 'title': 'Antrean di SPBU', 'url': 'https://www.tiktok.com/@warga/video/44444', 'source': 'warga', 'figure': 900}]
+    issue(db, shown, 'k-x', 1, 'Antrean BBM', platforms={'news': {'count': 5}, 'x': {'count': 625}, 'tiktok': {'found': 20, 'capped': True}}, evidence=evidence)
+    await db.flush()
+    response = await client.get(API + '/radar', headers=auth(admin_token))
+    data, detail = response.json(), await read(client, admin_token, '/radar/issues/k-x')
+    assert data['signals'] == {'news': 3, 'x': 2}
+    assert data['x_searched_at'] == now.isoformat(), 'the issues from X can be a day older than the list: the page is told when X was searched'
+    assert data['issues'][0]['platforms'] == {'news': {'count': 5}, 'x': {'count': 625}, 'tiktok': {'found': 20, 'capped': True}}
+    assert data['issues'][0]['evidence_titles'] == ['Harga BBM naik di Medan'], 'a place is read from headlines, not from sampled posts'
+    assert detail['evidence'] == evidence
+    assert not (keys(data) | keys(detail)) & {'model', 'method', 'usage', 'engine', 'provider', 'raw_answer', 'score', 'run_id', 'discovery', 'sampled'}
+    assert 'sampled' not in response.text and 'discovery' not in response.text

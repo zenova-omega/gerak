@@ -8,6 +8,7 @@ from .pulse_monitor import WorkerPolicy, WorkerUsage, MonitorSchedule, CrawlJob,
 from .pulse_identity import PulseUser, PulseSession, PulseLoginBudget, PulseAudit
 from .pulse_sources import SourceAccount, SourceCollection
 from .pulse_sentiment import SentimentJob, SentimentLane
+from .pulse_ai_usage import AIUsageDay
 from .pulse_response_analysis import ResponseAnalysisJob, ResponseAnalysisCursor
 from .pulse_review import PostReview
 from .pulse_report import PulseReport

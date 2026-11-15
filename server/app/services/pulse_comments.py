@@ -12,6 +12,7 @@ import httpx
 from sqlalchemy import select
 from ..models.pulse import SourceItem
 from .ingest.common import count, observed_engagement
+from .ingest.xpoz import _public_image_url
 from .pulse_network import timestamp
 
 
@@ -19,6 +20,15 @@ YOUTUBE_PAGES = 3
 AUTO_TOP_POSTS = 100   # per project, kept complete by the automatic lane
 STOP_STATUSES = ('quotaExceeded', 'dailyLimitExceeded', 'quota_stopped', 'authentication_failed',
                  'access_or_quota_restricted', 'plan_restricted', 'rate_limited', 'not_configured')
+
+
+def _keep_picture(comment, snippet):
+    """YouTube hands the commenter's picture in the same answer as the comment, at no extra quota. Only the link is
+    kept, and only a plain public one; a comment without a picture stores no empty field."""
+    picture = _public_image_url(snippet.get('authorProfileImageUrl'))
+    if picture:
+        comment['profile_image_url'] = picture
+    return comment
 
 
 async def fetch_all_comments(video_id, api_key, pages=YOUTUBE_PAGES):
@@ -57,6 +67,7 @@ async def fetch_all_comments(video_id, api_key, pages=YOUTUBE_PAGES):
                                            'likes': count(s['likeCount']) if s.get('likeCount') is not None else None,
                                            'replies': count(thread['totalReplyCount']) if thread.get('totalReplyCount') is not None else None,
                                            'url': 'https://www.youtube.com/watch?' + urlencode({'v': video_id, 'lc': top['id']})}
+                    _keep_picture(comments[top['id']], s)
                 token = payload.get('nextPageToken') if isinstance(payload.get('nextPageToken'), str) else None
                 more = bool(token)
                 if not token:
@@ -174,6 +185,7 @@ async def fetch_comments(video_id, api_key):
                                    'likes': count(s['likeCount']) if s.get('likeCount') is not None else None,
                                    'replies': count(thread['totalReplyCount']) if thread.get('totalReplyCount') is not None else None,
                                    'url': 'https://www.youtube.com/watch?' + urlencode({'v': video_id, 'lc': top['id']})}
+            _keep_picture(comments[top['id']], s)
         return {'status': 'success', 'items': sorted(comments.values(), key=lambda c: -(c['likes'] if c['likes'] is not None else -1)),
                 'has_more': bool(payload.get('nextPageToken'))}
     except (httpx.HTTPError, ValueError, TypeError, AttributeError):

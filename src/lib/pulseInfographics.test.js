@@ -128,3 +128,14 @@ test('posts that carry a date without a clock are left out of the hour chart', a
   assert.equal(hours.bins[10], 1);
   assert.deepEqual([hours.total, hours.dated, hours.unknown], [4, 1, 3]);
 });
+
+test('hours are counted in the installation zone (clock_v1)', async () => {
+  const { setZone } = await import('./pulseMeasures.js');
+  setZone({ offset_minutes: 540, name: 'WIT' });
+  try {
+    const hours = publicationHours([{ id: 'a', published_at: '2026-11-10T03:00:00Z' }, { id: 'b', published_at: '2026-11-10 16:30:00' }, { id: 'c', published_at: '2026-11-10T00:00:00' }]);
+    assert.equal(hours.bins[12], 1);
+    assert.equal(hours.bins[1], 1);
+    assert.deepEqual([hours.dated, hours.unknown], [2, 1]);
+  } finally { setZone({ offset_minutes: 420, name: 'WIB' }); }
+});

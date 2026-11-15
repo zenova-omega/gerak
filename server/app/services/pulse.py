@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.pulse import WatchTopic, Issue, SourceItem, PulseCrawlRun
 from .ingest.common import observed_engagement, credential, count
 from .pulse_public import metrics_for_reader
+from .pulse_measures import RULES, local_day, post_measures, zone
 import httpx
 from .dedup import simhash, is_near_duplicate
 from .ai import get_ai_service
@@ -140,7 +141,7 @@ async def crawl_topic_run(db: AsyncSession, topic: WatchTopic, settings, *, manu
     """One bounded attempt per provider. A savepoint isolates each ingestion failure."""
     from .ingest.rss import fetch_rss_items
     from .ingest.browserless import scrape_content, is_allowed
-    from .ingest.xpoz import fetch_xpoz_items, fetch_xpoz_stored_items, fetch_xpoz_social_items, PAGE_ROWS
+    from .ingest.xpoz import fetch_xpoz_items, fetch_xpoz_stored_items, fetch_xpoz_social_items, fetch_xpoz_tiktok_items, tiktok_recent_window, PAGE_ROWS
     from .ingest.youtube import fetch_youtube_items
     social = {"instagram", "tiktok", "reddit"}  # collected through the same provider account as X
     run = PulseCrawlRun(topic_id=topic.id, manual=manual)
@@ -167,6 +168,8 @@ async def crawl_topic_run(db: AsyncSession, topic: WatchTopic, settings, *, manu
                 items = await fetch(topic.query, key)
             elif source == "youtube":
                 items = await fetch_youtube_items(topic.query, key)
+            elif source == "tiktok":
+                items = await fetch_xpoz_tiktok_items(topic.query, key, **tiktok_recent_window())
             elif source in social:
                 items = await fetch_xpoz_social_items(topic.query, key, source, limit=PAGE_ROWS)
             else:
@@ -225,8 +228,7 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
         platform = item.platform or "unknown"
         platforms[platform] += 1
         if item.published_at:
-            from datetime import timedelta
-            timeline[(item.published_at + timedelta(hours=7)).date().isoformat()] += 1
+            timeline[local_day(item.published_at)] += 1
         if item.author:
             key = ((item.metrics or {}).get("author_id") or item.author, platform)
             author = influencers.setdefault(key, {"author": item.author, "platform": platform,
@@ -243,6 +245,7 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
               "first_observed_at": first_seen.get(item.id),
               "metrics": {**metrics_for_reader(item.metrics), "engagement": observed_engagement(item.metrics)}} for item in items]
     for post in posts:
+        post['measures'] = post_measures(post['published_at'], post['platform'], post['author'], post['metrics'], post['id'])
         snapshot = comment_snapshots.get((post['platform'], post['url']))
         if snapshot is not None:
             post['metrics']['comment_snapshot'] = snapshot
@@ -258,7 +261,8 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
             "platforms": [{"platform": p, "count": n} for p, n in sorted(platforms.items())],
             "timeline": [{"date": d, "count": n} for d, n in sorted(timeline.items())],
             "influencers": sorted(influencers.values(), key=lambda a: (a["engagement"] is None, -(a["engagement"] or 0), -a["mentions"], a["author"], a["platform"])),
-            "locations": [], "unknown_location_count": len(items)}
+            "locations": [], "unknown_location_count": len(items),
+            "measures": {"zone": dict(zip(("offset_minutes", "name"), zone())), "rules": RULES}}
 
 
 async def enrich_issue(db: AsyncSession, issue: Issue) -> Issue:

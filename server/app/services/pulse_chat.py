@@ -16,8 +16,8 @@ from ..models.pulse_monitor import MetricSnapshot, PulseAlert
 from ..models.pulse_profiles import PulseAccountProfile
 from .pulse_places import context_lines as place_lines, location_summary, place_summary
 from .pulse_growth import ENGAGEMENT, _interval, _values
+from .pulse_measures import has_clock, local_day, local_time
 
-WIB = timezone(timedelta(hours=7))
 EVIDENCE_POSTS = 8
 # The whole prompt must fit the model window with room for the answer; a clipped prompt loses DATA silently.
 CONTEXT_TOKENS = 8192
@@ -45,11 +45,19 @@ SYSTEM = (
 
 
 def _wib(value):
-    return value.replace(tzinfo=timezone.utc).astimezone(WIB).strftime('%Y-%m-%d %H:%M') if value else None
+    """An instant as the installation's zone shows it. The name is kept for its importers."""
+    moment = local_time(value)
+    return moment.strftime('%Y-%m-%d %H:%M') if moment else None
 
 
 def _wib_day(value):
-    return value.replace(tzinfo=timezone.utc).astimezone(WIB).strftime('%Y-%m-%d')
+    """The day a post belongs to (day_v1). The name is kept for its importers."""
+    return local_day(value)
+
+
+def _published(value):
+    """A publication time; a post without a clock (clock_v1) is given its date only, never an invented hour."""
+    return _wib(value) if has_clock(value) else local_day(value)
 
 
 def _number(metrics, key):
@@ -150,7 +158,7 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
     posts = [{
         'code': code[item.id], 'focus': bool(focus is not None and item.id == focus.id),
         'platform': item.platform or 'unknown', 'author': item.author,
-        'published_at': _wib(item.published_at), 'first_collected_at': _wib(item.crawled_at),
+        'published_at': _published(item.published_at), 'first_collected_at': _wib(item.crawled_at),
         'text': re.sub(r'\s+', ' ', (item.title or '') + ' ' + (item.text or '')).strip()[:140],
         'likes': _number(item.metrics, 'likes'), 'comments': _number(item.metrics, 'comments'),
         'shares': _number(item.metrics, 'shares'), 'views': _number(item.metrics, 'views'),
@@ -170,7 +178,7 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
             out.append({'title': (titles.get(issue_id) or members[0].title or members[0].text or '')[:160],
                         'posts': len(members), 'accounts': len({(item.platform, item.author) for item in members if item.author}),
                         'platforms': sorted({item.platform or 'unknown' for item in members}),
-                        'first_published_at': _wib(first), 'peak_day': by_day.most_common(1)[0][0] if by_day else None,
+                        'first_published_at': _published(first), 'peak_day': by_day.most_common(1)[0][0] if by_day else None,
                         'interactions': sum(_engagement(item.metrics) or 0 for item in members),
                         'sentiment': dict(Counter(_sentiment(item.metrics) for item in members)),
                         'example_posts': [code[item.id] for item in members if item.id in code][:3]})

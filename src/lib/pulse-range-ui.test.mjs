@@ -2,7 +2,7 @@
 // The range filter in the real UI, on the trend chart of Posting; the shared fixture intercepts all API traffic.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pulseUI } from './test-support/pulse-ui-fixture.mjs';
+import { nonReads, pulseUI } from './test-support/pulse-ui-fixture.mjs';
 
 // Nothing is wider than its box: the page, the shell that scrolls, the trend card. The charts redraw a moment after the
 // window changes size, so this waits for the layout to settle instead of measuring once.
@@ -107,5 +107,5 @@ test('the range filter narrows the trend chart before the unit is applied, keeps
   assert.equal(await card.getByLabel('Dari tanggal, Tren posting', { exact: true }).count(), 0);
   assert.equal(await caption.innerText(), '20 Okt – 11 Nov 2026');
   assert.equal(await fits(page), true);
-  assert.deepEqual(state.requests.filter(request => request.method !== 'GET'), [], 'choosing a range never writes and never starts a collection');
+  assert.deepEqual(nonReads(state), [], 'choosing a range never writes and never starts a collection');
 });

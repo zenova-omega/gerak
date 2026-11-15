@@ -61,3 +61,15 @@ test('mention-only accounts never inherit a profile or publications from a simil
   assert.equal(profile.first, null);
   assert.equal(profile.status, 'Hanya disebut');
 });
+
+test('a date-only post is left out of the time order and counted as left out', () => {
+  const dateOnly = { id: 'date-only', author: '@C', platform: 'instagram', published_at: '2026-11-10T00:00:00' };
+  const frame = { accounts: [{ id: 'x:a', evidence: [late, dateOnly, early, unknown] }], edges: [] };
+  const rows = chronologyRows(frame);
+  assert.deepEqual(rows.map(p => p.id), ['early', 'late', 'date-only', 'unknown'], 'timed posts first, then date-only, then undated');
+  assert.equal(rows.find(p => p.id === 'date-only').clock, false);
+  const page = chronologyPage(rows);
+  assert.deepEqual([page.total, page.dated, page.unknown, page.dateOnly], [4, 3, 1, 1]);
+  const profile = observedProfile({ id: 'x:a', label: '@A', platform: 'x' }, frame.accounts[0]);
+  assert.deepEqual([profile.first, profile.last], [early.published_at, late.published_at], 'first and last by time skip a date-only post');
+});

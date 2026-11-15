@@ -1,0 +1,48 @@
+/* Pertumbuhan interaksi: the fastest posts as a table that reads like a ranked list.
+   One meaning per column; counts are right-aligned and tabular so they can be compared down the column. */
+.pulse-standalone .pge-lede { margin: 0 0 16px; font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+.pulse-standalone .pge-table { width: 100%; border-collapse: collapse; font-size: .8125rem; line-height: 1.4; text-align: left; }
+.pulse-standalone .pge-table thead th { padding: 0 12px 8px; border-bottom: 1px solid var(--ps-line); font-size: .75rem; font-weight: 600; color: var(--ps-muted); white-space: nowrap; background: none; }
+.pulse-standalone .pge-table tbody :is(th, td) { padding: 12px; border-bottom: 1px solid var(--ps-line); vertical-align: middle; font-weight: 400; color: var(--ps-ink); }
+.pulse-standalone .pge-table tbody tr:last-child :is(th, td) { border-bottom: 0; }
+.pulse-standalone .pge-table :is(th, td):first-child { padding-left: 0; }
+.pulse-standalone .pge-table :is(th, td):last-child { padding-right: 0; }
+.pulse-standalone .pge-table .pge-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pulse-standalone .pge-table td > b { display: block; font-size: .9375rem; font-weight: 650; }
+.pulse-standalone .pge-table td > small { display: block; margin: 2px 0 0; font-size: .75rem; color: var(--ps-muted); white-space: nowrap; }
+
+/* Who and what: the whole cell opens the post. */
+.pulse-standalone .pge-post { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; width: calc(100% + 16px); min-width: 240px; max-width: 460px; min-height: 44px; margin: -6px -8px; padding: 6px 8px; border: 0; border-radius: var(--ps-radius-control); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.pulse-standalone .pge-post:hover { background: var(--ps-soft); }
+.pulse-standalone .pge-post:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .pge-who { display: grid; gap: 2px; min-width: 0; }
+.pulse-standalone .pge-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.pulse-standalone .pge-name > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .875rem; font-weight: 650; }
+.pulse-standalone .pge-name > .pu-arrow { flex: 0 0 auto; color: var(--ps-muted); }
+.pulse-standalone .pge-post:is(:hover, :focus-visible) .pu-arrow { color: var(--ps-ink); }
+.pulse-standalone .pge-who > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; color: var(--ps-muted); }
+
+/* The rate against the fastest row. */
+.pulse-standalone .pge-rate { min-width: 112px; }
+.pulse-standalone .pge-bar { display: block; height: 4px; margin-top: 6px; border-radius: 2px; background: var(--ps-soft); overflow: hidden; }
+.pulse-standalone .pge-bar::after { content: ''; display: block; width: max(2px, calc(var(--share, 0) * 100%)); height: 100%; border-radius: inherit; background: var(--ps-accent); }
+
+.pulse-standalone .pge-seen { min-width: 200px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pulse-standalone .pge-seen > span { display: block; }
+
+/* A narrow panel: each post becomes a block, with the column name written beside its figure. */
+@media (max-width: 760px) {
+  .pulse-standalone .pge-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .pulse-standalone .pge-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; padding: 14px 0; border-bottom: 1px solid var(--ps-line); }
+  .pulse-standalone .pge-table tbody tr:last-child { border-bottom: 0; }
+  .pulse-standalone .pge-table tbody :is(th, td) { display: block; padding: 0; border: 0; }
+  .pulse-standalone .pge-table tbody th, .pulse-standalone .pge-table .pge-seen { grid-column: 1 / -1; }
+  .pulse-standalone .pge-table td::before { content: attr(data-label); display: block; margin-bottom: 4px; font-size: .75rem; font-weight: 600; color: var(--ps-muted); }
+  .pulse-standalone .pge-table .pge-num { text-align: left; }
+  .pulse-standalone .pge-post { width: 100%; max-width: none; min-width: 0; margin: 0; padding: 0; }
+  .pulse-standalone .pge-seen { min-width: 0; white-space: normal; }
+  .pulse-standalone .pge-table td > small { white-space: normal; }
+}
+@media print {
+  .pulse-standalone .pge-bar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

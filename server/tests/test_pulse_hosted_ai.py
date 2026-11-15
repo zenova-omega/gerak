@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.database import Base
@@ -178,8 +179,10 @@ class Together:
 
 
 @pytest.mark.asyncio
-async def test_two_lanes_label_two_different_posts_at_the_same_time(store):
+async def test_two_lanes_label_two_different_posts_at_the_same_time(store, monkeypatch):
+    from app.services import pulse_sentiment
     from app.services.pulse_sentiment import run_one
+    monkeypatch.setattr(pulse_sentiment, 'POST_BATCH', 1)      # one post a call, so each lane has a post of its own
     model = Together()
     done = await asyncio.gather(run_one(store, model, lane='hosted-0'), run_one(store, model, lane='hosted-1'))
     assert done == ['done', 'done']
@@ -189,6 +192,78 @@ async def test_two_lanes_label_two_different_posts_at_the_same_time(store):
         assert len(labelled) == 2
         assert {item.metrics['sentiment']['method'] for item in labelled} == {'grok_post_v1'}      # the record says which engine wrote it
         assert all(item.metrics['likes'] is not None for item in labelled)
+
+
+@pytest.mark.asyncio
+async def test_one_hosted_call_labels_several_short_posts_and_an_entry_left_out_is_asked_again(store):
+    import json
+    from app.models.pulse_sentiment import SentimentJob
+    from app.services.pulse_sentiment import run_one
+    calls = []
+
+    class Batch:
+        model, name = 'labels-model', 'grok'
+
+        async def generate_text(self, content, **kwargs):
+            calls.append(json.loads(content))
+            entry = lambda n: {'n': n, 'label': 'negative', 'confidence': 0.9, 'reason': 'Keluhan', 'kind': 'statement',
+                               'emotion': {'label': 'anger', 'confidence': 0.8, 'reason': 'Marah'}}
+            return json.dumps({'results': [entry(1), entry(2)]})      # the third text gets no entry
+    assert await run_one(store, Batch(), lane='hosted-0') == 'done'
+    assert len(calls) == 1 and len(calls[0]['texts']) == 3, 'three posts, one call'
+    async with store() as db:
+        jobs = {f'p{index}': await db.get(SentimentJob, f'p{index}') for index in range(3)}
+        assert sorted(job.status for job in jobs.values()) == ['done', 'done', 'pending']
+        labelled = [await db.get(SourceItem, name) for name, job in jobs.items() if job.status == 'done']
+        assert all(item.metrics['sentiment']['label'] == 'negative' and item.metrics['emotion']['label'] == 'anger' and item.metrics['likes'] is not None for item in labelled)
+
+
+@pytest.mark.asyncio
+async def test_a_post_with_the_exact_text_of_a_labelled_one_copies_its_label_and_costs_no_call(store):
+    from app.models.pulse_sentiment import SentimentJob
+    from app.services.pulse_sentiment import run_one
+    async with store() as db:
+        first = await db.get(SourceItem, 'p0')
+        first.metrics = {'likes': 0, 'sentiment': {'label': 'negative', 'confidence': 0.9, 'reason': 'Keluhan'}}
+        db.add(SourceItem(id='copy', topic_id='t', source='x', platform='x', url='https://x.com/a/status/copy', text=first.text,
+                          published_at=datetime(2026, 11, 9, 3), crawled_at=datetime(2026, 11, 9, 5), metrics={'likes': 5}))
+        await db.commit()
+    asked = []
+
+    class Counting:
+        model, name = 'labels-model', 'grok'
+
+        async def generate_text(self, content, **kwargs):
+            asked.append(content)
+            raise AssertionError('the copy must not be sent')
+    import json
+    class Answering(Counting):
+        async def generate_text(self, content, **kwargs):
+            asked.append(content)
+            rows = json.loads(content)['texts']
+            return json.dumps({'results': [{'n': row['n'], 'label': 'neutral', 'confidence': 0.6, 'reason': 'x'} for row in rows]})
+    await run_one(store, Answering(), lane='hosted-0')
+    async with store() as db:
+        copy = await db.get(SourceItem, 'copy')
+        assert copy.metrics['sentiment']['label'] == 'negative' and copy.metrics['sentiment']['reused_from'] == 'p0' and copy.metrics['likes'] == 5
+        assert (await db.get(SentimentJob, 'copy')).status == 'done'
+    assert all('Pelayanan buruk 0' not in text for text in asked), 'the repeated text was not asked again'
+
+
+@pytest.mark.asyncio
+async def test_usage_is_written_per_day_lane_and_model_and_survives_a_restart(store):
+    from app.models.pulse_ai_usage import AIUsageDay
+    hosted.reset()
+    hosted.set_lane('labels_posts')
+    hosted.record({'input_tokens': 500, 'output_tokens': 100, 'input_tokens_details': {'cached_tokens': 300}, 'cost_in_usd_ticks': 20_000_000}, 'labels-model')
+    hosted.record({'input_tokens': 500, 'output_tokens': 100, 'cost_in_usd_ticks': 20_000_000}, 'labels-model')
+    await hosted.flush(store)
+    await hosted.flush(store)     # nothing new: nothing added twice
+    async with store() as db:
+        rows = (await db.execute(select(AIUsageDay))).scalars().all()
+    assert len(rows) == 1 and (rows[0].lane, rows[0].model, rows[0].calls, rows[0].input_tokens, rows[0].cached_tokens, rows[0].output_tokens, rows[0].cost_ticks) == \
+        ('labels_posts', 'labels-model', 2, 1000, 300, 200, 40_000_000)
+    hosted.set_lane('answers')
 
 
 @pytest.mark.asyncio
@@ -288,3 +363,39 @@ async def test_the_trial_measures_real_items_and_writes_nothing(store):
         stored = [(await db.get(SourceItem, f'p{index}')).metrics.get('sentiment') for index in range(3)]
         assert stored == [None, None, None], 'no label is stored by a trial'
         assert [(await db.get(SentimentJob, f'p{index}')).status for index in range(3)] == ['pending'] * 3
+
+
+# ── Live X search (the radar's discovery of what X is talking about) ─────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_a_live_x_search_carries_the_tool_with_its_dates_keeps_nothing_stored_and_records_what_it_cost():
+    seen = []
+
+    def handler(request):
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json=answer('{"issues": []}', cost_in_usd_ticks=3_926_500_000, server_side_tool_usage_details={'x_posts_fetched': 59}))
+    engine = GrokAIService('test-key', 'answers-model', effort='low', transport=httpx.MockTransport(handler))
+    text = await engine.search_x('Cari isu di X', from_date='2026-11-14', to_date='2026-11-16', system='Jawab JSON')
+    assert text == '{"issues": []}'
+    [body] = seen
+    assert body['tools'] == [{'type': 'x_search', 'from_date': '2026-11-14', 'to_date': '2026-11-16'}]
+    assert body['store'] is False and body['model'] == 'answers-model' and body['instructions'] == 'Jawab JSON' and body['max_output_tokens'] == 4000
+    assert hosted.usage()['calls'] == 1 and hosted.usage()['cost_usd'] == 0.39265
+
+
+@pytest.mark.asyncio
+async def test_a_search_that_is_busy_is_given_up_without_pausing_everything_else():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(429, json={'code': 'resource-exhausted', 'error': 'at capacity'})
+    engine = GrokAIService('test-key', 'answers-model', effort='low', transport=httpx.MockTransport(handler))
+    with pytest.raises(hosted.AIUnavailable) as failure:
+        await engine.search_x('Cari isu di X', from_date='2026-11-14', to_date='2026-11-16')
+    assert failure.value.reason == 'busy' and len(calls) == 2, 'one retry, then the refresh goes on without X'
+    assert hosted.state() == 'ok', 'answers and labelling are not paused because a search was busy'
+    refused = GrokAIService('test-key', 'answers-model', transport=httpx.MockTransport(lambda request: httpx.Response(402, json={'error': 'credit'})))
+    with pytest.raises(hosted.AIUnavailable):
+        await refused.search_x('Cari', from_date='2026-11-14', to_date='2026-11-16')
+    assert hosted.state() == 'access', 'a refused key or empty credit still stops the lane: no retry helps'

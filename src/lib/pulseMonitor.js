@@ -183,8 +183,13 @@ export function alertSummary(alert) {
     const code = detail.error || stored?.[2];
     figure = code ? errorReasons[code] || 'Sumber menolak permintaan' : null;
   } else if (alert?.kind === 'volume_spike' && Number.isFinite(detail.posts)) {
+    // The product's one spike rule (spike_v1) compares the window with the usual window of the hours before, and
+    // states no ratio when that usual window is empty. Alerts stored before 15 Nov 2026 (volume_spike_v1, with
+    // `previous_posts`) compared it with the 30 minutes just before, and keep saying so.
+    const earlier = detail.rule === 'volume_spike_v1' || Number.isFinite(detail.previous_posts);
     figure = `${formatCount(detail.posts)} posting dalam ${formatCount(detail.window_minutes || 30)} menit`
-      + (Number.isFinite(detail.ratio) ? `, ${oneDecimal(detail.ratio)}× dari sebelumnya` : '');
+      + (Number.isFinite(detail.ratio) ? `, ${oneDecimal(detail.ratio)}× dari ${earlier ? 'sebelumnya' : 'biasanya'}`
+        : !earlier && detail.usual_posts === 0 ? ', sebelumnya umumnya kosong' : '');
   } else if (alert?.kind === 'engagement_growth' && Number.isFinite(detail.delta_engagement)) {
     figure = `+${formatCount(detail.delta_engagement)} interaksi`
       + (Number.isFinite(detail.rate_per_hour) ? `, ${oneDecimal(detail.rate_per_hour)} per jam` : '');

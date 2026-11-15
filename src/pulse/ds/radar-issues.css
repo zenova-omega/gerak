@@ -14,7 +14,7 @@
 .pulse-standalone .rdi-row:last-child { padding-bottom: 0; }
 .pulse-standalone .rdi-row[data-selected] { background: color-mix(in oklch, var(--ps-soft) 60%, transparent); box-shadow: -10px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent), 10px 0 0 color-mix(in oklch, var(--ps-soft) 60%, transparent); }
 .pulse-standalone .rdi-rank { padding-top: 1px; color: var(--ps-muted); font-size: 1.125rem; font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
-.pulse-standalone .rdi-body { min-width: 0; }
+.pulse-standalone .rdi-body { min-width: 0; container-type: inline-size; }       /* the meters lay themselves out by the room a row has, not by the window */
 .pulse-standalone .rdi-body > h3 { margin: 0; font-size: 1rem; font-weight: 650; line-height: 1.35; }
 .pulse-standalone.pulse-standalone .rdi-title { display: inline; height: auto; min-height: 0; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ps-ink); font: inherit; text-align: left; cursor: pointer; text-wrap: balance; }
 .pulse-standalone.pulse-standalone .rdi-title:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -25,7 +25,7 @@
 /* Meters, each in its own cell whether or not the issue is on it, so a platform lines up down the list. First row: the
    lists that are read whole (Berita, YouTube, Google). Second row, only where there is something: the social platforms
    (X with a bar when its posts were counted; TikTok and Instagram as found, with no bar, because a sample is not a length). */
-.pulse-standalone .rdi-meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 16px; margin: 10px 0 0; padding: 0; list-style: none; }
+.pulse-standalone .rdi-meters { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.1fr) minmax(0, 1.1fr); gap: 6px 16px; margin: 10px 0 0; padding: 0; list-style: none; }
 .pulse-standalone .rdi-meters > li { display: grid; grid-template-columns: 16px minmax(24px, 1fr) auto; align-items: center; gap: 8px; min-width: 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .pulse-standalone .rdi-meters > li[data-platform="news"] { grid-area: 1 / 1; }
 .pulse-standalone .rdi-meters > li[data-platform="youtube"] { grid-area: 1 / 2; }
@@ -39,9 +39,9 @@
 /* The figure has a fixed width per platform, so every bar in a column is drawn on the same track. */
 .pulse-standalone .rdi-meter-text { white-space: nowrap; }
 .pulse-standalone .rdi-meters > li[data-platform="news"] { grid-template-columns: 16px minmax(24px, 1fr) 5.75em; }
-.pulse-standalone .rdi-meters > li[data-platform="youtube"] { grid-template-columns: 16px minmax(24px, 1fr) 6.75em; }
-.pulse-standalone .rdi-meters > li[data-platform="search"] { grid-template-columns: 16px minmax(24px, 1fr) 9em; }
-.pulse-standalone .rdi-meters > li[data-platform="x"] { grid-template-columns: 16px minmax(24px, 1fr) 5.75em; }
+.pulse-standalone .rdi-meters > li[data-platform="youtube"] { grid-template-columns: 16px minmax(24px, 1fr) 10.25em; }      /* views run to eight digits; its column is the widest for that */
+.pulse-standalone .rdi-meters > li[data-platform="search"] { grid-template-columns: 16px minmax(24px, 1fr) 10.25em; }      /* the list states up to "1.000.000+" */
+.pulse-standalone .rdi-meters > li[data-platform="x"] { grid-template-columns: 16px minmax(24px, 1fr) 7.75em; }       /* room for "12.345+ posting" */
 .pulse-standalone .rdi-meters > li[data-platform][data-plain] { grid-template-columns: 16px minmax(0, 1fr); }
 .pulse-standalone .rdi-spread, .pulse-standalone .rdi-quiet { margin: 6px 0 0; color: var(--ps-muted); font-size: .8125rem; }
 .pulse-standalone .rdi-action { display: flex; align-items: center; min-height: var(--ps-control-sm); }
@@ -70,9 +70,9 @@
 .pulse-standalone .rpt-meter { display: grid; grid-template-columns: minmax(24px, 1fr) var(--rpt-figure, 7em); align-items: center; gap: 8px; margin: 6px 0 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .pulse-standalone .rpt-text { white-space: nowrap; }
 .pulse-standalone .rpt-list[data-platform="news"] { --rpt-figure: 6.25em; }
-.pulse-standalone .rpt-list[data-platform="x"] { --rpt-figure: 7.25em; }
+.pulse-standalone .rpt-list[data-platform="x"] { --rpt-figure: 7.75em; }
 .pulse-standalone .rpt-list[data-platform="youtube"] { --rpt-figure: 10.25em; }
-.pulse-standalone .rpt-list[data-platform="search"] { --rpt-figure: 9.5em; }
+.pulse-standalone .rpt-list[data-platform="search"] { --rpt-figure: 10.25em; }
 /* The composition card: a second ranking under the first, divided by a line, not a card inside the card. */
 .pulse-standalone .rdb-sub { margin: 16px 0 4px; padding-top: 16px; border-top: 1px solid var(--ps-line); color: var(--ps-muted); font-size: .8125rem; font-weight: 600; }
 
@@ -91,16 +91,33 @@
 .pulse-standalone .rdi-figures { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: 0; color: var(--ps-ink); font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .pulse-standalone .rdi-fresh { margin: 4px 0 0; color: var(--ps-muted); font-size: .8125rem; }
 
+/* A row with less room keeps each platform in its own cell but in two columns. Three across need about 760 px: under
+   that the widest figures run into their neighbour and the bars shrink to a stub (at a 1440 px window a row is about
+   590 px wide, so that window gets two across and bars of 120 px or more). */
+@container (max-width: 759px) {
+  .pulse-standalone .rdi-meters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pulse-standalone .rdi-meters > li[data-platform="news"] { grid-area: 1 / 1; }
+  .pulse-standalone .rdi-meters > li[data-platform="youtube"] { grid-area: 1 / 2; }
+  .pulse-standalone .rdi-meters > li[data-platform="search"] { grid-area: 2 / 1; }
+  .pulse-standalone .rdi-meters > li[data-platform="x"] { grid-area: 2 / 2; }
+  .pulse-standalone .rdi-meters > li[data-platform="tiktok"] { grid-area: 3 / 1; }
+  .pulse-standalone .rdi-meters > li[data-platform="instagram"] { grid-area: 3 / 2; }
+}
+@container (max-width: 400px) {
+  .pulse-standalone .rdi-meters { grid-template-columns: minmax(0, 1fr); }
+  .pulse-standalone .rdi-meters > li[data-platform] { grid-area: auto / 1; grid-template-columns: 16px minmax(24px, 1fr) 10.25em; }
+  .pulse-standalone .rdi-meters > li[data-platform][data-plain] { grid-template-columns: 16px minmax(0, 1fr); }
+}
 /* Four columns need a wide window; under it they are two by two, and one column on a phone. */
 @media (max-width: 1439px) { .pulse-standalone .rpt[data-columns="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 1180px) { .pulse-standalone .rpt[data-columns="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1180px) {
+  .pulse-standalone .rpt[data-columns="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pulse-standalone .rpt[data-columns="3"] > :last-child { grid-column: 1 / -1; }       /* the third card takes the row, rather than half of it beside nothing */
+}
 @media (max-width: 760px) {
   .pulse-standalone .rpt.rpt { grid-template-columns: minmax(0, 1fr); }
   .pulse-standalone .rdi-row { grid-template-columns: 22px minmax(0, 1fr); }
   .pulse-standalone .rdi-row > .rdi-action { grid-column: 2; }
   .pulse-standalone .rdi-row > .rdi-action:empty { display: none; }
-  .pulse-standalone .rdi-meters { grid-template-columns: minmax(0, 1fr); }
-  .pulse-standalone .rdi-meters > li[data-platform] { grid-area: auto / 1; grid-template-columns: 16px minmax(24px, 1fr) 9em; }
-  .pulse-standalone .rdi-meters > li[data-platform][data-plain] { grid-template-columns: 16px minmax(0, 1fr); }
 }
 @media print { .pulse-standalone .rdl-filters, .pulse-standalone .rdi-action, .pulse-standalone .rdl .pu-panel-actions { display: none; } }

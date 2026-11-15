@@ -329,3 +329,22 @@ async def test_the_chat_answer_carries_its_charts_and_groups_and_stores_them_wit
     stored = await client.get(f"/api/admin/pulse/chat/conversations/{body['conversation_id']}", headers={'Authorization': f'Bearer {admin_token}'})
     turn = stored.json()['turns'][0]
     assert turn['charts'] == body['charts'] and turn['groups'] == body['groups'] and turn['answer'] == body['answer']
+
+
+@pytest.mark.asyncio
+async def test_context_days_and_times_follow_day_v1_in_the_installation_zone(db, monkeypatch):
+    from app.services import pulse_measures
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    topic = WatchTopic(id='chat-zone', label='Zona', query='zona', is_active=False)
+    db.add(topic); await db.flush()
+    db.add_all([
+        SourceItem(id='zone-late', topic_id='chat-zone', source='xpoz', platform='x', url='https://x.example/zone-late', author='a',
+                   text='malam', published_at=datetime(2026, 11, 12, 15, 30), metrics={'likes': 5}),
+        SourceItem(id='zone-date-only', topic_id='chat-zone', source='rss', platform='news', url='https://news.example/zone',
+                   author='b', text='tanggal saja', published_at=datetime(2026, 11, 12), metrics={'likes': 4}),
+    ]); await db.flush()
+    context = (await chat.build_context(db, 'chat-zone', NOW))['context']
+    assert context['posts_per_day_wib'] == {'2026-11-12': 1, '2026-11-13': 1}, '15.30 UTC is 00.30 WIT the next day'
+    stamps = {p['author']: p['published_at'] for p in context['evidence_posts']}
+    assert stamps == {'a': '2026-11-13 00:30', 'b': '2026-11-12'}, 'a post without a clock is given its date only'
+    assert context['now_wib'] == '2026-11-14 14:00'

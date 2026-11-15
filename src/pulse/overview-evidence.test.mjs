@@ -33,3 +33,17 @@ test('a narrative row shows on which platforms its posts are, as logos with coun
  } finally {await server.close();}
 });
 
+
+test('the evidence date range uses day_v1: the installation zone, never the browser zone',async()=>{
+ const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
+ try {
+  const {dateRange}=await server.ssrLoadModule('/src/pulse/evidenceFigures.js');
+  const {setZone}=await server.ssrLoadModule('/src/lib/pulseMeasures.js');
+  assert.equal(dateRange([{published_at:'2026-11-10T20:00:00'},{published_at:'2026-11-10T00:00:00'}]),'10 Nov 2026 – 11 Nov 2026');
+  setZone({offset_minutes:540,name:'WIT'});
+  try {
+   assert.equal(dateRange([{published_at:'2026-11-10T15:30:00Z'}]),'11 Nov 2026');
+  } finally {setZone({offset_minutes:420,name:'WIB'});}
+  assert.equal(dateRange([{published_at:null}]),'');
+ } finally {await server.close();}
+});

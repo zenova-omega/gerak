@@ -1,0 +1,218 @@
+{
+  "zone": [
+    {"note": "default of the installation", "in": null, "out": {"offset_minutes": 420, "name": "WIB"}},
+    {"note": "UTC itself is accepted", "in": {"offset_minutes": 0, "name": "UTC"}, "out": {"offset_minutes": 0, "name": "UTC"}},
+    {"note": "the last minute east of UTC is accepted", "in": {"offset_minutes": 1439, "name": "X"}, "out": {"offset_minutes": 1439, "name": "X"}},
+    {"note": "west of UTC is not supported in this version", "in": {"offset_minutes": -300, "name": "EST"}, "out": null},
+    {"note": "a whole day or more is refused", "in": {"offset_minutes": 1440, "name": "X"}, "out": null}
+  ],
+  "read_time": [
+    {"note": "naive is UTC", "in": "2026-11-10T08:13:34", "out": 1794298414000},
+    {"note": "Z", "in": "2026-11-10T08:13:34Z", "out": 1794298414000},
+    {"note": "+07:00", "in": "2026-11-10T08:13:34+07:00", "out": 1794273214000},
+    {"note": "+0700", "in": "2026-11-10T08:13:34+0700", "out": 1794273214000},
+    {"note": "space separated", "in": "2026-11-10 08:13:34", "out": 1794298414000},
+    {"note": "fraction", "in": "2026-11-10T08:13:34.5", "out": 1794298414500},
+    {"note": "long fraction is cut to milliseconds", "in": "2026-11-10T08:13:34.123456Z", "out": 1794298414123},
+    {"note": "date only", "in": "2026-11-10", "out": 1794268800000},
+    {"note": "impossible date", "in": "2026-02-30T10:00:00", "out": null},
+    {"note": "not a time", "in": "kemarin", "out": null},
+    {"note": "empty", "in": "", "out": null},
+    {"note": "full-width digits are not read", "in": "２０２６-11-10T08:00:00", "out": null},
+    {"note": "surrounding spaces are not read", "in": " 2026-11-10T08:00:00", "out": null},
+    {"note": "a space before the zone is not read", "in": "2026-11-10T08:00:00 +07:00", "out": null},
+    {"note": "null", "in": null, "out": null}
+  ],
+  "has_clock": [
+    {"note": "midnight UTC is a date without a clock", "in": "2026-11-10T00:00:00", "out": false},
+    {"note": "midnight UTC written with Z", "in": "2026-11-10T00:00:00Z", "out": false},
+    {"note": "midnight UTC written in the zone", "in": "2026-11-10T07:00:00+07:00", "out": false},
+    {"note": "date only", "in": "2026-11-10", "out": false},
+    {"note": "one second past midnight", "in": "2026-11-10T00:00:01", "out": true},
+    {"note": "a fraction past midnight", "in": "2026-11-10T00:00:00.5", "out": true},
+    {"note": "midnight in the zone is not midnight UTC", "in": "2026-11-10T00:00:00+07:00", "out": true},
+    {"note": "ordinary time", "in": "2026-11-10T08:13:34", "out": true},
+    {"note": "null", "in": null, "out": false},
+    {"note": "not a time", "in": "kemarin", "out": false}
+  ],
+  "day": [
+    {"note": "last second of the local day", "in": "2026-11-10T16:59:59", "out": "2026-11-10"},
+    {"note": "17:00 UTC is the next local day", "in": "2026-11-10T17:00:00", "out": "2026-11-11"},
+    {"note": "no clock keeps the source date", "in": "2026-11-10T00:00:00", "out": "2026-11-10"},
+    {"note": "date only keeps the source date", "in": "2026-11-10", "out": "2026-11-10"},
+    {"note": "with a clock just after midnight UTC", "in": "2026-11-10T00:00:01", "out": "2026-11-10"},
+    {"note": "own zone is honoured", "in": "2026-11-11T06:00:00+07:00", "out": "2026-11-11"},
+    {"note": "own zone without colon", "in": "2026-11-10T23:30:00+0700", "out": "2026-11-10"},
+    {"note": "Z late in the UTC day", "in": "2026-11-10T20:00:00Z", "out": "2026-11-11"},
+    {"note": "another offset of the installation", "in": "2026-11-10T15:00:00", "offset": 540, "out": "2026-11-11"},
+    {"note": "same instant under WIB", "in": "2026-11-10T15:00:00", "offset": 420, "out": "2026-11-10"},
+    {"note": "null", "in": null, "out": null},
+    {"note": "not a time", "in": "kemarin", "out": null}
+  ],
+  "week_start": [
+    {"note": "Monday starts its own week", "in": "2026-11-16", "out": "2026-11-16"},
+    {"note": "Sunday belongs to the week before", "in": "2026-11-15", "out": "2026-11-09"},
+    {"note": "midweek, across a month", "in": "2026-12-02", "out": "2026-11-30"},
+    {"note": "compact ISO form is not read", "in": "20261116", "out": null},
+    {"note": "ISO week form is not read", "in": "2026-W47-1", "out": null},
+    {"note": "full-width digits are not read", "in": "２０２６-11-16", "out": null},
+    {"note": "a timestamp is not a day", "in": "2026-11-16T08:00:00", "out": null},
+    {"note": "not a day", "in": "kemarin", "out": null}
+  ],
+  "in_period": [
+    {"note": "first instant of the period", "in": "2026-11-09T17:00:00", "from": "2026-11-10", "to": "2026-11-10", "out": true},
+    {"note": "just before the period", "in": "2026-11-09T16:59:59", "from": "2026-11-10", "to": "2026-11-10", "out": false},
+    {"note": "last instant of the period", "in": "2026-11-10T16:59:59.999", "from": "2026-11-10", "to": "2026-11-10", "out": true},
+    {"note": "just after the period", "in": "2026-11-10T17:00:00", "from": "2026-11-10", "to": "2026-11-10", "out": false},
+    {"note": "no clock on the first day", "in": "2026-11-10T00:00:00", "from": "2026-11-10", "to": "2026-11-12", "out": true},
+    {"note": "no clock on the day after", "in": "2026-11-13T00:00:00", "from": "2026-11-10", "to": "2026-11-12", "out": false},
+    {"note": "no clock on the day before", "in": "2026-11-09T00:00:00", "from": "2026-11-10", "to": "2026-11-12", "out": false},
+    {"note": "no clock on the only day, far east of UTC", "in": "2026-11-10T00:00:00", "from": "2026-11-10", "to": "2026-11-10", "offset": 1439, "out": true},
+    {"note": "no clock on the only day, at UTC", "in": "2026-11-10T00:00:00", "from": "2026-11-10", "to": "2026-11-10", "offset": 0, "out": true},
+    {"note": "only a start", "in": "2026-12-01T10:00:00", "from": "2026-11-10", "to": null, "out": true},
+    {"note": "only an end", "in": "2026-11-12T18:00:00", "from": null, "to": "2026-11-12", "out": false},
+    {"note": "no date and no period", "in": null, "from": null, "to": null, "out": true},
+    {"note": "no date with a period", "in": null, "from": "2026-11-10", "to": "2026-11-12", "out": false}
+  ],
+  "reported": [
+    {"note": "whole number", "in": 12, "out": 12},
+    {"note": "zero", "in": 0, "out": 0},
+    {"note": "digit string", "in": "12", "out": 12},
+    {"note": "digit string with leading zeros", "in": "007", "out": 7},
+    {"note": "fraction", "in": 1.5, "out": null},
+    {"note": "negative", "in": -3, "out": null},
+    {"note": "negative string", "in": "-3", "out": null},
+    {"note": "boolean", "in": true, "out": null},
+    {"note": "padded string", "in": " 12", "out": null},
+    {"note": "empty string", "in": "", "out": null},
+    {"note": "words", "in": "12k", "out": null},
+    {"note": "null", "in": null, "out": null}
+  ],
+  "interactions": [
+    {"note": "likes, comments and shares; views never", "in": {"likes": 10, "comments": "2", "shares": 3, "views": 900}, "out": 15},
+    {"note": "only what was reported", "in": {"likes": 4, "views": 100}, "out": 4},
+    {"note": "a reported zero is known", "in": {"likes": 0}, "out": 0},
+    {"note": "a reported zero blocks the stored total", "in": {"likes": 0, "engagement": 50}, "out": 0},
+    {"note": "nothing reported, stored total stands in", "in": {"views": 100, "engagement": 40}, "out": 40},
+    {"note": "stored total as digits", "in": {"engagement": "40"}, "out": 40},
+    {"note": "bad parts do not count as reported", "in": {"likes": -1, "comments": 1.5, "shares": true, "engagement": 5}, "out": 5},
+    {"note": "nothing reported and no stored total", "in": {"views": 100}, "out": null},
+    {"note": "bad stored total", "in": {"engagement": -2}, "out": null},
+    {"note": "empty metrics", "in": {}, "out": null},
+    {"note": "missing metrics", "in": null, "out": null}
+  ],
+  "shares_total": [
+    {"note": "sum over the posts that report shares", "in": [{"shares": 2}, {"shares": "3"}, {"likes": 1}], "out": 5},
+    {"note": "a repost carries none of its own", "in": [{"shares": 2}, {"repost": true, "shares": 0, "original_shares": 100}], "out": 2},
+    {"note": "no post reports shares", "in": [{"likes": 1}, {}], "out": null},
+    {"note": "empty set", "in": [], "out": null}
+  ],
+  "content_shares": [
+    {"note": "a repost carrying more than the collected posts", "in": [{"shares": 2}, {"repost": true, "shares": 0, "original_shares": 100}], "out": 100},
+    {"note": "collected posts carrying more than the repost", "in": [{"shares": 150}, {"shares": 60}, {"repost": true, "shares": 0, "original_shares": 100}], "out": 210},
+    {"note": "the carried count is taken once, the largest", "in": [{"repost": true, "shares": 0, "original_shares": 80}, {"repost": true, "shares": 0, "original_shares": 90}], "out": 90},
+    {"note": "original_shares on a post that is not a repost is ignored", "in": [{"shares": 1, "original_shares": 70}], "out": 1},
+    {"note": "only own shares", "in": [{"shares": 2}, {"shares": "3"}], "out": 5},
+    {"note": "no share figure", "in": [{"likes": 1}], "out": null},
+    {"note": "empty set", "in": [], "out": null}
+  ],
+  "interaction_order": [
+    {
+      "note": "known before unknown, larger first, then earlier, then id",
+      "in": [
+        {"id": "a", "published_at": "2026-11-10T08:00:00", "metrics": {}},
+        {"id": "b", "published_at": "2026-11-10T09:00:00", "metrics": {"likes": 5}},
+        {"id": "c", "published_at": "2026-11-10T08:00:00", "metrics": {"likes": 5}},
+        {"id": "d", "published_at": "2026-11-10T07:00:00", "metrics": {"likes": 50}},
+        {"id": "f", "published_at": "2026-11-10T08:00:00", "metrics": {"likes": 2, "comments": 3}},
+        {"id": "e", "published_at": "2026-11-10T08:00:00", "metrics": {"engagement": 5}},
+        {"id": "g", "published_at": null, "metrics": {"likes": 5}},
+        {"id": "h", "published_at": "2026-11-10T08:00:00", "metrics": {"likes": 0}}
+      ],
+      "out": ["d", "c", "e", "f", "b", "g", "h", "a"]
+    },
+    {
+      "note": "zones are read before comparing",
+      "in": [
+        {"id": "p", "published_at": "2026-11-10T08:00:00", "metrics": {"likes": 1}},
+        {"id": "q", "published_at": "2026-11-10T14:00:00+07:00", "metrics": {"likes": 1}}
+      ],
+      "out": ["q", "p"]
+    }
+  ],
+  "tone": [
+    {"note": "stored object", "in": {"sentiment": {"label": "positive"}}, "out": "positive"},
+    {"note": "stored plain string", "in": {"sentiment": "negative"}, "out": "negative"},
+    {"note": "neutral object", "in": {"sentiment": {"label": "neutral", "score": 0.4}}, "out": "neutral"},
+    {"note": "letter case and spaces", "in": {"sentiment": {"label": " Positive "}}, "out": "positive"},
+    {"note": "a label that is not one of the three", "in": {"sentiment": {"label": "mixed"}}, "out": "unknown"},
+    {"note": "label missing", "in": {"sentiment": {"label": null}}, "out": "unknown"},
+    {"note": "not analysed", "in": {"likes": 3}, "out": "unknown"},
+    {"note": "missing metrics", "in": null, "out": "unknown"}
+  ],
+  "tone_shares": [
+    {
+      "note": "the base is the analysed posts only",
+      "in": {"positive": 50, "neutral": 30, "negative": 20, "unknown": 900},
+      "out": {"analysed": 100, "unknown": 900, "percent": {"positive": 50, "neutral": 30, "negative": 20}, "text": {"positive": "50%", "neutral": "30%", "negative": "20%"}}
+    },
+    {
+      "note": "largest remainder adds up to 100, ties go in the order positive, neutral, negative",
+      "in": {"positive": 1, "neutral": 1, "negative": 1, "unknown": 2},
+      "out": {"analysed": 3, "unknown": 2, "percent": {"positive": 34, "neutral": 33, "negative": 33}, "text": {"positive": "34%", "neutral": "33%", "negative": "33%"}}
+    },
+    {
+      "note": "largest remainder goes to the larger fraction",
+      "in": {"positive": 2, "neutral": 2, "negative": 3},
+      "out": {"analysed": 7, "unknown": 0, "percent": {"positive": 29, "neutral": 28, "negative": 43}, "text": {"positive": "29%", "neutral": "28%", "negative": "43%"}}
+    },
+    {
+      "note": "a tone with posts that rounds to 0 prints <1%, a tone without posts prints 0%",
+      "in": {"positive": 1, "neutral": 299, "negative": 0, "unknown": 7},
+      "out": {"analysed": 300, "unknown": 7, "percent": {"positive": 0, "neutral": 100, "negative": 0}, "text": {"positive": "<1%", "neutral": "100%", "negative": "0%"}}
+    },
+    {
+      "note": "nothing analysed",
+      "in": {"positive": 0, "neutral": 0, "negative": 0, "unknown": 5},
+      "out": {"analysed": 0, "unknown": 5, "percent": null, "text": null}
+    },
+    {
+      "note": "empty counts",
+      "in": {},
+      "out": {"analysed": 0, "unknown": 0, "percent": null, "text": null}
+    }
+  ],
+  "account": [
+    {"note": "X: handle trimmed, without @, lower-cased", "in": {"platform": "x", "author": "@Okezonenews ", "metrics": {"author_id": "123"}}, "out": "x:okezonenews"},
+    {"note": "X: same account written another way", "in": {"platform": "x", "author": "okezonenews", "metrics": null}, "out": "x:okezonenews"},
+    {"note": "YouTube: channel id", "in": {"platform": "youtube", "author": "Kompas TV", "metrics": {"author_id": "UCabcDEF"}}, "out": "youtube:UCabcDEF"},
+    {"note": "YouTube: a row without id falls back to the name", "in": {"platform": "youtube", "author": " Kompas TV", "metrics": {}}, "out": "youtube:kompas tv"},
+    {"note": "Instagram: provider id as an integer", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {"author_id": 98765}}, "out": "instagram:98765"},
+    {"note": "Instagram: provider id as a string", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {"author_id": "98765"}}, "out": "instagram:98765"},
+    {"note": "a whole-number float id reads as the integer (JSON cannot tell them apart in the browser)", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {"author_id": 98765.0}}, "out": "instagram:98765"},
+    {"note": "a fractional id is no id", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {"author_id": 98765.5}}, "out": "instagram:gibran"},
+    {"note": "an integer beyond the safe range is no id", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {"author_id": 9007199254740993}}, "out": "instagram:gibran"},
+    {"note": "an empty string id is no id", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {"author_id": "  "}}, "out": "instagram:gibran"},
+    {"note": "a boolean id is no id", "in": {"platform": "tiktok", "author": "warga62", "metrics": {"author_id": true}}, "out": "tiktok:warga62"},
+    {"note": "only ASCII spaces are trimmed", "in": {"platform": "reddit", "author": " name", "metrics": {}}, "out": "reddit: name"},
+    {"note": "Instagram: handle without id", "in": {"platform": "instagram", "author": "@Gibran", "metrics": {}}, "out": "instagram:gibran"},
+    {"note": "TikTok: provider id", "in": {"platform": "tiktok", "author": "warga62", "metrics": {"author_id": "6900001"}}, "out": "tiktok:6900001"},
+    {"note": "Threads: handle even with an id", "in": {"platform": "threads", "author": "@Warga.Solo", "metrics": {"author_id": "1789"}}, "out": "threads:warga.solo"},
+    {"note": "Reddit: handle", "in": {"platform": "reddit", "author": "u_Example", "metrics": {}}, "out": "reddit:u_example"},
+    {"note": "Berita: publisher name", "in": {"platform": "news", "author": "Kompas.com", "metrics": {}}, "out": "news:kompas.com"},
+    {"note": "Berita: same publisher in another letter case", "in": {"platform": "news", "author": "KOMPAS.com ", "metrics": {"site": "kompas.com"}}, "out": "news:kompas.com"},
+    {"note": "another platform: id when present", "in": {"platform": "facebook", "author": "Page", "metrics": {"author_id": "fb1"}}, "out": "facebook:fb1"},
+    {"note": "another platform: name otherwise", "in": {"platform": "facebook", "author": "@Page ", "metrics": {}}, "out": "facebook:page"},
+    {"note": "no author and no id", "in": {"platform": "x", "author": "  ", "metrics": {}}, "out": null},
+    {"note": "no platform", "in": {"platform": null, "author": "someone", "metrics": {}}, "out": null}
+  ],
+  "local_time": [
+    {"note": "the zone's wall clock of a naive UTC time", "in": "2026-11-10T08:13:34", "out": "2026-11-10T15:13:34"},
+    {"note": "17:30 UTC is past local midnight", "in": "2026-11-10T17:30:00Z", "out": "2026-11-11T00:30:00"},
+    {"note": "a zone written without a colon", "in": "2026-11-10T08:00:00+0700", "out": "2026-11-10T08:00:00"},
+    {"note": "another zone offset", "in": "2026-11-10T23:00:00", "offset": 540, "out": "2026-11-11T08:00:00"},
+    {"note": "an instant at midnight UTC is still shifted; a post checks its clock first", "in": "2026-11-10T00:00:00", "out": "2026-11-10T07:00:00"},
+    {"note": "no time", "in": null, "out": null},
+    {"note": "not a time", "in": "kemarin", "out": null}
+  ]
+}

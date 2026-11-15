@@ -6,7 +6,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../components
 import { PulseRange } from '../components/ui/PulseRange';
 import { allRange, rangeBounds, resolveRange, withinRange } from '../lib/pulseRange';
 import { trendSeries, trendUnitsAvailable, bucketLabel, platformTrend } from '../lib/pulseTrendSeries';
-import { trendSpikes, spikeFacts, spikeLines, spikeOnset, onsetLines } from '../lib/pulseTrendSpikes';
+import { spikeFacts, spikeLines, spikeOnset, onsetLines } from '../lib/pulseTrendSpikes';
+import useTrendSpikes from './useTrendSpikes';
 import { PlatformIcon, platformLabel } from '../components/admin/pulse/PlatformIcon';
 import TrendSpikeCard, { TrendSpikeChip } from './TrendSpikeCard';
 import { axisTicks } from '../lib/pulseReportPages';
@@ -143,8 +144,10 @@ function NetPlot({ rows, unit }) {
  *   `initialRange` is the range filter's starting choice ("Semua" unless given); the reader's choice stays in this card.
  *   `compact` is the small form for a side column: no switches, posts and interactions only, and the days it covers.
  *   `dense` keeps the switches and shortens the plots, for a page whose main content is the list under the card.
+ *   `spikes` (`{posts, interactions}`, each a list of `{key, value, usual, times}`) hands the card spikes that are already
+ *   known, where no call to the server can be made (a test, a page rendered on the server). Without it the card asks the server.
  */
-export default function TrendChart({ posts = [], period = {}, title = 'Tren percakapan', description = 'Menurut tanggal terbit (WIB).', onPick, onClear, selected, initialView = 'volume', initialRange = allRange, compact = false, dense = false, footer }) {
+export default function TrendChart({ posts = [], period = {}, title = 'Tren percakapan', description = 'Menurut tanggal terbit (WIB).', onPick, onClear, selected, initialView = 'volume', initialRange = allRange, compact = false, dense = false, footer, spikes: handedSpikes }) {
   const [view, setView] = useState(initialView), [chosenUnit, setUnit] = useState('day'), [choice, setChoice] = useState(initialRange), [hot, setHot] = useState(null);
   // The range comes first: it decides which days are drawn, then the unit groups those days. Presets end on the last day
   // with a post; "Semua" keeps the whole project period, as before.
@@ -158,10 +161,13 @@ export default function TrendChart({ posts = [], period = {}, title = 'Tren perc
   const total = key => rows.reduce((sum, row) => sum + row[key], 0);
   const unknown = total('unknown'), all = total('posts'), undated = posts.filter(post => !sentimentDate(post)).length;
   const noun = UNITS.find(row => row[0] === unit)[2];
-  // Spikes of the two volume lines, each with what its day is made of (see pulseTrendSpikes). Counted from the posts
-  // on screen, so the range and the unit above apply; the sentiment view marks none.
-  const byKey = new Map(rows.map(row => [row.key, row]));
-  const spikesOf = key => new Map(trendSpikes(rows, key).map(spike => {
+  // Spikes of the two volume lines. Which buckets are spikes is the server's answer for the numbers drawn here (the
+  // product's one rule, see useTrendSpikes), so the range and the unit above apply; while the answer is on its way,
+  // and when the call fails, there are none. What each spike is made of is counted from the posts on screen (see
+  // pulseTrendSpikes). The sentiment and platform views mark none.
+  const volume = view === 'volume' || compact;
+  const byKey = new Map(rows.map(row => [row.key, row])), found = useTrendSpikes(rows, { handed: handedSpikes, wanted: volume });
+  const spikesOf = key => new Map(found[key].filter(spike => byKey.has(spike.key)).map(spike => {
     const facts = spikeFacts(inRange, byKey.get(spike.key));
     // How the day of a spike began is read in six hours, as one picture (day buckets only: a week has no start hour).
     // It is read for a spike in either line: the day that drew the interactions is the day whose start is asked about.
@@ -169,7 +175,6 @@ export default function TrendChart({ posts = [], period = {}, title = 'Tren perc
     const lines = spikeLines(facts, spike, key, { unit, platformName: platformLabel }), began = onsetLines(onset, { platformName: platformLabel });
     return [spike.key, { spike, facts, onset, lines: !onset ? lines : key === 'posts' ? [lines[0], ...began] : [...lines, ...began] }];
   }));
-  const volume = view === 'volume' || compact;
   // One line per platform, each on its own axis: the busiest platform has hundreds of times the posts of the smallest,
   // so on a shared axis the small ones would lie flat on the baseline. Size is read from the figures beside each line.
   const platforms = !volume && view === 'platform' ? platformTrend(inRange, unit, span) : [];
@@ -200,7 +205,7 @@ export default function TrendChart({ posts = [], period = {}, title = 'Tren perc
               <p className="tc-plat-name"><span aria-hidden="true"><PlatformIcon platform={item.platform} size={16} /></span><strong>{label}</strong></p>
               <p className="tc-plat-figure"><b>{formatCount(item.total)}</b> posting · {shareText(item.share)}</p>
               <span className="tc-plat-bar" aria-hidden="true"><i style={{ width: Math.max(2, item.share * 100) + '%' }} /></span>
-              {item.peak && rows.length > 1 && <p className="tc-plat-peak">Puncak {bucketLabel(item.peak, unit)}: {formatCount(item.peak.posts)}</p>}
+              {item.peak && rows.length > 1 && <p className="tc-plat-peak">Teramai {bucketLabel(item.peak, unit)}: {formatCount(item.peak.posts)}</p>}
             </div>
             <Plot rows={item.rows} unit={unit} series={{ posts: { label, color } }} mini axis={index === platforms.length - 1} name={'posting di ' + label} />
           </li>;

@@ -1,6 +1,7 @@
 import { hasClock, validLocations } from './pulseData.js';
+import { localTime, readTime } from './pulseMeasures.js';
 
-const STOPWORDS = new Set(('ada adalah adanya adapun agar akan akhirnya aku anda antara apa apabila apakah atas atau awal bagi bahwa bahkan baik banyak baru beberapa begitu belum benar berupa bisa bukan cara cukup dalam dan dapat dari daripada datang dengan demi demikian dia dilakukan diri dirinya dua dulu hanya harus hingga ia ialah ini itu jadi jangan juga justru kalau kami kamu karena kata ke kembali kemudian kepada ketika kita lagi lain lalu lebih maka makin maupun masih masing melalui memang mengenai menjadi mengatakan merupakan mereka meski mungkin namun nanti oleh pada paling para perlu pernah pula pun punya saat saja saling sama sampai sangat satu saya sebab sebagai sebagaimana sebagainya sebagian sebelum sebuah secara sedang sehingga sejak sejumlah sekitar selalu seluruh semua semakin sementara sendiri seperti serta setiap siapa sudah supaya telah tentang tentu terhadap tersebut tetapi tiap tidak tiga telah untuk yaitu yakni yang anda akan ini itu nya dong kok si sang rt via http https www com id the and for with from this that are was were not you your').split(/\s+/));
+export const STOPWORDS = new Set(('ada adalah adanya adapun agar akan akhirnya aku anda antara apa apabila apakah atas atau awal bagi bahwa bahkan baik banyak baru beberapa begitu belum benar berupa bisa bukan cara cukup dalam dan dapat dari daripada datang dengan demi demikian dia dilakukan diri dirinya dua dulu hanya harus hingga ia ialah ini itu jadi jangan juga justru kalau kami kamu karena kata ke kembali kemudian kepada ketika kita lagi lain lalu lebih maka makin maupun masih masing melalui memang mengenai menjadi mengatakan merupakan mereka meski mungkin namun nanti oleh pada paling para perlu pernah pula pun punya saat saja saling sama sampai sangat satu saya sebab sebagai sebagaimana sebagainya sebagian sebelum sebuah secara sedang sehingga sejak sejumlah sekitar selalu seluruh semua semakin sementara sendiri seperti serta setiap siapa sudah supaya telah tentang tentu terhadap tersebut tetapi tiap tidak tiga telah untuk yaitu yakni yang anda akan ini itu nya dong kok si sang rt via http https www com id the and for with from this that are was were not you your').split(/\s+/));
 
 function uniquePosts(posts = []) {
   const seen = new Set();
@@ -35,15 +36,23 @@ function plainText(value) {
     .replace(/<![^>]*>/g, ' ');
 }
 
-function termsIn(post) {
+/** The words of a post's title and text in reading order, as the word panel reads them: markup, links, addresses,
+ * site names and @handles removed, lower-cased, letters only. Stop words and short words are still in.
+ * server/app/services/pulse_readings.py reads text the same way; shared/pulse-readings.cases.json holds both to it. */
+export function wordsIn(post) {
   const text = [post.title, post.text].filter(value => typeof value === 'string').map(plainText).join(' ')
     .normalize('NFKC').toLowerCase()
     .replace(/(?:https?:\/\/|www\.)\S+/gu, ' ')
     .replace(/[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+/gu, ' ')
     .replace(/\b[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+(?:\/\S*)?/gu, ' ')
     .replace(/@[\p{L}\p{N}_]+/gu, ' ');
-  return new Set((text.match(/\p{L}+/gu) || [])
-    .filter(term => term.length >= 3 && term.length <= 40 && !STOPWORDS.has(term)));
+  return text.match(/\p{L}+/gu) || [];
+}
+/** Whether the word panel counts a word: 3 to 40 characters and not a stop word. */
+export const keepsWord = term => term.length >= 3 && term.length <= 40 && !STOPWORDS.has(term);
+
+function termsIn(post) {
+  return new Set(wordsIn(post).filter(keepsWord));
 }
 
 export function wordFrequency(posts = []) {
@@ -91,16 +100,11 @@ export function publicationHours(posts = []) {
   const bins = Array(24).fill(0);
   let unknown = 0;
   for (const post of rows) {
-    // Date-only values have no observed hour. Validate calendar dates before Date.parse,
-    // which otherwise silently normalizes impossible dates such as February 30.
+    // clock_v1: date-only values have no observed hour. The shared reader refuses impossible dates such as
+    // February 30, and the hour is the installation zone's.
     const value = post.published_at;
-    const parts = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/i);
-    if (!parts || !hasClock(value)) { unknown++; continue; }
-    const [, year, month, day, hour, minute, second = '0', zone] = parts;
-    const days = new Date(Date.UTC(Number(year), Number(month), 0)).getUTCDate();
-    const time = Date.parse(value.replace(' ', 'T') + (zone ? '' : 'Z'));
-    if (+month < 1 || +month > 12 || +day < 1 || +day > days || +hour > 23 || +minute > 59 || +second > 59 || !Number.isFinite(time)) { unknown++; continue; }
-    bins[new Date(time + 7 * 60 * 60 * 1000).getUTCHours()]++;
+    if (readTime(value) === null || !hasClock(value)) { unknown++; continue; }
+    bins[new Date(localTime(value)).getUTCHours()]++;
   }
   return { bins, total: rows.length, dated: rows.length - unknown, unknown };
 }

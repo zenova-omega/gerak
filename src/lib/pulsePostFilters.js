@@ -1,5 +1,6 @@
 import { postMedia } from './pulseMedia.js';
 import { postInteractions } from './pulseEngagement.js';
+import { inPeriod, localDay, readTime } from './pulseMeasures.js';
 // `province` is applied by the Posting page with `namesProvince` (pulsePlaces.js), not by filterPosts: the place reader
 // depends on this module's neighbours, and a filter here would close an import circle.
 export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',province:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
@@ -25,28 +26,20 @@ export function parseSavedViews(raw) {
     }).map(v=>({name:v.name.slice(0,60),filters:{...Object.fromEntries(Object.entries(defaultPostFilters).map(([key,initial])=>[key,v.filters[key]===undefined?initial:v.filters[key]])),from:'',to:''}}));
   }catch{return [];}
 }
-function postTime(raw) {
-  if (!raw) return -Infinity;
-  const time = Date.parse(/[Zz]|[+-]\d{2}:\d{2}$/.test(raw) ? raw : raw + 'Z');
-  return Number.isFinite(time) ? time : -Infinity;
-}
+const postTime = raw => readTime(raw) ?? -Infinity;
 export function filterPosts(posts, filters) {
   // The Posting page opens on the largest interactions; callers that pass no sort keep chronological order.
   const f = { ...defaultPostFilters, sort:'oldest', ...filters };
   const rank = post => f.sort === 'engagement' ? postInteractions(post.metrics) ?? -1 : post.metrics?.[f.sort] ?? -1;
   const platforms = filters?.platforms === undefined && filters?.platform && filters.platform !== 'all' ? [filters.platform] : f.platforms;
-  const start = f.from ? Date.parse(f.from + 'T00:00:00+07:00') : null;
-  const end = f.to ? Date.parse(f.to + 'T23:59:59.999+07:00') : null;
   return posts.filter(p => {
-    const time = postTime(p.published_at);
     const media = Boolean(postMedia(p).imageUrl);
     return (platforms === null || platforms.includes(p.platform))
       && (f.sentiments === null || f.sentiments.includes(postSentiment(p)))
       && `${p.title || ''} ${p.text || ''} ${p.author || ''}`.toLowerCase().includes(f.query.trim().toLowerCase())
       && (p.author || '').toLowerCase().includes(f.author.trim().toLowerCase())
       && (!f.exactAuthor || p.author === f.exactAuthor)
-      && ((start === null && end === null) || Number.isFinite(time))
-      && (start === null || time >= start) && (end === null || time <= end)
+      && inPeriod(p.published_at, f.from, f.to)
       && (f.minEngagement === '' || (postInteractions(p.metrics) != null && postInteractions(p.metrics) >= Number(f.minEngagement)))
       && (f.media === 'all' || (f.media === 'available' ? media : !media));
   }).sort((a,b)=>f.sort === 'oldest' ? ((Number.isFinite(postTime(a.published_at))?postTime(a.published_at):Infinity)-(Number.isFinite(postTime(b.published_at))?postTime(b.published_at):Infinity) || 0) : f.sort === 'recent' ? (postTime(b.published_at)-postTime(a.published_at) || 0) : rank(b)-rank(a) || (postTime(b.published_at)-postTime(a.published_at) || 0));
@@ -55,9 +48,8 @@ export function filterPosts(posts, filters) {
 export function dailyPostCounts(posts) {
   const days = new Map();
   for (const post of posts) {
-    const time = postTime(post.published_at);
-    if (!Number.isFinite(time)) continue;
-    const date = new Date(time + 7*60*60*1000).toISOString().slice(0,10);
+    const date = localDay(post.published_at);
+    if (!date) continue;
     days.set(date,(days.get(date)||0)+1);
   }
   return [...days].sort(([a],[b])=>a.localeCompare(b)).map(([date,count])=>({date,count}));

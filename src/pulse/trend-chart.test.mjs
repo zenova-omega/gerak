@@ -136,13 +136,18 @@ test('the small form shows the days it covers and no switch', async () => {
   assert.doesNotMatch(await render({ posts: [{ id: 'x', metrics: {} }], compact: true }), /pu-range/, 'nothing dated, nothing to caption');
 });
 
-test('a spike is marked, and what the day is made of is told in words that need no hover', async () => {
-  const at = (id, day, author, likes) => ({ id, published_at: `2026-11-${day}T05:00:00Z`, platform: 'x', author, text: 'Isi posting ' + id, metrics: { likes } });
-  const quiet = [at('q1', '08', 'satu', 10), at('q2', '09', 'dua', 10), at('q4', '11', 'empat', 10), at('q5', '12', 'lima', 10)];
-  const loud = ['a', 'b', 'c'].map(id => at(id, '10', 'ramai', 5)).concat(['d', 'e', 'f', 'g'].map(id => at(id, '10', 'akun_' + id, 5)), [at('viral', '10', 'kabar', 4000)]);
-  const html = await render({ posts: [...quiet, ...loud], onPick() {} });
+// Which days are spikes is decided on the server (rule spike_v1). Rendered here on the server side no call can be made,
+// so each test hands the chart the spikes the server would have answered with, and states what is drawn from them.
+const at = (id, day, author, likes) => ({ id, published_at: `2026-11-${day}T05:00:00Z`, platform: 'x', author, text: 'Isi posting ' + id, metrics: { likes } });
+const quiet = [at('q1', '08', 'satu', 10), at('q2', '09', 'dua', 10), at('q4', '11', 'empat', 10), at('q5', '12', 'lima', 10)];
+const loud = ['a', 'b', 'c'].map(id => at(id, '10', 'ramai', 5)).concat(['d', 'e', 'f', 'g'].map(id => at(id, '10', 'akun_' + id, 5)), [at('viral', '10', 'kabar', 4000)]);
+const answered = { posts: [{ key: '2026-11-10', value: 8, usual: 1, times: 8 }], interactions: [{ key: '2026-11-10', value: 4035, usual: 10, times: 403.5 }] };
+
+test('a spike the server found is marked, and what the day is made of is told in words that need no hover', async () => {
+  const html = await render({ posts: [...quiet, ...loud], spikes: answered, onPick() {} });
   assert.match(html, /class="tc-note tc-spike-note"/);
   assert.match(html, /menandai lonjakan/);
+  assert.match(html, /aria-label="Grafik garis posting per hari\. 1 lonjakan ditandai\./);
   const head = html.match(/<thead>[\s\S]*?<\/thead>/)[0];
   assert.match(head, />Lonjakan</, 'the table says in words what the mark says on hover');
   const row = html.match(/<tr><th scope="row">10 Nov<\/th>[\s\S]*?<\/tr>/)[0];
@@ -154,9 +159,41 @@ test('a spike is marked, and what the day is made of is told in words that need 
   const other = html.match(/<tr><th scope="row">9 Nov<\/th>[\s\S]*?<\/tr>/)[0];
   assert.doesNotMatch(other, /hari biasa/, 'an ordinary day carries no note');
   assert.doesNotMatch(html, /karena|penyebab|dipicu/i, 'a spike is described, never explained by a cause');
-  // No spike: no mark, no note, no extra column.
-  const calm = await render({ posts: quiet, onPick() {} });
-  assert.doesNotMatch(calm, /tc-spike-note|>Lonjakan</);
+  // The server found none: no mark, no note, no extra column.
+  const calm = await render({ posts: quiet, spikes: { posts: [], interactions: [] }, onPick() {} });
+  assert.doesNotMatch(calm, /tc-spike|>Lonjakan<|lonjakan/);
+  // Only one line has a spike: the other chart is drawn without a mark, and the table still has its column.
+  const one = await render({ posts: [...quiet, ...loud], spikes: { posts: answered.posts, interactions: [] }, onPick() {} });
+  assert.match(one, /8 posting, 8× hari biasa/);
+  assert.doesNotMatch(one, /403,5×/);
+  assert.match(one, /aria-label="Grafik garis interaksi per hari\. Angkanya ada pada tabel/);
+});
+
+test('without an answer from the server the chart marks nothing, however high a day stands', async () => {
+  // The same loud day as above. No spikes are handed over and no call can be made here, which is also what the page
+  // looks like while the answer is on its way or after the call has failed: the rule is not worked out in the browser.
+  const html = await render({ posts: [...quiet, ...loud], onPick() {} });
+  assert.match(html, /<tr><th scope="row">10 Nov<\/th><td>8<\/td>/, 'the day and its numbers are drawn as before');
+  assert.doesNotMatch(html, /tc-spike|>Lonjakan<|lonjakan|hari biasa/, 'no ring, no note, no "Lonjakan" column');
+  // The sentiment and platform views mark none, whatever was answered.
+  const tones = await render({ posts: [...quiet, ...loud], spikes: answered, initialView: 'sentiment', onPick() {} });
+  assert.doesNotMatch(tones, /tc-spike|>Lonjakan<|lonjakan/);
+});
+
+test('an answer about a day the chart does not draw is left out instead of breaking the chart', async () => {
+  const stray = { posts: [{ key: '2026-10-01', value: 90, usual: 1, times: 90 }, ...answered.posts], interactions: [] };
+  const html = await render({ posts: [...quiet, ...loud], spikes: stray, onPick() {} });
+  assert.match(html, /aria-label="Grafik garis posting per hari\. 1 lonjakan ditandai\./);
+  assert.doesNotMatch(html, /90 posting/);
+});
+
+test('the browser holds no copy of the spike rule: the chart sends its two lines to the server and draws the answer', async () => {
+  const { readFileSync } = await import('node:fs');
+  const described = await import('../lib/pulseTrendSpikes.js');
+  assert.equal(described.trendSpikes, undefined, 'what a spike is made of is still told here; which day is one is not decided here');
+  assert.doesNotMatch(readFileSync('src/lib/pulseTrendSpikes.js', 'utf8'), /ABOVE_USUAL|median\(/);
+  assert.doesNotMatch(readFileSync('src/pulse/TrendChart.jsx', 'utf8'), /trendSpikes\(/);
+  assert.match(readFileSync('src/pulse/useTrendSpikes.js', 'utf8'), /api\.post\('\/admin\/pulse\/spikes'/);
 });
 
 test('the platform view draws one line per platform on its own axis, with each platform\'s count and share beside it', async () => {
@@ -167,8 +204,8 @@ test('the platform view draws one line per platform on its own axis, with each p
   const items = [...html.matchAll(/<li class="tc-plat"[\s\S]*?<\/li>/g)].map(match => match[0]);
   assert.equal(items.length, 2);
   const text = item => item.match(/<div class="tc-plat-head">[\s\S]*?<\/div>/)[0].replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  assert.equal(text(items[0]), 'X 8 posting · 80% Puncak 10 Nov: 6');
-  assert.equal(text(items[1]), 'TikTok 2 posting · 20% Puncak 11 Nov: 1');
+  assert.equal(text(items[0]), 'X 8 posting · 80% Teramai 10 Nov: 6');
+  assert.equal(text(items[1]), 'TikTok 2 posting · 20% Teramai 11 Nov: 1');
   assert.match(items[1], /aria-label="Grafik garis posting di TikTok per hari/);
   assert.match(html, /skalanya sendiri/, 'the reader is told the lines do not share a scale');
   assert.doesNotMatch(html, /Klik grafik/, 'a click on one platform\'s line would open every platform\'s posts, so none is promised');

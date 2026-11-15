@@ -5,6 +5,11 @@
   .pulse-standalone .ps-sidebar-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .pulse-standalone .ps-navigation-body { display: flex; flex-direction: column; flex: 1; gap: 16px; min-height: 0; }
   .pulse-standalone .ps-sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+  @media (min-width: 1000px) {
+    .pulse-standalone .ps-sidebar { overflow: hidden; }
+    .pulse-standalone .ps-sidebar nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+    .pulse-standalone .ps-sidebar-bottom { flex: 0 0 auto; }
+  }
   .pulse-standalone .ps-sidebar nav a { min-height: 44px; padding: 10px 12px; gap: 12px; }
   .pulse-standalone .ps-sidebar nav a svg { flex-shrink: 0; }
   .pulse-standalone .ps-sidebar-bottom { margin-top: auto; padding-top: 20px; }

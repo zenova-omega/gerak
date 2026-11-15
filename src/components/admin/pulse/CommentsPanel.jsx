@@ -44,7 +44,7 @@ function SourcePreview({ post }) {
 function CompactComment({ comment, platform }) {
   const url = safeSourceUrl(comment.url), name = comment.author || 'Penulis tidak tersedia';
   return <article className="pcm-card pcm-compact">
-    <AccountAvatar size="xs" author={comment.author} platform={platform} photo={null} />
+    <AccountAvatar size="xs" author={comment.author} platform={platform} photo={comment.profile_image_url} />
     <div className="pcm-body">
       <div className="pcm-line"><strong>{name}</strong><small>{pulseDate(comment.published_at)}{comment.replies > 0 && <> · {formatCount(comment.replies)} balasan</>}</small></div>
       <p className="pcm-text">{comment.text}</p>
@@ -66,7 +66,7 @@ export function Comment({ comment, video, post, platform, showAnalysis = true })
   return <article className="pcm-card" data-has-source={post && video ? '' : undefined}>
     {post && video && <div className="pcm-source-pop" id={sourceId} role="tooltip"><SourcePreview post={post} /></div>}
     <header className="pcm-head">
-      <AccountAvatar size="sm" author={comment.author} platform={post?.platform || platform} photo={null} />
+      <AccountAvatar size="sm" author={comment.author} platform={post?.platform || platform} photo={comment.profile_image_url} />
       <div className="pcm-who"><strong>{comment.author || 'Penulis tidak tersedia'}</strong><small>{pulseDate(comment.published_at)}{comment.replies > 0 && <> · {formatCount(comment.replies)} balasan</>}</small></div>
       <span className="pcm-likes" title="Suka"><Heart size={14} aria-hidden="true" /><span className="pu-sr">Suka: </span>{formatCount(comment.likes)}</span>{url && <a className="pcm-open" href={url} target="_blank" rel="noopener noreferrer" aria-label={`Buka komentar ${comment.author || 'ini'}`} title="Buka komentar"><ExternalLink size={14} aria-hidden="true" /></a>}
     </header>

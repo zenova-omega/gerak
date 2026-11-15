@@ -43,7 +43,7 @@ async def test_analytics_observed_engagement_and_unknown_locations(client, db, a
     res = await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id}, headers={"Authorization": f"Bearer {admin_token}"})
     assert res.status_code == 200
     data = res.json()
-    assert set(data) == {"total_mentions", "platforms", "timeline", "influencers", "locations", "unknown_location_count", "posts", "metric_totals", "network"}
+    assert set(data) == {"total_mentions", "platforms", "timeline", "influencers", "locations", "unknown_location_count", "posts", "metric_totals", "network", "measures"}  # measures: the zone and rule versions (day_v1)
     assert data["total_mentions"] == 2
     assert data["timeline"] == [{"date": "2026-01-02", "count": 2}]
     assert data["platforms"] == [{"platform": "x", "count": 1}, {"platform": "youtube", "count": 1}]
@@ -338,10 +338,14 @@ async def test_project_crawl_collects_instagram_and_tiktok_with_the_shared_provi
         calls.append((query, key, platform, limit))
         return []
     monkeypatch.setattr(xpoz, "fetch_xpoz_social_items", social)
+    async def tiktok(query, key, **window):
+        calls.append((query, key, "tiktok", sorted(window)))
+        return []
+    monkeypatch.setattr(xpoz, "fetch_xpoz_tiktok_items", tiktok)
     settings = SimpleNamespace(XPOZ_API_KEY="fake", YOUTUBE_API_KEY="", XPOZ_MODE="mcp_stored")
     scheduled = await crawl_topic_run(db, t, settings)
     assert scheduled["providers"]["instagram"]["status"] == "manual_only" and not calls
     manual = await crawl_topic_run(db, t, settings, manual=True)
-    assert calls == [("isu contoh", "fake", "instagram", 300), ("isu contoh", "fake", "tiktok", 300)]
+    assert calls == [("isu contoh", "fake", "instagram", 300), ("isu contoh", "fake", "tiktok", ["end", "start"])]   # TikTok: the wide search over the last week
     assert manual["providers"]["instagram"]["status"] == manual["providers"]["tiktok"]["status"] == "success"
     assert (await crawl_topic_run(db, t, SimpleNamespace(XPOZ_API_KEY=""), manual=True))["providers"]["tiktok"]["status"] == "not_configured"

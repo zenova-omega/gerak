@@ -146,3 +146,24 @@ async def test_router_auth_validation_and_wib_period(growth_db):
         for params in [{'from': 'bad'}, {'from': '2026-11-11', 'to': '2026-11-10'}]:
             assert (await client.get('/admin/pulse/growth', headers=headers, params=params)).status_code == 422
         assert (await client.get('/admin/pulse/growth', headers=headers, params={'topic_id': 'missing'})).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_router_period_follows_the_installation_zone(growth_db, monkeypatch):
+    from app.services import pulse_measures
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    router = importlib.import_module('app.routers.pulse_growth').router
+    from app.middleware.auth import create_access_token
+    from app.models import User
+    growth_db.add(User(id='admin-growth-zone', nrp='GROWTHZ', name='Admin', password_hash='unused', role='admin', account_type='prajurit'))
+    await post(growth_db, 'first', published=datetime(2026, 11, 10, 15))       # 00:00 WIT on 11 Nov
+    await post(growth_db, 'next-day', published=datetime(2026, 11, 11, 15))    # 00:00 WIT on 12 Nov
+    app = FastAPI()
+    app.include_router(router, prefix='/admin/pulse')
+    async def override_db():
+        yield growth_db
+    app.dependency_overrides[get_db] = override_db
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+        headers = {'Authorization': f'Bearer {create_access_token("admin-growth-zone", "admin")}'}
+        response = await client.get('/admin/pulse/growth', headers=headers, params={'topic_id': 'a', 'from': '2026-11-11', 'to': '2026-11-11'})
+        assert [r['id'] for r in response.json()['posts']] == ['first']

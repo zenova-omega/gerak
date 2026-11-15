@@ -25,7 +25,7 @@ SYSTEM = (
     'ada di sinyal; jangan menambah fakta, angka, atau dugaan. Jangan menyebut diri Anda atau cara kerja Anda. '
     'Jawab HANYA dengan satu objek JSON yang sah, tanpa teks lain.')
 
-_PLATFORM = {'news': 'berita', 'search': 'pencarian', 'youtube': 'video'}
+_PLATFORM = {'news': 'berita', 'search': 'pencarian', 'youtube': 'video', 'x': 'x'}
 # The assistant talking about itself instead of the news: the first person, outside anything it quotes. Checked on the
 # text it wrote (reason, brief), never on a headline. A story about an AI company, or about "model bahasa", is a story.
 _QUOTED = re.compile(r'"[^"]*"|“[^”]*”|\'[^\']*\'|‘[^’]*’')
@@ -49,6 +49,8 @@ def _figure(signal):
         return f'{value} liputan lain' if value else ''
     if signal['platform'] == 'youtube':
         return f'{value} tayangan' if value else ''
+    if signal['platform'] == 'x':
+        return f"{1 + len(signal.get('related') or [])} posting contoh"
     return f'{value}+ pencarian nasional' if value is not None else 'hanya di daftar provinsi'
 
 
@@ -57,6 +59,8 @@ def build_prompt(signals, previous):
     for signal in signals:
         provinces = ', '.join(f'{code[3:]} {count}' for code, count in sorted(signal.get('provinces', {}).items(), key=lambda pair: -pair[1]))
         lines.append(' | '.join([signal['id'], _PLATFORM.get(signal['platform'], signal['platform']), signal['title'], _figure(signal), provinces]).rstrip(' |'))
+    if any(signal['platform'] == 'x' for signal in signals):
+        lines.append('Jenis "x" adalah isu yang ramai dibicarakan di X; angkanya jumlah posting contoh, bukan ukuran ramainya.')
     lines.append('')
     lines.append('ISU PADA PEMBARUAN SEBELUMNYA (key | judul):')
     lines.extend(f"{issue['key']} | {issue['title']}" for issue in previous) if previous else lines.append('(belum ada)')
@@ -149,6 +153,8 @@ async def compose(ai, signals, previous, *, timeout=300):
     or an answer that cannot be read. The caller keeps the last composed run on the page."""
     if ai is None or not signals:
         return None
+    from .ai import hosted
+    hosted.set_lane('radar_compose')
     try:
         text = await asyncio.wait_for(ai.generate_text(build_prompt(signals, previous), system=SYSTEM, max_tokens=ANSWER_TOKENS), timeout)
         return parse_answer(text, signals, previous)

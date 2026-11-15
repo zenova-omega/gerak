@@ -16,10 +16,15 @@ export function printableRule(cssText) {
   return urls.every(value => /url\(\s*['"]?data:image\/(?:png|jpeg|webp|gif);base64,/i.test(value));
 }
 
-/** A file name people can keep: "laporan-pulse-isu-pengunduran-diri-gibran-2026-11-14.pdf". */
-export function reportFileName(label, day = new Date().toISOString().slice(0, 10)) {
+const PLAIN_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** A file name people can keep. With a chosen period it carries the dates the report covers
+ * ("laporan-pulse-isu-gibran-2026-11-01-sd-2026-11-12.pdf"); without one, the day the file was made. */
+export function reportFileName(label, day = new Date().toISOString().slice(0, 10), period = {}) {
   const slug = String(label || 'project').normalize('NFKD').replace(/[^\w\s-]/g, '').trim().toLowerCase().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 60) || 'project';
-  return `laporan-pulse-${slug}-${day}.pdf`;
+  const from = PLAIN_DAY.test(period?.from) ? period.from : '', to = PLAIN_DAY.test(period?.to) ? period.to : '';
+  const dates = from && to ? (from === to ? from : `${from}-sd-${to}`) : from ? `sejak-${from}` : to ? `sampai-${to}` : day;
+  return `laporan-pulse-${slug}-${dates}.pdf`;
 }
 
 function printableCss() {

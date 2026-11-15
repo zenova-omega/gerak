@@ -84,3 +84,23 @@ test('card actions select the exact network account and navigate fifteen-record 
     assert.equal(page, 0);
   } finally { await server.close(); }
 });
+
+test('the trail says how many date-only posts were left out of the order by time, only when there are some', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { default: ChronologyCards } = await server.ssrLoadModule('/src/components/admin/pulse/ChronologyCards.jsx');
+    const { chronologyRows } = await server.ssrLoadModule('/src/lib/pulseChronology.js');
+    const evidence = [
+      { id: 'date-a', author: '@A', platform: 'instagram', title: 'Tanggal saja', published_at: '2026-11-10T00:00:00' },
+      { id: 'timed', author: '@A', platform: 'instagram', title: 'Berjam', published_at: '2026-11-10T03:00:00' },
+      { id: 'date-b', author: '@A', platform: 'instagram', title: 'Tanggal saja juga', published_at: '2026-11-11T00:00:00' },
+    ];
+    const rows = chronologyRows({ accounts: [{ id: 'ig:a', evidence }], edges: [] });
+    const props = { page: 0, selected: '', onSelect() {}, onPageChange() {} };
+    const html = renderToStaticMarkup(React.createElement(ChronologyCards, { ...props, rows, firstTime: rows[0].time }));
+    assert.match(html, /2 posting hanya bertanggal tidak diurutkan menurut jam\./);
+    assert.equal((html.match(/class="nx-chronology-first"/g) || []).length, 1, 'only the timed post can be the earliest');
+    const timedOnly = rows.filter(row => row.clock);
+    assert.doesNotMatch(renderToStaticMarkup(React.createElement(ChronologyCards, { ...props, rows: timedOnly, firstTime: timedOnly[0].time })), /hanya bertanggal/);
+  } finally { await server.close(); }
+});

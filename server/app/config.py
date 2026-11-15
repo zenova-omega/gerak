@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from pathlib import Path
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from dotenv import dotenv_values
 from typing import Literal
 
@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     XAI_REASONING_EFFORT: str = "low"
     PULSE_AI_HOSTED_BACKGROUND: bool = False   # paid labelling of the whole queue: off until switched on
     PULSE_AI_PARALLEL: int = 8                 # labelling calls in flight at once on the hosted model
+    PULSE_AI_POST_BATCH: int = 3               # short posts labelled in one hosted call; 1 = one post a call. Measured 15 Nov 2026 on 12 posts: 6 a call changed 3 labels against single calls, 3 a call changed 1
+    PULSE_AI_BATCH_MIN_QUEUE: int = 1500       # waiting posts above which the oldest go to the service's batch interface (20% cheaper, answered within about a day); 0 = never
+    PULSE_AI_LOCAL_MAX_QUEUE: int = 0          # above 0: while at most this many posts and comments wait, the local model labels them for free; a longer queue goes to the hosted model. Off by default: measured 15 Nov 2026, local labels matched hosted ones on 10 of 12 posts, at about 31 s a post
 
     # Pulse / listening
     BROWSERLESS_API_KEY: str = ""
@@ -65,6 +68,8 @@ class Settings(BaseSettings):
     ENABLE_SCHEDULER: bool = True
     PULSE_MONITOR_ENABLED: bool = True
     PULSE_RETENTION_DAYS: int = 0   # stored posts older than this many days are deleted once a day; 0 deletes nothing (services/pulse_retention.py)
+    PULSE_ZONE_OFFSET_MINUTES: int = Field(420, ge=0, lt=1440)   # fixed offset east of UTC the days of every figure are counted in; west of UTC is not supported in this version (services/pulse_measures.py)
+    PULSE_ZONE_NAME: str = "WIB"           # its short name, sent to the browser with the offset
     BROWSERLESS_ALLOWLIST: list[str] = []
 
     class Config:

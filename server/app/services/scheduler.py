@@ -12,6 +12,9 @@ def start_scheduler():
         scheduler.add_job(crawl_due_topics, "interval", seconds=30, id="pulse_monitor", replace_existing=True, max_instances=1, coalesce=True)
         from .pulse_analysis_cycle import analysis_tick
         scheduler.add_job(analysis_tick, 'interval', seconds=10, id='pulse_sentiment', replace_existing=True, max_instances=1, coalesce=True)
+        from .pulse_ai_batch import batch_tick
+        # Sends a long queue of posts to the service's batch interface and reads back what it finished; idle otherwise.
+        scheduler.add_job(batch_tick, 'interval', minutes=5, id='pulse_ai_batch', replace_existing=True, max_instances=1, coalesce=True)
         from .pulse_comments_auto import comments_tick, TICK_SECONDS
         scheduler.add_job(comments_tick, 'interval', seconds=TICK_SECONDS, id='pulse_comments', replace_existing=True, max_instances=1, coalesce=True)
         from .pulse_profiles import profiles_tick, TICK_SECONDS as PROFILE_SECONDS

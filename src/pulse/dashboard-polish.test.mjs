@@ -46,3 +46,11 @@ test('analysis navigation preserves selected project and alert evidence scope', 
     assert.doesNotMatch(markup, /<button/);
   } finally { await server.close(); }
 });
+
+test('the dashboard takes the installation zone from the analytics payload before anything counts days', async () => {
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../components/admin/pulse/PulseDashboard.jsx', import.meta.url), 'utf8');
+  const fetched = source.indexOf('usePulseAnalytics(topicId'), zoned = source.indexOf('setZone(analytics.data.measures.zone)');
+  const scoped = source.indexOf('const scopedData=useMemo(');
+  assert.ok(fetched > 0 && zoned > fetched && zoned < scoped, 'setZone runs as soon as the payload is there, before the scoped data is counted');
+});

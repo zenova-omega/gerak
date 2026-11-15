@@ -1,7 +1,8 @@
+import { readTime } from './pulseMeasures.js';
+
+/** A publication time in milliseconds, read by the shared reader (day_v1); null when there is none. */
 export function replayTime(value) {
-  if (typeof value !== 'string' || !value) return null;
-  const t = Date.parse(/(?:Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value : value + 'Z');
-  return Number.isFinite(t) ? t : null;
+  return typeof value === 'string' ? readTime(value) : null;
 }
 export function replayEvents(data) {
   const seen = new Map();

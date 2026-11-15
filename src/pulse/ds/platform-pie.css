@@ -1,0 +1,16 @@
+/* Small pie of the posts per platform, in the summary on Ikhtisar (PlatformPie.jsx). The pie is the glance; the keys
+   beside it carry the figures. Platform colours come from platformColor, the same as every other platform mark. */
+.pulse-standalone .ppie { display: flex; align-items: center; gap: 20px; padding: 14px 24px; border-bottom: 1px solid var(--ps-line); }
+.pulse-standalone .ppie-chart { flex: none; width: 72px; height: 72px; }
+.pulse-standalone .ppie-chart :is(path, circle) { stroke: var(--ps-panel); stroke-width: 1; stroke-linejoin: round; }
+.pulse-standalone .ppie-body { display: grid; gap: 6px; min-width: 0; }
+.pulse-standalone .ppie-title { margin: 0; color: var(--ps-muted); font-size: .75rem; font-weight: 600; }
+.pulse-standalone .ppie-keys { display: flex; flex-wrap: wrap; gap: 2px 6px; margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .ppie-keys :is(button, li > span) { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 8px; border: 0; border-radius: var(--ps-radius-control); background: transparent; box-shadow: none; color: var(--ps-ink); font: inherit; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .ppie-keys button { cursor: pointer; }
+.pulse-standalone .ppie-keys button:hover { background: var(--ps-selected); }
+.pulse-standalone .ppie-keys button:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: -2px; }
+.pulse-standalone .ppie-keys i { flex: none; width: 8px; height: 8px; border-radius: 2px; }
+.pulse-standalone .ppie-keys b { font-weight: 650; }
+.pulse-standalone .ppie-keys small { color: var(--ps-muted); font-size: .75rem; }
+@media (max-width: 640px) { .pulse-standalone .ppie { align-items: flex-start; gap: 14px; padding: 14px 16px; } }

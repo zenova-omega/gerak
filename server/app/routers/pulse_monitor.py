@@ -12,6 +12,7 @@ from ..models.pulse_monitor import WorkerPolicy, WorkerUsage, MonitorSchedule, C
 from ..services.pulse_public import lane_for_reader, lane_from_reader, lanes_for_reader
 from ..services.pulse_monitor import ensure_policies, PROVIDERS, SCHEDULE_PROVIDERS, budget_provider, source_platform, MIN_GAP_SECONDS
 from ..services.pulse import pulse_analytics
+from ..services.pulse_measures import local_day, period_closed_bounds
 from ..services.pulse_alert_workflow import workflow_dict, update_workflow
 
 router=APIRouter(dependencies=[Depends(require_admin)])
@@ -61,11 +62,17 @@ async def collection_overview(db,topic_id,now):
             'days_with_posts':0,'last_collected_at':None,
             'runs':{name:{'planned':0,'succeeded':0,'failed':0,'waiting':0} for name,_ in OVERVIEW_WINDOWS}})
     stored=select(SourceItem.platform,func.count(),func.min(SourceItem.published_at),func.max(SourceItem.published_at),
-        func.count(func.distinct(func.date(SourceItem.published_at))),func.max(SourceItem.crawled_at)).where(SourceItem.platform.is_not(None))
+        func.max(SourceItem.crawled_at)).where(SourceItem.platform.is_not(None))
+    # Days with posts are days of the installation's zone (day_v1), counted from each distinct publication time.
+    stamps=select(SourceItem.platform,SourceItem.published_at).where(SourceItem.platform.is_not(None),SourceItem.published_at.is_not(None)).distinct()
     if topic_id:
         stored=stored.where(SourceItem.topic_id==topic_id)
-    for platform,posts,first,last,days,collected in (await db.execute(stored.group_by(SourceItem.platform))).all():
-        row(platform).update(posts=posts,first_published_at=first,last_published_at=last,days_with_posts=days,last_collected_at=collected)
+        stamps=stamps.where(SourceItem.topic_id==topic_id)
+    days={}
+    for platform,published in (await db.execute(stamps)).all():
+        days.setdefault(platform,set()).add(local_day(published))
+    for platform,posts,first,last,collected in (await db.execute(stored.group_by(SourceItem.platform))).all():
+        row(platform).update(posts=posts,first_published_at=first,last_published_at=last,days_with_posts=len(days.get(platform,())),last_collected_at=collected)
     for name,span in OVERVIEW_WINDOWS:
         planned=select(CrawlJob.provider,CrawlJob.status,func.count()).where(CrawlJob.created_at>=now-span,CrawlJob.status!='cancelled')
         if topic_id:
@@ -129,8 +136,8 @@ async def configure_worker(provider:str,req:PolicyUpdate,db:AsyncSession=Depends
     provider=lane_from_reader(provider)
     from ..services.pulse_comments_auto import PROVIDER as COMMENTS, ensure_comment_policy
     from ..services.pulse_profiles import PROVIDER as PROFILES, X_PROVIDER as PROFILES_X, IG_PROVIDER as PROFILES_IG, TT_PROVIDER as PROFILES_TT, ensure_profile_policy
-    from ..services.pulse_radar import PROVIDER as RADAR, ensure_policy as ensure_radar_policy
-    if provider not in PROVIDERS and provider not in (COMMENTS, PROFILES, PROFILES_X, PROFILES_IG, PROFILES_TT, RADAR):
+    from ..services.pulse_radar import PROVIDER as RADAR, SOCIAL as RADAR_SOCIAL, ensure_policy as ensure_radar_policy
+    if provider not in PROVIDERS and provider not in (COMMENTS, PROFILES, PROFILES_X, PROFILES_IG, PROFILES_TT, RADAR, RADAR_SOCIAL):
         raise HTTPException(404,'Unknown provider')
     await ensure_policies(db)
     await ensure_comment_policy(db)
@@ -186,8 +193,9 @@ async def alert_analysis(alert_id:str,db:AsyncSession=Depends(get_db),date_from:
         raise HTTPException(409,'Collection alerts have no issue spread; inspect worker status')
     if date_from and date_to and date_from>date_to:
         raise HTTPException(422,'Tanggal akhir harus sama atau setelah tanggal mulai.')
-    starts=[v for v in [alert.window_start,datetime.combine(date_from,time.min)-timedelta(hours=7) if date_from else None] if v is not None]
-    ends=[v for v in [alert.window_end,datetime.combine(date_to,time.max)-timedelta(hours=7) if date_to else None] if v is not None]
+    first,last=period_closed_bounds(date_from,date_to)
+    starts=[v for v in [alert.window_start,first] if v is not None]
+    ends=[v for v in [alert.window_end,last] if v is not None]
     data=await pulse_analytics(db,alert.topic_id,issue_id=alert.issue_id,start=max(starts) if starts else None,end=min(ends) if ends else None)
     return {**data,'alert':alert_dict(alert)}
 

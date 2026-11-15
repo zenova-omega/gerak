@@ -6,6 +6,7 @@ import { filterPosts, postSentiment } from './pulsePostFilters.js';
 import { sourceText } from './pulseOverview.js';
 import { contentShares, postInteractions } from './pulseEngagement.js';
 import { formatCount, pulseDay } from './pulseData.js';
+import { localDay, readTime } from './pulseMeasures.js';
 
 export const groupPageSize = 20;
 export const groupSorts = ['posts', 'accounts', 'interactions', 'recent'];
@@ -21,14 +22,9 @@ const byPlatformOrder = (a, b) => {
   return (left < 0 ? platformOrder.length : left) - (right < 0 ? platformOrder.length : right) || a.localeCompare(b);
 };
 const fold = value => String(value ?? '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-const wib = 7 * 60 * 60 * 1000;
-function timeOf(value) {
-  if (typeof value !== 'string' || !value) return null;
-  const time = Date.parse(/[Zz]$|[+-]\d{2}:?\d{2}$/.test(value) || !/[T ]\d{2}:/.test(value) ? value : value + 'Z');
-  return Number.isFinite(time) ? time : null;
-}
-/** The calendar day in WIB. A date the source gave without a clock is midnight UTC and stays on its own day. */
-const dayOf = time => time === null ? null : new Date(time + wib).toISOString().slice(0, 10);
+const timeOf = value => (typeof value === 'string' ? readTime(value) : null);
+/** The day of a time (day_v1): a date the source gave without a clock is midnight UTC and stays on its own day. */
+const dayOf = time => time === null ? null : localDay(new Date(time));
 
 function describe(id, posts) {
   const accounts = new Map(), platforms = new Map(), tone = { positive: 0, neutral: 0, negative: 0, unknown: 0 };

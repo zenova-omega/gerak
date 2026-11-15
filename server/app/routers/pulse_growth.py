@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..models.pulse import WatchTopic
 from ..services.pulse_growth import pulse_growth
+from ..services.pulse_measures import period_closed_bounds
 from ..services.pulse_identity import require_pulse_access
 
 
@@ -81,8 +82,7 @@ async def get_growth(
         raise HTTPException(422, 'from must be on or before to')
     if topic_id and await db.get(WatchTopic, topic_id) is None:
         raise HTTPException(404, 'Topic not found')
-    start = datetime.combine(date_from, time.min) - timedelta(hours=7) if date_from else None
-    end = datetime.combine(date_to, time.max) - timedelta(hours=7) if date_to else None
+    start, end = period_closed_bounds(date_from, date_to)
     result = await pulse_growth(db, topic_id, start=start, end=end)
     result['period'] = {'from': date_from.isoformat() if date_from else None,
                         'to': date_to.isoformat() if date_to else None,

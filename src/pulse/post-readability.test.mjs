@@ -41,3 +41,17 @@ test('long captions render a single excerpt, not duplicate hidden source text', 
     assert.doesNotMatch(short, /<button/);
   } finally { await server.close(); }
 });
+
+test('an issue card prints a source time in the installation zone with its name, and a date alone without a clock', async () => {
+  const server = await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
+  try {
+    const { absDate } = await server.ssrLoadModule('/src/components/admin/pulse/IssueCard.jsx');
+    assert.match(absDate('2026-11-10T17:30:00'), /^11 Nov 2026.+00\.30 WIB$/, 'never the browser zone');
+    assert.equal(absDate('2026-11-10T00:00:00'), '10 Nov 2026');
+    assert.equal(absDate(null), '');
+    assert.equal(absDate('bukan waktu'), '');
+    const { timeAgo } = await server.ssrLoadModule('/src/components/admin/pulse/IssueCard.jsx');
+    const naive = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 19);
+    assert.equal(timeAgo(naive), '3j', 'a time without a zone is UTC, not the browser zone');
+  } finally { await server.close(); }
+});

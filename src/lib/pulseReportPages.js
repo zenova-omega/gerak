@@ -8,6 +8,7 @@ import { inVoice, leading, neutralBreakdown, publicOpinion, shares } from './pul
 import { responseEvidence } from './pulseResponse.js';
 import { buildConversationGroups, groupDayRange, leadingGroups } from './pulseConversationGroups.js';
 import { accountSpread, spreadByDay, spreadTotals } from './pulsePlaces.js';
+import { weekStart } from './pulseMeasures.js';
 
 /** Every section of the report, in the default order. A section is one page; `posts` may take two. */
 export const reportSections = [
@@ -112,15 +113,16 @@ export function periodLabel(period = {}, days = []) {
 const addDays = (date, days) => new Date(Date.parse(date + 'T00:00:00Z') + days * 86400000).toISOString().slice(0, 10);
 const emptyDay = date => ({ date, end: date, positive: 0, neutral: 0, negative: 0, unknown: 0, total: 0 });
 /** Posts per day on an unbroken axis from the first to the last day with data: a day without stored posts is an
- * empty column, not a gap. A range longer than `maxBars` days is drawn per week.
+ * empty column, not a gap. A range longer than `maxBars` days is drawn per week, Monday to Sunday (day_v1), the first
+ * and last week clipped to the days with data.
  * @returns {{unit:'day'|'week', rows:object[], max:number, peak:object|null}} `peak` is the earliest of the largest. */
 export function trendBuckets(days = [], maxBars = 92) {
   if (!days.length) return { unit: 'day', rows: [], max: 0, peak: null };
   const first = days[0].date, last = days.at(-1).date, byDate = new Map(days.map(day => [day.date, day]));
   const span = Math.round((Date.parse(last + 'T00:00:00Z') - Date.parse(first + 'T00:00:00Z')) / 86400000) + 1;
   const size = span <= maxBars ? 1 : 7, rows = [];
-  for (let start = first; start <= last; start = addDays(start, size)) {
-    const row = emptyDay(start), end = addDays(start, size - 1);
+  for (let start = size === 1 ? first : weekStart(first); start <= last; start = addDays(start, size)) {
+    const row = emptyDay(start < first ? first : start), end = addDays(start, size - 1);
     row.end = end > last ? last : end;
     for (let offset = 0; offset < size; offset++) {
       const day = byDate.get(addDays(start, offset));

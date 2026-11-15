@@ -1,53 +1,17 @@
-// Spikes on the trend chart: which days stand out, and what the posts of that day show about it.
-// Everything here is counted from the posts already on screen. Nothing is asked of a server or a model, and nothing
-// is said about causes: a line names what the number is made of (which platform, which accounts, which posts), so a
-// reader can open the day and judge for themselves. Pure: no clock, no network.
+// Spikes on the trend chart: what the posts of a bucket that stands out show about it.
+// Which buckets are spikes is not decided here. That is the product's one rule (spike_v1), counted on the server in
+// server/app/services/pulse_spikes.py. The chart asks for it (POST /api/admin/pulse/spikes, see pulseSpikeAnswers.js),
+// and the same rule raises the `volume_spike` alert and names the spike days in the AI summary's facts, so the
+// browser holds no copy of it. Everything here describes a spike the server found, counted from the posts already on
+// screen, and nothing is said about causes: a line names what the number is made of (which platform, which accounts,
+// which posts), so a reader can open the day and judge for themselves. Pure: no clock, no network.
 import { bucketPosts } from './pulseTrendSeries.js';
 import { postInteractions } from './pulseEngagement.js';
 import { hasClock } from './pulseData.js';
 import { sourceText } from './pulseOverview.js';
 
-// A spike is at least this many times the usual bucket. Set to 1.5 for the chart on purpose (owner's decision,
-// 15 Nov 2026): a busy project's ordinary day is already high, so the day its posts jump is seldom three times it.
-// The server's `volume_spike` alert (spike_evidence in services/pulse_listening.py) uses 3 on 30-minute windows;
-// the two measure different things and are not kept equal.
-const ABOVE_USUAL = 1.5;
-const FLOOR = { posts: 5, interactions: 100 };      // below this a rise is too small to call a spike
-const MOST = 3;                                     // marks per line; more would mark the whole line
-const VISIBLE = 0.1;                                // of the highest bucket: lower than this the rise is a flat line to the eye
 const QUOTE = 80;                                   // characters of a post's text quoted in a hint
 const HANDLES = new Set(['x', 'instagram', 'tiktok', 'threads', 'reddit']);   // platforms whose author is a username
-
-function median(values) {
-  if (!values.length) return 0;
-  const sorted = [...values].sort((a, b) => a - b), middle = sorted.length >> 1;
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-}
-
-/**
- * The buckets of `rows` that are spikes for one series.
- * A bucket is a spike when it rose from the bucket before it, the next one is not higher, and it is at least 1.5
- * times the usual bucket: the median of all the other buckets in the range. When the other buckets are mostly empty
- * it only has to reach a small floor. It must also be a tenth of the highest bucket, so that the mark sits on a rise
- * a reader can see. The first bucket is never one (nothing says it rose), and fewer than three
- * buckets are too few to know what is usual. At most three are returned, the highest, in date order.
- * @param {{key: string}[]} rows from `trendSeries`
- * @param {'posts'|'interactions'} key
- * @returns {{key: string, value: number, usual: number, times: number|null}[]} `times` is null when the usual bucket is empty
- */
-export function trendSpikes(rows = [], key = 'posts') {
-  if (rows.length < 3) return [];
-  const values = rows.map(row => Number(row[key]) || 0), found = [];
-  const floor = Math.max(FLOOR[key] ?? 1, Math.max(...values) * VISIBLE);
-  for (let index = 1; index < values.length; index++) {
-    const value = values[index];
-    if (value <= values[index - 1] || (index < values.length - 1 && value < values[index + 1]) || value < floor) continue;
-    const usual = median(values.filter((_, other) => other !== index));
-    if (usual > 0 && value < usual * ABOVE_USUAL) continue;
-    found.push({ key: rows[index].key, value, usual, times: usual > 0 ? value / usual : null });
-  }
-  return found.sort((a, b) => b.value - a.value).slice(0, MOST).sort((a, b) => a.key < b.key ? -1 : 1);
-}
 
 /**
  * What the posts inside one bucket show: how many, from which platforms, by which accounts, and which posts carry
@@ -129,7 +93,7 @@ export function spikeAuthor(item) {
  * The facts of a spike as short Indonesian sentences (the chart's table shows them), most telling first. Says what the number is made of and
  * never why: no "karena", no "dipicu". An empty bucket gives no lines.
  * @param {ReturnType<typeof spikeFacts>} facts
- * @param {{value: number, usual: number, times: number|null}} spike from `trendSpikes`
+ * @param {{value: number, usual: number, times: number|null}} spike as the server answered it; `times` is null when the usual bucket is empty
  * @param {'posts'|'interactions'} key
  * @param {{unit?: 'day'|'week'|'month', platformName?: (platform: string) => string}} options
  */

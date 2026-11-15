@@ -1,5 +1,6 @@
 import { createElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { PulsePageHead } from '../components/ui/PulsePatterns';
 import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Settings, LogOut, Moon, Sun, Users, Database, Sparkles, Search, HeartPulse, FileText, ChartPie } from 'lucide-react';
 import api from '../lib/api';
 import PulseDashboard from '../components/admin/pulse/PulseDashboard';
@@ -98,7 +99,7 @@ function PasswordSettings({ user, onChanged }) {
     } catch (error) { setError(errorMessage(error)); }
     finally { setBusy(false); }
   }
-  return <section className="ps-settings"><h1>Pengaturan akun</h1><p>{user.name} / {user.email}</p><div className="ps-auth-card"><h2>Ubah kata sandi</h2><p>Setelah berhasil, semua sesi akan berakhir, termasuk sesi ini. Masuk kembali dengan kata sandi baru.</p><form onSubmit={submit} aria-busy={busy}>
+  return <section className="ps-settings"><PulsePageHead icon={Settings} title="Pengaturan" tagline={`${user.name} · ${user.email}`} /><div className="ps-auth-card"><h2>Ubah kata sandi</h2><p>Setelah berhasil, semua sesi akan berakhir, termasuk sesi ini. Masuk kembali dengan kata sandi baru.</p><form onSubmit={submit} aria-busy={busy}>
     <input type="text" name="username" autoComplete="username" value={user.email} readOnly hidden />
     <label htmlFor="ps-current">Kata sandi saat ini</label><input id="ps-current" name="current_password" type="password" autoComplete="current-password" maxLength={128} required disabled={busy} />
     <label htmlFor="ps-new">Kata sandi baru</label><input id="ps-new" name="new_password" type="password" autoComplete="new-password" minLength={12} maxLength={128} aria-describedby="ps-password-length" required disabled={busy} />

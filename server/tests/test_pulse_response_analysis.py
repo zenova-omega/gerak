@@ -222,3 +222,12 @@ async def test_discovery_pages_rotate_and_reads_do_not_enqueue(store):
         jobs=(await db.execute(select(models.ResponseAnalysisJob))).scalars().all()
         assert len(jobs)==6
         await db.commit()
+
+
+def test_response_dates_are_whole_days_of_the_installation_zone(monkeypatch):
+    from app.services import pulse_measures
+    from app.services.pulse_response_analysis import date_bound
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    assert date_bound('2026-11-11') == datetime(2026, 11, 10, 15)
+    assert date_bound('2026-11-11', True) == datetime(2026, 11, 11, 15), 'the end is the next local midnight, exclusive'
+    assert date_bound(None) is None

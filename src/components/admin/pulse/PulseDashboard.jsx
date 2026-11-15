@@ -22,6 +22,7 @@ import { PulseButton } from '../../ui/PulseUI';
 import AnalysisNavigation from '../../../pulse/AnalysisNavigation';
 import { pageMeta } from '../../../pulse/pageMeta';
 import { sentimentLabels } from '../../../lib/pulsePostFilters';
+import { setZone } from '../../../lib/pulseMeasures';
 import { PulsePageHead, PulseSkeleton } from '../../ui/PulsePatterns';
 import useProjectPeriod from '../../../pulse/useProjectPeriod';
 import SentimentSummary from './SentimentSummary';
@@ -218,6 +219,8 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const topics = useTopics();
   const issues = useIssues({ topicId });
   const analytics = usePulseAnalytics(topicId, alertId, standalone?period:{});
+  // day_v1: the installation's zone comes with the payload; set it before any day is counted below.
+  if (analytics.data?.measures?.zone) setZone(analytics.data.measures.zone);
   const carriedSentiment = sentimentLabels[searchParams.get('sentiment')] && sentimentScoped.includes(view) ? searchParams.get('sentiment') : null;
   const scopedData=useMemo(()=>analytics.data&&standalone?scopeProjectData(analytics.data,{from:period.from,to:period.to,platforms:JSON.parse(platformKey),sentiments:carriedSentiment?[carriedSentiment]:null}):analytics.data,[analytics.data,standalone,period.from,period.to,platformKey,carriedSentiment]);
   const dropSentiment = () => { const next = new URLSearchParams(searchParams); next.delete('sentiment'); setSearchParams(next); };

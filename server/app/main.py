@@ -73,6 +73,7 @@ from .routers import pulse_sources
 from .routers import pulse_response_analysis
 from .routers import pulse_chat
 from .routers import pulse_radar
+from .routers import pulse_spikes
 app.include_router(pulse_response_analysis.router, prefix="/api/admin/pulse/response-analysis", tags=["pulse-response-analysis"])
 app.include_router(pulse_sources.router, prefix="/api/admin/pulse/sources", tags=["pulse-sources"])
 app.include_router(pulse_auth.router, prefix="/api/pulse/auth", tags=["pulse-auth"])
@@ -83,6 +84,7 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(pulse_chat.router, prefix="/api/admin/pulse", tags=["pulse-chat"])
 app.include_router(pulse_radar.router, prefix="/api/admin/pulse", tags=["pulse-radar"])
+app.include_router(pulse_spikes.router, prefix="/api/admin/pulse", tags=["pulse-spikes"])
 app.include_router(pulse.router, prefix="/api/admin/pulse", tags=["pulse"])
 app.include_router(pulse_monitor.router, prefix="/api/admin/pulse/monitor", tags=["pulse-monitor"])
 app.include_router(survey_admin.router, prefix="/api/admin/surveys", tags=["survey-admin"])

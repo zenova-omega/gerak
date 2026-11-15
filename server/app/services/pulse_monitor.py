@@ -125,18 +125,35 @@ async def create_cluster_alerts(db, topic_id, new_ids, now, baseline_at):
         return
     new_items=(await db.execute(select(SourceItem).where(SourceItem.id.in_(new_ids)))).scalars().all()
     start=max(now-timedelta(minutes=30),baseline_at)
-    candidate_issues={p.issue_id for p in new_items if p.issue_id and p.published_at and start<p.published_at<=now}
+    # A post whose source gave a date without a clock is stored at midnight UTC. It cannot be placed in a half hour, so
+    # it is in none of the windows below: a collection that runs just after midnight would otherwise read every such
+    # post as written in the last 30 minutes.
+    from .pulse_measures import has_clock
+    candidate_issues={p.issue_id for p in new_items if p.issue_id and p.published_at and has_clock(p.published_at) and start<p.published_at<=now}
     for issue_id in candidate_issues:
         rows=(await db.execute(select(SourceItem).where(SourceItem.issue_id==issue_id,SourceItem.published_at>start,SourceItem.published_at<=now))).scalars().all()
+        rows=[p for p in rows if has_clock(p.published_at)]
         authors={((p.platform or ''),p.author.strip().lower()) for p in rows if p.author}
         # Separate baseline-based signal from the legacy activity threshold.
-        # Require a full observed hour, so first imports do not create spikes.
-        if baseline_at <= now-timedelta(minutes=60) and len(authors) >= 3:
-            from .pulse_listening import spike_evidence
-            previous=(await db.execute(select(SourceItem).where(
-                SourceItem.issue_id==issue_id, SourceItem.published_at>start-timedelta(minutes=30),
-                SourceItem.published_at<=start, SourceItem.crawled_at<=start))).scalars().all()
-            evidence=spike_evidence(len(rows), len(previous))
+        # The window that just ended against the group's earlier 30-minute windows of the last six hours, by the
+        # product's one spike rule (pulse_spikes). Only windows that began after the schedule's first collection are
+        # read, and two are needed: a full observed hour, so first imports do not create spikes. The windows are
+        # counted from what is stored now, whenever it was collected: a source that is collected every few hours
+        # brings the whole stretch at once, and reading the hours not yet collected as silence would turn every
+        # steady group into a spike.
+        from .pulse_listening import SPIKE_WINDOWS, SPIKE_WINDOW_MINUTES, spike_evidence
+        window=timedelta(minutes=SPIKE_WINDOW_MINUTES)
+        observed=min(SPIKE_WINDOWS-1,(start-baseline_at)//window)
+        if observed >= 2 and len(authors) >= 3:
+            baseline_start=start-observed*window
+            previous=(await db.execute(select(SourceItem.id,SourceItem.published_at).where(
+                SourceItem.issue_id==issue_id, SourceItem.published_at>baseline_start,
+                SourceItem.published_at<=start).order_by(SourceItem.published_at.desc(),SourceItem.id))).all()
+            previous=[p for p in previous if has_clock(p.published_at)]
+            counts=[0]*observed
+            for p in previous:
+                counts[observed-1-(start-p.published_at)//window]+=1   # oldest window first
+            evidence=spike_evidence([*counts,len(rows)])
             existing=(await db.execute(select(PulseAlert.id).where(
                 PulseAlert.issue_id==issue_id, PulseAlert.kind=='volume_spike',
                 PulseAlert.created_at>=now-timedelta(hours=2)).limit(1))).first()
@@ -147,8 +164,8 @@ async def create_cluster_alerts(db, topic_id, new_ids, now, baseline_at):
                     'topic_id':topic_id,'issue_id':issue_id,'kind':'volume_spike','title':issue.title[:500],
                     'created_at':now,'window_start':start,'window_end':now,
                     'evidence_ids':[p.id for p in rows],
-                    'detail':{**evidence,'authors':len(authors),'baseline_start':(start-timedelta(minutes=30)).isoformat(),
-                              'baseline_end':start.isoformat(),'baseline_evidence_ids':[p.id for p in previous]}})
+                    'detail':{**evidence,'authors':len(authors),'baseline_start':baseline_start.isoformat(),
+                              'baseline_end':start.isoformat(),'baseline_evidence_ids':[p.id for p in previous[:200]]}})   # the newest 200: an alert row stays small
         # A transparent threshold alert, not a calibrated virality/probability claim.
         if len(rows)<5 or len(authors)<3:
             continue
@@ -247,15 +264,20 @@ async def fetch_youtube_with_channels(query, key, watch):
     return {'items': more + rows, 'search': 'refused' if refused else 'ok', 'channels': stats}
 
 
+TIKTOK_TIMEOUT = 170     # under the job's 180 s lease: an answer that arrives after the lease is thrown away
+TIKTOK_BUDGET = 150      # no new search starts after this; the ones not reached are asked for on the next run
+
+
 async def fetch_provider(provider, query, settings, watch=None):
     from .ingest.rss import fetch_rss_items
-    from .ingest.xpoz import fetch_xpoz_items, fetch_xpoz_stored_items, fetch_xpoz_social_items
+    from .ingest.xpoz import fetch_xpoz_items, fetch_xpoz_stored_items, fetch_xpoz_social_items, fetch_xpoz_tiktok_items, tiktok_recent_window
     from .ingest.youtube import fetch_youtube_items
     key=credential(settings,budget_provider(provider).upper()+'_API_KEY') if provider!='rss' else ''
     if provider!='rss' and not key:
         return {'error':'not_configured'}
     try:
-        async with asyncio.timeout(120):
+        # A TikTok pull is several searches (the query and each of its words), one after another.
+        async with asyncio.timeout(TIKTOK_TIMEOUT if provider=='tiktok' else 120):
             if provider=='rss':
                 rows=await fetch_rss_items(query)
             elif provider=='youtube':
@@ -264,7 +286,9 @@ async def fetch_provider(provider, query, settings, watch=None):
             elif provider=='xpoz':
                 fn=fetch_xpoz_items if settings.XPOZ_MODE=='rest_live' else fetch_xpoz_stored_items
                 rows=await fn(query,key)
-            elif provider in ('instagram','tiktok','reddit'):
+            elif provider=='tiktok':
+                rows=await fetch_xpoz_tiktok_items(query,key,budget=TIKTOK_BUDGET,**tiktok_recent_window())
+            elif provider in ('instagram','reddit'):
                 rows=await fetch_xpoz_social_items(query,key,provider,limit=PAGE_ROWS)
             else:
                 return {'error':'unsupported'}

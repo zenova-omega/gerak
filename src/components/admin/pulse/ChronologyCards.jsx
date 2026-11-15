@@ -10,14 +10,15 @@ export default function ChronologyCards({ rows, page, onPageChange, selected, on
   const result = chronologyPage(rows, page);
   return <section className="nx-chronology" aria-label="Jejak Penyebaran">
     <div className="nx-chronology-head"><h3>Jejak Penyebaran</h3><InfoTip label="Cara membaca jejak penyebaran">{chronologyNotes.map(note => <p key={note}>{note}</p>)}</InfoTip>
-      <p role="status">{result.total} posting · {result.dated} bertanggal · {result.unknown} tanpa tanggal · {result.rows.length} tampil</p></div>
+      <p role="status">{result.total} posting · {result.dated} bertanggal · {result.unknown} tanpa tanggal · {result.rows.length} tampil</p>
+      {result.dateOnly > 0 && <p className="nx-chronology-note">{result.dateOnly} posting hanya bertanggal tidak diurutkan menurut jam.</p>}</div>
     {!rows.length && <p className="nx-empty">Belum ada posting untuk filter dan waktu ini.</p>}
     <ol className="nx-chronology-list" start={result.page * 15 + 1}>
       {result.rows.map(post => <li key={post.id} className="nx-chronology-card">
         <div className="nx-chronology-meta"><span className="pu-account-line"><AccountAvatar size="xs" author={post.author} platform={post.platform} />{post.author || 'Akun tanpa nama'}</span>
           {post.time === null ? <span>Tanggal tidak diketahui · di luar urutan waktu</span> : <time>{pulseDate(post.published_at)}</time>}
         </div>
-        {post.time !== null && post.time === firstTime && <strong className="nx-chronology-first">Terawal teramati dalam sampel</strong>}
+        {post.time !== null && post.clock !== false && post.time === firstTime && <strong className="nx-chronology-first">Terawal teramati dalam sampel</strong>}
         <h4>{post.title || 'Teks posting tidak tersedia'}</h4>
         <div className="nx-chronology-actions">
           <button type="button" aria-label={'Pilih akun ' + (post.author || post.accountId)} aria-pressed={selected === post.accountId} onClick={() => onSelect(post.accountId)}>{post.author || 'Akun tanpa nama'} · Lihat bukti akun</button>

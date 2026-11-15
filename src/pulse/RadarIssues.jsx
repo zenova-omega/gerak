@@ -39,7 +39,7 @@ export function SourceRow({ platform, item }) {
 export default function RadarIssues({ payload, filters, onFilters, selectedKey = '', onSelect, canCreate = false }) {
   const { category, platform, province } = filters;
   if (payload.state === 'raw') return <AnalyticsPanel title="Daftar mentah per platform" description="Kepala tiap daftar seperti saat dibaca, tanpa kategori dan tanpa peringkat gabungan.">
-    <div className="rdi-raw">{radarPlatforms.slice(1).filter(([id]) => OWN_LISTS.includes(id) || payload.raw?.[id]?.length).map(([id, label]) => <section key={id}><h3>{label}</h3>
+    <div className="rdi-raw">{radarPlatforms.slice(1).filter(([id]) => OWN_LISTS.includes(id) || payload.raw?.[id]?.length).map(([id, label]) => <section key={id}><h3>{id === 'x' ? 'X, isu yang ditemukan' : label}</h3>
       {(payload.raw?.[id] || []).length ? <ol className="rdi-sources">{payload.raw[id].slice(0, 10).map((item, index) => <SourceRow key={index} platform={id} item={item} />)}</ol> : <p className="rdi-quiet">Tidak terbaca pada pembaruan ini.</p>}
     </section>)}</div>
   </AnalyticsPanel>;
@@ -48,14 +48,16 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
   const platformName = radarPlatforms.find(([id]) => id === platform)?.[1];
   const sampled = SAMPLED.includes(platform);
   const description = province ? `Isu yang masuk pencarian populer ${provinceName(province)}.` : sampled ? `Isu yang ditemukan di ${platformName}, dalam urutan gabungan.`
-    : platform === 'x' ? 'Diurutkan menurut jumlah posting di X sejak kemarin.' : platform ? `Diurutkan menurut angka ${platformName}.`
+    : platform === 'x' ? 'Diurutkan menurut posting di X yang terpantau sejak kemarin.' : platform ? `Diurutkan menurut angka ${platformName}.`
     : 'Urutan menggabungkan posisi isu di tiap platform; isu di lebih banyak platform berada lebih atas.';
   const unread = province && Array.isArray(payload.provinces_read) && !payload.provinces_read.includes(province);
   const missing = unread ? `Daftar pencarian populer ${provinceName(province)} tidak terbaca` : category ? `Belum ada isu ${categoryLabel(category)}`
     : sampled ? `Belum ada isu yang ditemukan di ${platformName}` : platform ? `Belum ada isu dengan angka ${platformName}` : `Belum ada isu yang masuk pencarian populer ${provinceName(province)}`;
 
-  return <AnalyticsPanel title="Isu teratas" description={description} className="rdi">
-    {rows.length ? <ol className="rdi-list">{rows.map((issue, index) => {
+  // A plus sign is a lower bound (searches, and posts counted on X). Said once under the list, for everyone, not only on hover.
+  const bounded = rows.some(issue => issue.platforms?.search || Number.isFinite(issue.platforms?.x?.count));
+  return <AnalyticsPanel title="Isu teratas" description={description} className="rdi" footer={bounded ? 'Tanda + berarti batas bawah: sedikitnya sebanyak itu yang tercatat.' : undefined}>
+    {rows.length ? <ol className="rdi-list" role="list">{rows.map((issue, index) => {
       // Movement belongs to the combined order: with one platform ordering the list it would point at another list.
       const move = platform ? null : movementText(issue.movement), MoveIcon = movementIcon[issue.movement?.kind];
       const meters = platformMeters(issue, rows), provinces = (issue.regions || []).length;

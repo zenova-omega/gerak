@@ -19,11 +19,11 @@ export default function RadarPlatformTops({ issues, filters = {}, selectedKey = 
   if (!tops.length) return null;
   return <div className="rpt" data-columns={tops.length} role="group" aria-label="Isu teratas per platform">{tops.map(top =>
     <AnalyticsPanel key={top.id} title={`Teratas di ${top.label}`} description={top.basis} icon={MARKS[top.id]} className="rpt-card">
-      <ol className="rpt-list" data-platform={top.id}>{top.rows.map((row, index) => <li key={row.key} data-selected={selectedKey === row.key ? '' : undefined}>
+      <ol className="rpt-list" role="list" data-platform={top.id}>{top.rows.map((row, index) => <li key={row.key} data-selected={selectedKey === row.key ? '' : undefined}>
         <span className="rpt-rank" aria-hidden="true">{index + 1}</span>
         <div className="rpt-body">
           <button type="button" className="rpt-title" aria-pressed={selectedKey === row.key} onClick={() => onSelect(row.key)}>{row.title}</button>
-          <p className="rpt-meter"><span className="rdi-track" aria-hidden="true"><i style={{ width: `${Math.max(2, Math.round(row.ratio * 1000) / 10)}%` }} /></span><span className="rpt-text">{row.text}</span></p>
+          <p className="rpt-meter"><span className="rdi-track" aria-hidden="true"><i style={{ width: `${Math.max(2, Math.round(row.ratio * 1000) / 10)}%` }} /></span><span className="rpt-text" title={row.hint}>{row.text}</span></p>
         </div>
       </li>)}</ol>
     </AnalyticsPanel>)}</div>;

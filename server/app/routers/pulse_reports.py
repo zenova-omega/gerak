@@ -10,6 +10,7 @@ from ..models.pulse_report import PulseReport
 from ..services.pulse_identity import require_pulse_access, session_identity, optional_bearer
 from ..models.pulse_identity import PulseAudit
 from ..services.pulse_public import without_engine
+from ..services.pulse_measures import in_period, local_day
 
 async def archive_access(request:Request,credentials=Depends(optional_bearer),db=Depends(get_db)):
     if credentials and not getattr(request.app.state,'pulse_only',False):
@@ -89,11 +90,9 @@ class ArchiveCreate(BaseModel):
                 if p.get(key) is not None and not isinstance(p[key],str): raise ValueError('Teks posting tidak valid')
             metrics(p.get('metrics'))
             if start or end:
-                try:
-                    stamp=datetime.fromisoformat(p['published_at'].replace('Z','+00:00'))
-                    day=stamp.replace(tzinfo=stamp.tzinfo or timezone.utc).astimezone(timezone(timedelta(hours=7))).date()
-                except (KeyError,TypeError,ValueError,AttributeError): raise ValueError('Tanggal posting tidak valid')
-                if (start and day<start) or (end and day>end): raise ValueError('Posting di luar periode snapshot')
+                day=local_day(p.get('published_at'))
+                if day is None: raise ValueError('Tanggal posting tidak valid')
+                if not in_period(p['published_at'],start,end): raise ValueError('Posting di luar periode snapshot')
         response=s.get('responseAnalysis')
         if not isinstance(response,dict) or response.get('loaded') is not True or response.get('error') is not False: raise ValueError('Respons belum selesai dimuat')
         body=response.get('response')

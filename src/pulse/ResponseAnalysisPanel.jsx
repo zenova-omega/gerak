@@ -10,6 +10,7 @@ import {PulseButton} from '../components/ui/PulseUI';
 import useResponseAnalysis from './useResponseAnalysis';
 import './response-analysis.css';
 import InfoTip from './InfoTip';
+import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 import {Card,CardHeader,CardTitle,CardDescription,CardContent,CardFooter} from '../components/ui/shadcn/card';
 
 const scopeNote='Cakupan komentar mengikuti platform dan tanggal publikasi posting induknya (WIB), bukan tanggal komentar.';
@@ -49,7 +50,7 @@ export function ResponseAnalysisView({posts=[],response,loaded=false,error=false
   {printable&&<><p className="pra-note">{scopeNote}</p><p className="pra-note">{stanceNote}</p></>}
   {choice&&!printable&&<section className="pra-evidence" aria-label="Sumber analisis respons"><header><h3>{choice.kind==='sentiment'?commentLabels[choice.label]:stanceLabels[choice.label]} · {num(rows.length)} {choice.kind==='post'?'posting':'komentar'}</h3><PulseButton onClick={()=>setChoice(null)}>Tutup rincian</PulseButton></header><ol>{rows.slice(0,20).map(row=>{
    const result=choice.kind==='sentiment'?row.sentiment:row.stance,url=safeSourceUrl(row.url);
-   return <li key={(row.post?.id||row.id)+':'+row.id}><strong>{row.author||'Penulis tidak tersedia'}</strong><p>{sourceText(row)||'Teks tidak tersedia'}</p><p className="pra-reason"><b>Alasan: </b>{result?.reason||'Belum ada hasil analisis.'}</p>{readingNeedsReview(result,choice.kind==='sentiment'?'sentiment':'stance')&&<span className="pra-review">Perlu ditinjau</span>}{url&&<a href={url} target="_blank" rel="noopener noreferrer">Buka sumber asli <PulseArrow/></a>}</li>;
+   return <li key={(row.post?.id||row.id)+':'+row.id}><span className="pu-account-line"><AccountAvatar size="sm" author={row.author} platform={row.platform||row.post?.platform} photo={row.profile_image_url} /><strong>{row.author||'Penulis tidak tersedia'}</strong></span><p>{sourceText(row)||'Teks tidak tersedia'}</p><p className="pra-reason"><b>Alasan: </b>{result?.reason||'Belum ada hasil analisis.'}</p>{readingNeedsReview(result,choice.kind==='sentiment'?'sentiment':'stance')&&<span className="pra-review">Perlu ditinjau</span>}{url&&<a href={url} target="_blank" rel="noopener noreferrer">Buka sumber asli <PulseArrow/></a>}</li>;
   })}</ol>{!rows.length&&<p>Tidak ada hasil dalam kategori ini pada filter terpilih.</p>}{rows.length>20&&<p>Menampilkan 20 sumber pertama dari {rows.length}.</p>}</section>}
  </section>;
 }

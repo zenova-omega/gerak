@@ -3,6 +3,11 @@
 Three engines: `ollama` (a local model on this machine), `grok` (hosted, paid by the token) and `claude` (hosted, used
 for single manual calls only). Which one is on is an operations detail and never leaves the server.
 """
+import contextvars
+import time
+
+import httpx
+
 from .base import AIService
 from .providers.claude import ClaudeAIService
 
@@ -54,7 +59,30 @@ def get_ai_service(settings=None) -> AIService | None:
 def get_bulk_ai_service(settings=None) -> AIService | None:
     """The engine for background labelling. Hosted: a cheaper model that does not reason. Otherwise the same engine."""
     settings = _settings(settings)
+    if use_local.get():
+        from .providers.ollama import OllamaAIService
+        return OllamaAIService(model=settings.OLLAMA_MODEL)
     if _hosted_ready(settings):
         from .providers.grok import GrokAIService
         return GrokAIService(settings.XAI_API_KEY, settings.XAI_BULK_MODEL)
     return get_ai_service(settings)
+
+
+use_local = contextvars.ContextVar('use_local_engine', default=False)   # set around a round of background work that the local model should do
+_reach = [0.0, False]
+
+
+async def local_reachable(settings=None):
+    """Is the local model server up and does it have the configured model? Looked up at most once a minute."""
+    settings = _settings(settings)
+    if time.monotonic() - _reach[0] < 60:
+        return _reach[1]
+    ok = False
+    try:
+        async with httpx.AsyncClient(timeout=2, trust_env=False) as client:
+            tags = await client.get('http://127.0.0.1:11434/api/tags')
+            ok = any(model.get('name') == settings.OLLAMA_MODEL for model in tags.json().get('models', []))
+    except (httpx.HTTPError, ValueError):
+        ok = False
+    _reach[0], _reach[1] = time.monotonic(), ok
+    return ok

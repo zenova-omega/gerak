@@ -29,7 +29,7 @@ async def radar_issue(key: str, db: AsyncSession = Depends(get_db)):
 async def radar_refresh(background: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     if await held(db, datetime.utcnow()):
         raise HTTPException(409, 'Pembaruan sedang berjalan.')
-    background.add_task(refresh, async_session, force=True)
+    background.add_task(refresh, async_session, force=True, fresh_x=True)
     return {'state': 'started'}
 
 

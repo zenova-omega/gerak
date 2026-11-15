@@ -38,3 +38,15 @@ test('the Posting page defaults to the largest interactions, using observed like
   assert.deepEqual(filterPosts(rows,postFilters.defaultPostFilters).map(p=>p.id),['big','small','none']);
   assert.deepEqual(filterPosts(rows,{}).map(p=>p.id),['big','small','none']);
 });
+
+test('the period and the daily counts read every written zone the same way (day_v1)', () => {
+  const rows = [
+    { id: 'colonless', platform: 'x', published_at: '2026-11-10T23:30:00+0700', metrics: {} },
+    { id: 'late', platform: 'x', published_at: '2026-11-10 17:00:00', metrics: {} },
+    { id: 'date-only', platform: 'x', published_at: '2026-11-11T00:00:00', metrics: {} },
+  ];
+  assert.deepEqual(filterPosts(rows, { from: '2026-11-10', to: '2026-11-10' }).map(p => p.id), ['colonless']);
+  assert.deepEqual(filterPosts(rows, { from: '2026-11-11', to: '2026-11-11' }).map(p => p.id).sort(), ['date-only', 'late']);
+  assert.deepEqual(postFilters.dailyPostCounts(rows), [{ date: '2026-11-10', count: 1 }, { date: '2026-11-11', count: 2 }]);
+  assert.deepEqual(filterPosts(rows, { sort: 'oldest' }).map(p => p.id), ['colonless', 'late', 'date-only']);
+});

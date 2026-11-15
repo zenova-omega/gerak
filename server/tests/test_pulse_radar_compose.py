@@ -151,3 +151,18 @@ async def test_a_model_that_raises_or_hangs_gives_none():
     assert await compose(None, SIGNALS, PREVIOUS) is None, 'no engine, no issues'
     assert await compose(Model(answer()), [], PREVIOUS) is None, 'nothing to group, nothing asked'
     assert await compose(Model(text=12345), SIGNALS, PREVIOUS) is None, 'an answer that is not text is no answer'
+
+
+X_SIGNAL = {**signal(7, 'x', 'Tagar soal BBM'), 'url': 'https://x.com/akun_a/status/11111', 'related': [{'title': 'Posting di X', 'url': 'https://x.com/akun_b/status/22222', 'source': None}]}
+
+
+def test_an_issue_found_on_x_is_listed_with_its_posts_and_explained_only_when_there_is_one():
+    prompt = build_prompt(SIGNALS + [X_SIGNAL], PREVIOUS)
+    assert 'S7 | x | Tagar soal BBM | 2 posting contoh' in prompt and 'ramai dibicarakan di X' in prompt
+    assert 'ramai dibicarakan di X' not in build_prompt(SIGNALS, PREVIOUS) and 'posting contoh' not in build_prompt(SIGNALS, PREVIOUS), \
+        'with no signal from X the question is word for word what it was'
+
+
+def test_an_issue_found_only_on_x_is_national():
+    issues = parse_answer(answer({'signals': ['S7'], 'title': 'Tagar BBM'}), SIGNALS + [X_SIGNAL], PREVIOUS)['issues']
+    assert [(row['title'], row['scope'], row['signal_ids']) for row in issues] == [('Tagar BBM', 'national', ['S7'])]

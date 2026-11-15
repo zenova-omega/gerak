@@ -1,40 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { trendSpikes, spikeFacts, spikeLines } from './pulseTrendSpikes.js';
+import { spikeFacts, spikeLines } from './pulseTrendSpikes.js';
 
-const day = index => `2026-11-${String(8 + index).padStart(2, '0')}`;
-const series = (key, values) => values.map((value, index) => ({ key: day(index), from: day(index), to: day(index), posts: 0, interactions: 0, [key]: value }));
-const keys = spikes => spikes.map(spike => spike.key);
-
-test('a spike is a day that rose, is not topped by the next one, and stands well above the usual day', () => {
-  // The week in the screenshot: posts jump on the 10th and then ease off; interactions peak on the 10th and again on the 12th.
-  const posts = series('posts', [80, 180, 1700, 1400, 1328, 1050, 1030]);
-  assert.deepEqual(trendSpikes(posts, 'posts'), [{ key: '2026-11-10', value: 1700, usual: 1040, times: 1700 / 1040 }], 'one and a half times the usual day is a spike');
-  assert.deepEqual(trendSpikes(series('posts', [80, 180, 1500, 1400, 1328, 1050, 1030]), 'posts'), [], 'a little under one and a half times is not');
-  const interactions = series('interactions', [0, 0, 6_000_000, 2_500_000, 17_300_000, 3_000_000, 200_000]);
-  assert.deepEqual(keys(trendSpikes(interactions, 'interactions')), ['2026-11-10', '2026-11-12']);
-  assert.equal(trendSpikes(interactions, 'interactions')[1].usual, 1_350_000, 'the usual day is the middle one of the other days');
-});
-
-test('ordinary movement gets no mark', () => {
-  assert.deepEqual(trendSpikes(series('posts', [100, 120, 110, 130, 125]), 'posts'), [], 'a little more than usual is not a spike');
-  assert.deepEqual(trendSpikes(series('posts', [50, 50, 50, 50]), 'posts'), [], 'flat');
-  assert.deepEqual(trendSpikes(series('posts', [900, 40, 30, 20]), 'posts'), [], 'the first day cannot be said to have risen');
-  assert.deepEqual(trendSpikes(series('posts', [10, 400]), 'posts'), [], 'two points are too few to know what is usual');
-  assert.deepEqual(trendSpikes(series('posts', [0, 0, 3, 0, 0]), 'posts'), [], 'three posts are too few to call a spike');
-  assert.deepEqual(trendSpikes(series('interactions', [0, 0, 60, 0, 0]), 'interactions'), []);
-  assert.deepEqual(trendSpikes([], 'posts'), []);
-});
-
-test('a rise on the last day counts, quiet days around it are said as such, and at most three are marked', () => {
-  const late = trendSpikes(series('posts', [10, 12, 9, 11, 80]), 'posts');
-  assert.deepEqual(keys(late), ['2026-11-12']);
-  const alone = trendSpikes(series('posts', [0, 0, 40, 0, 0]), 'posts')[0];
-  assert.equal(alone.usual, 0);
-  assert.equal(alone.times, null, 'nothing can be so many times zero');
-  const many = trendSpikes(series('posts', [1, 50, 1, 90, 1, 70, 1, 60, 1]), 'posts');
-  assert.deepEqual(keys(many), ['2026-11-11', '2026-11-13', '2026-11-15'], 'the three highest, in date order');
-});
+// Which buckets are spikes is decided on the server; the cases that used to be here are the first tests of
+// server/tests/test_pulse_spikes.py, with the same figures. What follows is how a spike is described.
 
 const post = (id, platform, author, interactions, text = 'Isi posting ' + id, when = '2026-11-12T05:00:00Z') => ({ id, platform, author, text, published_at: when,
   metrics: interactions === null ? {} : { likes: interactions } });
@@ -84,12 +53,6 @@ test('nothing is said in words of cause, and a number is never split across what
   assert.deepEqual(lines, ['100 interaksi, 10× hari biasa pada rentang ini.', 'Seluruhnya dari satu posting: @warga di X, “Isi posting a”']);
   assert.doesNotMatch(lines.join(' '), /karena|penyebab|akibat|dipicu/i);
   assert.deepEqual(spikeLines(spikeFacts([], row), { key: row.key, value: 0, usual: 0, times: null }, 'interactions'), []);
-});
-
-test('a rise too small to see at the scale of the chart is not marked', () => {
-  // The whole period on one chart: a day of 300 interactions next to a day of 17 million is a flat line to the eye.
-  const rows = series('interactions', [0, 0, 300, 0, 0, 0, 6_000_000, 2_500_000, 17_300_000, 3_000_000]);
-  assert.deepEqual(keys(trendSpikes(rows, 'interactions')), ['2026-11-14', '2026-11-16']);
 });
 
 test('the parts of a spike add up to the whole and name only what is known', async () => {

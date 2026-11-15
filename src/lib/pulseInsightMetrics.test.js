@@ -55,3 +55,39 @@ test('a diverging bar splits neutral across the centre and says nothing when not
   assert.equal(divergingSplit({ unknown: 9 }), null);
   assert.equal(divergingScale([split, null, divergingSplit({ positive: 1 })]), 100, 'one scale for every bar');
 });
+
+// Part 1 of the calculation dictionary: this file reads a post's tone, interactions and account through
+// pulseMeasures.js, and concentration is the reading of pulseReadings.js.
+test('a bubble counts accounts by the one account rule, and reads interactions the way every page does', () => {
+  const group = { id: 'n', title: 'Satu', posts: [
+    { id: '1', platform: 'x', author: '@Budi', metrics: { sentiment: 'negative', likes: '4' } },
+    { id: '2', platform: 'x', author: 'budi', metrics: { sentiment: { label: 'negative' }, likes: 1 } },
+    { id: '3', platform: 'instagram', author: 'budi', metrics: { sentiment: { label: ' Positive ' }, author_id: 9 } },
+    { id: '4', platform: 'x', author: '', metrics: { sentiment: 'negative' } },
+  ] };
+  const [point] = narrativeBubbles([group]).points;
+  assert.equal(point.accounts, 2, 'one X account written two ways, one Instagram account; a post without an author is nobody');
+  assert.equal(point.interactions, 5, 'a count the source sent as digits is a count');
+  assert.equal(Math.round(point.net), -50, 'a label stored as plain text, or with spaces and capitals, is still a tone');
+});
+
+test('a post that carries its own figures is read from them', () => {
+  const sent = { day: null, clock: false, interactions: 40, account: 'x:someone', tone: 'positive' };
+  const group = { id: 'n', title: 'Satu', posts: [{ id: '1', platform: 'x', author: 'a', metrics: {}, measures: sent }] };
+  assert.deepEqual(narrativeBubbles([group]).points.map(point => [point.net, point.interactions, point.accounts]), [[100, 40, 1]]);
+  assert.equal(accountConcentration(group.posts).interactions, 40);
+});
+
+test('concentration counts accounts by the one account rule and orders the top posts by the one ordering', () => {
+  const insta = (id, author, likes) => ({ id, platform: 'instagram', author, metrics: { author_id: '77', likes } });
+  const result = accountConcentration([
+    insta('1', 'nama_lama', 5), insta('2', 'nama_baru', 5),
+    { id: '3', platform: 'x', author: 'nama_baru', published_at: '2026-11-10T09:00:00', metrics: { likes: 7 } },
+    { id: '4', platform: 'x', author: 'lain', published_at: '2026-11-10T08:00:00', metrics: { likes: '7' } },
+  ]);
+  assert.equal(result.accounts, 3, 'one Instagram account under two handles is one; the same name on X is another account');
+  assert.deepEqual(result.topAccounts.map(row => [row.platform, row.count]), [['instagram', 2], ['x', 1], ['x', 1]]);
+  assert.deepEqual(result.topPosts.map(row => row.id), ['4', '3', '1'], 'equal interactions: the earlier post first, then the id');
+  assert.equal(result.interactions, 24);
+  assert.equal(result.reading.posts.reach80.accounts, 3, 'the reading it was taken from comes with it');
+});

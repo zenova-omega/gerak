@@ -217,7 +217,7 @@ Infografik adalah cara PULSE menjawab sebelum pembaca selesai membaca kalimatnya
 | Deret angka | Seberapa besar? | Dua sampai lima angka tebal dengan label kecil, opsional garis tren di kanan |
 | Batang proporsi | Bagaimana pembagiannya? | Satu batang 12px, urutan negatif, netral, positif, dengan persentase di bawahnya |
 | Lencana tanggal | Kapan mulai? | Tanggal di lencana gelap, diikuti akun dan platform |
-| Lonjakan | Kapan naik? | Tanda denyut, tambahan interaksi, dan laju per jam; bila riwayat belum ada, hari teramai dengan garis tren |
+| Tumbuh tercepat | Posting mana yang naik paling cepat? | Tanda denyut, tambahan interaksi, dan laju per jam dengan label "posting tumbuh tercepat"; bila riwayat belum ada, hari teramai dengan garis tren. Kata "lonjakan" hanya untuk yang ditemukan aturan `spike_v1` |
 | Batang peringkat | Apa yang paling banyak? | Tiga baris judul dengan angka dan garis proporsional |
 | Kutipan | Apa kata orang? | Satu komentar teratas, miring, dengan penulis dan jumlah suka |
 | Linimasa | Bagaimana urutannya? | Tanggal di kiri, titik dan garis, peristiwa di kanan |
@@ -234,4 +234,4 @@ Infografik adalah cara PULSE menjawab sebelum pembaca selesai membaca kalimatnya
 
 **Pemetaan bagian ringkasan AI**
 
-Awal → lencana tanggal · Viral → lonjakan · Topik utama dan Ringkasan → deret angka · Yang dibicarakan → batang peringkat · Sentimen, Nada publik, Suasana → batang proporsi · Kenapa orang marah → persentase negatif dan kutipan · Kronologi → garis tren dan linimasa · Perlu diperhatikan → kartu bernomor.
+Awal → lencana tanggal · Viral → tumbuh tercepat · Topik utama dan Ringkasan → deret angka · Yang dibicarakan → batang peringkat · Sentimen, Nada publik, Suasana → batang proporsi · Kenapa orang marah → persentase negatif dan kutipan · Kronologi → garis tren dan linimasa · Perlu diperhatikan → kartu bernomor.

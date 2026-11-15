@@ -20,6 +20,7 @@ from ..models.pulse_chat import PulseChatConversation
 from ..services.pulse_chat import ANSWER_TOKENS, CONTEXT_TOKENS, SYSTEM, build_context, build_prompt, cited, data_block, shape_answer
 from ..services.ai.priority import interactive
 from ..services.pulse_identity import require_pulse_access
+from ..services.pulse_measures import period_closed_bounds
 
 router = APIRouter(dependencies=[Depends(require_pulse_access)])
 logger = logging.getLogger(__name__)
@@ -108,9 +109,8 @@ class PrepareRequest(BaseModel):
 
 
 def _bounds(date_from, date_to):
-    # Project dates are WIB calendar days; stored timestamps are naive UTC.
-    return (datetime.combine(date_from, time.min) - timedelta(hours=7) if date_from else None,
-            datetime.combine(date_to, time.max) - timedelta(hours=7) if date_to else None)
+    # Project dates are whole days of the installation's zone; stored timestamps are naive UTC.
+    return period_closed_bounds(date_from, date_to)
 
 
 _warming: set[str] = set()

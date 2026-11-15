@@ -175,3 +175,11 @@ async def test_cross_project_annotation_never_pairs(evaluation):
     db.add(PostReview(topic_id='a', post_id='foreign', manual_sentiment='positive', updated_by='viewer'))
     await db.flush()
     assert (await get(client)).json()['reviewed_count'] == 0
+
+
+def test_evaluation_dates_are_whole_days_of_the_installation_zone(monkeypatch):
+    from app.routers.pulse_evaluation import date_bound
+    from app.services import pulse_measures
+    monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
+    assert date_bound('2026-11-11', 'from_date')[1] == datetime(2026, 11, 10, 15)
+    assert date_bound('2026-11-11', 'to_date', end=True)[1] == datetime(2026, 11, 11, 14, 59, 59, 999999)

@@ -36,7 +36,7 @@
 .pi-coverage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0;padding-block:16px;border-block:1px solid var(--pi-line)}
 .pi-coverage dt{color:var(--pi-muted);font-size:12px}
 .pi-coverage dd{margin:4px 0 0;font-size:24px;font-variant-numeric:tabular-nums}
-.pi-panel .pi-caution{border-left:3px solid var(--pi-accent);padding-left:12px;font-size:12px;margin-top:20px}
+.pi-panel .pi-caution{border:1px solid var(--ps-line,currentColor);border-radius:8px;background:var(--ps-soft,transparent);padding:10px 12px;font-size:12px;margin-top:20px}
 .pi-provenance li{font-size:12px;overflow-wrap:anywhere;line-height:1.7;padding:10px 0;border-bottom:1px solid var(--pi-line)}
 .pi-provenance ul{max-height:240px;overflow:auto}
 .pi-panel summary{cursor:pointer;font-size:12px;padding:10px 0}

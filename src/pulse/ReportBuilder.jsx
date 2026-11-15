@@ -52,7 +52,7 @@ export default function ReportBuilder({ sections, brand, pages, status, onSectio
   const printed = sections.filter(section => section.on).length;
   return <aside className="rb" data-screen-only="" data-open={open ? '' : undefined} aria-label="Susunan dan merek laporan">
     <header className="rb-head">
-      <div><h2>Susunan laporan</h2><p>{pages.length ? `${pages.length} halaman dari ${printed} bagian` : 'Tidak ada bagian yang dicetak'}</p></div>
+      <div><h2>Susunan laporan</h2><p>{pages.length ? `${printed} bagian dicetak, ${pages.length} halaman` : 'Tidak ada bagian yang dicetak'}</p></div>
       <PulseButton className="rb-toggle" size="sm" aria-expanded={open} aria-controls="rb-body" onClick={() => setOpen(value => !value)}><SlidersHorizontal aria-hidden="true" />{open ? 'Tutup' : 'Atur'}</PulseButton>
     </header>
     <div className="rb-body" id="rb-body">

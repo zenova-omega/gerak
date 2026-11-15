@@ -145,6 +145,7 @@ Each stage is usable on its own.
 
 1. Beranda with the projects block, the map, and the radar from the free signals (including the province lists) plus the compose step. Routing, sidebar, filters, drawer, states, and movement (it needs only stored runs, so it appears after three hours of history).
 2. X discovery and per-platform measurement, with the measured cost reported first.
+   Built 15 Nov 2026 behind its own paid switch ("Radar: X, TikTok, Instagram", off after installation). What was measured, and how the figures differ from this estimate (the count on X is a lower bound from what the supplier has stored; TikTok and Instagram are samples and order nothing), is in `docs/operations/pulse-radar.md`, section "Stage 2". Plan and rulings: `docs/superpowers/plans/2026-11-15-pulse-radar-stage-2.md`, `.superpowers/sdd/2026-11-15-pulse-radar-stage-2/progress.md`. A top ten per platform was added to Beranda at the owner's request the same day.
 3. The 7-day window and the hourly sparkline.
 
 ## Decisions Claude made (for the owner to check)

@@ -155,7 +155,7 @@ function TrendChart({ trend }) {
     })}
     {trend.peak && <g>
       <line className="rp-peak-mark" x1={peakX - bar / 2} x2={peakX + bar / 2} y1={y(trend.peak.total) - 5} y2={y(trend.peak.total) - 5} />
-      <text className="rp-peak" x={peakX} y={y(trend.peak.total) - 13} textAnchor={peakAnchor}>Puncak: {formatCount(trend.peak.total)} posting, {shortDay(trend.peak.date)}</text>
+      <text className="rp-peak" x={peakX} y={y(trend.peak.total) - 13} textAnchor={peakAnchor}>Teramai: {formatCount(trend.peak.total)} posting, {shortDay(trend.peak.date)}</text>
     </g>}
   </svg>;
 }
@@ -449,7 +449,7 @@ function MethodPage({ page, frame }) {
     <section className="rp-block rp-block-tight">
       <h3>Batasan</h3>
       <ul className="rp-limits">
-        <li>Laporan memuat posting yang tersimpan di PULSE untuk kata kunci project ini, bukan seluruh percakapan di tiap platform. Hari paling ramai adalah puncak dalam data tersimpan.</li>
+        <li>Laporan memuat posting yang tersimpan di PULSE untuk kata kunci project ini, bukan seluruh percakapan di tiap platform. Hari teramai adalah hari dengan posting terbanyak dalam data tersimpan.</li>
         <li>Sentimen menilai nada teks, bukan dukungan politik. Sindiran, kutipan, dan konteks dapat terbaca keliru.</li>
         <li>Posting dan komentar yang belum dianalisis tidak dianggap netral. Setiap persentase dihitung dari yang sudah dianalisis.</li>
         <li>Interaksi adalah suka, komentar, dan bagikan yang teramati saat data diambil. Tayangan bukan jumlah orang, dan laporan ini tidak memuat perkiraan jangkauan.</li>

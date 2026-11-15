@@ -52,7 +52,9 @@ test('a publish time of exactly midnight UTC is a date without a clock, never "0
   assert.equal(hasClock('2026-11-12'), false);
   assert.equal(hasClock('2026-11-12T00:00:01'), true);
   assert.equal(hasClock('2026-11-12T03:15:00Z'), true);
-  assert.equal(hasClock('2026-11-12T07:00:00+07:00'), true, 'a stated zone and time is a real time');
+  // clock_v1 (Task 1 ruling): 07.00 at +07:00 is midnight UTC, the form a date-only post is stored in, so it has no clock.
+  assert.equal(hasClock('2026-11-12T07:00:00+07:00'), false, 'midnight UTC in any written zone is a date without a clock');
+  assert.equal(hasClock('2026-11-12T08:00:00+07:00'), true, 'a stated zone and time is a real time');
   assert.equal(hasClock(null), false);
   assert.equal(pulseDate('2026-11-12T00:00:00'), '12 Nov 2026');
   assert.match(pulseDate('2026-11-12T03:15:00'), /^12 Nov 2026.+10\.15 WIB$/);
@@ -65,4 +67,22 @@ test('a calendar day is written the way the rest of the product writes dates', a
   assert.equal(pulseDay('2026-11-14T03:00:00'), '14 Nov 2026');
   assert.equal(pulseDay(''), '');
   assert.equal(pulseDay('bukan tanggal'), 'bukan tanggal');
+});
+
+test('pulseDate reads a zone written without a colon and prints the installation zone', async () => {
+  const { pulseDate } = await import('./pulseData.js');
+  const { setZone } = await import('./pulseMeasures.js');
+  assert.match(pulseDate('2026-11-10T08:00:00+0700'), /^10 Nov 2026.+08\.00 WIB$/);
+  setZone({ offset_minutes: 540, name: 'WIT' });
+  try {
+    assert.match(pulseDate('2026-11-10T15:30:00'), /^11 Nov 2026.+00\.30 WIT$/);
+    assert.equal(pulseDate('2026-11-10T00:00:00'), '10 Nov 2026');
+  } finally { setZone({ offset_minutes: 420, name: 'WIB' }); }
+});
+
+test('pulseDay gives a timestamp its day_v1 day, a plain day as written', async () => {
+  const { pulseDay } = await import('./pulseData.js');
+  assert.equal(pulseDay('2026-11-14T20:00:00'), '15 Nov 2026');
+  assert.equal(pulseDay('2026-11-14T00:00:00'), '14 Nov 2026');
+  assert.equal(pulseDay('2026-11-14'), '14 Nov 2026');
 });

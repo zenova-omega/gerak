@@ -38,7 +38,7 @@ def windows(start: date, end: date, limit: int = MAX_WINDOWS):
 
 async def fetch_window(provider, query, key, first: date, last: date):
     from .ingest.rss import fetch_rss_items
-    from .ingest.xpoz import fetch_xpoz_social_items, fetch_xpoz_stored_items
+    from .ingest.xpoz import fetch_xpoz_social_items, fetch_xpoz_stored_items, fetch_xpoz_tiktok_items
     from .ingest.youtube import fetch_youtube_items
     a, b = first.isoformat(), last.isoformat()
     if provider == 'rss':
@@ -51,6 +51,8 @@ async def fetch_window(provider, query, key, first: date, last: date):
     # The archive pull is the complete one: every post the source has for the window, through its paging mode.
     if provider == 'xpoz':
         return await fetch_xpoz_stored_items(query, key, start=a, end=b, complete=True)
+    if provider == 'tiktok':
+        return await fetch_xpoz_tiktok_items(query, key, start=a, end=b)
     return await fetch_xpoz_social_items(query, key, provider, start=a, end=b, complete=True)
 
 

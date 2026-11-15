@@ -74,8 +74,7 @@ async def test_fetch_social_uses_xpoz_credentials_and_bounded_limit(monkeypatch)
     monkeypatch.setattr(xpoz,'fetch_xpoz_social_items',fake)
     settings=SimpleNamespace(XPOZ_API_KEY='test-key')
     assert await monitor.fetch_provider('instagram','Gibran',settings)=={'items':[]}
-    assert await monitor.fetch_provider('tiktok','Gibran',settings)=={'items':[]}
-    assert calls==[('Gibran','test-key','instagram',300),('Gibran','test-key','tiktok',300)]  # one call returns up to 300 rows
+    assert calls==[('Gibran','test-key','instagram',300)]  # one call returns up to 300 rows; TikTok: test_pulse_tiktok_wide
 
 @pytest.mark.asyncio
 async def test_raw_snapshots_append_without_carrying_missing_metrics(db):
@@ -178,7 +177,7 @@ async def test_monitor_api_admin_validation_and_empty_state(client,admin_token,u
     assert (await client.get('/api/admin/pulse/monitor',headers={'Authorization':f'Bearer {user_token}'})).status_code==403
     h={'Authorization':f'Bearer {admin_token}'}
     state=await client.get('/api/admin/pulse/monitor',headers=h)
-    assert state.status_code==200 and len(state.json()['workers'])==9   # three sources, automatic comments, the four profile lanes and the issue radar
+    assert state.status_code==200 and len(state.json()['workers'])==10   # three sources, automatic comments, the four profile lanes and the issue radar's two switches
     # -1 is the "no daily cap" mode; anything below it is invalid.
     bad=await client.put('/api/admin/pulse/monitor/workers/xpoz',json={'daily_limit':-2},headers=h)
     assert bad.status_code==422

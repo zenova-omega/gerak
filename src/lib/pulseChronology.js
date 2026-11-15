@@ -1,4 +1,5 @@
 import { replayTime } from './pulseReplay.js';
+import { hasClock } from './pulseMeasures.js';
 
 // Account IDs come only from the existing network; never join authors by name.
 export function chronologyRows(frame, { kind = 'all', includeIsolated = true } = {}) {
@@ -10,30 +11,35 @@ export function chronologyRows(frame, { kind = 'all', includeIsolated = true } =
     if (!includeIsolated && !linked.has(account.id)) continue;
     for (const post of account.evidence || []) {
       if (!seen.has(post.id)) seen.set(post.id, {
-        ...post, accountId: account.id, time: replayTime(post.published_at),
+        ...post, accountId: account.id, time: replayTime(post.published_at), clock: hasClock(post.published_at),
       });
     }
   }
+  // clock_v1: a post whose source gave a date only never takes part in the order by time. Timed posts come first,
+  // then date-only posts by their date, then posts without a date.
+  const place = row => (row.time === null ? 2 : row.clock ? 0 : 1);
   return [...seen.values()].sort((a, b) =>
-    (a.time ?? Infinity) - (b.time ?? Infinity) || String(a.id).localeCompare(String(b.id)));
+    place(a) - place(b) || (a.time ?? 0) - (b.time ?? 0) || String(a.id).localeCompare(String(b.id)));
 }
 
 export function chronologyPage(rows, requestedPage = 0) {
   const pages = Math.max(1, Math.ceil(rows.length / 15));
   const page = Math.max(0, Math.min(pages - 1, Math.trunc(requestedPage) || 0));
   const unknown = rows.filter(row => row.time === null).length;
+  const dateOnly = rows.filter(row => row.time !== null && row.clock === false).length;
   return { rows: rows.slice(page * 15, page * 15 + 15), page, pages,
-    total: rows.length, dated: rows.length - unknown, unknown };
+    total: rows.length, dated: rows.length - unknown, unknown, dateOnly };
 }
 
 export function observedProfile(node, account) {
   const rows = chronologyRows({ accounts: account?.id === node?.id ? [account] : [] });
-  const dated = rows.filter(row => row.time !== null);
+  const timed = rows.filter(row => row.time !== null && row.clock);
+  const dated = timed.length ? timed : rows.filter(row => row.time !== null);
   return {
     label: node?.label || 'Tidak tersedia', platform: node?.platform || 'Tidak tersedia',
     status: rows.length ? 'Posting teramati' : 'Hanya disebut', count: rows.length,
     first: dated[0]?.published_at ?? null, last: dated.at(-1)?.published_at ?? null,
-    unknown: rows.length - dated.length,
+    unknown: rows.filter(row => row.time === null).length,
     bio: 'Tidak tersedia dalam data saat ini', demography: 'Tidak diketahui; tidak disimpulkan',
   };
 }

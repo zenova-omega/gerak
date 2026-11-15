@@ -106,11 +106,13 @@ export function issueFootprint(issue) {
 const foundText = figures => `${formatCount(figures?.found || 0)}${figures?.capped ? '+' : ''}`;
 const figureText = {
   news: issue => `Berita ${formatCount(issue.platforms.news.count)} artikel`,
-  // The count on X is of posts since yesterday (the finest window it has); without a count, only the posts that found the issue are known.
-  x: issue => Number.isFinite(issue.platforms.x.count) ? `X ${formatCount(issue.platforms.x.count)} posting sejak kemarin` : `X ${formatCount(issue.platforms.x.posts || 0)} posting contoh`,
+  // The count on X is of posts since yesterday (the finest window it has) that were observed: a lower bound, written with a plus like the
+  // searches. Without a count, only the posts that found the issue are known.
+  x: issue => Number.isFinite(issue.platforms.x.count) ? `X ${formatCount(issue.platforms.x.count)}+ posting sejak kemarin` : `X ${formatCount(issue.platforms.x.posts || 0)} posting contoh`,
   tiktok: issue => `TikTok ${foundText(issue.platforms.tiktok)} posting ditemukan`,
   instagram: issue => `Instagram ${foundText(issue.platforms.instagram)} posting ditemukan`,
-  youtube: issue => `YouTube ${formatCount(issue.platforms.youtube.count)} video tren`,
+  // One figure for videos everywhere: the views of the issue's trending videos, which is what orders them. How many videos that is comes second.
+  youtube: issue => `YouTube ${formatCount(issue.platforms.youtube.views)} tayangan (${formatCount(issue.platforms.youtube.count)} video tren)`,
   search: issue => `Google ${formatCount(issue.platforms.search.searches)}+ pencarian`,
 };
 /** A row's figures, each with its unit, the chosen platform first, then how widely it is searched. */
@@ -132,7 +134,11 @@ const sourceNames = { news: 'Berita', youtube: 'YouTube', search: 'daftar pencar
 const partNames = { x: 'X', tiktok: 'TikTok', instagram: 'Instagram' };      // asked issue by issue: some of it may be there
 /** The time of the refresh on screen, in WIB: the clock alone today, with its date on another day. */
 export function updatedText(payload, now = new Date()) {
-  const date = asDate(payload?.updated_at);
+  return clockText(payload?.updated_at, now);
+}
+/** A stored time in WIB: the clock alone when it is today, with its date on another day. Empty when it cannot be read. */
+function clockText(value, now) {
+  const date = asDate(value);
   if (!date || Number.isNaN(date.getTime())) return '';
   const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
   return (wibDay(date) === wibDay(now) ? time : `${wibDay(date)}, ${time}`) + ' WIB';
@@ -147,6 +153,9 @@ export function freshnessText(payload, now = new Date()) {
   if (provinces.length > 1) text += `; ${provinces.length} provinsi tidak terbaca`;
   for (const name of missing) if (sourceNames[name]) text += `; ${sourceNames[name]} tidak terbaca`;
   for (const name of missing) if (partNames[name]) text += `; ${partNames[name]} belum lengkap`;
+  // X is searched once a day (or when the refresh button is pressed), so the issues it found can be older than the list.
+  const searched = clockText(payload.x_searched_at, now);
+  if (searched) text += `; isu dari X dicari ${searched}`;
   return text;
 }
 
@@ -161,18 +170,14 @@ export const projectHref = project => '/pulse/overview?' + search([['topic', pro
 // ── Infographics: the figures strip, the rankings beside the map and the list, the meters in a row ─────────────────
 
 const platformLabel = id => radarPlatforms.find(([key]) => key === id)?.[1] || id;
-/** The number a platform's meter and its printed figure share: articles, videos, searches, counted posts. Null where there is none to draw. */
-const meterValue = (issue, platform) => {
-  const figures = issue?.platforms?.[platform];
-  if (!figures || SAMPLED.includes(platform)) return null;
-  const value = platform === 'search' ? figures.searches : figures.count;
-  return Number.isFinite(value) ? value : null;
-};
+/** The number a platform's meter and its printed figure share. It is the figure the platform is ordered by, here and on
+ * the server: articles, views of trending videos, searches, counted posts. Null where there is none to draw. */
+const meterValue = platformFigure;
 const METERS = ['news', 'youtube', 'search', 'x', 'tiktok', 'instagram'];       // the lists that are read whole, then the social platforms
 const meterText = {
-  x: value => `${formatCount(value)} posting`,
+  x: value => `${formatCount(value)}+ posting`,
   news: value => `${formatCount(value)} artikel`,
-  youtube: value => `${formatCount(value)} video tren`,
+  youtube: value => `${formatCount(value)} tayangan`,
   search: value => `${formatCount(value)}+ pencarian`,
 };
 
@@ -220,27 +225,25 @@ export function platformMeters(issue, listed) {
     if (value === null) return platform === 'x' ? { id: 'x', label, text: `${formatCount(figures.posts || 0)} posting contoh`, ratio: null, hint: `X: ditemukan lewat ${formatCount(figures.posts || 0)} posting, belum dihitung` } : null;
     const most = Math.max(value, ...(listed || []).map(other => meterValue(other, platform) || 0));
     const meter = { id: platform, label, text: meterText[platform](value), ratio: most > 0 ? value / most : 0 };
-    return platform === 'x' ? { ...meter, hint: `X: ${meter.text} sejak kemarin` } : meter;
+    return platform === 'x' ? { ...meter, hint: `X: sedikitnya ${formatCount(value)} posting terpantau sejak kemarin` } : meter;
   }).filter(Boolean);
 }
 
-const topText = {
-  news: value => `${formatCount(value)} artikel`,
-  x: value => `${formatCount(value)} posting`,
-  youtube: value => `${formatCount(value)} tayangan`,       // videos are ordered by views, so views are what the row says
-  search: value => `${formatCount(value)}+ pencarian`,
-};
-const topBasis = { news: 'Menurut jumlah artikel.', x: 'Menurut jumlah posting sejak kemarin.', youtube: 'Menurut tayangan video tren.', search: 'Menurut pencarian (batas bawah dari daftarnya).' };
+const TOPS = ['news', 'x', 'youtube', 'search'];       // the platforms with a figure to order by, in the page's order
+// One short line each, so the lists of a row start level. What a plus sign means is said by `hint`, on the figure.
+const topBasis = { news: 'Jumlah artikel.', x: 'Terpantau sejak kemarin.', youtube: 'Tayangan video tren.', search: 'Pencarian, batas bawah.' };
+const topHint = { x: value => `Sedikitnya ${formatCount(value)} posting terpantau sejak kemarin`, search: value => `Sedikitnya ${formatCount(value)} pencarian menurut daftar pencarian populer` };
 /** For the row of ranked lists: the ten loudest issues of the page's scope on each platform that has a figure to order
- * by, as `[{ id, label, basis, rows: [{ key, title, text, ratio }] }]`. `ratio` is against the first row of that
- * platform. A platform with nothing to order is left out, and TikTok and Instagram always are: a sample has no order.
+ * by, as `[{ id, label, basis, rows: [{ key, title, text, ratio, hint }] }]`. `ratio` is against the first row of that
+ * platform; `hint` says what a lower bound is, where the figure is one. A platform with nothing to order is left out, and TikTok and Instagram always are: a sample has no order.
  * Category and province narrow it; the platform that orders the main list does not. */
 export function platformTops(issues, { category = '', province = '' } = {}, limit = LIST_LENGTH) {
-  return Object.keys(topText).map(id => {
+  return TOPS.map(id => {
     const ordered = visibleIssues(issues, { category, province, platform: id }).filter(issue => platformFigure(issue, id) !== null).slice(0, limit);
     const most = ordered.length ? platformFigure(ordered[0], id) : 0;
     return { id, label: platformLabel(id), basis: topBasis[id],
-      rows: ordered.map(issue => ({ key: issue.key, title: issue.title, text: topText[id](platformFigure(issue, id)), ratio: most > 0 ? platformFigure(issue, id) / most : 0 })) };
+      rows: ordered.map(issue => ({ key: issue.key, title: issue.title, text: meterText[id](platformFigure(issue, id)), ratio: most > 0 ? platformFigure(issue, id) / most : 0,
+        ...(topHint[id] ? { hint: topHint[id](platformFigure(issue, id)) } : {}) })) };
   }).filter(top => top.rows.length);
 }
 

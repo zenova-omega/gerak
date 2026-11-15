@@ -1,0 +1,630 @@
+{
+  "about": [
+    "Worked cases for the four readings of part 2 (coverage, term shift, hour grid, concentration), read by",
+    "server/tests/test_pulse_readings.py and src/lib/pulseReadings.test.js. A change on one side fails the other.",
+    "Posts: an entry with \"times\": n stands for n posts (an \"id\" gets -1, -2, ...; \"{i}\" in \"author\" becomes 01, 02, ...).",
+    "Expected shares are written as fractions (\"3/11\") and compared as numbers. Hour-grid cells list only the hours that have posts."
+  ],
+  "zone": {"offset_minutes": 420, "name": "WIB"},
+  "rules": [
+    {"name": "coverage", "version": "coverage_v1", "text": "Cakupan data menyebut berapa bagian postingan dalam pilihan yang sudah dianalisis, yang interaksinya diketahui, dan yang membawa jam terbit; tingkatnya mengikuti bagian terkecil dari ketiganya: Lengkap mulai 90%, Cukup mulai 60%, Terbatas di bawah itu."},
+    {"name": "term_shift", "version": "term_shift_v1", "text": "Naik dan turun kata membandingkan bagian postingan yang memuat satu kata, atau dua kata berurutan, pada periode ini dengan periode sama panjang tepat sebelumnya, dalam poin persentase; kata dihitung bila dimuat sedikitnya 5 postingan pada salah satu periode."},
+    {"name": "hour_grid", "version": "hour_grid_v1", "text": "Kisi hari dan jam menghitung postingan yang membawa jam terbit per hari dan per jam menurut zona waktu instalasi; barisnya tanggal bila rentangnya 14 hari atau kurang, selain itu hari dalam seminggu mulai Senin."},
+    {"name": "concentration", "version": "concentration_v1", "text": "Konsentrasi akun mengurutkan akun dari yang paling banyak memposting, lalu menyebut bagian postingan dari tiga akun teratas dan berapa akun yang dibutuhkan untuk mencapai 80% postingan; hal yang sama dihitung untuk interaksi, dari postingan yang interaksinya diketahui."}
+  ],
+  "stopwords": ["ada","adalah","adanya","adapun","agar","akan","akhirnya","aku","and","anda","antara","apa","apabila","apakah","are","atas","atau","awal","bagi","bahkan","bahwa","baik","banyak","baru","beberapa","begitu","belum","benar","berupa","bisa","bukan","cara","com","cukup","dalam","dan","dapat","dari","daripada","datang","demi","demikian","dengan","dia","dilakukan","diri","dirinya","dong","dua","dulu","for","from","hanya","harus","hingga","http","https","ia","ialah","id","ini","itu","jadi","jangan","juga","justru","kalau","kami","kamu","karena","kata","ke","kembali","kemudian","kepada","ketika","kita","kok","lagi","lain","lalu","lebih","maka","makin","masih","masing","maupun","melalui","memang","mengatakan","mengenai","menjadi","mereka","merupakan","meski","mungkin","namun","nanti","not","nya","oleh","pada","paling","para","perlu","pernah","pula","pun","punya","rt","saat","saja","saling","sama","sampai","sang","sangat","satu","saya","sebab","sebagai","sebagaimana","sebagainya","sebagian","sebelum","sebuah","secara","sedang","sehingga","sejak","sejumlah","sekitar","selalu","seluruh","semakin","sementara","semua","sendiri","seperti","serta","setiap","si","siapa","sudah","supaya","telah","tentang","tentu","terhadap","tersebut","tetapi","that","the","this","tiap","tidak","tiga","untuk","via","was","were","with","www","yaitu","yakni","yang","you","your"],
+  "words": [
+    {"note": "mixed case, and a repeated word stays repeated", "in": {"text": "BANJIR Banjir banjir"}, "out": ["banjir", "banjir", "banjir"]},
+    {"note": "title first, then text", "in": {"title": "Banjir Jakarta", "text": "Warga mengungsi"}, "out": ["banjir", "jakarta", "warga", "mengungsi"]},
+    {"note": "an accented letter is a letter, and a decomposed accent is composed first", "in": {"text": "Pel\u00e9 cafe\u0301 na\u00efve"}, "out": ["pel\u00e9", "caf\u00e9", "na\u00efve"]},
+    {"note": "a mark that cannot be composed splits the word", "in": {"text": "x\u0301yz abc"}, "out": ["x", "yz", "abc"]},
+    {"note": "digits split words and are never words", "in": {"text": "covid19 2024 h2o 3M"}, "out": ["covid", "h", "o", "m"]},
+    {"note": "a hashtag is read as its letters, and an underscore splits it", "in": {"text": "#MakanSiangGratis #makan_siang"}, "out": ["makansianggratis", "makan", "siang"]},
+    {"note": "a mention is removed whole, also when it names a site", "in": {"text": "@budi_santoso halo @Kompas.com"}, "out": ["halo"]},
+    {"note": "links are removed whole, with or without a scheme", "in": {"text": "baca https://contoh.id/berita-banjir?x=1 dan www.contoh.id/abc atau contoh.co.id/kabar-kota selesai"}, "out": ["baca", "dan", "atau", "selesai"]},
+    {"note": "an e-mail address is removed, and so is anything written word@word", "in": {"text": "hubungi redaksi@contoh.id atau kasih@budi sekarang"}, "out": ["hubungi", "atau", "sekarang"]},
+    {"note": "two words joined by a full stop are read as a site name and removed", "in": {"text": "banjir.Warga mengungsi"}, "out": ["mengungsi"]},
+    {"note": "emoji and punctuation separate words", "in": {"text": "banjir\ud83c\udf0abesar, parah!"}, "out": ["banjir", "besar", "parah"]},
+    {"note": "markup is dropped and entities are read as text", "in": {"text": "<b>Banjir</b>&nbsp;besar &amp; parah<script>alert('x')</script> &lt;i&gt;sekali&lt;/i&gt;"}, "out": ["banjir", "besar", "parah", "sekali"]},
+    {"note": "numeric entities, and one that names no character", "in": {"text": "&#98;anjir &#x42;ESAR &#0;x &#9999999999;"}, "out": ["banjir", "besar", "x"]},
+    {"note": "full-width letters are folded to plain ones", "in": {"text": "\uff22\uff21\uff2e\uff2a\uff29\uff32 \uff42\uff45\uff53\uff41\uff52"}, "out": ["banjir", "besar"]},
+    {"note": "a capital sigma at the end of a word becomes the final form", "in": {"text": "\u039f\u0394\u039f\u03a3"}, "out": ["\u03bf\u03b4\u03bf\u03c2"]},
+    {"note": "a dotted capital I leaves a mark behind when lower-cased, which splits the word", "in": {"text": "\u0130stanbul"}, "out": ["i", "stanbul"]},
+    {"note": "letters outside the first plane are letters", "in": {"text": "\ud800\udf30\ud800\udf31 warga"}, "out": ["\ud800\udf30\ud800\udf31", "warga"]},
+    {"note": "a no-break space ends a link", "in": {"text": "https://contoh.id\u00a0banjir"}, "out": ["banjir"]},
+    {"note": "a zero-width no-break space ends a link too", "in": {"text": "https://contoh.id\ufeffbanjir"}, "out": ["banjir"]},
+    {"note": "a next-line control does not end a link", "in": {"text": "https://contoh.id\u0085banjir warga"}, "out": ["warga"]},
+    {"note": "a field that is not text is skipped", "in": {"title": null, "text": 12}, "out": []},
+    {"note": "a post without text", "in": {}, "out": []}
+  ],
+  "terms": [
+    {"note": "words of 3 to 40 characters that are not stop words, and each two of them in a row", "in": {"text": "Makan siang gratis"}, "out": ["makan", "siang", "gratis", "makan siang", "siang gratis"]},
+    {"note": "a stop word is not a term and breaks the pair", "in": {"text": "banjir yang besar"}, "out": ["banjir", "besar"]},
+    {"note": "a short word breaks the pair too", "in": {"text": "banjir di kota"}, "out": ["banjir", "kota"]},
+    {"note": "punctuation, digits, emoji and a removed link do not break the pair", "in": {"text": "banjir, 2026 \ud83c\udf0a https://x.id/a besar"}, "out": ["banjir", "besar", "banjir besar"]},
+    {"note": "a repeated word counts once, and a word followed by itself is a pair", "in": {"text": "banjir banjir banjir"}, "out": ["banjir", "banjir banjir"]},
+    {"note": "a pair never runs from the title into the text", "in": {"title": "Banjir Jakarta", "text": "Warga mengungsi"}, "out": ["banjir", "jakarta", "warga", "mengungsi", "banjir jakarta", "warga mengungsi"]},
+    {"note": "length is counted as the browser counts it: two letters outside the first plane are long enough", "in": {"text": "\ud800\udf30\ud800\udf31 warga"}, "out": ["\ud800\udf30\ud800\udf31", "warga", "\ud800\udf30\ud800\udf31 warga"]},
+    {"note": "a word of 40 letters is kept, one of 41 is not", "in": {"text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, "out": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]},
+    {"note": "a post without text has no terms", "in": {}, "out": []}
+  ],
+  "period_before": [
+    {"note": "a week", "from": "2026-11-09", "to": "2026-11-15", "out": {"from": "2026-11-02", "to": "2026-11-08"}},
+    {"note": "one day", "from": "2026-11-10", "to": "2026-11-10", "out": {"from": "2026-11-09", "to": "2026-11-09"}},
+    {"note": "across a year", "from": "2026-01-01", "to": "2026-01-31", "out": {"from": "2025-12-01", "to": "2025-12-31"}},
+    {"note": "into a leap day", "from": "2028-03-01", "to": "2028-03-01", "out": {"from": "2028-02-29", "to": "2028-02-29"}},
+    {"note": "no chosen period", "from": null, "to": null, "out": null},
+    {"note": "only a start is not a period", "from": "2026-11-09", "to": null, "out": null},
+    {"note": "only an end is not a period", "from": null, "to": "2026-11-15", "out": null},
+    {"note": "an end before the start", "from": "2026-11-15", "to": "2026-11-09", "out": null},
+    {"note": "an impossible date", "from": "2026-02-30", "to": "2026-03-02", "out": null},
+    {"note": "not a day", "from": "kemarin", "to": "2026-11-15", "out": null}
+  ],
+  "coverage": [
+    {
+      "note": "the level follows the lowest of the three shares; a tie names the first of analysed, measured, clocked",
+      "in": [
+        {"platform": "x", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": {"label": "positive"}, "likes": 3}},
+        {"platform": "x", "published_at": "2026-11-10T09:00:00", "metrics": {"sentiment": "negative"}},
+        {"platform": "instagram", "published_at": "2026-11-10T00:00:00", "metrics": {"sentiment": {"label": "neutral"}, "likes": 0}},
+        {"platform": "news", "published_at": "2026-11-11T02:30:00", "metrics": {}},
+        {"platform": "instagram", "published_at": null, "metrics": {"sentiment": {"label": "positive"}, "engagement": 5}}
+      ],
+      "out": {
+        "total": 5,
+        "analysed": {"count": 4, "share": "4/5", "percent": 80},
+        "measured": {"count": 3, "share": "3/5", "percent": 60},
+        "clocked": {"count": 3, "share": "3/5", "percent": 60},
+        "dated": {"count": 4, "share": "4/5", "percent": 80},
+        "level": "fair", "lowest": "measured",
+        "platforms": [
+          {"platform": "instagram", "total": 2, "analysed": {"count": 2, "share": "2/2", "percent": 100}, "measured": {"count": 2, "share": "2/2", "percent": 100}, "clocked": {"count": 0, "share": "0/2", "percent": 0}, "dated": {"count": 1, "share": "1/2", "percent": 50}},
+          {"platform": "x", "total": 2, "analysed": {"count": 2, "share": "2/2", "percent": 100}, "measured": {"count": 1, "share": "1/2", "percent": 50}, "clocked": {"count": 2, "share": "2/2", "percent": 100}, "dated": {"count": 2, "share": "2/2", "percent": 100}},
+          {"platform": "news", "total": 1, "analysed": {"count": 0, "share": "0/1", "percent": 0}, "measured": {"count": 0, "share": "0/1", "percent": 0}, "clocked": {"count": 1, "share": "1/1", "percent": 100}, "dated": {"count": 1, "share": "1/1", "percent": 100}}
+        ]
+      }
+    },
+    {
+      "note": "an empty selection has no shares and no level",
+      "in": [],
+      "out": {"total": 0, "analysed": null, "measured": null, "clocked": null, "dated": null, "level": null, "lowest": null, "platforms": []}
+    },
+    {
+      "note": "a selection of one platform that gives no clock stays limited, and says it is the clock",
+      "in": [{"times": 3, "platform": "instagram", "published_at": "2026-11-10T00:00:00", "metrics": {"sentiment": {"label": "neutral"}, "likes": 4}}],
+      "out": {
+        "total": 3,
+        "analysed": {"count": 3, "share": "3/3", "percent": 100}, "measured": {"count": 3, "share": "3/3", "percent": 100},
+        "clocked": {"count": 0, "share": "0/3", "percent": 0}, "dated": {"count": 3, "share": "3/3", "percent": 100},
+        "level": "limited", "lowest": "clocked",
+        "platforms": [{"platform": "instagram", "total": 3, "analysed": {"count": 3, "share": "3/3", "percent": 100}, "measured": {"count": 3, "share": "3/3", "percent": 100}, "clocked": {"count": 0, "share": "0/3", "percent": 0}, "dated": {"count": 3, "share": "3/3", "percent": 100}}]
+      }
+    },
+    {
+      "note": "exactly 90% is complete",
+      "in": [
+        {"times": 9, "platform": "x", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "neutral", "likes": 1}},
+        {"times": 1, "platform": "x", "published_at": "2026-11-10T00:00:00", "metrics": {"sentiment": "neutral", "likes": 1}}
+      ],
+      "out": {
+        "total": 10,
+        "analysed": {"count": 10, "share": "10/10", "percent": 100}, "measured": {"count": 10, "share": "10/10", "percent": 100},
+        "clocked": {"count": 9, "share": "9/10", "percent": 90}, "dated": {"count": 10, "share": "10/10", "percent": 100},
+        "level": "complete", "lowest": "clocked",
+        "platforms": [{"platform": "x", "total": 10, "analysed": {"count": 10, "share": "10/10", "percent": 100}, "measured": {"count": 10, "share": "10/10", "percent": 100}, "clocked": {"count": 9, "share": "9/10", "percent": 90}, "dated": {"count": 10, "share": "10/10", "percent": 100}}]
+      }
+    },
+    {
+      "note": "89.9% is fair, and its whole percent is cut, not rounded up to the next level",
+      "in": [
+        {"times": 899, "platform": "x", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "neutral", "likes": 1}},
+        {"times": 101, "platform": "x", "published_at": "2026-11-10T08:00:00", "metrics": {"likes": 1}}
+      ],
+      "out": {
+        "total": 1000,
+        "analysed": {"count": 899, "share": "899/1000", "percent": 89}, "measured": {"count": 1000, "share": "1000/1000", "percent": 100},
+        "clocked": {"count": 1000, "share": "1000/1000", "percent": 100}, "dated": {"count": 1000, "share": "1000/1000", "percent": 100},
+        "level": "fair", "lowest": "analysed",
+        "platforms": [{"platform": "x", "total": 1000, "analysed": {"count": 899, "share": "899/1000", "percent": 89}, "measured": {"count": 1000, "share": "1000/1000", "percent": 100}, "clocked": {"count": 1000, "share": "1000/1000", "percent": 100}, "dated": {"count": 1000, "share": "1000/1000", "percent": 100}}]
+      }
+    },
+    {
+      "note": "59% is limited",
+      "in": [
+        {"times": 59, "platform": "news", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "neutral", "likes": 1}},
+        {"times": 41, "platform": "news", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "neutral"}}
+      ],
+      "out": {
+        "total": 100,
+        "analysed": {"count": 100, "share": "100/100", "percent": 100}, "measured": {"count": 59, "share": "59/100", "percent": 59},
+        "clocked": {"count": 100, "share": "100/100", "percent": 100}, "dated": {"count": 100, "share": "100/100", "percent": 100},
+        "level": "limited", "lowest": "measured",
+        "platforms": [{"platform": "news", "total": 100, "analysed": {"count": 100, "share": "100/100", "percent": 100}, "measured": {"count": 59, "share": "59/100", "percent": 59}, "clocked": {"count": 100, "share": "100/100", "percent": 100}, "dated": {"count": 100, "share": "100/100", "percent": 100}}]
+      }
+    },
+    {
+      "note": "everything observed is complete; with all three equal the first is named",
+      "in": [{"times": 2, "platform": "x", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "positive", "comments": "2"}}],
+      "out": {
+        "total": 2,
+        "analysed": {"count": 2, "share": "2/2", "percent": 100}, "measured": {"count": 2, "share": "2/2", "percent": 100},
+        "clocked": {"count": 2, "share": "2/2", "percent": 100}, "dated": {"count": 2, "share": "2/2", "percent": 100},
+        "level": "complete", "lowest": "analysed",
+        "platforms": [{"platform": "x", "total": 2, "analysed": {"count": 2, "share": "2/2", "percent": 100}, "measured": {"count": 2, "share": "2/2", "percent": 100}, "clocked": {"count": 2, "share": "2/2", "percent": 100}, "dated": {"count": 2, "share": "2/2", "percent": 100}}]
+      }
+    },
+    {
+      "note": "a post's own figures are read from the ones sent with it, and a post without a platform is listed as unknown",
+      "in": [
+        {"platform": "x", "published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "positive", "likes": 2}, "measures": {"day": null, "clock": false, "interactions": null, "account": null, "tone": "unknown"}},
+        {"published_at": "2026-11-10T08:00:00", "metrics": {"sentiment": "positive", "likes": 2}}
+      ],
+      "out": {
+        "total": 2,
+        "analysed": {"count": 1, "share": "1/2", "percent": 50}, "measured": {"count": 1, "share": "1/2", "percent": 50},
+        "clocked": {"count": 1, "share": "1/2", "percent": 50}, "dated": {"count": 1, "share": "1/2", "percent": 50},
+        "level": "limited", "lowest": "analysed",
+        "platforms": [
+          {"platform": "unknown", "total": 1, "analysed": {"count": 1, "share": "1/1", "percent": 100}, "measured": {"count": 1, "share": "1/1", "percent": 100}, "clocked": {"count": 1, "share": "1/1", "percent": 100}, "dated": {"count": 1, "share": "1/1", "percent": 100}},
+          {"platform": "x", "total": 1, "analysed": {"count": 0, "share": "0/1", "percent": 0}, "measured": {"count": 0, "share": "0/1", "percent": 0}, "clocked": {"count": 0, "share": "0/1", "percent": 0}, "dated": {"count": 0, "share": "0/1", "percent": 0}}
+        ]
+      }
+    }
+  ],
+  "term_shift": [
+    {
+      "note": "a share is the posts that contain the term over the posts of the period; the shift is in percentage points",
+      "now": [{"times": 6, "text": "banjir"}, {"times": 1, "text": "macet"}, {"times": 3, "text": ""}],
+      "before": [{"times": 2, "text": "banjir"}, {"times": 5, "text": "macet"}, {"times": 3, "text": ""}],
+      "out": {
+        "posts_now": 10, "posts_before": 10,
+        "rising": [{"term": "banjir", "now": 6, "before": 2, "share_now": "6/10", "share_before": "2/10", "shift": 40}],
+        "falling": [{"term": "macet", "now": 1, "before": 5, "share_now": "1/10", "share_before": "5/10", "shift": -40}]
+      }
+    },
+    {
+      "note": "two words in a row are a term; equal shifts with equal posts are listed alphabetically; a term that did not move is in neither list",
+      "now": [{"times": 5, "text": "makan siang gratis"}, {"times": 5, "text": ""}],
+      "before": [{"times": 5, "text": "makan malam"}, {"times": 5, "text": ""}],
+      "out": {
+        "posts_now": 10, "posts_before": 10,
+        "rising": [
+          {"term": "gratis", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/10", "shift": 50},
+          {"term": "makan siang", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/10", "shift": 50},
+          {"term": "siang", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/10", "shift": 50},
+          {"term": "siang gratis", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/10", "shift": 50}
+        ],
+        "falling": [
+          {"term": "makan malam", "now": 0, "before": 5, "share_now": "0/10", "share_before": "5/10", "shift": -50},
+          {"term": "malam", "now": 0, "before": 5, "share_now": "0/10", "share_before": "5/10", "shift": -50}
+        ]
+      }
+    },
+    {
+      "note": "a post counts once per term however often it repeats the word",
+      "now": [{"times": 5, "text": "banjir banjir banjir"}],
+      "before": [{"times": 5, "text": ""}],
+      "out": {
+        "posts_now": 5, "posts_before": 5,
+        "rising": [
+          {"term": "banjir", "now": 5, "before": 0, "share_now": "5/5", "share_before": "0/5", "shift": 100},
+          {"term": "banjir banjir", "now": 5, "before": 0, "share_now": "5/5", "share_before": "0/5", "shift": 100}
+        ],
+        "falling": []
+      }
+    },
+    {
+      "note": "a term in fewer than 5 posts in both periods is not kept; 5 in one of them is enough",
+      "now": [{"times": 4, "text": "hujan"}, {"times": 5, "text": "angin"}, {"times": 1, "text": ""}],
+      "before": [{"times": 4, "text": "petir"}, {"times": 6, "text": ""}],
+      "out": {
+        "posts_now": 10, "posts_before": 10,
+        "rising": [{"term": "angin", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/10", "shift": 50}],
+        "falling": []
+      }
+    },
+    {
+      "note": "at most 8 rising terms, largest shift first",
+      "now": [
+        {"times": 14, "text": "alfa"}, {"times": 13, "text": "bravo"}, {"times": 12, "text": "charlie"}, {"times": 11, "text": "delta"},
+        {"times": 10, "text": "echo"}, {"times": 9, "text": "foxtrot"}, {"times": 8, "text": "golf"}, {"times": 7, "text": "hotel"},
+        {"times": 6, "text": "india"}, {"times": 5, "text": "juliet"}, {"times": 5, "text": ""}
+      ],
+      "before": [{"times": 1, "text": ""}],
+      "out": {
+        "posts_now": 100, "posts_before": 1,
+        "rising": [
+          {"term": "alfa", "now": 14, "before": 0, "share_now": "14/100", "share_before": "0/1", "shift": 14},
+          {"term": "bravo", "now": 13, "before": 0, "share_now": "13/100", "share_before": "0/1", "shift": 13},
+          {"term": "charlie", "now": 12, "before": 0, "share_now": "12/100", "share_before": "0/1", "shift": 12},
+          {"term": "delta", "now": 11, "before": 0, "share_now": "11/100", "share_before": "0/1", "shift": 11},
+          {"term": "echo", "now": 10, "before": 0, "share_now": "10/100", "share_before": "0/1", "shift": 10},
+          {"term": "foxtrot", "now": 9, "before": 0, "share_now": "9/100", "share_before": "0/1", "shift": 9},
+          {"term": "golf", "now": 8, "before": 0, "share_now": "8/100", "share_before": "0/1", "shift": 8},
+          {"term": "hotel", "now": 7, "before": 0, "share_now": "7/100", "share_before": "0/1", "shift": 7}
+        ],
+        "falling": []
+      }
+    },
+    {
+      "note": "at most 8 falling terms, largest drop first",
+      "now": [{"times": 1, "text": ""}],
+      "before": [
+        {"times": 14, "text": "alfa"}, {"times": 13, "text": "bravo"}, {"times": 12, "text": "charlie"}, {"times": 11, "text": "delta"},
+        {"times": 10, "text": "echo"}, {"times": 9, "text": "foxtrot"}, {"times": 8, "text": "golf"}, {"times": 7, "text": "hotel"},
+        {"times": 6, "text": "india"}, {"times": 5, "text": "juliet"}, {"times": 5, "text": ""}
+      ],
+      "out": {
+        "posts_now": 1, "posts_before": 100,
+        "rising": [],
+        "falling": [
+          {"term": "alfa", "now": 0, "before": 14, "share_now": "0/1", "share_before": "14/100", "shift": -14},
+          {"term": "bravo", "now": 0, "before": 13, "share_now": "0/1", "share_before": "13/100", "shift": -13},
+          {"term": "charlie", "now": 0, "before": 12, "share_now": "0/1", "share_before": "12/100", "shift": -12},
+          {"term": "delta", "now": 0, "before": 11, "share_now": "0/1", "share_before": "11/100", "shift": -11},
+          {"term": "echo", "now": 0, "before": 10, "share_now": "0/1", "share_before": "10/100", "shift": -10},
+          {"term": "foxtrot", "now": 0, "before": 9, "share_now": "0/1", "share_before": "9/100", "shift": -9},
+          {"term": "golf", "now": 0, "before": 8, "share_now": "0/1", "share_before": "8/100", "shift": -8},
+          {"term": "hotel", "now": 0, "before": 7, "share_now": "0/1", "share_before": "7/100", "shift": -7}
+        ]
+      }
+    },
+    {
+      "note": "a tie in the shift goes to the term with more posts now, before the alphabet",
+      "now": [{"times": 6, "text": "jeruk"}, {"times": 5, "text": "apel"}, {"times": 1, "text": ""}],
+      "before": [{"times": 1, "text": "jeruk"}, {"times": 11, "text": ""}],
+      "out": {
+        "posts_now": 12, "posts_before": 12,
+        "rising": [
+          {"term": "jeruk", "now": 6, "before": 1, "share_now": "6/12", "share_before": "1/12", "shift": "500/12"},
+          {"term": "apel", "now": 5, "before": 0, "share_now": "5/12", "share_before": "0/12", "shift": "500/12"}
+        ],
+        "falling": []
+      }
+    },
+    {
+      "note": "the alphabet is the order of the characters themselves, the same on the server and in the browser",
+      "now": [{"times": 5, "text": "\ud800\udf30\ud800\udf31\ud800\udf32"}, {"times": 5, "text": "\ufa0e\ufa0f\ufa11"}],
+      "before": [{"times": 1, "text": ""}],
+      "out": {
+        "posts_now": 10, "posts_before": 1,
+        "rising": [
+          {"term": "\ufa0e\ufa0f\ufa11", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/1", "shift": 50},
+          {"term": "\ud800\udf30\ud800\udf31\ud800\udf32", "now": 5, "before": 0, "share_now": "5/10", "share_before": "0/1", "shift": 50}
+        ],
+        "falling": []
+      }
+    },
+    {"note": "no period before: no shift", "now": [{"times": 6, "text": "banjir"}], "before": null, "out": null},
+    {"note": "no post in the period before: no shift", "now": [{"times": 6, "text": "banjir"}], "before": [], "out": null},
+    {"note": "no post in the period itself: no shift", "now": [], "before": [{"times": 6, "text": "banjir"}], "out": null}
+  ],
+  "hour_grid": [
+    {
+      "note": "14 days or fewer: one row per day, in the zone; date-only and undated posts are counted beside the grid",
+      "in": [
+        {"published_at": "2026-11-10T08:13:34"},
+        {"published_at": "2026-11-10T08:59:59"},
+        {"published_at": "2026-11-10T17:30:00"},
+        {"published_at": "2026-11-11T16:59:59Z"},
+        {"published_at": "2026-11-12T00:00:00"},
+        {"published_at": null}
+      ],
+      "out": {
+        "mode": "days", "from": "2026-11-10", "to": "2026-11-11",
+        "rows": [
+          {"day": "2026-11-10", "weekday": 1, "cells": {"15": 2}, "total": 2},
+          {"day": "2026-11-11", "weekday": 2, "cells": {"0": 1, "23": 1}, "total": 2}
+        ],
+        "max": 2, "clocked": 4, "date_only": 1, "undated": 1, "total": 6
+      }
+    },
+    {
+      "note": "more than 14 days: seven weekday rows, Monday first",
+      "in": [
+        {"published_at": "2026-11-02T03:00:00"},
+        {"published_at": "2026-11-16T03:30:00"},
+        {"published_at": "2026-11-08T13:00:00"}
+      ],
+      "out": {
+        "mode": "weekdays", "from": "2026-11-02", "to": "2026-11-16",
+        "rows": [
+          {"day": null, "weekday": 0, "cells": {"10": 2}, "total": 2},
+          {"day": null, "weekday": 1, "cells": {}, "total": 0},
+          {"day": null, "weekday": 2, "cells": {}, "total": 0},
+          {"day": null, "weekday": 3, "cells": {}, "total": 0},
+          {"day": null, "weekday": 4, "cells": {}, "total": 0},
+          {"day": null, "weekday": 5, "cells": {}, "total": 0},
+          {"day": null, "weekday": 6, "cells": {"20": 1}, "total": 1}
+        ],
+        "max": 2, "clocked": 3, "date_only": 0, "undated": 0, "total": 3
+      }
+    },
+    {
+      "note": "exactly 14 days are still days, with the quiet days between as empty rows",
+      "in": [{"published_at": "2026-11-01T05:00:00"}, {"published_at": "2026-11-14T05:00:00"}],
+      "out": {
+        "mode": "days", "from": "2026-11-01", "to": "2026-11-14",
+        "rows": [
+          {"day": "2026-11-01", "weekday": 6, "cells": {"12": 1}, "total": 1},
+          {"day": "2026-11-02", "weekday": 0, "cells": {}, "total": 0},
+          {"day": "2026-11-03", "weekday": 1, "cells": {}, "total": 0},
+          {"day": "2026-11-04", "weekday": 2, "cells": {}, "total": 0},
+          {"day": "2026-11-05", "weekday": 3, "cells": {}, "total": 0},
+          {"day": "2026-11-06", "weekday": 4, "cells": {}, "total": 0},
+          {"day": "2026-11-07", "weekday": 5, "cells": {}, "total": 0},
+          {"day": "2026-11-08", "weekday": 6, "cells": {}, "total": 0},
+          {"day": "2026-11-09", "weekday": 0, "cells": {}, "total": 0},
+          {"day": "2026-11-10", "weekday": 1, "cells": {}, "total": 0},
+          {"day": "2026-11-11", "weekday": 2, "cells": {}, "total": 0},
+          {"day": "2026-11-12", "weekday": 3, "cells": {}, "total": 0},
+          {"day": "2026-11-13", "weekday": 4, "cells": {}, "total": 0},
+          {"day": "2026-11-14", "weekday": 5, "cells": {"12": 1}, "total": 1}
+        ],
+        "max": 1, "clocked": 2, "date_only": 0, "undated": 0, "total": 2
+      }
+    },
+    {
+      "note": "the span is that of the posts with a clock: date-only posts further away do not turn days into weekdays",
+      "in": [{"published_at": "2026-11-10T05:00:00"}, {"published_at": "2026-10-01T00:00:00"}, {"published_at": "2026-11-30"}],
+      "out": {
+        "mode": "days", "from": "2026-11-10", "to": "2026-11-10",
+        "rows": [{"day": "2026-11-10", "weekday": 1, "cells": {"12": 1}, "total": 1}],
+        "max": 1, "clocked": 1, "date_only": 2, "undated": 0, "total": 3
+      }
+    },
+    {
+      "note": "a selection of one platform that gives no clock has no grid",
+      "in": [{"times": 4, "platform": "instagram", "published_at": "2026-11-10T00:00:00"}],
+      "out": {"mode": null, "from": null, "to": null, "rows": [], "max": 0, "clocked": 0, "date_only": 4, "undated": 0, "total": 4}
+    },
+    {
+      "note": "an empty selection has no grid",
+      "in": [],
+      "out": {"mode": null, "from": null, "to": null, "rows": [], "max": 0, "clocked": 0, "date_only": 0, "undated": 0, "total": 0}
+    },
+    {
+      "note": "the hour and the day are those of the installation's zone: 15.00 UTC is 22.00 under WIB",
+      "in": [{"published_at": "2026-11-10T15:00:00"}],
+      "out": {"mode": "days", "from": "2026-11-10", "to": "2026-11-10", "rows": [{"day": "2026-11-10", "weekday": 1, "cells": {"22": 1}, "total": 1}], "max": 1, "clocked": 1, "date_only": 0, "undated": 0, "total": 1}
+    },
+    {
+      "note": "the same instant nine hours east of UTC is midnight of the next day",
+      "offset": 540,
+      "in": [{"published_at": "2026-11-10T15:00:00"}],
+      "out": {"mode": "days", "from": "2026-11-11", "to": "2026-11-11", "rows": [{"day": "2026-11-11", "weekday": 2, "cells": {"0": 1}, "total": 1}], "max": 1, "clocked": 1, "date_only": 0, "undated": 0, "total": 1}
+    },
+    {
+      "note": "a timestamp that carries its own zone is read with it",
+      "in": [{"published_at": "2026-11-11T06:00:00+07:00"}],
+      "out": {"mode": "days", "from": "2026-11-11", "to": "2026-11-11", "rows": [{"day": "2026-11-11", "weekday": 2, "cells": {"6": 1}, "total": 1}], "max": 1, "clocked": 1, "date_only": 0, "undated": 0, "total": 1}
+    },
+    {
+      "note": "whether a post has a day and a clock is read from the figures sent with it",
+      "in": [
+        {"published_at": "2026-11-10T08:00:00", "measures": {"day": "2026-11-10", "clock": false, "interactions": null, "account": null, "tone": "unknown"}},
+        {"published_at": "2026-11-10T09:00:00", "measures": {"day": null, "clock": false, "interactions": null, "account": null, "tone": "unknown"}}
+      ],
+      "out": {"mode": null, "from": null, "to": null, "rows": [], "max": 0, "clocked": 0, "date_only": 1, "undated": 1, "total": 2}
+    }
+  ],
+  "concentration": [
+    {
+      "note": "fewer than 10 accounts: the figures stand and there is no curve; interactions count only posts that report them",
+      "in": [
+        {"times": 5, "platform": "x", "author": "a", "metrics": {"likes": 10}},
+        {"platform": "x", "author": "b", "metrics": {"likes": 100}},
+        {"times": 2, "platform": "x", "author": "b", "metrics": {"views": 900}},
+        {"times": 2, "platform": "x", "author": "c", "metrics": {}},
+        {"platform": "x", "author": "d", "metrics": {"likes": 0}},
+        {"platform": "x", "author": "", "metrics": {"likes": 7}}
+      ],
+      "out": {
+        "total": 12, "without_account": 1,
+        "posts": {
+          "total": 11, "accounts": 4,
+          "top": [
+            {"account": "x:a", "name": "a", "platform": "x", "value": 5, "share": "5/11"},
+            {"account": "x:b", "name": "b", "platform": "x", "value": 3, "share": "3/11"},
+            {"account": "x:c", "name": "c", "platform": "x", "value": 2, "share": "2/11"}
+          ],
+          "top_share": "10/11",
+          "reach80": {"accounts": 3, "account_share": "3/4", "share": "10/11"},
+          "curve": null
+        },
+        "interactions": {
+          "total": 150, "accounts": 3, "posts": 7,
+          "measured": {"count": 8, "share": "8/12", "percent": 66},
+          "top": [
+            {"account": "x:b", "name": "b", "platform": "x", "value": 100, "share": "100/150"},
+            {"account": "x:a", "name": "a", "platform": "x", "value": 50, "share": "50/150"},
+            {"account": "x:d", "name": "d", "platform": "x", "value": 0, "share": "0/150"}
+          ],
+          "top_share": "150/150",
+          "reach80": {"accounts": 2, "account_share": "2/3", "share": "150/150"},
+          "curve": null
+        }
+      }
+    },
+    {
+      "note": "a tie in the ranking goes by the account key; the name is the latest author text under the key; no interactions reported is no figure",
+      "in": [
+        {"platform": "x", "author": "@Budi", "published_at": "2026-11-01T01:00:00", "metrics": {}},
+        {"platform": "x", "author": "budi", "published_at": "2026-11-02T01:00:00", "metrics": {}},
+        {"platform": "instagram", "author": "Zed Lama", "published_at": "2026-11-01T01:00:00", "metrics": {"author_id": "111"}},
+        {"platform": "instagram", "author": "Zed Baru", "published_at": "2026-11-05T01:00:00", "metrics": {"author_id": 111}},
+        {"platform": "x", "author": "Andi", "metrics": {}},
+        {"platform": "x", "author": "ANDI", "metrics": {}}
+      ],
+      "out": {
+        "total": 6, "without_account": 0,
+        "posts": {
+          "total": 6, "accounts": 3,
+          "top": [
+            {"account": "instagram:111", "name": "Zed Baru", "platform": "instagram", "value": 2, "share": "2/6"},
+            {"account": "x:andi", "name": "Andi", "platform": "x", "value": 2, "share": "2/6"},
+            {"account": "x:budi", "name": "budi", "platform": "x", "value": 2, "share": "2/6"}
+          ],
+          "top_share": "6/6",
+          "reach80": {"accounts": 3, "account_share": "3/3", "share": "6/6"},
+          "curve": null
+        },
+        "interactions": {
+          "total": null, "accounts": 0, "posts": 0,
+          "measured": {"count": 0, "share": "0/6", "percent": 0},
+          "top": [], "top_share": null, "reach80": null, "curve": null
+        }
+      }
+    },
+    {
+      "note": "10 accounts: the curve has every account, and the 80% figure is the first account that reaches it",
+      "in": [
+        {"times": 10, "platform": "x", "author": "a01", "metrics": {"likes": 1}}, {"times": 9, "platform": "x", "author": "a02", "metrics": {"likes": 1}},
+        {"times": 8, "platform": "x", "author": "a03", "metrics": {"likes": 1}}, {"times": 7, "platform": "x", "author": "a04", "metrics": {"likes": 1}},
+        {"times": 6, "platform": "x", "author": "a05", "metrics": {"likes": 1}}, {"times": 5, "platform": "x", "author": "a06", "metrics": {"likes": 1}},
+        {"times": 4, "platform": "x", "author": "a07", "metrics": {"likes": 1}}, {"times": 3, "platform": "x", "author": "a08", "metrics": {"likes": 1}},
+        {"times": 2, "platform": "x", "author": "a09", "metrics": {"likes": 1}}, {"times": 1, "platform": "x", "author": "a10", "metrics": {"likes": 1}}
+      ],
+      "out": {
+        "total": 55, "without_account": 0,
+        "posts": {
+          "total": 55, "accounts": 10,
+          "top": [
+            {"account": "x:a01", "name": "a01", "platform": "x", "value": 10, "share": "10/55"},
+            {"account": "x:a02", "name": "a02", "platform": "x", "value": 9, "share": "9/55"},
+            {"account": "x:a03", "name": "a03", "platform": "x", "value": 8, "share": "8/55"}
+          ],
+          "top_share": "27/55",
+          "reach80": {"accounts": 6, "account_share": "6/10", "share": "45/55"},
+          "curve": [
+            {"accounts": 1, "account_share": "1/10", "share": "10/55"}, {"accounts": 2, "account_share": "2/10", "share": "19/55"},
+            {"accounts": 3, "account_share": "3/10", "share": "27/55"}, {"accounts": 4, "account_share": "4/10", "share": "34/55"},
+            {"accounts": 5, "account_share": "5/10", "share": "40/55"}, {"accounts": 6, "account_share": "6/10", "share": "45/55"},
+            {"accounts": 7, "account_share": "7/10", "share": "49/55"}, {"accounts": 8, "account_share": "8/10", "share": "52/55"},
+            {"accounts": 9, "account_share": "9/10", "share": "54/55"}, {"accounts": 10, "account_share": "10/10", "share": "55/55"}
+          ]
+        },
+        "interactions": {
+          "total": 55, "accounts": 10, "posts": 55,
+          "measured": {"count": 55, "share": "55/55", "percent": 100},
+          "top": [
+            {"account": "x:a01", "name": "a01", "platform": "x", "value": 10, "share": "10/55"},
+            {"account": "x:a02", "name": "a02", "platform": "x", "value": 9, "share": "9/55"},
+            {"account": "x:a03", "name": "a03", "platform": "x", "value": 8, "share": "8/55"}
+          ],
+          "top_share": "27/55",
+          "reach80": {"accounts": 6, "account_share": "6/10", "share": "45/55"},
+          "curve": [
+            {"accounts": 1, "account_share": "1/10", "share": "10/55"}, {"accounts": 2, "account_share": "2/10", "share": "19/55"},
+            {"accounts": 3, "account_share": "3/10", "share": "27/55"}, {"accounts": 4, "account_share": "4/10", "share": "34/55"},
+            {"accounts": 5, "account_share": "5/10", "share": "40/55"}, {"accounts": 6, "account_share": "6/10", "share": "45/55"},
+            {"accounts": 7, "account_share": "7/10", "share": "49/55"}, {"accounts": 8, "account_share": "8/10", "share": "52/55"},
+            {"accounts": 9, "account_share": "9/10", "share": "54/55"}, {"accounts": 10, "account_share": "10/10", "share": "55/55"}
+          ]
+        }
+      }
+    },
+    {
+      "note": "more than 20 accounts: 20 points, the first account and the last always among them",
+      "in": [{"times": 39, "platform": "x", "author": "u{i}", "metrics": {}}],
+      "out": {
+        "total": 39, "without_account": 0,
+        "posts": {
+          "total": 39, "accounts": 39,
+          "top": [
+            {"account": "x:u01", "name": "u01", "platform": "x", "value": 1, "share": "1/39"},
+            {"account": "x:u02", "name": "u02", "platform": "x", "value": 1, "share": "1/39"},
+            {"account": "x:u03", "name": "u03", "platform": "x", "value": 1, "share": "1/39"}
+          ],
+          "top_share": "3/39",
+          "reach80": {"accounts": 32, "account_share": "32/39", "share": "32/39"},
+          "curve": [
+            {"accounts": 1, "account_share": "1/39", "share": "1/39"}, {"accounts": 3, "account_share": "3/39", "share": "3/39"},
+            {"accounts": 5, "account_share": "5/39", "share": "5/39"}, {"accounts": 7, "account_share": "7/39", "share": "7/39"},
+            {"accounts": 9, "account_share": "9/39", "share": "9/39"}, {"accounts": 11, "account_share": "11/39", "share": "11/39"},
+            {"accounts": 13, "account_share": "13/39", "share": "13/39"}, {"accounts": 15, "account_share": "15/39", "share": "15/39"},
+            {"accounts": 17, "account_share": "17/39", "share": "17/39"}, {"accounts": 19, "account_share": "19/39", "share": "19/39"},
+            {"accounts": 21, "account_share": "21/39", "share": "21/39"}, {"accounts": 23, "account_share": "23/39", "share": "23/39"},
+            {"accounts": 25, "account_share": "25/39", "share": "25/39"}, {"accounts": 27, "account_share": "27/39", "share": "27/39"},
+            {"accounts": 29, "account_share": "29/39", "share": "29/39"}, {"accounts": 31, "account_share": "31/39", "share": "31/39"},
+            {"accounts": 33, "account_share": "33/39", "share": "33/39"}, {"accounts": 35, "account_share": "35/39", "share": "35/39"},
+            {"accounts": 37, "account_share": "37/39", "share": "37/39"}, {"accounts": 39, "account_share": "39/39", "share": "39/39"}
+          ]
+        },
+        "interactions": {
+          "total": null, "accounts": 0, "posts": 0,
+          "measured": {"count": 0, "share": "0/39", "percent": 0},
+          "top": [], "top_share": null, "reach80": null, "curve": null
+        }
+      }
+    },
+    {
+      "note": "21 accounts: the 20 points skip one account near the end, never the last",
+      "in": [{"times": 21, "platform": "x", "author": "u{i}", "metrics": {}}],
+      "out": {
+        "total": 21, "without_account": 0,
+        "posts": {
+          "total": 21, "accounts": 21,
+          "top": [
+            {"account": "x:u01", "name": "u01", "platform": "x", "value": 1, "share": "1/21"},
+            {"account": "x:u02", "name": "u02", "platform": "x", "value": 1, "share": "1/21"},
+            {"account": "x:u03", "name": "u03", "platform": "x", "value": 1, "share": "1/21"}
+          ],
+          "top_share": "3/21",
+          "reach80": {"accounts": 17, "account_share": "17/21", "share": "17/21"},
+          "curve": [
+            {"accounts": 1, "account_share": "1/21", "share": "1/21"}, {"accounts": 2, "account_share": "2/21", "share": "2/21"},
+            {"accounts": 3, "account_share": "3/21", "share": "3/21"}, {"accounts": 4, "account_share": "4/21", "share": "4/21"},
+            {"accounts": 5, "account_share": "5/21", "share": "5/21"}, {"accounts": 6, "account_share": "6/21", "share": "6/21"},
+            {"accounts": 7, "account_share": "7/21", "share": "7/21"}, {"accounts": 8, "account_share": "8/21", "share": "8/21"},
+            {"accounts": 9, "account_share": "9/21", "share": "9/21"}, {"accounts": 10, "account_share": "10/21", "share": "10/21"},
+            {"accounts": 11, "account_share": "11/21", "share": "11/21"}, {"accounts": 12, "account_share": "12/21", "share": "12/21"},
+            {"accounts": 13, "account_share": "13/21", "share": "13/21"}, {"accounts": 14, "account_share": "14/21", "share": "14/21"},
+            {"accounts": 15, "account_share": "15/21", "share": "15/21"}, {"accounts": 16, "account_share": "16/21", "share": "16/21"},
+            {"accounts": 17, "account_share": "17/21", "share": "17/21"}, {"accounts": 18, "account_share": "18/21", "share": "18/21"},
+            {"accounts": 19, "account_share": "19/21", "share": "19/21"}, {"accounts": 21, "account_share": "21/21", "share": "21/21"}
+          ]
+        },
+        "interactions": {
+          "total": null, "accounts": 0, "posts": 0,
+          "measured": {"count": 0, "share": "0/21", "percent": 0},
+          "top": [], "top_share": null, "reach80": null, "curve": null
+        }
+      }
+    },
+    {
+      "note": "interactions that add up to zero were observed, but there is nothing to take a share of",
+      "in": [
+        {"platform": "x", "author": "a", "metrics": {"likes": 0}},
+        {"platform": "x", "author": "b", "metrics": {"likes": 0}}
+      ],
+      "out": {
+        "total": 2, "without_account": 0,
+        "posts": {
+          "total": 2, "accounts": 2,
+          "top": [
+            {"account": "x:a", "name": "a", "platform": "x", "value": 1, "share": "1/2"},
+            {"account": "x:b", "name": "b", "platform": "x", "value": 1, "share": "1/2"}
+          ],
+          "top_share": "2/2",
+          "reach80": {"accounts": 2, "account_share": "2/2", "share": "2/2"},
+          "curve": null
+        },
+        "interactions": {
+          "total": 0, "accounts": 2, "posts": 2,
+          "measured": {"count": 2, "share": "2/2", "percent": 100},
+          "top": [], "top_share": null, "reach80": null, "curve": null
+        }
+      }
+    },
+    {
+      "note": "an empty selection has no figure",
+      "in": [],
+      "out": {
+        "total": 0, "without_account": 0,
+        "posts": {"total": 0, "accounts": 0, "top": [], "top_share": null, "reach80": null, "curve": null},
+        "interactions": {"total": null, "accounts": 0, "posts": 0, "measured": null, "top": [], "top_share": null, "reach80": null, "curve": null}
+      }
+    }
+  ]
+}

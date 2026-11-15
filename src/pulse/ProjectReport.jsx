@@ -11,6 +11,8 @@ import useResponseAnalysis from './useResponseAnalysis';
 import ReportArchive from './ReportArchive';
 import ReportPages from './ReportPages';
 import ReportBuilder from './ReportBuilder';
+import ProjectPeriod from './ProjectPeriod';
+import { rangeText } from './projectPeriodPresets';
 import { downloadReportPdf, reportFileName } from './reportPdf';
 import './project-report.css';
 import './report-brand.css';
@@ -122,12 +124,14 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
   const pages = useMemo(() => reportPages(settings.sections, { topPosts: report.topPosts }), [settings.sections, report]);
   const analysisReady = Boolean(responseState.loaded) && !responseState.error;
   const busy = pdf.status === 'busy';
+  // The dates the pages on screen cover: the archive's own when one is open, else the project's period.
+  const chosen = report.period?.from || report.period?.to, covered = chosen ? rangeText({ from: report.period.from || '', to: report.period.to || '' }) : 'seluruh periode tersimpan';
 
   async function downloadPdf() {
     if (busy || !root.current) return;
     setPdf({ status: 'busy', text: 'Menyiapkan PDF…' });
     try {
-      const made = await downloadReportPdf(root.current, reportFileName(report.topic.label), `Laporan ${report.topic.label}`);
+      const made = await downloadReportPdf(root.current, reportFileName(report.topic.label, undefined, report.period), `Laporan ${report.topic.label}`);
       setPdf({ status: 'done', text: `PDF tersimpan sebagai ${made.filename}${made.pages ? `, ${made.pages} halaman` : ''}.` });
     } catch (error) {
       if (error?.status === 503) {
@@ -151,7 +155,7 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
     {/* Only while the report is open: its sheets fill the paper, so the paper has no margin of its own. */}
     <style>{'@page{size:A4;margin:0}'}</style>
     <div className="pr-bar" data-screen-only="" role="group" aria-label="Tindakan laporan">
-      <p className="pr-bar-text" role="status" data-state={pdf.status}>{pdf.text || (pages.length ? `${pages.length} halaman A4. Berkas PDF sama dengan pratinjau di bawah.` : 'Semua bagian dimatikan, jadi belum ada halaman untuk diunduh.')}</p>
+      <p className="pr-bar-text" role="status" data-state={pdf.status}>{pdf.text || (pages.length ? <>{pages.length} halaman A4 untuk <strong>{covered}</strong>. Berkas PDF sama dengan pratinjau di bawah.</> : 'Semua bagian dimatikan, jadi belum ada halaman untuk diunduh.')}</p>
       <div className="pr-actions">
         {/* Stays focusable while it works, so the keyboard is not dropped; a second press does nothing. */}
         <PulseButton variant="primary" aria-disabled={busy || undefined} disabled={!pages.length} onClick={downloadPdf}>{busy
@@ -160,6 +164,9 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
         <PulseButton disabled={!pages.length || busy} onClick={() => window.print()}><Printer aria-hidden="true" />Cetak</PulseButton>
       </div>
     </div>
+    {/* The same period as every other page of the project: changing it here changes it there, and the pages below
+        are rebuilt for it at once. */}
+    <div className="ps-scope pr-period" data-screen-only=""><ProjectPeriod key={topic.id} topicId={topic.id} /></div>
     <details className="pr-more" data-screen-only="">
       <summary>Arsip dan data mentah</summary>
       <div className="pr-more-body">

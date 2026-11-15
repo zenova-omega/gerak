@@ -47,3 +47,14 @@ test('range evidence counts one sentiment over several days and compares with th
   assert.deepEqual(range.posts.map(p=>p.id),['4','3']);
   assert.equal(sentimentRangeEvidence(posts,'2026-11-01','2026-11-04','negative').delta,null);
 });
+
+test('sentimentDate is day_v1: any written zone, a space or fractions read alike, 17.00 UTC is the next day, the server day first', async () => {
+  const { sentimentDate } = await import('./pulseSentiment.js');
+  assert.equal(sentimentDate({ published_at: '2026-11-10T23:30:00+0700' }), '2026-11-10');
+  assert.equal(sentimentDate({ published_at: '2026-11-10T23:30:00+07:00' }), '2026-11-10');
+  assert.equal(sentimentDate({ published_at: '2026-11-10 17:00:00' }), '2026-11-11');
+  assert.equal(sentimentDate({ published_at: '2026-11-10T16:59:59.999' }), '2026-11-10');
+  assert.equal(sentimentDate({ published_at: '2026-11-10T00:00:00' }), '2026-11-10', 'a date-only post keeps its date');
+  assert.equal(sentimentDate({ published_at: null }), null);
+  assert.equal(sentimentDate({ published_at: '2026-11-10T17:00:00', measures: { day: '2026-11-11' } }), '2026-11-11');
+});

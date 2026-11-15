@@ -209,3 +209,16 @@ test('a range of days is written once, without repeating the month or the year',
  assert.equal(groupDayRange('2025-12-30','2026-01-02'),'30 Des 2025 – 2 Jan 2026');
  assert.equal(groupDayRange(null,null),'');
 });
+
+test('a group\'s first and last day follow the installation zone (day_v1)', async () => {
+  const { setZone } = await import('./pulseMeasures.js');
+  setZone({ offset_minutes: 540, name: 'WIT' });
+  try {
+    const rows = [
+      { id: 'a', issue_id: 'z', platform: 'x', author: 'a', text: 'Zona', published_at: '2026-11-10T15:30:00Z', metrics: {} },
+      { id: 'b', issue_id: 'z', platform: 'x', author: 'b', text: 'Zona', published_at: '2026-11-12T08:00:00+0900', metrics: {} },
+    ];
+    const group = buildConversationGroups(rows, {}).groups.find(g => g.id === 'z');
+    assert.deepEqual([group.firstDay, group.lastDay], ['2026-11-11', '2026-11-12']);
+  } finally { setZone({ offset_minutes: 420, name: 'WIB' }); }
+});

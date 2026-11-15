@@ -88,3 +88,14 @@ async def test_archive_rejects_malformed_nested_render_inputs(archive_env,case):
     if case=='response_id':s['responseAnalysis']['response']={'posts':[{'post_id':['p']}]}
     if case=='period_filter':s['period']['query']='silently hides every post'
     assert (await client.post('/api/admin/pulse/reports',headers=headers,json=body)).status_code==422
+
+@pytest.mark.asyncio
+async def test_archive_period_check_uses_days_of_the_installation_zone(archive_env,monkeypatch):
+    from app.services import pulse_measures
+    monkeypatch.setattr(pulse_measures,'zone',lambda:(540,'WIT'))
+    client,headers=archive_env
+    body=payload()
+    body['snapshot']['posts'][0]['published_at']='2026-11-13T15:30:00Z'   # 00.30 WIT on 14 Nov, after the period
+    assert (await client.post('/api/admin/pulse/reports',headers=headers,json=body)).status_code==422
+    body['snapshot']['posts'][0]['published_at']='2026-11-13T14:30:00+0000'
+    assert (await client.post('/api/admin/pulse/reports',headers=headers,json=body)).status_code==201

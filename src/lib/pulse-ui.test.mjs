@@ -2,7 +2,7 @@
 // Real standalone UI; the dedicated fixture intercepts all API traffic.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pulseUI } from './test-support/pulse-ui-fixture.mjs';
+import { nonReads, pulseUI } from './test-support/pulse-ui-fixture.mjs';
 
 test('standalone project selection, account drill-down and refresh use stored posts without collection', async t => {
   const { page, state, open } = await pulseUI(t);
@@ -31,7 +31,7 @@ test('standalone project selection, account drill-down and refresh use stored po
   await page.getByRole('button', { name: 'Muat ulang', exact: true }).click();
   await ranking.getByText('New stored account', { exact: true }).waitFor();
   assert.equal(await ranking.locator('tr').count(), 2);
-  assert.deepEqual(state.requests.filter(r => r.method !== 'GET'), []);
+  assert.deepEqual(nonReads(state), []);
 });
 
 test('analytics failure hides stale rankings and retry restores actual evidence', async t => {
@@ -191,6 +191,6 @@ test('the trend chart on Posting filters the list to the day that is picked, and
   await card.getByRole('button', { name: 'Sentimen', exact: true }).click();
   await card.getByText('2 dari 2 posting belum dianalisis dan tidak digambar.', { exact: true }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-  assert.deepEqual(state.requests.filter(r => r.method !== 'GET'), []);
+  assert.deepEqual(nonReads(state), []);
   assert.deepEqual(state.unexpected, []);
 });

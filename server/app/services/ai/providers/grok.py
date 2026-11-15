@@ -50,7 +50,41 @@ class GrokAIService(AIService):
                 hosted.pause(60, 'busy')
                 raise hosted.AIUnavailable('busy')
         result = response.json()
-        hosted.record(result.get('usage') or {})
+        hosted.record(result.get('usage') or {}, self.model)
+        text = ''.join(part.get('text', '') for item in result.get('output') or [] if item.get('type') == 'message'
+                       for part in item.get('content') or [] if part.get('type') == 'output_text').strip()
+        if not text:
+            raise ValueError('Empty hosted model response')
+        return text
+
+    async def search_x(self, prompt, *, from_date, to_date, system=None, max_tokens=4000, timeout=240):
+        """One answer written from a live search of X between two dates (YYYY-MM-DD; the end date is not included).
+        The search is billed per post it reads, on top of the tokens; the usage the service reports carries both.
+        A search that is busy is tried once more and then given up without pausing the lane: answers and labelling
+        do not stop because a search was refused for load. A refused key or empty credit stops the lane as elsewhere."""
+        body = {'model': self.model, 'input': [{'role': 'user', 'content': prompt}], 'max_output_tokens': max_tokens, 'store': False,
+                'tools': [{'type': 'x_search', 'from_date': from_date, 'to_date': to_date}]}
+        if system:
+            body['instructions'] = system
+        if self.effort:
+            body['reasoning'] = {'effort': self.effort}
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=10), trust_env=False, transport=self.transport) as client:
+            for attempt in range(2):
+                try:
+                    response = await client.post(API, json=body, headers={'Authorization': f'Bearer {self.api_key}'})
+                except httpx.HTTPError:
+                    response = None
+                if response is not None and response.status_code in REFUSED:
+                    hosted.pause(1800, 'access')
+                    raise hosted.AIUnavailable('access')
+                if response is not None and response.status_code == 200:
+                    break
+                if attempt == 0:
+                    await _wait(2)
+            else:
+                raise hosted.AIUnavailable('busy')
+        result = response.json()
+        hosted.record(result.get('usage') or {}, self.model)
         text = ''.join(part.get('text', '') for item in result.get('output') or [] if item.get('type') == 'message'
                        for part in item.get('content') or [] if part.get('type') == 'output_text').strip()
         if not text:

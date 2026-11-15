@@ -1,6 +1,7 @@
 import { sentimentCounts, postSentiment } from './pulsePostFilters.js';
 import { sentimentTimeline } from './pulseSentiment.js';
 import {postInteractions} from './pulseEngagement.js';
+import { readTime } from './pulseMeasures.js';
 
 export function previousPeriod({from,to}={}) {
   if(!from||!to)return null;
@@ -39,7 +40,7 @@ export function overviewEvidence(input=[],{platforms=null,excludedIds=[],previou
     if(p.crawled_at&&(!updatedAt||p.crawled_at>updatedAt))updatedAt=p.crawled_at;
     if(p.author){const key=JSON.stringify([p.platform,p.metrics?.author_id||p.author]);const row=authors.get(key)||{author:p.author,platform:p.platform,mentions:0,engagement:null,post:p};row.mentions++;if(own!==null)row.engagement=(row.engagement??0)+own;authors.set(key,row);}
     const source=sources.get(p.platform)||{platform:p.platform,count:0,firstPublished:null,firstObserved:null};source.count++;
-    if(p.published_at&&(!source.firstPublished||p.published_at<source.firstPublished))source.firstPublished=p.published_at;
+    if(readTime(p.published_at)!==null&&(!source.firstPublished||readTime(p.published_at)<readTime(source.firstPublished)))source.firstPublished=p.published_at;
     if(p.first_observed_at&&(!source.firstObserved||p.first_observed_at<source.firstObserved))source.firstObserved=p.first_observed_at;
     sources.set(p.platform,source);
     const key=p.issue_id||contentKey(p);if(!groups.has(key))groups.set(key,{id:key,title:p.title||p.text||'Posting tanpa teks',posts:[],previous:0});groups.get(key).posts.push(p);
@@ -50,7 +51,7 @@ export function overviewEvidence(input=[],{platforms=null,excludedIds=[],previou
     uniqueContent:content.size,duplicates:posts.length-content.size,
     accounts:[...authors.values()].sort((a,b)=>(b.engagement??-1)-(a.engagement??-1)||b.mentions-a.mentions),
     platforms:[...sources.values()].sort((a,b)=>b.count-a.count),
-    platformTimeline:[...sources.values()].sort((a,b)=>(a.firstPublished||'z').localeCompare(b.firstPublished||'z')),
+    platformTimeline:[...sources.values()].sort((a,b)=>(readTime(a.firstPublished)??Infinity)-(readTime(b.firstPublished)??Infinity)),
     narratives:[...groups.values()].filter(g=>g.posts.length>1).sort((a,b)=>b.posts.length-a.posts.length),
     days:sentimentTimeline(posts),topPosts:[...posts].sort((a,b)=>(postInteractions(b.metrics)??-1)-(postInteractions(a.metrics)??-1)).slice(0,5),
     volumeChange:previous===null?null:{previous:previous.length,delta:posts.length-previous.length,percent:previous.length?(posts.length-previous.length)/previous.length*100:null}};

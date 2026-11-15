@@ -76,3 +76,11 @@ test('each platform gets its own line over the same buckets, busiest first, with
   assert.deepEqual(total.map((row, index) => weeks.reduce((sum, line) => sum + line.rows[index].posts, 0)), total.map(row => row.posts));
   assert.deepEqual(platformTrend([{ id: 'a', metrics: {} }], 'day'), []);
 });
+
+test('weeks run Monday to Sunday and a post written with any zone lands on its day_v1 day', () => {
+  const rows = trendSeries([
+    { id: 'sun', published_at: '2026-11-15T23:30:00+0700', platform: 'x', metrics: {} },   // Sunday 15 Nov
+    { id: 'mon', published_at: '2026-11-15T17:00:00', platform: 'x', metrics: {} },         // Monday 16 Nov in WIB
+  ], 'week');
+  assert.deepEqual(rows.map(row => [row.from, row.to, row.posts]), [['2026-11-15', '2026-11-15', 1], ['2026-11-16', '2026-11-16', 1]]);
+});

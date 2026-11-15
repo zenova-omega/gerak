@@ -8,6 +8,12 @@
 .pulse-standalone .pr-bar-text[data-state=done] { color: var(--ps-ink); }
 .pulse-standalone .pr-bar-text:is([data-state=error], [data-state=print]) { color: var(--ps-danger-ink); }
 .pr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* The period of the report, changed where the file is made. It borrows the scope panel's chips but not its card:
+   one row between the actions and the archive, label, chips, then the dates in words. */
+.pulse-standalone .pr-workspace .ps-scope.pr-period { display: block; margin: 0; padding: 14px 0 6px; border: 0; border-radius: 0; background: none; }
+.pulse-standalone .pr-period > .ps-scope-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.pulse-standalone .pr-period > .ps-scope-group > :is(form, [role=alert]) { flex: 1 1 100%; }
+.pulse-standalone .pr-bar-text > strong { color: var(--ps-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
 
 .pr-more { border-bottom: 1px solid var(--ps-line); }
 .pulse-standalone .pr-more > summary { width: fit-content; padding-block: 12px; font-size: .875rem; font-weight: var(--ps-weight-label); color: var(--ps-ink); }

@@ -126,3 +126,18 @@ async def test_a_stopped_source_says_whether_it_resumes_by_itself(db, client, ad
     assert workers['youtube']['blocked_until'] == '2026-11-14T09:30:00'
     assert workers['social']['blocked_reason'] == 'authentication_failed' and workers['social']['blocked_until'] is None
     assert workers['rss']['blocked_reason'] is None and workers['rss']['blocked_until'] is None
+
+
+@pytest.mark.asyncio
+async def test_days_with_posts_are_days_of_the_installation_zone(db, client, admin_token):
+    """23:30 UTC is the next morning in WIB: two posts on one UTC date are two days with posts. A date-only post keeps
+    the date its source gave."""
+    db.add(WatchTopic(id='overview-zone', label='Zone', query='zone'))
+    await db.flush()
+    for name, published in [('day', datetime(2026, 11, 1, 10)), ('night', datetime(2026, 11, 1, 23, 30)),
+                            ('date-only', datetime(2026, 11, 3))]:
+        db.add(SourceItem(id=f'overview-zone-{name}', topic_id='overview-zone', source='test', platform='news',
+                          url=f'https://example.test/zone/{name}', published_at=published, crawled_at=datetime.utcnow()))
+    await db.flush()
+    rows = by_platform(await get_overview(client, admin_token, topic_id='overview-zone'))
+    assert rows['news']['days_with_posts'] == 3, '1 Nov (17.00 WIB), 2 Nov (06.30 WIB) and 3 Nov (the date-only post)'

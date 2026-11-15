@@ -215,14 +215,18 @@ const socialPayload = { ...payload, signals: { news: 122, search: 54, youtube: 5
 
 test('a row shows X with a bar when it was counted, and TikTok and Instagram as found, without a bar', async () => {
   const list = rows(await render({ payload: socialPayload }));
-  assert.match(text(list[0]), /Berita 40 artikel X 625 posting TikTok 20\+ ditemukan Instagram 12 ditemukan/);
+  assert.match(text(list[0]), /Berita 40 artikel X 625\+ posting TikTok 20\+ ditemukan Instagram 12 ditemukan/);
   const meter = name => list[0].match(new RegExp(`<li[^>]*data-platform="${name}"[\\s\\S]*?</li>`))?.[0] || '';
-  assert.match(meter('x'), /title="X: 625 posting sejak kemarin"/);
+  assert.match(meter('x'), /title="X: sedikitnya 625 posting terpantau sejak kemarin"/);
   assert.match(meter('x'), /<span class="rdi-track"[^>]*><i style="width:6\.4%"/, 'drawn against the loudest listed issue on X');
   assert.doesNotMatch(meter('tiktok'), /rdi-track/, 'a sample is not a length');
   assert.match(meter('tiktok'), /title="TikTok: sampel 20 posting terisi penuh, jumlah sebenarnya lebih banyak"/);
   assert.match(meter('tiktok') + meter('instagram') + meter('x'), /<svg/, 'each platform is named by its mark');
   assert.match(text(list[1]), /X 3 posting contoh/);
+  const html = await render({ payload: socialPayload });
+  assert.match(text(html), /Tanda \+ berarti batas bawah: sedikitnya sebanyak itu yang tercatat\./, 'what the plus means is on the page, not only on hover');
+  assert.doesNotMatch(text(await render({ payload: { ...payload, issues: [issue(1, 'Hanya berita', 'politik', { news: { count: 4 } })] } })), /Tanda \+/);
+  assert.match(html, /<ol[^>]*class="rdi-list"[^>]*role="list"/, 'a list without markers is still announced as a list');
   assert.doesNotMatch(list[1], /rdi-track/, 'found on X but not counted: no bar');
 });
 
@@ -230,7 +234,7 @@ test('the platform switch offers the social platforms when the refresh has them,
   assert.deepEqual(buttons(group(await lead({ payload: socialPayload }), 'Platform')), ['Semua platform', 'Berita', 'X', 'TikTok', 'Instagram']);
   const onX = await render({ payload: socialPayload, filters: { ...none, platform: 'x' } });
   assert.deepEqual(rows(onX).map(row => text(row).split(' ').slice(1, 3).join(' ')), ['Laga bola', 'Antrean BBM', 'Tagar BBM']);
-  assert.match(text(onX), /Diurutkan menurut jumlah posting di X sejak kemarin\./);
+  assert.match(text(onX), /Diurutkan menurut posting di X yang terpantau sejak kemarin\./);
   const onTiktok = await render({ payload: socialPayload, filters: { ...none, platform: 'tiktok' } });
   assert.deepEqual(rows(onTiktok).map(row => text(row).split(' ').slice(1, 3).join(' ')), ['Antrean BBM', 'Laga bola']);
   assert.match(text(onTiktok), /Isu yang ditemukan di TikTok, dalam urutan gabungan\./);
@@ -245,7 +249,7 @@ test('the figures strip counts what X found, and the raw view lists X only when 
   const raw = await render({ payload: { ...payload, state: 'raw', issues: [], brief: null, raw: lists } });
   assert.doesNotMatch(raw, /<h3[^>]*>(X|TikTok|Instagram)<\/h3>/, 'a platform that has no list of its own is not shown as unread');
   const withX = await render({ payload: { ...payload, state: 'raw', issues: [], brief: null, raw: { ...lists, x: [{ title: 'Tagar soal BBM', url: 'https://x.com/a/status/11111', source: null, figure: null }] } } });
-  assert.match(withX, /<h3[^>]*>X<\/h3>[\s\S]*<a[^>]*href="https:\/\/x\.com\/a\/status\/11111"[^>]*>Tagar soal BBM<\/a>/);
+  assert.match(withX, /<h3[^>]*>X, isu yang ditemukan<\/h3>[\s\S]*<a[^>]*href="https:\/\/x\.com\/a\/status\/11111"[^>]*>Tagar soal BBM<\/a>/, 'these are names of issues, not a list read from X');
 });
 
 test('the evidence view lists sampled posts by platform, with the account and the interactions, and says they are examples', async () => {
@@ -258,7 +262,7 @@ test('the evidence view lists sampled posts by platform, with the account and th
     { platform: 'instagram', title: 'Foto antrean', url: 'https://www.instagram.com/p/ABC/', source: 'kabar.medan', figure: null }] };
   const html = await render({ summary, detail }, '/src/pulse/RadarIssueDrawer.jsx', 'RadarIssueDetail');
   assert.match(html, /<h3[^>]*>Berita<\/h3>[\s\S]*<h3[^>]*>X, posting contoh<\/h3>[\s\S]*<h3[^>]*>TikTok, posting contoh<\/h3>[\s\S]*<h3[^>]*>Instagram, posting contoh<\/h3>/);
-  assert.match(text(html), /Berita 40 artikel X 625 posting sejak kemarin TikTok 20\+ posting ditemukan Instagram 12 posting ditemukan/);
+  assert.match(text(html), /Berita 40 artikel X 625\+ posting sejak kemarin TikTok 20\+ posting ditemukan Instagram 12 posting ditemukan/);
   assert.match(text(html), /Antre sejak subuh @warga_medan 80 interaksi/);
   assert.match(text(html), /Posting dari @akun_a(?! @)/, 'a post known only by its link has no account or figure to repeat');
   assert.match(text(html), /Antrean di SPBU @warga 900 interaksi/);
@@ -277,7 +281,7 @@ test('each platform with a figure has its own ranked column: position, issue, it
   assert.match(html, /<div[^>]*class="rpt"[^>]*data-columns="2"[^>]*role="group"[^>]*aria-label="Isu teratas per platform"/);
   const cards = columns(html);
   assert.deepEqual(cards.map(card => text(card.match(/<h2[^>]*>[\s\S]*?<\/h2>/)[0])), ['Teratas di Berita', 'Teratas di Google']);
-  assert.match(text(cards[0]), /Menurut jumlah artikel\./);
+  assert.match(text(cards[0]), /Jumlah artikel\./);
   const news = topRows(cards[0]);
   assert.equal(news.length, 10);
   assert.equal(text(news[0]), '1 Pengunduran diri Wapres 212 artikel');
@@ -286,6 +290,7 @@ test('each platform with a figure has its own ranked column: position, issue, it
   assert.deepEqual(topRows(cards[1]).map(text), ['1 Timnas Indonesia 10.000+ pencarian', '2 Pengunduran diri Wapres 5.000+ pencarian']);
   assert.match(news[0], /<button[^>]*class="rpt-title"[^>]*aria-pressed="false"[^>]*>Pengunduran diri Wapres<\/button>/, 'a row opens the same evidence as the main list');
   assert.match(cards[0], /<h2[^>]*><svg/, 'the platform is named by its mark as well');
+  assert.match(cards[0], /<ol[^>]*class="rpt-list"[^>]*role="list"/);
 });
 
 test('with X counted there are four columns; an issue opened elsewhere is marked here; scope follows the page', async () => {
@@ -293,8 +298,9 @@ test('with X counted there are four columns; an issue opened elsewhere is marked
   assert.match(four, /class="rpt"[^>]*data-columns="4"/);
   assert.deepEqual(columns(four).map(card => text(card.match(/<h2[^>]*>[\s\S]*?<\/h2>/)[0])), ['Teratas di Berita', 'Teratas di X', 'Teratas di YouTube', 'Teratas di Google']);
   const onX = columns(four)[1];
-  assert.deepEqual(topRows(onX).map(text), ['1 Laga bola 9.700 posting', '2 Antrean BBM 625 posting']);
-  assert.match(text(onX), /Menurut jumlah posting sejak kemarin\./);
+  assert.deepEqual(topRows(onX).map(text), ['1 Laga bola 9.700+ posting', '2 Antrean BBM 625+ posting']);
+  assert.match(text(onX), /Terpantau sejak kemarin\./);
+  assert.match(onX, /title="Sedikitnya 9\.700 posting terpantau sejak kemarin"/, 'what the plus sign means is one hover away');
   assert.match(topRows(onX)[0], /<li[^>]*data-selected=""[\s\S]*aria-pressed="true"/);
   assert.doesNotMatch(four, /Teratas di (TikTok|Instagram)/, 'a sample has no order');
   assert.deepEqual(columns(await tops({ filters: { ...none, category: 'olahraga' } })).map(card => topRows(card).map(text)), [['1 Timnas Indonesia 10.000+ pencarian']]);

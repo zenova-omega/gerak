@@ -45,3 +45,11 @@ test('a narrative says where its posts are: platforms with their counts, most fi
   assert.deepEqual(narrativePlatforms([]),{rows:[],more:0});
   assert.deepEqual(narrativePlatforms([...on('x',2),...on('tiktok',2)]).rows.map(row=>row.platform),['tiktok','x'],'a tie is ordered by name, so the order does not jump between refreshes');
 });
+
+test('the platform order reads publication times with the shared reader, whatever zone they are written in', () => {
+  const result = overviewEvidence([
+    { id: 'x1', platform: 'x', published_at: '2026-11-10T02:00:00', metrics: {} },
+    { id: 'n1', platform: 'news', published_at: '2026-11-10T08:00:00+0700', metrics: {} },   // 01.00 UTC, earlier
+  ]);
+  assert.deepEqual(result.platformTimeline.map(row => row.platform), ['news', 'x']);
+});

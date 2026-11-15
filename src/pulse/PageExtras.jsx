@@ -51,7 +51,7 @@ export function AccountsInsights({posts=[],topic,period}){
  const r=overviewEvidence(posts);
  const open=(title,rows)=>setSelection({title,posts:rows});
  return <>
-  <AccountConcentration posts={r.posts}/>
+  <AccountConcentration posts={r.posts} onOpen={open}/>
   <div className="lay-grid">
    <div className="lay-4"><AnalyticsPanel title="Sumber percakapan" description="Jumlah posting per platform, bukan estimasi audiens.">
     {r.platforms.length?<PulseBreakdown total={r.posts.length} rows={r.platforms.map(row=>({key:row.platform,label:platformLabel(row.platform),value:row.count,color:platformColor(row.platform),leading:<PlatformIcon platform={row.platform} size={16}/>,onClick:()=>open(platformLabel(row.platform),r.posts.filter(p=>p.platform===row.platform))}))}/>:<PulsePanelEmpty>Belum ada sumber dalam pilihan ini.</PulsePanelEmpty>}

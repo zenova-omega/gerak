@@ -18,9 +18,11 @@ function Start({ facts }) {
   return <div className="sig sig-start"><span className="sig-date">{day(first.published_at)}</span><div className="pu-account-line"><AccountAvatar size="sm" author={first.author} platform={first.platform} /><strong>{first.author || 'Nama tidak tersedia'}</strong></div></div>;
 }
 
+// The post whose interactions grew fastest between two readings or, when no growth was observed, the busiest day.
+// Neither is called a spike ("lonjakan"): that word is for the days in `facts.spikes`, found by the product's one rule.
 function Viral({ facts }) {
   const { surge, peak_day: peak, days } = facts;
-  if (surge) return <div className="sig sig-viral"><PulseBeat size={18} /><Figure value={'+' + formatCount(surge.added)} label="interaksi di antara dua pengamatan" /><Figure value={formatCount(Math.round(surge.rate_per_hour)) + '/jam'} label={surge.author || 'posting'} /></div>;
+  if (surge) return <div className="sig sig-viral"><PulseBeat size={18} /><Figure value={'+' + formatCount(surge.added)} label="interaksi di antara dua pengamatan" /><Figure value={formatCount(Math.round(surge.rate_per_hour)) + '/jam'} label={'posting tumbuh tercepat' + (surge.author ? ' · ' + surge.author : '')} /></div>;
   if (!peak) return null;
   return <div className="sig sig-viral"><span className="sig-spark"><Sparkline values={days.map(row => row.posts)} width={120} height={40} /></span><Figure value={formatCount(peak.posts)} label={`posting pada ${day(peak.date)}, hari teramai`} /></div>;
 }

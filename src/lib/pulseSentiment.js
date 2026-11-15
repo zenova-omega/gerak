@@ -1,11 +1,10 @@
 import { postSentiment } from './pulsePostFilters.js';
 import { postInteractions } from './pulseEngagement.js';
+import { localDay } from './pulseMeasures.js';
 
+/** The day a post belongs to (day_v1): the one the server sent, or the module's reading for an older snapshot. */
 export function sentimentDate(post) {
-  const raw=post.published_at;
-  if (!raw) return null;
-  const time=Date.parse(/[Zz]|[+-]\d{2}:\d{2}$/.test(raw)?raw:raw+'Z');
-  return Number.isFinite(time)?new Date(time+7*3600000).toISOString().slice(0,10):null;
+  return post?.measures ? post.measures.day : localDay(post?.published_at);
 }
 export function sentimentTimeline(posts) {
   const days=new Map();

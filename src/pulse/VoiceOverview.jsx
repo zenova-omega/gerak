@@ -54,6 +54,6 @@ export default function VoiceOverview({ posts, opinion, loaded, hideUnknown, onH
       tip={side.key === 'news' ? <InfoTip label="Tentang pemberitaan">Berita ditulis datar, jadi sebagian besar terbaca netral. Itu nada penulisan media, bukan ukuran opini publik.</InfoTip> : <InfoTip label="Tentang posting warganet">Posting di media sosial: X, Instagram, TikTok, YouTube, Reddit. Ini suara orang yang memulai percakapan; tanggapan atasnya ada di Opini publik.</InfoTip>}
       basis={postBasis(side, side.key === 'news' ? 'berita' : 'posting')}
       empty={side.rows.length ? `${formatCount(side.rows.length)} ${side.key === 'news' ? 'berita' : 'posting'} menunggu analisis.` : side.key === 'news' ? 'Tidak ada berita pada cakupan ini.' : 'Tidak ada posting media sosial pada cakupan ini.'} />)}</div>
-    <div className="pvo-scope"><span id="pvo-scope-label">Rincian di bawah untuk</span><div className="pu-tag-group" role="group" aria-labelledby="pvo-scope-label">{['public', 'news', 'all'].map(key => <PulseTag key={key} size="lg" tone="accent" pressed={voice === key} onClick={() => onVoice(key)}>{voiceLabels[key]}</PulseTag>)}</div></div>
+    <div className="pvo-scope"><span id="pvo-scope-label">Rincian di bawah menampilkan</span><div className="pu-tag-group" role="group" aria-labelledby="pvo-scope-label">{['public', 'news', 'all'].map(key => <PulseTag key={key} size="lg" tone="accent" pressed={voice === key} onClick={() => onVoice(key)}>{voiceLabels[key]}</PulseTag>)}</div></div>
   </section>;
 }

@@ -118,6 +118,11 @@ async def require_pulse_access(request: Request, credentials: HTTPAuthorizationC
         raise HTTPException(403, 'Autentikasi diperlukan')
     user = await session_identity(request, db)
     if request.method not in ('GET', 'HEAD', 'OPTIONS'):
+        # The spike rule answers from its own request: it reads no project data and stores nothing (routers/pulse_spikes.py).
+        # It is a POST only because a series does not fit in an address. So any signed-in role may ask, and asking
+        # leaves no line in the audit trail; the session's CSRF check above has already been made.
+        if request.method == 'POST' and request.url.path.endswith('/admin/pulse/spikes'):
+            return user
         permitted = user.role in ('owner', 'admin')
         if user.role == 'analyst' and request.url.path.endswith('/ack'):
             permitted = True

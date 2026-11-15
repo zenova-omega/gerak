@@ -1,18 +1,19 @@
 // Three reader-facing figures, counted from the posts already on screen: the net sentiment score, how concentrated
 // the speaking is in a few accounts and posts, and the points of the narrative bubble chart. Pure: no clock, no network.
 // A figure nobody observed is null and never read as zero.
-import { postSentiment } from './pulsePostFilters.js';
-import { postInteractions } from './pulseEngagement.js';
+// A post's tone, interactions and account are read through pulseMeasures.js, the one home of those rules; how
+// concentrated the accounts are is the reading `concentration_v1` of pulseReadings.js.
+import { byInteractions, postMeasures, reported, toneShares } from './pulseMeasures.js';
+import { concentration } from './pulseReadings.js';
 import { recentShareChange } from './pulseTrend.js';
-
-const finite = value => typeof value === 'number' && Number.isFinite(value);
 
 /** Net sentiment: (positive − negative) ÷ analysed posts, from −100 (all negative) to +100 (all positive).
  * Posts not analysed yet are outside the base. Null when none is analysed.
  * @param {{positive?: number, neutral?: number, negative?: number}} counts */
 export function netSentiment(counts = {}) {
-  const positive = counts.positive || 0, neutral = counts.neutral || 0, negative = counts.negative || 0, analysed = positive + neutral + negative;
-  return analysed ? (positive - negative) / analysed * 100 : null;
+  // The base is the one tone_share_v1 names: the analysed posts.
+  const { analysed } = toneShares(counts);
+  return analysed ? ((reported(counts?.positive) ?? 0) - (reported(counts?.negative) ?? 0)) / analysed * 100 : null;
 }
 
 /** Change of the net score, in points: the last `window` days of `rows` against the ones before, shares of analysed posts.
@@ -31,49 +32,41 @@ export function narrativeBubbles(narratives = [], limit = 12) {
   const points = [];
   let unrated = 0;
   for (const group of narratives.slice(0, limit)) {
-    const counts = { positive: 0, neutral: 0, negative: 0, unknown: 0 };
+    const counts = { positive: 0, neutral: 0, negative: 0, unknown: 0 }, accounts = new Set();
     let interactions = null;
     for (const post of group.posts) {
-      counts[postSentiment(post)]++;
-      const own = postInteractions(post.metrics);
-      if (finite(own)) interactions = (interactions ?? 0) + own;
+      const own = postMeasures(post);
+      counts[own.tone in counts ? own.tone : 'unknown']++;
+      if (own.interactions != null) interactions = (interactions ?? 0) + own.interactions;
+      if (own.account) accounts.add(own.account);
     }
     const net = netSentiment(counts);
     if (net === null) { unrated++; continue; }
-    points.push({ id: group.id, title: group.title, posts: group.posts, count: group.posts.length, net, interactions,
-      accounts: new Set(group.posts.map(post => post.platform + '|' + post.author)).size });
+    points.push({ id: group.id, title: group.title, posts: group.posts, count: group.posts.length, net, interactions, accounts: accounts.size });
   }
   return { points, unrated };
 }
 
-/** How concentrated the speaking is: the share of posts written by the three most active accounts, and the share of
- * interactions held by the three posts with the most. An account is one author on one platform. Neither share says
+/** How concentrated the speaking is: the share of posts written by the three most active accounts (the reading
+ * `concentration_v1`, which also holds the 80% point and the curve), and the share of interactions held by the three
+ * posts with the most (ordered as every list by interactions is). An account is account_v1. Neither share says
  * anything about intent: a news publisher writing often is concentrated and ordinary.
- * @returns {{accounts: number, posts: number, topAccounts: {author: string, platform: string, count: number, share: number}[], topAccountShare: number|null,
- *   interactions: number|null, topPosts: {id: string, author: string, platform: string, interactions: number, share: number}[], topPostShare: number|null}} */
+ * @returns {{accounts: number, posts: number, topAccounts: {key: string, author: string, platform: string, count: number, share: number}[], topAccountShare: number|null,
+ *   interactions: number|null, topPosts: {id: string, author: string, platform: string, interactions: number, share: number}[], topPostShare: number|null,
+ *   reading: ReturnType<typeof concentration>}} `posts` counts the posts that have an account */
 export function accountConcentration(posts = []) {
-  const accounts = new Map(), ranked = [];
-  let named = 0, interactions = 0;
-  for (const post of posts) {
-    const author = typeof post.author === 'string' ? post.author.trim() : '';
-    if (author) {
-      named++;
-      const key = (post.platform || '') + '|' + author.replace(/^@/, '').toLowerCase();
-      const row = accounts.get(key) || { author: author.replace(/^@/, ''), platform: post.platform || '', count: 0 };
-      row.count++;
-      accounts.set(key, row);
-    }
-    const own = postInteractions(post.metrics);
-    if (finite(own) && own > 0) { interactions += own; ranked.push({ id: post.id, author, platform: post.platform || '', interactions: own }); }
-  }
-  const topAccounts = [...accounts.values()].sort((a, b) => b.count - a.count || a.author.localeCompare(b.author)).slice(0, 3)
-    .map(row => ({ ...row, share: row.count / named }));
-  const topPosts = ranked.sort((a, b) => b.interactions - a.interactions).slice(0, 3).map(row => ({ ...row, share: row.interactions / interactions }));
+  const reading = concentration(posts);
+  const ranked = posts.filter(post => postMeasures(post).interactions > 0).sort(byInteractions);
+  const interactions = ranked.reduce((sum, post) => sum + postMeasures(post).interactions, 0);
+  const topAccounts = reading.posts.top.map(row => ({ key: row.account, author: (row.name ?? row.account.slice(row.platform.length + 1)).replace(/^@/, ''),
+    platform: row.platform, count: row.value, share: row.share }));
+  const topPosts = ranked.slice(0, 3).map(post => ({ id: post.id, author: typeof post.author === 'string' ? post.author.trim() : '', platform: post.platform || '',
+    interactions: postMeasures(post).interactions, share: postMeasures(post).interactions / interactions }));
   return {
-    accounts: accounts.size, posts: named, topAccounts,
-    topAccountShare: named ? topAccounts.reduce((sum, row) => sum + row.share, 0) : null,
+    accounts: reading.posts.accounts, posts: reading.posts.total, topAccounts, topAccountShare: reading.posts.top_share,
     interactions: interactions || null, topPosts,
     topPostShare: interactions ? topPosts.reduce((sum, row) => sum + row.share, 0) : null,
+    reading,
   };
 }
 
@@ -82,8 +75,9 @@ export function accountConcentration(posts = []) {
  * `left` and `right` list segments from the centre outwards. Null when nothing is analysed.
  * @returns {{left: {key: string, share: number}[], right: {key: string, share: number}[], leftTotal: number, rightTotal: number, net: number}|null} */
 export function divergingSplit(counts = {}) {
-  const positive = counts.positive || 0, neutral = counts.neutral || 0, negative = counts.negative || 0, analysed = positive + neutral + negative;
+  const { analysed } = toneShares(counts);
   if (!analysed) return null;
+  const [positive, neutral, negative] = ['positive', 'neutral', 'negative'].map(key => reported(counts?.[key]) ?? 0);
   const share = value => value / analysed * 100, half = share(neutral) / 2;
   const left = [{ key: 'neutral', share: half }, { key: 'negative', share: share(negative) }].filter(row => row.share > 0);
   const right = [{ key: 'neutral', share: half }, { key: 'positive', share: share(positive) }].filter(row => row.share > 0);

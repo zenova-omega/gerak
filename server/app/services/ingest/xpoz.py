@@ -5,10 +5,11 @@ Live search requires a compatible plan (trial keys are not supported).
 """
 import httpx
 import asyncio
+import time
 import json
 import re
 from urllib.parse import urlsplit, urlunsplit
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from .common import mark_repost, observed_metrics, published
 from .xpoz_text import parse_tool_text
 
@@ -261,6 +262,66 @@ async def fetch_xpoz_social_items(query, api_key, platform, limit=5, *, start=No
     return items
 
 
+TIKTOK_SEARCH_SECONDS = 120   # measured 9 to 20 s; a search that hangs must not hold back the ones that answered
+TIKTOK_DAYS = 7
+_now = time.monotonic
+_turns: dict[str, int] = {}
+
+
+def tiktok_recent_window():
+    """The window of a routine TikTok pull: the last week up to tomorrow (the provider's days are UTC). Without a
+    window the answer is mostly old posts: 100 rows spread over 51 different days, measured 15 Nov 2026."""
+    today = datetime.now().date()
+    return {'start': (today - timedelta(days=TIKTOK_DAYS)).isoformat(), 'end': (today + timedelta(days=1)).isoformat()}
+
+
+async def fetch_xpoz_tiktok_items(query, api_key, *, start=None, end=None, budget=None):
+    """TikTok posts for a query, asked for more than one way: the whole query, and each of its words by itself.
+
+    One TikTok keyword search answers with some tens of posts, and a different set for each wording (measured
+    15 Nov 2026 over seven days: 56 posts for a six-word query, 81 with every word also asked for alone; asking day
+    by day or by hashtag added none). Each search is one paid call (5 credits). A word that is only part of the query
+    (the first side of an AND) brings posts the query does not mean, so its posts are checked against the whole
+    query; the provider's answer to the whole query is kept as it is.
+
+    The searches run one after another: three at once were answered with HTTP 429 that day, which paused the whole
+    lane. Nothing more is asked after a 429, or once `budget` seconds have passed (a scheduled job's answer must
+    arrive inside its lease). A search that fails loses only its own posts; when none answers, the refusal is raised."""
+    from .query_match import matches_query, search_words
+    searches = [(query, False)]
+    for word in search_words(query):
+        asked = f'"{word}"' if re.search(r'\s', word) else word
+        if asked.lower() not in (query.strip().lower(), query.strip().strip('"').lower()):
+            searches.append((asked, not matches_query(query, word)))
+    if budget is not None and len(searches) > 2:
+        # A budgeted pull may not reach its last words, so each run starts one word further on.
+        turn = _turns.get(query, 0) % (len(searches) - 1)
+        _turns[query] = turn + 1
+        searches = searches[:1] + searches[1 + turn:] + searches[1:1 + turn]
+    found, errors, answered, began = {}, [], 0, _now()
+    for search, check in searches:
+        left = TIKTOK_SEARCH_SECONDS if budget is None else min(TIKTOK_SEARCH_SECONDS, budget - (_now() - began))
+        if left <= 0:
+            break
+        try:
+            async with asyncio.timeout(left):
+                answer = await fetch_xpoz_social_items(search, api_key, 'tiktok', start=start, end=end, complete=True)
+        except Exception as exc:
+            errors.append(exc)
+            if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+                break
+            continue
+        answered += 1
+        for item in answer:
+            if not check or matches_query(query, item.get('text')):
+                found.setdefault(item['url'], item)
+    if errors and not answered:
+        # The refusal worth reporting is the one that says why (balance, access, too many requests), not a bare failure.
+        named = [e for e in errors if isinstance(e, (XpozToolError, httpx.HTTPStatusError)) and getattr(e, 'code', '') != 'provider_error']
+        raise (named or errors)[0]
+    return list(found.values())
+
+
 def normalize_comments(platform, rows, post_url):
     """Provider rows to the stored comment shape. Text is kept as data; nothing here is rendered as markup."""
     comments = {}
@@ -306,7 +367,7 @@ def _one_line(value, limit):
     return text[:limit] or None
 
 
-def normalize_profiles(rows):
+def normalize_profiles(rows, by='id'):
     """Provider rows to {account id: {photo_url, followers, location, based_in}}.
 
     The small default picture is swapped for the 200px one. `location` is what the owner wrote on the profile,
@@ -316,11 +377,15 @@ def normalize_profiles(rows):
     for row in rows[:100]:
         if not isinstance(row, dict) or not re.fullmatch(r'[0-9]{1,25}', str(row.get('id') or '')):
             continue
+        # `by='username'` is for people known only by their handle (commenters): the answer is keyed by it, in lower case.
+        name = row.get('username')
+        if by == 'username' and not (isinstance(name, str) and re.fullmatch(r'[A-Za-z0-9_]{1,15}', name)):
+            continue
         photo = _public_image_url(row.get('profileImageUrl'))
         if photo and urlsplit(photo).hostname == 'pbs.twimg.com':
             photo = re.sub(r'_normal(\.[A-Za-z]{3,4})$', r'_200x200\1', photo)
         followers = row.get('followersCount')
-        profiles[str(row['id'])] = {'photo_url': photo, 'followers': int(followers) if str(followers).isdigit() else None,
+        profiles[name.lower() if by == 'username' else str(row['id'])] = {'photo_url': photo, 'followers': int(followers) if str(followers).isdigit() else None,
                                     'location': _one_line(row.get('location'), 200), 'based_in': _one_line(row.get('accountBasedIn'), 80)}
     return profiles
 
@@ -339,6 +404,27 @@ async def fetch_xpoz_profiles(ids, api_key):
                 'name':'getTwitterUsers', 'arguments':{'identifiers':ids, 'identifierType':'id',
                 'fields':['id','username','profileImageUrl','followersCount','location','accountBasedIn']}}})
     return normalize_profiles(_stored_rows(_payload(result)))
+
+
+async def fetch_xpoz_profiles_by_username(usernames, api_key):
+    """One call: picture, follower count and profile location for up to 100 X accounts, by username. No paging or retry.
+    For people known only by their handle, such as commenters. Returned under the username in lower case."""
+    names = [str(value) for value in usernames]
+    if not names or len(names) > 100 or not all(re.fullmatch(r'[A-Za-z0-9_]{1,15}', value) for value in names):
+        raise ValueError('Invalid bounded profile request')
+    async with asyncio.timeout(60):
+        async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
+            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+            await _initialize(client)
+            result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
+                'name':'getTwitterUsers', 'arguments':{'identifiers':names, 'identifierType':'username',
+                'fields':['id','username','profileImageUrl','followersCount','location','accountBasedIn']}}})
+    return normalize_profiles(_stored_rows(_payload(result)), by='username')
+
+
+# The supplier's status for an account it cannot find (renamed, deleted, or never an account). It is an answer, not a
+# failure: read as a failure, the account is never noted as looked up and the lane asks for it again at every step.
+NO_ACCOUNT = 'no_data'
 
 
 def normalize_instagram_user(payload):
@@ -363,7 +449,7 @@ async def fetch_xpoz_instagram_user(username, api_key):
                 'name':'getInstagramUser', 'arguments':{'identifier':username, 'identifierType':'username',
                 'fields':['id','username','profilePicUrl','followerCount']}}})
     payload = _payload(result, account=True)
-    if isinstance(payload, dict) and (payload.get('status') not in (None, 'success') or payload.get('error')):
+    if isinstance(payload, dict) and (payload.get('status') not in (None, 'success', NO_ACCOUNT) or payload.get('error')):
         _tool_error(payload)
     return normalize_instagram_user(payload)
 
@@ -390,7 +476,7 @@ async def fetch_xpoz_tiktok_user(username, api_key):
                 'name':'getTiktokUser', 'arguments':{'identifier':username, 'identifierType':'username',
                 'fields':['id','username','avatar','followerCount']}}})
     payload = _payload(result, account=True)
-    if isinstance(payload, dict) and (payload.get('status') not in (None, 'success') or payload.get('error')):
+    if isinstance(payload, dict) and (payload.get('status') not in (None, 'success', NO_ACCOUNT) or payload.get('error')):
         _tool_error(payload)
     return normalize_tiktok_user(payload)
 

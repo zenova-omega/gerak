@@ -192,12 +192,21 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pu-legend strong { color: var(--ps-ink); font-variant-numeric: tabular-nums; }
 .pu-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; background: var(--swatch, var(--ps-muted)); }
 .pu-swatch[data-hatch] { background: repeating-linear-gradient(135deg, var(--ps-sent-unknown) 0 2px, transparent 2px 4px); outline: 1px solid var(--ps-control-line); outline-offset: -1px; }
-.pu-chart-tooltip { min-width: 150px; padding: 10px 12px; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control, 8px); background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; box-shadow: 0 4px 6px -1px oklch(20% 0.02 285 / .1), 0 2px 4px -2px oklch(20% 0.02 285 / .1); }
-.pu-chart-tooltip > strong { display: block; margin-bottom: 6px; font-size: .8125rem; }
-.pu-chart-tooltip ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.pu-chart-tooltip li { display: flex; align-items: center; gap: 8px; }
-.pu-chart-tooltip li > b { margin-left: auto; padding-left: 16px; font-variant-numeric: tabular-nums; }
-.pu-chart-tooltip > small { display: block; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--ps-line); color: var(--ps-muted); }
+/* Chart tooltip: a small floating card. Head (what is hovered, and its total), the shares as one bar, one row per
+   series with count and share in their own columns, then what is behind the bar. */
+.pu-chart-tooltip { width: max-content; min-width: 208px; max-width: min(320px, 86vw); padding: 12px 14px; border: 1px solid var(--ps-control-line); border-radius: var(--ps-surface-radius, 12px); background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; line-height: 1.4; box-shadow: var(--ps-shadow-overlay); }
+.pu-chart-tip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+.pu-chart-tip-head > strong { font-size: .875rem; font-weight: 650; }
+.pu-chart-tip-head > span { color: var(--ps-muted); white-space: nowrap; }
+.pu-chart-tip-head > span > b { color: var(--ps-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+.pu-chart-tip-bar { display: flex; gap: 2px; height: 6px; margin-bottom: 10px; }
+.pu-chart-tip-bar > i { flex-basis: 0; min-width: 3px; border-radius: 2px; background: var(--swatch, var(--ps-muted)); }
+.pu-chart-tip-bar > i[data-hatch] { background: repeating-linear-gradient(135deg, var(--ps-sent-unknown) 0 2px, transparent 2px 4px); outline: 1px solid var(--ps-control-line); outline-offset: -1px; }
+.pu-chart-tooltip > ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pu-chart-tooltip > ul > li { display: flex; align-items: center; gap: 8px; }
+.pu-chart-tooltip > ul > li > b { margin-left: auto; padding-left: 16px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.pu-chart-tooltip > ul > li > em { min-width: 4ch; font-style: normal; text-align: right; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pu-chart-tooltip > small { display: block; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ps-line); color: var(--ps-muted); }
 .pulse-standalone .recharts-cartesian-axis-tick-value { fill: var(--ps-chart-axis); font-size:12px; }
 .pulse-standalone .recharts-cartesian-grid line { stroke: var(--ps-chart-grid); }
 
@@ -1184,15 +1193,17 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pulse-standalone .pu-account-pop > a { font-size: .8125rem; font-weight: 600; color: var(--ps-ink); }
 .pulse-standalone .pm-workspace[data-layout=grid] .pu-source-name[data-has-account] :is(strong, small) { overflow: visible; }
 .pulse-standalone .pm-workspace[data-layout=grid] .pu-source-name[data-has-account] > :is(strong, small) { overflow: hidden; }
-.pu-chart-top { display: grid; gap: 6px; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--ps-line); list-style: none; max-width: 300px; }
-.pu-chart-top li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 10px; font-size: .75rem; line-height: 1.4; }
-.pu-chart-top b { grid-column: 1; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pu-chart-top span { grid-column: 1; color: var(--ps-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pu-chart-top i { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; font-weight: 650; font-variant-numeric: tabular-nums; }
+.pu-chart-top-wrap { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--ps-line); }
+.pu-chart-top-head { display: flex; justify-content: space-between; gap: 12px; margin: 0 0 8px; font-size: .6875rem; font-weight: 600; color: var(--ps-muted); }
+.pu-chart-top { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.pu-chart-top > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0 10px; }
+.pu-chart-top-who { display: grid; min-width: 0; }
+.pu-chart-top-who > b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+.pu-chart-top-who > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ps-muted); }
+.pu-chart-top > li > i { padding-left: 8px; font-style: normal; font-weight: 650; font-variant-numeric: tabular-nums; }
 @media (hover: none) { .pu-account-pop { display: none; } }
 @media (prefers-reduced-motion: reduce) { .pu-account-pop { transition: none; transform: none; } }
 @media print { .pu-account-pop, .pu-carried > .pu-tag { display: none; } }
-.pu-chart-top { text-align: left; } .pu-chart-top b { text-align: left; }
 
 /* ── SUMMARY AI card: the one branded, tinted surface on the overview ── */
 .ais-card { display: grid; gap: 16px; margin: 0 0 var(--ps-surface-gap); padding: var(--ps-surface-pad); border-radius: var(--ps-surface-radius); background: var(--ps-lavender); color: var(--ps-accent-ink); }
@@ -1346,7 +1357,6 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pu-switch > input:checked + .pu-switch-track { background: var(--ps-accent); }
 .pu-switch > input:checked + .pu-switch-track > i { transform: translateX(16px); }
 .pu-switch > input:focus-visible + .pu-switch-track { outline: var(--ps-control-focus); outline-offset: 2px; }
-.pu-chart-tooltip b > em { margin-left: 8px; font-style: normal; font-weight: 500; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
 .pulse-standalone .psa-tile > strong { color: var(--ps-ink); }
 @media (prefers-reduced-motion: reduce) { .pu-switch-track, .pu-switch-track > i { transition: none; } }
 /* In a panel heading the label may wrap: a narrow column has no room for it on one line. */
@@ -1531,7 +1541,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .ped-who > span { display: grid; min-width: 0; }
 .ped-when { font-weight: 600; font-variant-numeric: tabular-nums; }
 .pulse-standalone .ped-accounts td a { display: inline-grid; place-items: center; min-width: 36px; min-height: 36px; color: var(--ps-ink); border-radius: var(--ps-radius-control); }
-.pulse-standalone .sig-anger blockquote { border: 0; border-left: 2px solid color-mix(in oklch, var(--ps-ink) 22%, transparent); background: none; padding: 0 0 0 14px; }
+.pulse-standalone .sig-anger blockquote { border: 0; border-radius: var(--ps-radius-control); background: var(--ps-soft); padding: 10px 14px; }
 
 /* ── KPI card ────────────────────────────────────────────────────────────────
    label · value with its change · one visual (meter or trend) · note.
@@ -2028,7 +2038,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pulse-standalone .sig-block h4 { margin: 0; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ps-muted); }
 .sig-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: .8125rem; }
 .sig-triggers { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.sig-triggers li { display: grid; gap: 2px; padding-left: 10px; border-left: 3px solid var(--ps-accent); }
+.sig-triggers li { display: grid; gap: 2px; padding: 8px 12px; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); background: var(--ps-soft); }
 .sig-triggers b { font-size: .75rem; font-weight: 600; color: var(--ps-muted); }
 @media print { .ais-stale .pu-button { display: none; } }
 

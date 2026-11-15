@@ -1,0 +1,66 @@
+/* Concentration curve, the third block of "Konsentrasi percakapan" (AccountConcentration.jsx): the cumulative share
+   of posts against the share of accounts, most active first, with the point where 80% of the posts is reached.
+   The lines live in an SVG that stretches with the block (strokes keep their width); every label is HTML placed over
+   it, so text keeps its own size at any width. The two lines differ by dash as well as colour, and the key names
+   them. The block is set apart from the two bars by a rule, not by a frame. */
+.ac-grid.ac-grid-curve { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); }
+.acc { padding-left: 24px; border-left: 1px solid var(--ps-line); }
+@media (max-width: 1180px) {
+  .ac-grid.ac-grid-curve { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acc { grid-column: 1 / -1; padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--ps-line); }
+}
+@media (max-width: 720px) { .ac-grid.ac-grid-curve { grid-template-columns: minmax(0, 1fr); } }
+
+.acc-lead { flex-wrap: wrap; }
+.acc-caption, .acc-says { margin: 0; font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+.acc-says b { color: var(--ps-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.acc-chart { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); column-gap: 8px; padding: 6px 8px 0 0; }
+.acc-yaxis { position: relative; font-size: .75rem; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.acc-yaxis > span { position: absolute; right: 0; line-height: 1; transform: translateY(-50%); }
+.acc-plot { position: relative; height: 176px; }
+.acc-plot > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.acc-plot :is(line, polyline) { fill: none; vector-effect: non-scaling-stroke; }
+.acc-rule { stroke: var(--ps-line); stroke-width: 1; }
+.acc-rule-80 { stroke: var(--ps-control-line); stroke-dasharray: 2 3; }
+.acc-even { stroke: var(--ps-control-line); stroke-width: 1; stroke-dasharray: 1 4; stroke-linecap: round; }
+.acc-drop { stroke: var(--ps-accent); stroke-width: 1; stroke-dasharray: 2 3; }
+.acc-line { stroke-linejoin: round; stroke-linecap: round; }
+.acc-line-posts { stroke: var(--ps-accent); stroke-width: 2.25; }
+.acc-line-interactions { stroke: var(--ps-ink); stroke-width: 1.75; stroke-dasharray: 5 4; stroke-linecap: butt; }
+/* The 80% point: a ring with a dot, the mark a spike wears on the trend chart. */
+.acc-mark, .acc-mark-2 { position: absolute; box-sizing: border-box; border-radius: 50%; background: var(--ps-panel); transform: translate(-50%, -50%); }
+.acc-mark { width: 13px; height: 13px; border: 2px solid var(--ps-accent); }
+.acc-mark::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--ps-accent); }
+.acc-mark-2 { width: 9px; height: 9px; border: 1.75px solid var(--ps-ink); }
+.acc-mark-label { position: absolute; padding: 1px 5px; border-radius: var(--ps-radius-mark, 3px); background: var(--ps-panel); color: var(--ps-ink); font-size: .75rem; font-weight: 600; line-height: 1.4; white-space: nowrap; font-variant-numeric: tabular-nums; transform: translate(10px, 8px); }
+/* The label sits where no line runs: under the curve to the right of the point, or above it to the left when the
+   point is near the right edge. */
+.acc-mark-label[data-side=left] { transform: translate(calc(-100% - 8px), calc(-100% - 8px)); }
+.acc-xaxis { grid-column: 2; display: flex; justify-content: space-between; padding-top: 6px; font-size: .75rem; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+
+.acc-keys { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; font-size: .75rem; color: var(--ps-muted); }
+.acc-key { display: inline-flex; align-items: center; gap: 6px; }
+.acc-key > i { flex: none; width: 20px; height: 0; border-top: 2.25px solid var(--ps-accent); }
+.acc-key-interactions > i { border-top: 1.75px dashed var(--ps-ink); }
+.acc-key-even > i { border-top: 1px dotted var(--ps-control-line); }
+
+.acc-data summary { font-size: .8125rem; color: var(--ps-muted); cursor: pointer; }
+.acc-data summary:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; border-radius: 4px; }
+.acc-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 24px; padding-top: 8px; }
+.acc-tables table { width: 100%; border-collapse: collapse; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.acc-tables caption { padding-bottom: 4px; text-align: left; font-weight: 600; color: var(--ps-ink); }
+.acc-tables :is(th, td) { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--ps-line); text-align: right; font-weight: 400; }
+.acc-tables thead th { color: var(--ps-muted); font-weight: 600; white-space: nowrap; }
+.acc-tables :is(th, td):first-child { text-align: left; }
+.acc-tables tr[data-reach] :is(th, td) { color: var(--ps-ink); font-weight: 600; }
+
+/* A figure that opens its posts: the name in a row of the two bars, and the accounts behind the 80% point. */
+.ac-rows[data-open] { gap: 0; }
+.pulse-standalone .ac-rows button.ac-open, .pulse-standalone button.acc-open { min-width: 0; height: auto; min-height: 32px; padding: 0 6px; margin: 0 -6px; border: 0; border-radius: 6px; background: transparent; box-shadow: none; color: inherit; font: inherit; font-size: .8125rem; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--ps-control-line); text-underline-offset: 3px; }
+.pulse-standalone .ac-rows button.ac-open { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone button.acc-open { justify-self: start; color: var(--ps-accent); font-weight: 600; }
+.pulse-standalone .ac-rows button.ac-open:hover, .pulse-standalone button.acc-open:hover { background: var(--ps-soft); text-decoration-color: currentColor; }
+.pulse-standalone .ac-rows button.ac-open:focus-visible, .pulse-standalone button.acc-open:focus-visible { outline: var(--ps-control-focus); outline-offset: 0; }
+@media (max-width: 700px) { .pulse-standalone .ac-rows button.ac-open, .pulse-standalone button.acc-open { min-height: 44px; } }
+@media print { .acc-data, .acc-open { display: none; } }

@@ -86,9 +86,14 @@ async function chatApi(chat, method, path, url, request) {
   return null;
 }
 
+const SPIKES = '/api/admin/pulse/spikes';
+/** The requests of a page that are not reads. The trend chart's question about its spikes is left out: it is a POST
+ * only because it carries the chart's numbers, and it is answered from those numbers alone. */
+export const nonReads = state => state.requests.filter(request => request.method !== 'GET' && request.path !== SPIKES);
+
 export async function pulseUI(t, { authenticated = true } = {}) {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
-  const state = { authenticated, loginAllowed: false, analyticsStatus: 200, updated: false, requests: [], unexpected: [], errors: [], balance: { state: 'ok', credits_remaining: 5832, checked_at: '2026-11-14T09:00:00', until: null }, monitor: { unread: 0 }, chat: null };
+  const state = { authenticated, loginAllowed: false, analyticsStatus: 200, updated: false, requests: [], unexpected: [], errors: [], spikes: {}, spikesStatus: 200, spikeQuestions: [], balance: { state: 'ok', credits_remaining: 5832, checked_at: '2026-11-14T09:00:00', until: null }, monitor: { unread: 0 }, chat: null };
   t.after(async () => {
     await browser.close();
     assert.deepEqual(state.unexpected, [], 'Unmocked API or non-local request was blocked');
@@ -136,6 +141,14 @@ export async function pulseUI(t, { authenticated = true } = {}) {
     else if (method === 'GET' && path === '/api/admin/pulse/issues') body = [];
     else if (method === 'GET' && path === '/api/admin/pulse/sources/balance') body = state.balance;
     else if (method === 'GET' && path === '/api/admin/pulse/monitor') body = state.monitor;   // the unread-alert badge on the Monitor nav item
+    else if (method === 'POST' && path === SPIKES) {
+      // The trend chart asks which of its buckets are spikes. `state.spikes` is what the server answers per line
+      // (none unless a test says so) and `state.spikesStatus` makes the call fail; every question is kept.
+      const asked = request.postDataJSON();
+      state.spikeQuestions.push({ ...asked, csrf: request.headers()['x-pulse-csrf'] });
+      status = state.spikesStatus;
+      body = status === 200 ? { rule: { id: 'spike_v1' }, spikes: Object.fromEntries(Object.keys(asked.series).map(name => [name, state.spikes[name] || []])) } : { detail: 'Tidak berhasil.' };
+    }
     else if (state.chat && path.startsWith('/api/admin/pulse/chat')) {
       const answer = await chatApi(state.chat, method, path, url, request);
       if (!answer) { state.unexpected.push(`${method} ${path}`); return route.abort(); }

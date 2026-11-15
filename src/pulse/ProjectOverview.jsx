@@ -6,6 +6,7 @@ import {EvidenceSheet} from './EvidencePosts';
 import {useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import TrendChart from './TrendChart';
+import PlatformPie from './PlatformPie';
 import {bucketLabel,bucketPosts} from '../lib/pulseTrendSeries';
 import {overviewEvidence,previousPeriod,reviewEvidence} from '../lib/pulseOverview';
 import {sentimentDate} from '../lib/pulseSentiment';
@@ -48,14 +49,13 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
  const dayLabel=v=>{const d=new Date(v+'T00:00:00Z');return Number.isNaN(d.getTime())?v:d.toLocaleDateString('id-ID',{day:'numeric',month:'short',timeZone:'UTC'});};
  const topNarrative=r.narratives[0],topPlatform=r.platforms[0];
  const signals=[
-  peak&&{key:'peak',label:'Puncak volume',value:dayLabel(peak.date),note:`${formatCount(peak.total)} posting · ${sharePercent(peak.total,total)||'0%'} dari cakupan`,action:'Lihat posting',onClick:()=>open('Puncak '+peak.date,r.posts.filter(p=>sentimentDate(p)===peak.date))},
+  peak&&{key:'peak',label:'Hari teramai',value:dayLabel(peak.date),note:`${formatCount(peak.total)} posting · ${sharePercent(peak.total,total)||'0%'} dari cakupan`,action:'Lihat posting',onClick:()=>open('Hari teramai '+peak.date,r.posts.filter(p=>sentimentDate(p)===peak.date))},
   topPlatform&&{key:'platform',label:'Sumber terbanyak',value:platformLabel(topPlatform.platform),note:`${formatCount(topPlatform.count)} posting · ${sharePercent(topPlatform.count,total)||'0%'} dari cakupan`,action:'Lihat posting',onClick:()=>open(platformLabel(topPlatform.platform),r.posts.filter(p=>p.platform===topPlatform.platform))},
   topNarrative&&{key:'narrative',label:'Narasi terbesar',value:topNarrative.title.slice(0,64)+(topNarrative.title.length>64?'…':''),note:`${formatCount(topNarrative.posts.length)} posting serupa`,action:'Periksa kelompok',onClick:()=>open('Kelompok percakapan',topNarrative.posts)},
   quality.needsReview.length>0&&{key:'review',label:'Perlu ditinjau',value:`${formatCount(quality.needsReview.length)} posting`,note:'Penilaian kurang yakin atau ditandai analis',action:'Tinjau sekarang',onClick:()=>open('Perlu ditinjau',quality.needsReview)},
  ].filter(Boolean);
  const netText=net===null?null:`${net>0?'+':net<0?'−':''}${Math.abs(Math.round(net))}`;
  return <div className="po-overview po-workbench">
-  <AiSummaryCard key={params.get('topic')||''} topicId={params.get('topic')||''} period={period} platforms={platforms} posts={total}/>
   <section className="po-brief" aria-label="Ringkasan eksekutif">
    <header className="po-brief-head">
     <div className="po-brief-text"><span className="po-eyebrow">RINGKASAN PROJECT</span><h2>{total?`${formatCount(total)} posting dalam cakupan terpilih`:'Belum ada posting dalam cakupan ini'}</h2><p>{change&&change.previous>0?`Volume posting ${change.delta>0?'meningkat':change.delta<0?'menurun':'tetap'} dibanding periode sebelumnya (${formatCount(change.previous)} posting). `:''}{r.platforms[0]?`Percakapan paling banyak ditemukan di ${platformLabel(r.platforms[0].platform)} (${formatCount(r.platforms[0].count)} posting). `:''}{r.accounts[0]?.engagement!=null?`${r.accounts[0].author} mencatat interaksi tertinggi: ${formatCount(r.accounts[0].engagement)}. `:''}{!total?'Ubah periode atau pilihan platform untuk melihat hasil.':''}</p></div>
@@ -73,17 +73,19 @@ export default function ProjectOverview({data,topic={},period={},platforms=null}
      note={concentration.topAccountShare===null?'Belum ada akun bernama':`posting dari 3 akun teratas · dari ${formatCount(concentration.accounts)} akun`}/>
    </PulseStatGrid>
    {signals.length>0&&<ul className="po-signals" aria-label="Sorotan untuk diperiksa">{signals.map(s=><li key={s.key}><button type="button" onClick={s.onClick}><span className="po-signal-label">{s.label}</span><strong>{s.value}</strong><small>{s.note}</small><span className="po-signal-action">{s.action} <PulseArrow/></span></button></li>)}</ul>}
+   <PlatformPie platforms={r.platforms} onOpen={id=>open(platformLabel(id),r.posts.filter(p=>p.platform===id))}/>
    <footer className="po-brief-foot">
     <label className="po-relevance"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeIrrelevant} onChange={e=>{setIncludeIrrelevant(e.target.checked);setSelection(null);}}/> Sertakan posting yang ditandai tidak relevan</label>
     <span className="po-quality">{quality.paired?`${Math.round(quality.accuracy*100)}% sesuai penilaian analis · ${quality.correct}/${quality.paired} sampel`:'Belum ada sampel berlabel manual'} <InfoTip label="Tentang angka ringkasan">Kualitas analisis hanya dari sampel yang dinilai analis dalam pilihan ini; bukan ukuran akurasi seluruh data. Perlu ditinjau mencakup penilaian kurang yakin, perbedaan label, atau penandaan analis. Konten unik menggabungkan teks identik dengan perbedaan kapital dan spasi; kemiripan narasi tidak dihitung sebagai duplikat. Sentimen bersih = (positif − negatif) ÷ posting yang dianalisis; {hideUnknown?'posting belum dianalisis disembunyikan di halaman Sentimen, dan di sini juga tidak dihitung':'posting belum dianalisis tidak dihitung'}. Konsentrasi akun adalah porsi posting dari tiga akun paling aktif, bukan bukti akun terkoordinasi.</InfoTip></span>
     {extra.loaded&&!extra.reviews&&<small>Status koreksi analis belum tersedia; hasil belum disaring berdasarkan koreksi.</small>}
    </footer>
   </section>
+  <AiSummaryCard key={params.get('topic')||''} topicId={params.get('topic')||''} period={period} platforms={platforms} posts={total}/>
   <EvidenceSheet selection={selection} onClose={()=>setSelection(null)}/>
   <section id="overview-development" className="lay-grid">
    <div className="lay-12">
    <TrendChart title="Perkembangan isu" description="Posting dan interaksi dari waktu ke waktu, atau dipilah menurut sentimen atau platform." posts={r.posts} period={period}
-    footer="Tanggal publikasi WIB. Puncak volume bukan bukti peristiwa baru atau sebab perubahan." onPick={(row,unit)=>open('Posting '+bucketLabel(row,unit),bucketPosts(r.posts,row))}/>
+    footer="Tanggal publikasi WIB. Lonjakan bukan bukti peristiwa baru atau sebab perubahan." onPick={(row,unit)=>open('Posting '+bucketLabel(row,unit),bucketPosts(r.posts,row))}/>
    </div>
   </section>
   <nav className="po-detail-links" aria-label="Detail di halaman lain"><h2>Telusuri lebih jauh</h2><ul>{detailPages.map(([view,title,note])=><li key={view}><Link to={page(view)}><strong>{title}</strong><small>{note}</small><PulseArrow/></Link></li>)}</ul></nav>

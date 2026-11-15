@@ -66,6 +66,8 @@ async def candidates(db):
 
 async def run_one(session_factory, ai, lane='local'):
     global _idle_until
+    from .ai.hosted import set_lane
+    set_lane('text_kind')
     if datetime.utcnow().timestamp() < _idle_until:
         return 'idle'
     async with session_factory() as db:

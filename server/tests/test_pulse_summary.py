@@ -10,7 +10,7 @@ def test_sections_are_parsed_and_only_cited_codes_are_returned():
     assert [s['title'] for s in sections] == ['Awal', 'Yang dibicarakan']
     assert sections[1]['bullets'] == ['Soal izin [N1]', 'Soal biaya [K2]'] and sections[1]['paragraphs'] == ['tebal tanpa judul']
     assert service.parse_sections('tanpa judul sama sekali')[0]['title'] == 'Ringkasan'
-    assert [s['kind'] for s in sections] == ['start', 'talk'] and service.section_kind('Kenapa orang marah') == 'anger' and service.section_kind('Lain') == 'text'
+    assert [s['kind'] for s in sections] == ['start', 'talk'] and service.section_kind('Kenapa orang marah') == 'anger' and service.section_kind('Lain') == 'text' and service.section_kind('Pemicu sentimen negatif') == 'anger' and service.section_kind('Perlu diperhatikan') == 'watch'
     assert service.parse_sections('### Sentimen\nNegatif 26% dari 1040 posting [SENTIMEN UNTUK DIKUTIP] [N1].')[0]['paragraphs'] == ['Negatif 26% dari 1040 posting [N1].']
     sources = {'A1': {'code': 'A1'}, 'N1': {'code': 'N1'}, 'P9': {'code': 'P9'}}
     assert [s['code'] for s in service.cited(text + ' [X1] [A1]', sources)] == ['A1', 'N1']
@@ -36,6 +36,7 @@ async def test_summary_input_names_the_earliest_posts_negative_posts_and_top_com
     facts = built['facts']
     assert facts['sentiment'] == {'positive': 0, 'neutral': 1, 'negative': 1, 'unknown': 0, 'analysed': 2} and facts['totals']['posts'] == 2
     assert facts['first']['author'] == 'akun_awal' and facts['peak_day']['posts'] == 1 and facts['quotes'][0]['text'] == 'Setuju, parah' and len(facts['days']) == 2
+    assert facts['triggers'][0]['author'] == 'akun_marah' and facts['triggers'][0]['reason'] == 'kecewa'
     assert service.build_prompt(built['data'], 'timeline').endswith('Tulis ringkasannya sekarang.')
     assert await service.build_summary_input(db, 'tidak-ada', datetime(2026, 11, 5)) is None
 

@@ -11,6 +11,7 @@ from sqlalchemy import select
 from ..models.pulse import SourceItem
 from .pulse_chat import _engagement, _sentiment, _wib, _wib_day, build_context, render_context
 from .pulse_places import post_places
+from .pulse_spikes import FLOORS, RULE_ID, daily_series, keyed_spikes
 
 CONTEXT_TOKENS = 8192
 ANSWER_TOKENS = 520
@@ -25,7 +26,9 @@ BASE = (
     'WAJIB: setiap kalimat dan setiap butir diakhiri kode bukti dalam kurung siku dari DATA, dengan bentuk "<kalimat dari DATA> [A1]." atau "<kalimat dari DATA> [K2][N1]." Nama akun ditulis persis seperti di DATA. Kode yang sah hanya yang tertulis di DATA (P, A, N, K, I, T diikuti angka); jangan mengarang kode. '
     'Untuk sentimen, salin angka dari baris SENTIMEN UNTUK DIKUTIP apa adanya. '
     'Tulis tanggal seperti "3 Nov"; jam 07:00 berarti hanya tanggalnya yang diketahui, jadi jangan tulis jamnya. '
-    '"Viral" berarti lonjakan interaksi tercepat yang teramati crawler, bukan klaim terverifikasi. '
+    '"Viral" berarti kenaikan interaksi tercepat pada satu posting yang teramati crawler, bukan klaim terverifikasi. '
+    '"Lonjakan" hanya dipakai untuk hari pada baris HARI LONJAKAN POSTING: hari yang jumlah postingnya jauh di atas hari biasa pada cakupan ini. '
+    'Bila baris itu berisi "tidak ada", jangan menyebut lonjakan; hari dengan posting terbanyak disebut hari teramai. '
     'Alasan kemarahan hanya boleh diambil dari isi posting atau komentar negatif di DATA; jika tidak ada, tulis "belum terlihat dari data". '
     'Jangan menyimpulkan koordinasi, niat, jumlah orang unik, atau jangkauan. '
     'Baris TEMPAT YANG DISEBUT adalah tempat yang dibicarakan dalam teks, bukan lokasi penulis atau asal penyebaran, dan LOKASI PROFIL adalah keterangan pemilik akun X; '
@@ -34,7 +37,7 @@ BASE = (
     'Ikuti FORMAT persis: tiap bagian diawali baris "### Judul", isi berupa kalimat atau butir yang diawali "- ". Tanpa tabel, tanpa teks tebal.'
 )
 FORMATS = {
-    'brief': ('Ringkas', 'FORMAT (maksimal 110 kata):\n### Awal\nsatu kalimat: kapan dan oleh akun siapa posting paling awal muncul.\n### Viral\nsatu kalimat: kapan dan di posting mana lonjakan tercepat teramati.\n### Topik utama\nsatu kalimat.\n### Yang dibicarakan\n- dua sampai tiga butir pendek.\n### Sentimen\nsatu kalimat dengan angka.\n### Kenapa orang marah\nsatu sampai dua kalimat dari posting atau komentar negatif.'),
+    'brief': ('Ringkas', 'FORMAT (maksimal 150 kata):\n### Awal\nsatu kalimat: kapan dan oleh akun siapa posting paling awal muncul.\n### Viral\nsatu kalimat: kapan dan di posting mana kenaikan interaksi tercepat teramati.\n### Topik utama\nsatu kalimat, diakhiri kode bukti; bila tidak ada bukti di DATA, tulis "belum terlihat dari data".\n### Yang dibicarakan\n- dua sampai tiga butir pendek, masing-masing diakhiri kode bukti.\n### Sentimen\nsatu kalimat dengan angka.\n### Pemicu sentimen negatif\n- satu sampai tiga butir: apa yang memicu sentimen negatif menurut posting atau komentar negatif, tiap butir dengan kode bukti. Jangan menyebut "marah" bila sentimen negatif kecil.\n### Perlu diperhatikan\n- dua butir: hal yang patut dipantau berikutnya, masing-masing dengan dasar datanya.'),
     'timeline': ('Kronologi', 'FORMAT (maksimal 130 kata):\n### Kronologi\n- empat sampai enam butir berurutan, tiap butir diawali tanggal atau jam WIB, lalu apa yang terjadi dan oleh akun siapa.\n### Titik viral\nsatu kalimat.\n### Suasana\nsatu sampai dua kalimat: sentimen dengan angka dan alasan kemarahan dari data.'),
     'executive': ('Eksekutif', 'FORMAT (maksimal 140 kata):\n### Ringkasan\nsatu paragraf tiga sampai empat kalimat: apa isunya, sejak kapan, siapa penggeraknya, seberapa besar.\n### Nada publik\nsatu sampai dua kalimat: sentimen dengan angka dan alasan kemarahan dari data.\n### Perlu diperhatikan\n- tiga butir: hal yang patut dipantau berikutnya, masing-masing dengan dasar datanya.'),
     'insights': ('AI Insights', 'FORMAT (sekitar 220 kata):\n### Judul\nsatu kalimat judul: isu utamanya dan perkembangan terpentingnya, dengan tanggal atau angka terpenting dari DATA.\n### Insight\n- tiga sampai lima butir, urut dari yang terpenting, tiap butir tentang hal yang berbeda: awal isu, lonjakan, penggerak, sentimen, alasan kemarahan, atau tempat yang paling banyak disebut. Bila baris TEMPAT YANG DISEBUT berisi angka, satu butir membahas tempat yang paling banyak disebut dengan angkanya, sebagai tempat yang dibicarakan dan bukan lokasi penulis, diakhiri kode T. Bentuk tiap butir: "- <satu kalimat inti yang menyatakan temuannya>. <satu sampai tiga kalimat penjelasan dengan angka, akun, atau tanggal dari DATA> [A1][K2]." Butir langsung dimulai dengan kalimat inti yang lengkap, tanpa label atau judul di depannya, dan diakhiri kode bukti. Angka ribuan ditulis dengan titik (12.500), bukan koma.'),
@@ -152,6 +155,14 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
     context = built['context']
     by_day = Counter(_wib_day(item.published_at) for item in items if item.published_at)
     peak = max(by_day.items(), key=lambda pair: pair[1]) if by_day else None
+    # Spike days by the product's one rule (pulse_spikes), read over the days the trend chart draws for the same
+    # scope: a day without posts counts as zero and a chosen period is covered in full. The busiest day (`peak_day`)
+    # is another thing: every scope has one, and it is a spike only when the rule says so.
+    spike_days = [{'date': spike['key'], 'posts': spike['value'], 'usual': spike['usual'], 'times': spike['times']}
+                  for spike in keyed_spikes(daily_series(by_day, _wib_day(start) if start else None, _wib_day(end) if end else None), FLOORS['posts'])]
+    lines.append('HARI LONJAKAN POSTING (hari yang jumlah postingnya jauh di atas hari biasa pada cakupan ini): ' + ('; '.join(
+        f"{row['date']} {row['posts']} posting, " + (f"{row['times']:.1f} kali hari biasa".replace('.', ',') if row['times'] else 'hari lain umumnya kosong')
+        for row in spike_days) or 'tidak ada'))
     surges = [post for post in context['evidence_posts'] if post['observed_growth']['fastest_interval']]
     surge = max(surges, key=lambda post: post['observed_growth']['fastest_interval']['rate_per_hour']) if surges else None
     facts = {
@@ -163,6 +174,7 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
         'first': {'code': 'A1', 'author': earliest[0].author, 'platform': earliest[0].platform or 'unknown', 'published_at': earliest[0].published_at.isoformat() + 'Z',
                   'text': _clean(earliest[0].title or earliest[0].text, 140)} if earliest else None,
         'peak_day': {'date': peak[0], 'posts': peak[1]} if peak else None,
+        'spikes': {'rule': RULE_ID, 'days': spike_days},
         'surge': {'code': surge['code'], 'author': surge['author'], 'platform': surge['platform'], 'added': surge['observed_growth']['fastest_interval']['added_interactions'],
                   'rate_per_hour': surge['observed_growth']['fastest_interval']['rate_per_hour'], 'from': surge['observed_growth']['fastest_interval']['from'],
                   'to': surge['observed_growth']['fastest_interval']['to'], 'interactions': surge['interactions']} if surge else None,
@@ -172,6 +184,9 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
                      for (author, platform), (posts, total) in sorted(accounts.items(), key=lambda pair: -pair[1][1])[:4]],
         'groups': [{'code': row['code'], 'title': row['title'][:90], 'posts': row['posts'], 'accounts': row['accounts']} for row in context['conversation_groups_in_scope'][:4]],
         'quotes': [{'code': f'K{index}', 'text': _clean(comment['text'], 160), 'author': comment.get('author'), 'likes': likes} for index, (likes, comment, item) in enumerate(comments[:3], 1)],
+        'triggers': [{'code': f'N{index}', 'author': item.author, 'platform': item.platform or 'unknown', 'interactions': _engagement(item.metrics) or 0,
+                      'text': _clean(item.title or item.text, 140), 'reason': _clean(((item.metrics or {}).get('sentiment') or {}).get('reason'), 100)}
+                     for index, item in enumerate(negative[:3], 1)],
         'emotions': [{'label': label, 'posts': count} for label, count in emotions.most_common(4)],
     }
     data = f"DATA (satu-satunya sumber fakta, waktu dalam WIB):\n{render_context(built['context'])}\n" + '\n'.join(lines) + '\n\n'
@@ -184,8 +199,8 @@ def build_prompt(data, fmt):
 
 
 # Which infographic goes with a section, by its title. Unknown titles render as plain text.
-KINDS = (('headline', ('judul',)), ('insights', ('insight',)), ('start', ('awal',)), ('viral', ('viral',)), ('topic', ('topik',)), ('talk', ('dibicarakan',)), ('sentiment', ('sentimen', 'nada publik', 'suasana')),
-         ('anger', ('marah',)), ('timeline', ('kronologi',)), ('overview', ('ringkasan',)), ('watch', ('perlu diperhatikan', 'diperhatikan')))
+KINDS = (('headline', ('judul',)), ('insights', ('insight',)), ('start', ('awal',)), ('viral', ('viral',)), ('topic', ('topik',)), ('talk', ('dibicarakan',)), ('anger', ('marah', 'pemicu')), ('sentiment', ('sentimen', 'nada publik', 'suasana')),
+         ('timeline', ('kronologi',)), ('overview', ('ringkasan',)), ('watch', ('perlu diperhatikan', 'diperhatikan')))
 
 
 def section_kind(title):

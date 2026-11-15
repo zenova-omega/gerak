@@ -144,7 +144,8 @@ test('the trend axis has no gaps and long ranges are drawn per week', () => {
 
   const long = trendBuckets([day('2026-01-01', 1), day('2026-01-03', 2), day('2026-06-30', 4)]);
   assert.equal(long.unit, 'week');
-  assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total], ['2026-01-01', '2026-01-07', 3]);
+  // Weeks run Monday to Sunday (day_v1); they used to start on the first day with data (1 Jan, a Thursday, to 7 Jan).
+  assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total], ['2026-01-01', '2026-01-04', 3]);
   assert.equal(long.rows.at(-1).end, '2026-06-30');
   assert.equal(long.rows.reduce((sum, row) => sum + row.total, 0), 7);
   assert.deepEqual(trendBuckets([]), { unit: 'day', rows: [], max: 0, peak: null });
@@ -244,4 +245,13 @@ test('the place figures of the report: provinces the posts name, and where the X
   const many = reportData({ posts: Array.from({ length: 12 }, (_, index) => named('m' + index, 'Aksi di ' + ['Jakarta', 'Bandung', 'Surabaya', 'Medan', 'Makassar', 'Denpasar', 'Pontianak', 'Kupang', 'Ambon', 'Jayapura', 'Padang', 'Manado'][index])), days: [] }).places;
   assert.deepEqual([many.provinces, many.rows.length], [12, 6], 'the page lists six provinces and says how many there are');
   assert.deepEqual(reportData({ posts: [], days: [] }).places, { total: 0, named: 0, provinces: 0, rows: [], map: [], accounts: { total: 0, named: 0, unasked: 0, provinces: 0, rows: [] } });
+});
+
+test('long reports count weeks from Monday to Sunday, clipped to the days with data', () => {
+  const day = (date, total) => ({ date, positive: 0, neutral: 0, negative: 0, unknown: total, total });
+  const long = trendBuckets([day('2026-01-01', 1), day('2026-01-03', 2), day('2026-01-05', 4), day('2026-06-30', 4)]);
+  assert.equal(long.unit, 'week');
+  assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total], ['2026-01-01', '2026-01-04', 3], 'Thursday to Sunday');
+  assert.deepEqual([long.rows[1].date, long.rows[1].end, long.rows[1].total], ['2026-01-05', '2026-01-11', 4]);
+  assert.deepEqual([long.rows.at(-1).date, long.rows.at(-1).end], ['2026-06-29', '2026-06-30']);
 });

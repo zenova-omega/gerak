@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Eye, Activity, Heart } from 'lucide-react';
 import { fetchIssueDetail } from '../../../hooks/usePulse';
 import { PlatformIcon, platformLabel } from './PlatformIcon';
-import { allegationLabel, pulseError, safeSourceUrl } from '../../../lib/pulseData';
+import { allegationLabel, pulseDate, pulseError, safeSourceUrl } from '../../../lib/pulseData';
+import { readTime } from '../../../lib/pulseMeasures';
 
 function sentimentTag(s) {
   if (s === null || s === undefined) return null;
@@ -20,10 +21,9 @@ function domain(url) {
   }
 }
 
-function timeAgo(iso) {
-  if (!iso) return '';
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return '';
+export function timeAgo(iso) {
+  const then = readTime(iso);   // a time without a zone is UTC, never the browser's zone
+  if (then === null) return '';
   const mins = Math.max(0, Math.round((Date.now() - then) / 60000));
   if (mins < 60) return `${mins}m`;
   const hrs = Math.round(mins / 60);
@@ -31,11 +31,9 @@ function timeAgo(iso) {
   return `${Math.round(hrs / 24)}h`;
 }
 
-function absDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+/** A source's publication time as every page prints it (day_v1): the installation's zone, a date alone without a clock. */
+export function absDate(iso) {
+  return readTime(iso) === null ? '' : pulseDate(iso);
 }
 
 function fmt(n) {
