@@ -29,7 +29,7 @@ test('feed exposes inline media, original caption, safe links and truthful legac
     const posts = [{ id: '1', platform: 'instagram', author: 'Display Name', url: 'https://instagram.com/p/Abc/?track=1', title: 'Original caption headline', text: 'Original caption in full', metrics: { profile_image_url:'https://cdn.example.com/avatar.jpg',author_username: 'real.user', media_url: 'https://cdn.example.com/photo.jpg', media_type: 'image', likes: 0, engagement: 0 } }, { id: '2', platform: 'tiktok', author: 'Older record', metrics: {} }];
     const html = renderToStaticMarkup(React.createElement(PostFeed, { posts }));
     assert.match(html, /aria-label="Filter cepat posting"/);
-    assert.match(html, /data-layout="list"/);
+    assert.match(html, /data-layout="grid"/, 'the Posting page opens on the media grid (the owner, 15 Nov 2026)');
     assert.match(html, /pm-post-body has-media/);
     const dated=renderToStaticMarkup(React.createElement(PostFeed,{posts:[{...posts[0],published_at:'2026-11-10T23:30:00Z'},{...posts[1],published_at:'2026-11-09T10:00:00Z'}],initialDay:'2026-11-11'}));
     assert.match(dated,/Original caption in full/);

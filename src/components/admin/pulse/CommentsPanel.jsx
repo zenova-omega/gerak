@@ -1,5 +1,5 @@
 import { commentNeedsReview } from '../../../lib/pulseCommentReview';
-import React, { useEffect, useId, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { postInteractions } from '../../../lib/pulseEngagement';
 import api from '../../../lib/api';
@@ -19,6 +19,7 @@ import { UnanalysedToggle } from '../../../pulse/UnanalysedToggle';
 import CommentPostPicker from './CommentPostPicker';
 import { PulseButton } from '../../ui/PulseUI';
 import '../../../pulse/ds/comments-browse.css';
+import useMasonry from '../../../pulse/useMasonry';
 
 
 /** One comment as a card: who and when, the words, then the reading of it. Reasons stay folded so the text is never crowded. */
@@ -159,6 +160,9 @@ export default function CommentsPanel({ posts = [], topicId }) {
   // The switch narrows the cards to comments that already have a reading. It is offered only while some are still waiting.
   const [hideUnknown,setHideUnknown]=useHideUnknown();
   const canHide=waiting>0&&labelled>0, listed=hideUnknown&&canHide?comments.filter(c=>c.sentiment):comments;
+  // Comment cards differ in height; the list packs them (the owner, 15 Nov 2026).
+  const commentGrid = useRef(null);
+  useMasonry(commentGrid, true, [listed, limit]);
   const emoji = topEmoji(comments.map(c => c.text), 8);
   const one = chosen !== 'all' ? withComments.find(p => p.id === chosen) : null;
   const pick = id => { setSelected(id); setLimit(PAGE); };
@@ -177,7 +181,7 @@ export default function CommentsPanel({ posts = [], topicId }) {
         <div className="pcb-scope-actions">{safeSourceUrl(one.url) && <a href={safeSourceUrl(one.url)} target="_blank" rel="noopener noreferrer">Buka posting asli <PulseArrow/></a>}<PulseButton size="sm" onClick={backToAll}>Kembali ke semua posting</PulseButton></div>
       </div>}
       {total > 0 && <CommentSummary counts={counts} emoji={emoji} reading={!analysis.loaded ? 'loading' : analysis.error ? 'failed' : null} />}
-      {listed.length > 0 && <div className="pcb-list">{listed.slice(0, limit).map(c => <Comment key={c.post_id + c.id} comment={c} video={one ? null : c.video} post={one ? null : c.post} platform={c.post.platform} />)}</div>}
+      {listed.length > 0 && <div ref={commentGrid} className="pcb-list">{listed.slice(0, limit).map(c => <Comment key={c.post_id + c.id} comment={c} video={one ? null : c.video} post={one ? null : c.post} platform={c.post.platform} />)}</div>}
       {!total && <p className="pulse-empty">{withComments.length ? 'Belum ada komentar untuk pilihan ini. Pilih posting lain.' : 'Belum ada komentar tersimpan. Ambil komentar posting untuk mulai menganalisis.'}</p>}
       {listed.length > limit && <div className="pcb-more"><PulseButton onClick={() => setLimit(limit + MORE)}>Tampilkan {formatCount(Math.min(MORE, listed.length - limit))} komentar berikutnya</PulseButton><span>{formatCount(limit)} dari {formatCount(listed.length)} komentar{listed.length < total ? ' yang sudah dianalisis' : ''} ditampilkan</span></div>}
       <div className="pc-coverage" aria-live="polite">

@@ -1,7 +1,7 @@
 import { PulseRepostNote } from '../../ui/PulseMetricRow';
 import { Link } from 'react-router-dom';
 import { PulseArrow } from '../../ui/PulseArrow';
-import React, { createElement, useEffect, useState } from 'react';
+import React, { createElement, useEffect, useRef, useState } from 'react';
 import api from '../../../lib/api';
 import ReviewPost from './ReviewPost';
 import { ExternalLink, List, LayoutGrid, Sparkles, ChevronDown } from 'lucide-react';
@@ -28,6 +28,7 @@ import '../../../pulse/mentions-workspace.css';
 import '../../../pulse/overview-analytics.css';
 import { defaultPostFilters, filterPosts, sentimentLabels, postSentiment } from '../../../lib/pulsePostFilters';
 import { namesProvince, provinceNames } from '../../../lib/pulsePlaces';
+import useMasonry from '../../../pulse/useMasonry';
 
 // One formatter for the whole product: WIB with its label, and a date alone when the source gave no clock.
 const date = pulseDate;
@@ -67,7 +68,8 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
   const day=isDay(initialDay)?initialDay:'',dayTo=day&&isDay(initialDayTo)&&initialDayTo>=day?initialDayTo:day;
   const [filters, setFilters] = useState({...defaultPostFilters,query:initialQuery,from:day,to:dayTo,exactAuthor:initialAuthor,account:initialAccount,province:provinceNames[initialProvince]?initialProvince:'',platforms:initialPlatform?initialPlatform.split(',').filter(Boolean):null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
   const [page, setPage] = useState(0);
-  const [layout, setLayout] = useState('list');
+  // The media grid is the opening view (the owner, 15 Nov 2026); the list stays one press away.
+  const [layout, setLayout] = useState('grid');
   const [reviewState, setReviewState] = useState({topicId:'', loaded:false, rows:[], error:''});
   useEffect(() => {
     let active = true;
@@ -87,6 +89,9 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
   const rows = filterPosts(effectivePosts,filters).filter(post=>namesProvince(post,filters.province));
   const pages = Math.max(1, Math.ceil(rows.length / 12));
   const current = Math.min(page, pages - 1);
+  // The grid packs its cards by their own heights, as every card grid does (the owner, 15 Nov 2026).
+  const postGrid = useRef(null);
+  useMasonry(postGrid, layout==='grid', [rows, current]);
   return <section id="pulse-posts" className="pulse-post-feed pm-workspace" data-layout={layout} aria-label="Posting terkumpul">
     <PulsePanelHeading title="Posting terkumpul" description="Konten asli, interaksi, dan analisis per posting."><PulseTag>{formatCount(rows.length)} dari {formatCount(posts.length)} posting</PulseTag></PulsePanelHeading>
     {reviewState.topicId===topicId && reviewState.error && <p role="alert">Review belum dapat dimuat: {reviewState.error}</p>}
@@ -98,7 +103,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
     <div className="ps-active-filters" aria-label="Filter aktif">{Object.entries(filters).filter(([k,v])=>k!=='sort' && v!==defaultPostFilters[k]).map(([key,value])=><PulseTag key={key} size="lg" variant="outline" onRemove={()=>{setFilters({...filters,[key]:defaultPostFilters[key]});setPage(0);}} removeLabel={'Hapus filter '+key}>{({query:'Teks',author:'Akun',exactAuthor:'Akun terpilih',account:'Akun terpilih',province:'Menyebut tempat di',sentiments:'Sentimen',platforms:'Platform',minEngagement:'Min. interaksi',media:'Media',from:'Mulai',to:'Selesai'})[key]}: {Array.isArray(value)?value.map(v=>sentimentLabels[v]||platformLabel(v)).join(', ')||'Tidak ada':key==='province'?provinceNames[value]:key==='account'?accountName(posts.filter(p=>postAccount(p)===value))||'Nama tidak tersedia':value}</PulseTag>)}</div>
     <div className="pm-results-toolbar"><p role="status"><strong>{formatCount(rows.length)}</strong> posting cocok <span>· {rows.length ? current * 12 + 1 : 0}–{Math.min((current+1)*12,rows.length)} ditampilkan</span></p><div className="pm-view-switch" role="group" aria-label="Tampilan posting"><PulseButton aria-pressed={layout==='list'} onClick={()=>setLayout('list')}><List size={16}/>Daftar</PulseButton><PulseButton aria-pressed={layout==='grid'} onClick={()=>setLayout('grid')}><LayoutGrid size={16}/>Grid media</PulseButton></div></div>
     <div className="pm-results-layout"><div className="pm-results-main">
-    <div className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}
+    <div ref={postGrid} className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}
       onReviewSaved={review=>setReviewState(state=>state.topicId===topicId ? {...state,rows:[...state.rows.filter(row=>row.post_id!==review.post_id),review]} : state)}/>)}</div>
     {!rows.length && <div className="pulse-empty"><h3>Tidak ada posting yang cocok</h3><p>Coba hapus filter platform, sentimen, atau kata pencarian. Hanya data tersimpan yang diperiksa.</p><PulseButton onClick={()=>applyFilters({...defaultPostFilters})}>Hapus filter posting</PulseButton></div>}
     <div className="pulse-pagination"><PulseButton disabled={current === 0} onClick={() => setPage(current - 1)}>Sebelumnya</PulseButton><span>Halaman {current + 1} / {pages}</span><PulseButton disabled={current + 1 >= pages} onClick={() => setPage(current + 1)}>Berikutnya</PulseButton></div>

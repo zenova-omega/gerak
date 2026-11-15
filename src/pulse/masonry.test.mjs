@@ -19,3 +19,19 @@ test('the grid of "Posting di balik angka" packs its cards; the list view is unt
   assert.match(css, /\.psa-evidence\[data-layout=grid\] \{[^}]*align-items: start;/, 'without the script, cards still keep their own height');
   assert.doesNotMatch(css, /\.psa-evidence\[data-layout=grid\] > \.pse-card \{[^}]*grid-template-rows: auto 1fr auto auto/, 'the caption row no longer stretches');
 });
+
+test('the grid sets its own packing rows, whatever gap a page gave it, and gives them back when it stops', () => {
+  const hook = readFileSync(new URL('./useMasonry.js', import.meta.url), 'utf8');
+  // A page's own `gap` would put a row gap between every 4px row; the hook's inline style wins over any stylesheet.
+  for (const property of ['gridAutoRows', 'rowGap', 'alignItems']) assert.match(hook, new RegExp(`${property}`), property);
+  assert.match(hook, /removeAttribute\('data-masonry'\)/);
+});
+
+test('every grid of cards with different heights is packed: Posting, Komentar and "Posting di balik angka"', () => {
+  const posts = readFileSync(new URL('../components/admin/pulse/PostFeed.jsx', import.meta.url), 'utf8');
+  assert.match(posts, /useMasonry\(postGrid,\s*layout==='grid'/);
+  assert.match(posts, /<div ref=\{postGrid\} className="pulse-post-grid">/);
+  const comments = readFileSync(new URL('../components/admin/pulse/CommentsPanel.jsx', import.meta.url), 'utf8');
+  assert.match(comments, /useMasonry\(commentGrid,\s*true/);
+  assert.match(comments, /<div ref=\{commentGrid\} className="pcb-list">/);
+});
