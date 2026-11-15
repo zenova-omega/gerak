@@ -21,10 +21,13 @@ not a verified count of people.
 
 `GET /api/admin/pulse/sentiment/status` exposes configuration status, never secrets.
 An owner/admin can explicitly analyze one stored caption with
-`POST /api/admin/pulse/items/{id}/sentiment`. The local installation now uses
-`AI_PROVIDER=ollama` and the already-installed `qwen2.5:14b`. The adapter connects
-only to 127.0.0.1:11434, ignores proxy variables, never downloads a model, and
-never falls back to a cloud provider. Existing Claude support remains optional.
+`POST /api/admin/pulse/items/{id}/sentiment`. Since 15 November 2026 the local
+installation runs on the hosted xAI Grok model (`AI_PROVIDER=grok`, paid by the
+token; see `docs/operations/pulse-hosted-ai.md`). Local Ollama (`AI_PROVIDER=ollama`,
+`qwen2.5:14b`) remains a switch-back option: its adapter connects only to
+127.0.0.1:11434, ignores proxy variables, never downloads a model, and never
+falls back to a cloud provider. With the hosted provider, public post text is
+sent to the AI service. Existing Claude support remains optional.
 
 The backend sends up to 6,000 characters, requests structured label, confidence
 and rationale, validates output, and saves method/model/time alongside existing
@@ -36,16 +39,17 @@ labeled Indonesian evaluation set are not implemented.
 ### Automatic local sentiment
 
 Automatic backfill and crawler-post processing are now enabled with
-`PULSE_SENTIMENT_ENABLED=true`, restricted to `AI_PROVIDER=ollama`.
-The scheduler discovers up to 250 unqueued records per pass. A durable local
-lane lease limits inference to one background post at a time, prioritizing
+`PULSE_SENTIMENT_ENABLED=true`. On `AI_PROVIDER=ollama` a durable local lane lease
+limits inference to one background post at a time; on the hosted provider with
+`PULSE_AI_HOSTED_BACKGROUND=true`, `PULSE_AI_PARALLEL` calls (default 8) run at
+once. The scheduler discovers up to 250 unqueued records per pass, prioritizing
 recently collected records. It commits the claim before inference and re-reads
 current metrics on completion, retaining concurrently updated counters.
 
 Existing valid sentiment is retained; missing text is skipped. Invalid output
 stays unknown. Failed inference retries up to 3 attempts with backoff, after
 which it remains visibly failed. Expired leases are recoverable after restart.
-No model download, paid API fallback, or crawler quota change is performed.
+No model download or crawler quota change is performed; on the local provider there is no paid API fallback.
 
 `GET /api/admin/pulse/sentiment/progress?topic_id=…` is authenticated and reports
 project-wide totals, analyzed, pending, running, failed, and skipped. Pending
@@ -84,8 +88,9 @@ schedulers, change quotas, backfill notifications, or add push/email delivery.
 
 ## Local activation, 12 November 2026
 
-The scheduler was subsequently enabled at the user's request. Limits remain
-rss=24, xpoz=4, youtube=6 per UTC day (reset at 07:00 WIB). X/IG/TikTok share
+The scheduler was subsequently enabled at the user's request. Limits were then
+rss=24, xpoz=4, youtube=6 per UTC day (historical: a new installation now has no
+local daily cap, see `operations/pulse-monitoring.md`) (reset at 07:00 WIB). X/IG/TikTok share
 the Xpoz budget. Both existing project schedules are retained. No upgrade.
 
 Run from the project root in two terminals after stopping any existing instances:

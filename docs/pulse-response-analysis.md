@@ -2,7 +2,7 @@
 
 ## Implemented
 
-- Installed Ollama model only, no paid provider fallback, download, or additional collection. Existing PULSE_SENTIMENT_ENABLED and AI_PROVIDER switches apply.
+- Written against the local Ollama model (no paid fallback, no download, no additional collection); since 15 Nov 2026 the same workers run on the hosted model when `AI_PROVIDER=grok` (see `operations/pulse-hosted-ai.md`). Existing PULSE_SENTIMENT_ENABLED and AI_PROVIDER switches apply.
 - Separate durable results for each posting's expressed stance and each available comment's sentiment and expressed stance. Target is the project's exact label. Supports/opposes refers to explicit approval/disapproval of an action or proposal, not belief in a claim, political affiliation, or the author's identity. Reporting, quotation and vague targets remain unclear.
 - Content and target fingerprints invalidate changed evidence; a fenced shared inference lane prevents overlap with caption analysis. Failed jobs have bounded retries. Discovery rotates through stored posts. Comment and post jobs alternate; response and caption workers each receive a turn.
 - Result categories open original evidence and model reasons. Unclear/low confidence/truncated inputs are marked for review. Model confidence is not calibrated accuracy. Missing analysis is never neutral.
