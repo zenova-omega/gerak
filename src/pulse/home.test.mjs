@@ -154,3 +154,9 @@ test('the radar has its own switch in Monitor, asked about before it is turned o
   assert.deepEqual(monitorExtras.find(extra => extra.channel === 'radar'), { channel: 'radar', label: 'Radar isu Indonesia', paid: true });
   assert.deepEqual(monitorExtras.find(extra => extra.channel === 'radar_social'), { channel: 'radar_social', label: 'Radar: X, TikTok, Instagram', paid: true }, 'the paid steps have their own switch');
 });
+
+test('Beranda opens on every issue: a category or platform chosen on an earlier visit is never brought back, and the old saved choice is dropped', () => {
+  const source = readFileSync(new URL('./Home.jsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /localStorage\.setItem|localStorage\.getItem/, 'no choice is saved or read');
+  assert.match(source, /localStorage\.removeItem\(STORE\)/, 'a "Sosial" left from before is removed');
+});

@@ -352,3 +352,16 @@ test('a column of the top ten per platform carries the same small picture, wide 
   const videos = topRows(cards.find(card => /Teratas di YouTube/.test(card)));
   assert.match(videos[0], /data-size="column-wide"/, 'video pictures keep their shape in the video column');
 });
+
+test('the first card names each choice in words, breaks the freshness line into facts, and says how much a filter hides', async () => {
+  const html = await lead({ payload });
+  assert.match(html, /class="rdl-row-name"[^>]*>Kategori</);
+  assert.match(html, /class="rdl-row-name"[^>]*>Platform</);
+  assert.match(html, /class="rdl-facts"><span>Diperbarui 08\.10 WIB, tiap 30 menit<\/span>/);
+  assert.doesNotMatch(html, /rdl-active/, 'with nothing chosen there is nothing to say about what is hidden');
+  const filtered = await lead({ payload, filters: { ...none, category: 'politik' } });
+  assert.match(text(filtered), /Menampilkan 11 dari 12 isu Tampilkan semua isu/);
+  assert.match(filtered, /<button[^>]*class="rdl-clear"[^>]*>Tampilkan semua isu<\/button>/);
+  const province = await lead({ payload, filters: { ...none, province: 'ID-JI' } });
+  assert.match(province, /class="rdl-row-name"[^>]*>Wilayah</);
+});

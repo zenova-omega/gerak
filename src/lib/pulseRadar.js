@@ -53,12 +53,17 @@ function scoped(issues, province) {
   return province ? [...national.filter(issue => loudIn(issue, province)), ...local.filter(issue => loudIn(issue, province))] : national;
 }
 
-/** The rows on screen: at most ten. A platform keeps the issues that are on it, loudest there first. */
-export function visibleIssues(issues, { category = '', platform = '', province = '' } = {}) {
+/** Every issue the choices keep, before the list is cut to ten. A platform keeps the issues that are on it, loudest there first. */
+export function matchingIssues(issues, { category = '', platform = '', province = '' } = {}) {
   let rows = scoped(issues, province).filter(issue => !category || issue.category === category);
   // Loudest on that platform first; an issue with no figure there (sampled, or found but not counted) keeps the combined order, after the counted ones.
   if (platform) rows = rows.filter(issue => issue.platforms?.[platform]).sort((a, b) => (platformFigure(b, platform) ?? -1) - (platformFigure(a, platform) ?? -1) || a.rank - b.rank);
-  return rows.slice(0, LIST_LENGTH);
+  return rows;
+}
+
+/** The rows on screen: at most ten. */
+export function visibleIssues(issues, choices = {}) {
+  return matchingIssues(issues, choices).slice(0, LIST_LENGTH);
 }
 
 /** How many issues each category holds in the scope on screen; '' is all of them. Categories with none are left out. */

@@ -6,7 +6,29 @@
 .pulse-standalone .rdl .pu-notice > p { margin: 0; }
 .pulse-standalone .rdl .pu-notice > p + .pu-button { margin-top: 10px; }
 .pulse-standalone .rdl-brief { margin: 0 0 16px; max-width: 80ch; color: var(--ps-ink); font-size: 1rem; line-height: 1.6; text-wrap: pretty; }
-.pulse-standalone .rdl-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* Beranda's first card. The heading says what the page answers and breaks "when" and "what could not be read" into separate
+   facts; the choices sit under a hairline, each named in words, and the one in force is the filled one. */
+.pulse-standalone .rdl .pu-panel-heading > div:first-child > p { margin-top: 4px; }
+.pulse-standalone .rdl-facts { display: flex; flex-wrap: wrap; gap: 2px 0; color: var(--ps-muted); font-size: .8125rem; line-height: 1.5; }
+.pulse-standalone .rdl-facts > span + span::before { content: ""; display: inline-block; width: 3px; height: 3px; margin: 0 10px 2px; border-radius: 50%; background: currentColor; opacity: .6; vertical-align: middle; }
+.pulse-standalone .rdl-filters { display: grid; gap: 12px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rdl-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: start; gap: 8px 16px; }
+.pulse-standalone .rdl-row-name { padding-top: 9px; color: var(--ps-muted); font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.pulse-standalone .rdl-row-body { display: flex; flex-wrap: wrap; align-items: center; min-width: 0; }
+.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; background: none; border-radius: 0; }
+.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button { border-radius: var(--ps-radius-control); color: var(--ps-muted); font-variant-numeric: tabular-nums; font-weight: var(--ps-weight-label); }
+.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button:hover:not(:disabled, [aria-pressed=true]) { background: var(--ps-soft); color: var(--ps-ink); }
+.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button[aria-pressed=true],
+.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button[aria-pressed=true]:hover { background: var(--ps-lavender); border-color: transparent; color: var(--ps-accent-ink); font-weight: var(--ps-weight-strong); }
+.pulse-standalone .rdl-active { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; padding-left: 92px; color: var(--ps-muted); font-size: .875rem; }
+.pulse-standalone .rdl-active b { color: var(--ps-ink); font-weight: var(--ps-weight-strong); font-variant-numeric: tabular-nums; }
+.pulse-standalone .rdl-clear { padding: 4px 0; border: 0; background: none; color: var(--ps-accent); font: inherit; font-weight: var(--ps-weight-label); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.pulse-standalone .rdl-clear:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; border-radius: 4px; }
+@media (max-width: 700px) {
+  .pulse-standalone .rdl-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .pulse-standalone .rdl-row-name { padding-top: 0; }
+  .pulse-standalone .rdl-active { padding-left: 0; }
+}
 
 /* The list: the three highest as cards across the top (a picture, then the issue), the rest as ranked rows with a small
    picture. One ordered list, so the positions read in order whatever the layout. */

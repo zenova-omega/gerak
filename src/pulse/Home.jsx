@@ -82,20 +82,11 @@ export default function Home({ canCreate = false }) {
     return () => { active = false; clearInterval(timer); };
   }, [attempt, fast]);
 
-  // The last category and platform a person chose come back when the address names none.
+  // Beranda always opens on every issue. It once brought back the last category and platform a person chose, and a forgotten
+  // "Sosial" hid 39 of 40 issues on every visit (the owner asked for this to stop, 15 Nov 2026). The old saved choice is dropped.
   useEffect(() => {
-    if (params.has('cat') || params.has('pf')) return;
-    let kept = null;
-    try { kept = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch { /* Preference storage may be disabled. */ }
-    if (!kept || (!kept.cat && !kept.pf)) return;
-    setParams(previous => { const next = new URLSearchParams(previous); if (kept.cat) next.set('cat', kept.cat); if (kept.pf) next.set('pf', kept.pf); return next; }, { replace: true });
-  // Only on arrival: later changes are the person's own.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    try { localStorage.removeItem(STORE); } catch { /* Preference storage may be disabled. */ }
   }, []);
-  // A choice made through a link (the rankings beside the map and the list) is remembered like one made on a switch.
-  useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify({ cat: filters.category, pf: filters.platform })); } catch { /* Preference storage may be disabled. */ }
-  }, [filters.category, filters.platform]);
 
   const write = (changes, replace) => setParams(previous => {
     const next = new URLSearchParams(previous);
