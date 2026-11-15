@@ -45,3 +45,27 @@ Read from Meta's documentation on 15 Nov 2026 (`developers.facebook.com/docs/thr
 - A long-lived token is saved (from Graph API Explorer, swapped with the app secret; valid until 14 Jan 2027; all eleven Threads permissions). A search is accepted and returns nothing, because before App Review only the account's own posts are searched and it has none. Nothing refreshes the token yet: before 14 Jan 2027 call the refresh in step 8 or save a new one.
 - The dashboard describes `threads_keyword_search` as meant "to help the user manage their social media presence", and `threads_profile_discovery` as access to public profiles and their posts "to conduct competitor analyses". Read both against PULSE's use before App Review.
 - The data supplier used for X, Instagram and TikTok offers no Threads tool.
+
+## Jalur pencarian publik berbayar (SocialCrawl)
+
+Bila `SOCIALCRAWL_API_KEY` diisi di `server/.env`, Threads dikumpulkan lewat pencarian SocialCrawl
+(`server/app/services/ingest/socialcrawl.py`), bukan API resmi. Jalur ini menjangkau semua posting publik tanpa
+menunggu persetujuan aplikasi.
+
+- **Lengkap, tanpa batas lokal.** Setiap pengumpulan mencari semua kata pencarian project sampai halaman terakhir,
+  pada rentang hari project (bawaan 7 hari). Pengumpulan hanya berhenti bila sumber menolak, termasuk saat kredit habis.
+- **Otomatis.** `pulse_threads_auto.py` mencari setiap project yang dipantau (punya minimal satu jadwal aktif) setiap
+  `PULSE_THREADS_AUTO_MINUTES` menit (bawaan 120; 0 = hanya lewat tombol). Project baru ikut dengan sendirinya.
+  Setelah kredit diisi ulang, pengumpulan lanjut sendiri pada putaran berikutnya.
+- **Isi tiap posting:** teks, username, nama tampilan, id akun, centang verifikasi, foto profil, waktu terbit, jumlah
+  suka, balasan, repost, kutipan, tagar, dan media. Sumber ini tidak memberi lokasi posting maupun lokasi akun;
+  tempat yang disebut di dalam teks tetap dibaca seperti sumber lain. Tautan foto profil dan media kedaluwarsa
+  dalam hitungan jam.
+- **Biaya terukur 15 Nov 2026:** sekitar 1 kredit per 15 posting yang dibaca. Satu pencarian penuh 7 hari memakai
+  6 sampai 7 kredit per project (96 sampai 114 posting dibaca).
+- **Kecepatan:** satu panggilan 45 baris selesai dalam 10 sampai 40 detik. Panggilan 100 baris pernah melewati dua
+  menit, jadi halaman dibuat 45 baris. Satu kata yang tidak dijawab dilewati; dua berturut-turut menghentikan putaran.
+- Sisa kredit dibaca dari setiap jawaban dan tampil di halaman Sumber. Cek tanpa biaya:
+  `GET https://www.socialcrawl.dev/v1/credits/balance` dengan header `x-api-key`.
+- Nama pemasok tidak dikirim ke browser; halaman Sumber hanya menyebut "pencarian publik".
+- Kosongkan kuncinya untuk kembali ke API resmi.

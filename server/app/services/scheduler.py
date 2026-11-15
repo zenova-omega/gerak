@@ -24,6 +24,10 @@ def start_scheduler():
         from .pulse_radar import radar_tick
         # Checks once a minute whether a refresh is due; the refresh itself runs every half hour while its switch is on.
         scheduler.add_job(radar_tick, 'interval', seconds=60, id='pulse_radar', replace_existing=True, max_instances=1, coalesce=True)
+        from .pulse_threads_auto import threads_tick, TICK_SECONDS as THREADS_SECONDS
+        # Checks every few minutes which projects are due; does nothing without the search key or with the interval at 0.
+        scheduler.add_job(threads_tick, 'interval', seconds=THREADS_SECONDS, id='pulse_threads', replace_existing=True, max_instances=1, coalesce=True, misfire_grace_time=120,
+                          next_run_time=datetime.now() + timedelta(seconds=90))
         from .pulse_retention import retention_tick
         # Once a day, and first ten minutes after a start: counted from the start alone, a server restarted every day
         # would never reach its turn. The run does nothing while PULSE_RETENTION_DAYS is 0.

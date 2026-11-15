@@ -12,6 +12,7 @@ from ..models.pulse import PulseCrawlRun, WatchTopic
 from ..models.pulse_sources import SourceAccount
 from ..services.ingest.xpoz import SOCIAL_TOOLS
 from ..services.ingest.threads import fetch_threads_items
+from ..services.ingest.socialcrawl import fetch_socialcrawl_threads_items
 
 router=APIRouter(dependencies=[Depends(require_pulse_access)])
 
@@ -62,7 +63,8 @@ class ThreadsCollection(BaseModel):
 
 @router.post('/threads/collect')
 async def collect_threads(req:ThreadsCollection,db:AsyncSession=Depends(get_db)):
-    """One collection of a project's Threads posts through the official API, over the project's day range.
+    """One collection of a project's Threads posts over the project's day range: through the paid public search when
+    its key is saved (it reaches every public post), otherwise through the official API.
 
     Nothing is held open while the platform is asked. The attempt is recorded either way, so the sources page shows
     a refusal and its reason (no search permission, an expired token, a spent allowance) instead of an empty row."""
@@ -72,22 +74,28 @@ async def collect_threads(req:ThreadsCollection,db:AsyncSession=Depends(get_db))
     topic=await db.get(WatchTopic,req.topic_id)
     if topic is None:
         raise HTTPException(404,'Topic not found')
+    key=credential(get_settings(),'SOCIALCRAWL_API_KEY')
     token=credential(get_settings(),'THREADS_ACCESS_TOKEN')
     started=datetime.utcnow()
     query,days=topic.query,(await pulse_lookback.read(db,topic.id))['days']
     await db.commit()
-    if token:
+    if key:
+        items,stats=await fetch_socialcrawl_threads_items(query,key,since=started-timedelta(days=days))
+    elif token:
         items,stats=await fetch_threads_items(query,token,since=started-timedelta(days=days))
     else:
         items,stats=[],{'searches':0,'calls':0,'read':0,'matched':0,'stopped':'not_configured'}
     topic=await db.get(WatchTopic,req.topic_id)
     ingested=await ingest_items(db,topic,items) if items else 0
-    outcome={'status':'failed' if stats['stopped'] else 'success','fetched':len(items),'ingested':ingested,
-             'error':stats['stopped'],'searches':stats['searches'],'read':stats['read']}
+    if key:
+        from ..services.pulse_threads_auto import outcome_of
+        outcome=outcome_of(stats,len(items),ingested)
+    else:
+        outcome={'status':'failed' if stats['stopped'] else 'success','fetched':len(items),'ingested':ingested,
+                 'error':stats['stopped'],'searches':stats['searches'],'read':stats['read']}
     db.add(PulseCrawlRun(topic_id=topic.id,manual=True,started_at=started,finished_at=datetime.utcnow(),ingested=ingested,providers={'threads':outcome}))
     await db.commit()
-    return {'status':'failed' if stats['stopped'] else 'succeeded' if items else 'empty','fetched':len(items),'ingested':ingested,
-            'error':stats['stopped'],'searches':stats['searches'],'read':stats['read']}
+    return {**outcome,'status':'failed' if stats['stopped'] else 'succeeded' if items else 'empty'}
 
 
 @router.post('/collect')

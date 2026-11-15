@@ -72,7 +72,10 @@ def test_account_snapshot_parses_compact_metadata_without_secrets():
 
 
 @pytest.mark.asyncio
-async def test_sources_coverage_is_authenticated_and_read_only(client,admin_token):
+async def test_sources_coverage_is_authenticated_and_read_only(client,admin_token,monkeypatch):
+    from app.services import pulse_sources as service
+    original=service.credential   # this machine's own .env may hold the paid Threads search key
+    monkeypatch.setattr(service,'credential',lambda settings,name:'' if name=='SOCIALCRAWL_API_KEY' else original(settings,name))
     res=await client.get('/api/admin/pulse/sources',headers={'Authorization':f'Bearer {admin_token}'})
     assert res.status_code==200, 'Coverage route missing'
     assert {s['platform'] for s in res.json()['sources']}=={'x','instagram','tiktok','news','youtube','threads'}

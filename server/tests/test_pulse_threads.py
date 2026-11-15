@@ -191,7 +191,7 @@ def token_set(monkeypatch):
     from app.services import pulse_sources as service
     for module in (routes, service):
         original = module.credential
-        monkeypatch.setattr(module, 'credential', lambda settings, name, original=original: TOKEN if name == 'THREADS_ACCESS_TOKEN' else original(settings, name))
+        monkeypatch.setattr(module, 'credential', lambda settings, name, original=original: TOKEN if name == 'THREADS_ACCESS_TOKEN' else '' if name == 'SOCIALCRAWL_API_KEY' else original(settings, name))
 
 
 async def threads_row(client, admin_token, topic_id=None):

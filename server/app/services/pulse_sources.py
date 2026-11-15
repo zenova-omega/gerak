@@ -222,6 +222,12 @@ async def coverage(db, settings, topic_id=None):
     threads_posts={p.url:p for p in rows if p.platform=='threads'}
     threads_token=bool(credential(settings,'THREADS_ACCESS_TOKEN'))
     connection=threads_account.detail if threads_account else None
+    # The paid public search needs no account connection. Its supplier is an operations detail: a reader is told only
+    # that public search is on, and the credits left as of the last collection (across projects).
+    public_search=bool(credential(settings,'SOCIALCRAWL_API_KEY'))
+    last_paid=(await db.execute(select(PulseCrawlRun).order_by(PulseCrawlRun.started_at.desc()).limit(200))).scalars().all() if public_search else []
+    search_credits=next((r['credits_remaining'] for c in last_paid for r in [(c.providers or {}).get('threads')]
+                         if isinstance(r,dict) and r.get('credits_remaining') is not None),None)
     # One attempt per manual collection, read from the same run log as the other lanes. A run that found nothing new
     # and was not refused counts as a success.
     attempts=[]
@@ -229,14 +235,22 @@ async def coverage(db, settings, topic_id=None):
         r=(c.providers or {}).get('threads')
         if r:
             attempts.append({'status':'failed' if r.get('error') else 'succeeded' if r.get('fetched') else 'empty','error':r.get('error'),
-                             'fetched':r.get('fetched',0),'ingested':r.get('ingested',0),'started_at':c.started_at,'finished_at':c.finished_at})
+                             'fetched':r.get('fetched',0),'ingested':r.get('ingested',0),'credits':r.get('credits'),'started_at':c.started_at,'finished_at':c.finished_at})
+    threads_list=list(threads_posts.values())
+    from .pulse_threads_auto import minutes_between_runs
+    threads_minutes=minutes_between_runs(settings) if public_search else 0
     sources.append({'platform':'threads','provider':'threads',
-        'configured':threads_token,
-        'stored_posts':len(threads_posts),'fields':{},'last_attempt':attempts[0] if attempts else None,
+        'configured':threads_token or public_search,'public_search':public_search,'search_credits_remaining':search_credits,
+        'stored_posts':len(threads_posts),
+        'fields':{**{k:sum(bool(getattr(p,k)) for p in threads_list) for k in ('text','author','published_at')},
+                  **{k:sum((p.metrics or {}).get(k) is not None for p in threads_list) for k in ('likes','comments','shares','views')}},
+        'last_attempt':attempts[0] if attempts else None,
         'last_success_at':next((a['finished_at'] for a in attempts if a['status'] in ('succeeded','empty')),None),
-        'recurring_enabled':False,
+        # Automatic for every monitored project while the paid search is on; a project with no schedule is not monitored.
+        'recurring_enabled':bool(threads_minutes) and (any(s.enabled for s in schedule_rows) if topic_id else True),
+        'interval_minutes':threads_minutes or None,
         # Searching needs a token that carries the search permission. Known only after a connection check.
-        'keyword_collection_available':threads_token and bool((connection or {}).get('search_permission')),
+        'keyword_collection_available':public_search or (threads_token and bool((connection or {}).get('search_permission'))),
         'connection':connection,
         'connection_checked_at':threads_account.checked_at if threads_account else None})
     return {'checked_at':account.checked_at if account else None,

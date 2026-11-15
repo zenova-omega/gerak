@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     XPOZ_MODE: Literal["mcp_stored", "rest_live"] = "mcp_stored"
     YOUTUBE_API_KEY: SecretStr = SecretStr("")
     THREADS_ACCESS_TOKEN: SecretStr = SecretStr("")
+    SOCIALCRAWL_API_KEY: SecretStr = SecretStr("")   # paid public Threads search, charged per window of rows (services/ingest/socialcrawl.py)
+    PULSE_THREADS_AUTO_MINUTES: int = 120   # every monitored project is searched on Threads this often while the key is set; 0 leaves it to the button
     THREADS_APP_SECRET: SecretStr = SecretStr("")   # only for swapping a short-lived token for a 60-day one (app.pulse_threads_token)
     BROWSERLESS_BASE: str = "https://chrome.browserless.io"
     PULSE_WEBHOOK_SECRET: str = ""
