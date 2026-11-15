@@ -2,7 +2,7 @@ import { LogOut, Moon, Sun } from 'lucide-react';
 import { PulseButton } from '../components/ui/PulseUI';
 
 /** Up to two letters for the signed-in person: the first letter of the first two words of the name, else of the email. */
-export function initialsOf(user) {
+function initialsOf(user) {
   const words = String(user?.name || '').trim().split(/\s+/).filter(Boolean);
   const letters = words.length ? words.slice(0, 2).map(word => word[0]) : [String(user?.email || '?').trim()[0] || '?'];
   return letters.join('').toUpperCase();

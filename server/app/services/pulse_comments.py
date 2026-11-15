@@ -18,7 +18,7 @@ from .pulse_network import timestamp
 
 
 YOUTUBE_PAGES = 3
-AUTO_TOP_POSTS = 100   # per project, kept complete by the automatic lane
+AUTO_TOP_POSTS = 300   # per project, kept complete by the automatic lane (raised from 100 by the owner, 16 Nov 2026)
 STOP_STATUSES = ('quotaExceeded', 'dailyLimitExceeded', 'quota_stopped', 'authentication_failed',
                  'access_or_quota_restricted', 'plan_restricted', 'rate_limited', 'not_configured')
 
@@ -116,7 +116,7 @@ def comment_coverage(rows):
     # The automatic lane keeps the most-commented posts complete; say how far that is.
     top = sorted((row for row in eligible if (row.metrics or {}).get('comments') != 0), key=comment_rank)[:AUTO_TOP_POSTS]
     auto_done = sum(1 for row in top if (row.metrics or {}).get('comment_snapshot'))
-    return {'auto_target': len(top), 'auto_done': auto_done,
+    return {'auto_top': AUTO_TOP_POSTS, 'auto_target': len(top), 'auto_done': auto_done,
             'posts': len(rows), 'eligible': len(eligible), 'collected': len(done), 'waiting': len(waiting),
             'not_requestable': len(rows) - len(eligible),
             'comments': sum(len(((row.metrics or {}).get('comment_snapshot') or {}).get('items') or []) for row in rows)}

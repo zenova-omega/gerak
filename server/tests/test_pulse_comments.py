@@ -171,7 +171,7 @@ async def test_automatic_comment_collection_is_capped_and_only_for_monitored_pro
     await db.flush()
     now, calls = datetime(2026, 11, 14, 3, 0, 0), []
     async def collect(session, topic_id, settings, max_posts=10, top=None):
-        assert top == 100
+        assert top == 300   # the owner raised the automatic lane from the top 100 posts to the top 300 (16 Nov 2026)
         calls.append((topic_id, max_posts))
         return {'posts': [{'post_id': str(i)} for i in range(max_posts)], 'comments': 7, 'stopped': []}
     monkeypatch.setattr(auto, 'collect_project_comments', collect)
@@ -188,6 +188,18 @@ async def test_automatic_comment_collection_is_capped_and_only_for_monitored_pro
     assert (await auto.auto_collect(db, SimpleNamespace(), now))['status'] == 'collected' and calls[-1] == (topic.id, 10)   # no daily cap: a full batch
     await db.execute(WorkerPolicy.__table__.update().where(WorkerPolicy.provider == 'comments').values(daily_limit=0))
     assert (await auto.auto_collect(db, SimpleNamespace(), now))['status'] == 'off' and len(calls) == 2
+
+
+def test_coverage_names_the_size_of_the_automatic_lane_and_counts_its_300_posts():
+    """The automatic lane keeps the 300 most-commented posts of a project complete; the coverage says how big the lane is,
+    so the Comments page names it from the server and never from a number of its own."""
+    from types import SimpleNamespace
+    rows = [SimpleNamespace(id=f'p{i}', platform='youtube', url=f'https://www.youtube.com/watch?v=vid{i}', published_at=None,
+                            metrics={'comments': 1000 - i, **({'comment_snapshot': {'status': 'success', 'items': []}} if i < 120 else {})}) for i in range(305)]
+    coverage = service.comment_coverage(rows)
+    assert service.AUTO_TOP_POSTS == 300
+    assert coverage['auto_top'] == 300 and coverage['auto_target'] == 300 and coverage['auto_done'] == 120
+    assert coverage['waiting'] == 185
 
 
 @pytest.mark.asyncio

@@ -10,10 +10,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { createServer } from 'vite';
 
-let server, panel;
+let server, panel, browse;
 before(async () => {
   server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
   panel = await server.ssrLoadModule('/src/components/admin/pulse/CommentsPanel.jsx');
+  browse = await server.ssrLoadModule('/src/lib/pulseCommentsBrowse.js');   // the panel's helpers, kept apart so the panel exports components only
 });
 after(async () => { await server?.close(); });
 
@@ -24,9 +25,9 @@ const post = { id: 'p1', platform: 'tiktok', author: 'kanal', url: 'https://www.
 const render = element => renderToStaticMarkup(React.createElement(MemoryRouter, { initialEntries: ['/pulse/comments?topic=t1'] }, element));
 
 test('one step adds the next cards and never runs past the list', () => {
-  assert.equal(panel.nextShown(12, 8770), 36);
-  assert.equal(panel.nextShown(36, 40), 40);
-  assert.equal(panel.nextShown(40, 40), 40);
+  assert.equal(browse.nextShown(12, 8770), 36);
+  assert.equal(browse.nextShown(36, 40), 40);
+  assert.equal(browse.nextShown(40, 40), 40);
 });
 
 test('the list opens on its first cards, with one button for more, what is shown, and a mark that loads more by itself near the end', () => {
@@ -58,4 +59,10 @@ test('under the list one line says how many comments were analysed; the automati
 test('collecting comments reloads the page data in the background, so the cards on screen stay', () => {
   const dashboard = readFileSync(new URL('../components/admin/pulse/PulseDashboard.jsx', import.meta.url), 'utf8');
   assert.match(dashboard, /const reload = \(\) => refetchAnalytics\(\{ background: true \}\);[^\n]*'pulse-data-changed'/);
+});
+
+test('the choice to collect beyond the automatic lane names the lane by the size the server reports', () => {
+  assert.equal(browse.outsideTop({ auto_top: 300 }), 'Ambil di luar 300 besar');
+  assert.equal(browse.outsideTop({}), 'Ambil komentar posting lain', 'a server that does not say its size is not given a number');
+  assert.doesNotMatch(readFileSync(new URL('../components/admin/pulse/CommentsPanel.jsx', import.meta.url), 'utf8'), /di luar 100 besar/);
 });
