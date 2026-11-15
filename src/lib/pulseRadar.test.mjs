@@ -188,8 +188,19 @@ test('a project card says its last day against the day before and how its last w
   assert.equal(projectTones({ sentiment_7d: { positive: 1, neutral: 0, negative: 0, unknown: 3 } }).at(-1).hatch, true, 'unknown is hatched, never a flat grey');
   assert.deepEqual(projectTones({ sentiment_7d: { positive: 0, neutral: 0, negative: 0, unknown: 0 } }), []);
   assert.deepEqual(projectTones({}), []);
-  assert.deepEqual(projectTones({ sentiment_7d: { positive: 0, neutral: 999, negative: 0, unknown: 1 } }).map(row => row.shareText), ['100%', '<1%'], 'a sliver is not printed as nothing');
+  // tone_share_v1: "belum dianalisis" is a count beside the three, never a share of them (was ['100%', '<1%']).
+  assert.deepEqual(projectTones({ sentiment_7d: { positive: 0, neutral: 999, negative: 0, unknown: 1 } }).map(row => row.shareText), ['100%', '1 posting'], 'a sliver is not printed as nothing');
   assert.equal(tones[0].shareText, '6%');
+});
+
+test('a project card\'s week of tone is tone_share_v1: shares of the analysed posts, "belum dianalisis" as a count', () => {
+  const tones = projectTones({ sentiment_7d: { positive: 1, neutral: 1, negative: 2, unknown: 1996 } });
+  assert.deepEqual(tones.map(row => [row.key, row.share, row.shareText]), [['positive', 25, '25%'], ['neutral', 25, '25%'], ['negative', 50, '50%'], ['unknown', null, '1.996 posting']]);
+  assert.deepEqual(projectTones({ sentiment_7d: { positive: 1, neutral: 299, negative: 0, unknown: 0 } }).map(row => row.shareText), ['<1%', '100%'], 'one post of 300 is a sliver');
+  // Nothing analysed yet: no percentage at all, and "belum dianalisis" carries the whole count.
+  const waiting = projectTones({ sentiment_7d: { positive: 0, neutral: 0, negative: 0, unknown: 12 } });
+  assert.deepEqual(waiting.map(row => [row.key, row.value, row.share, row.shareText]), [['unknown', 12, null, '12 posting']]);
+  assert.doesNotMatch(JSON.stringify(waiting), /%|NaN/);
 });
 
 // ── X, TikTok and Instagram: a count on X, samples on the other two ─────────────────────────────────────────────────

@@ -31,6 +31,7 @@ import {responseEvidence} from '../lib/pulseResponse';
 import {inVoice,kindHints,kindLabels,kindOrder,neutralBreakdown,neutralKind,publicOpinion,voiceLabels,voiceOf} from '../lib/pulseVoice';
 import {sentimentColor,sentimentOrder,sentimentTone} from '../lib/pulseChartTheme';
 import {divergingSplit,divergingScale} from '../lib/pulseInsightMetrics';
+import {toneShares,zone} from '../lib/pulseMeasures';
 
 const colors=sentimentColor;
 const labels=sentimentOrder.map(key=>[key,sentimentLabels[key]]);
@@ -74,11 +75,11 @@ export default function SentimentAnalytics({data,topicId}) {
   // Links open exactly the posts a number counts: the chosen voice travels as its list of platforms.
   const link=filters=>postsEvidenceLink(params.toString(),{...(voicePlatforms?{platform:voicePlatforms}:{}),...filters});
   const platforms=[...new Set(posts.map(post=>post.platform||'unknown'))].map(platform=>({platform,counts:sentimentCounts(posts.filter(post=>(post.platform||'unknown')===platform))})).map(row=>({...row,total:Object.values(row.counts).reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
-  const analysed=counts.positive+counts.neutral+counts.negative;
   const [hideUnknown,setHideUnknown]=useHideUnknown();
   const shown=labels.filter(([key])=>!(hideUnknown&&key==='unknown'));
-  // The switch decides the base of every percentage on this page: only analysed posts, or all posts.
-  const base=hideUnknown?analysed:posts.length;
+  // tone_share_v1: a tone's share is always of the analysed posts. The switch only shows or hides "belum dianalisis",
+  // which is a count with its part of all posts, never a share beside the three.
+  const tone=toneShares(counts);
 
   const dayLabel=value=>{const d=new Date(value+'T00:00:00Z');return Number.isNaN(d.getTime())?value:d.toLocaleDateString('id-ID',{day:'numeric',month:'short',timeZone:'UTC'});};
   const dayOf=post=>days.length?sentimentDayOf(post):null;
@@ -89,19 +90,19 @@ export default function SentimentAnalytics({data,topicId}) {
     <VoiceOverview posts={allPosts} opinion={opinion} loaded={analysis.loaded||!topicId} hideUnknown={hideUnknown} onHideUnknown={setHideUnknown} voice={voice} onVoice={setVoice} commentsLink={'/pulse/comments?'+params}/>
     <p className="psa-scope-caption">Rincian untuk <strong>{voiceLabels[voice]}</strong>: jumlah posting dan perubahan porsinya</p>
     <PulseStatGrid label={`Jumlah posting per sentimen, ${voiceLabels[voice].toLowerCase()}`} className="psa-scope-stats">{shown.map(([key,label])=>{const change=key==='unknown'?null:recentShareChange(days,key);return <PulseStat key={key} as={Link} to={link({sentiment:key})} tone={sentimentTone[key]} label={label} value={counts[key]}
-        share={base?counts[key]/base*100:null} shareLabel={hideUnknown?'dari yang dianalisis':'dari seluruh posting'}
+        share={key==='unknown'?(posts.length?counts.unknown/posts.length*100:null):tone.percent?.[key]??null} shareText={key==='unknown'?undefined:tone.text?.[key]} shareLabel={key==='unknown'?'dari seluruh posting':'dari yang dianalisis'}
         delta={change?.delta??null} deltaUnit=" poin" deltaIntent={deltaIntent(key,change?.delta)} deltaNote={change?`porsi dari yang dianalisis · ${change.days} hari terakhir vs ${change.days} hari sebelumnya`:undefined} trend={days.map(row=>row[key])}/>;})}</PulseStatGrid>
     <div className="lay-grid"><div className="lay-8">
-    <AnalyticsPanel title="Tren harian" description="Arahkan kursor ke batang untuk melihat posting teratas hari itu. Klik warna untuk membuka postingnya." actions={bounds&&<PulseRange chart="Tren harian" bounds={bounds} value={chartRange} onChange={setChartRange}/>} footer={`Tanggal publikasi WIB.${posts.length-dated>0?` ${formatCount(posts.length-dated)} posting tanpa tanggal tidak masuk grafik.`:''}`}>
+    <AnalyticsPanel title="Tren harian" description="Arahkan kursor ke batang untuk melihat posting teratas hari itu. Klik warna untuk membuka postingnya." actions={bounds&&<PulseRange chart="Tren harian" bounds={bounds} value={chartRange} onChange={setChartRange}/>} footer={`Tanggal publikasi ${zone().name}.${posts.length-dated>0?` ${formatCount(posts.length-dated)} posting tanpa tanggal tidak masuk grafik.`:''}`}>
       {days.length?<><PulseLegend items={shown.map(([key,label])=>({key,label,color:colors[key],hatch:key==='unknown',value:chartCounts[key]}))}/>
       <div className="po-chart psa-chart" role="img" aria-label="Grafik sentimen harian. Tabel tautan yang dapat diakses tersedia di bawah."><ResponsiveContainer width="100%" height="100%"><BarChart data={chartDays} barCategoryGap="22%"><defs><pattern id="psa-hatch-unknown" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="6" fill="var(--ps-sent-unknown)"/></pattern></defs><CartesianGrid vertical={false}/><XAxis dataKey="date" tickFormatter={dayLabel} minTickGap={28} tickLine={false} axisLine={false}/><YAxis allowDecimals={false} width={38} tickLine={false} axisLine={false}/><Tooltip cursor={{fill:'var(--ps-soft)'}} content={<PulseChartTooltip labelFormatter={dayLabel} total percent top={topOfDay} topUnit="Interaksi"/>}/>{shown.map(([key,label])=><Bar key={key} dataKey={key} name={label} stackId="sentiment" fill={fill(key)} maxBarSize={44} isAnimationActive={false} cursor="pointer" onClick={row=>{if(row?.date)navigate(link({day:row.date,sentiment:key}));}}/>)}</BarChart></ResponsiveContainer></div>
-      <details className="po-data"><summary>Data harian & tautan posting</summary><div className="psa-table"><table><thead><tr><th>Tanggal WIB</th>{labels.map(([key,label])=><th key={key}>{label}</th>)}</tr></thead><tbody>{chartDays.map(row=><tr key={row.date}><th><button type="button" onClick={()=>setEvidenceRange({key:'custom',from:row.date,to:row.date})} aria-label={`Telusuri perubahan ${row.date}`}>{dayLabel(row.date)}</button></th>{labels.map(([key,label])=><td key={key}><Link aria-label={`${row.date}, ${label}: ${row[key]} posting`} to={link({day:row.date,sentiment:key})}>{row[key]} <PulseArrow/></Link></td>)}</tr>)}</tbody></table></div></details></>:<p className="po-empty">Belum ada posting bertanggal pada periode ini. Pilih rentang lain atau periksa Sumber & Cakupan.</p>}
+      <details className="po-data"><summary>Data harian & tautan posting</summary><div className="psa-table"><table><thead><tr><th>Tanggal {zone().name}</th>{labels.map(([key,label])=><th key={key}>{label}</th>)}</tr></thead><tbody>{chartDays.map(row=><tr key={row.date}><th><button type="button" onClick={()=>setEvidenceRange({key:'custom',from:row.date,to:row.date})} aria-label={`Telusuri perubahan ${row.date}`}>{dayLabel(row.date)}</button></th>{labels.map(([key,label])=><td key={key}><Link aria-label={`${row.date}, ${label}: ${row[key]} posting`} to={link({day:row.date,sentiment:key})}>{row[key]} <PulseArrow/></Link></td>)}</tr>)}</tbody></table></div></details></>:<p className="po-empty">Belum ada posting bertanggal pada periode ini. Pilih rentang lain atau periksa Sumber & Cakupan.</p>}
     </AnalyticsPanel>
     </div><div className="lay-4">
     <AnalyticsPanel title="Sentimen per platform" description="Negatif ke kiri, positif ke kanan, dalam satu skala. Klik angka untuk membuka postingnya." footer="Netral dibagi dua di sisi garis tengah. Posting yang belum dianalisis tidak digambar; jumlahnya ada di angka. Bersih = (positif − negatif) ÷ yang dianalisis.">
       {platforms.length?<>{(()=>{const splits=platforms.map(row=>divergingSplit(row.counts)),scale=divergingScale(splits);return <ul className="psa-platforms">{platforms.map(({platform,counts:row,total},index)=>{const split=splits[index];return <li key={platform}>
         <span className="psa-platform-name"><PlatformIcon platform={platform}/> {platformLabel(platform)}<small>{formatCount(total)} posting{split?` · bersih ${split.net>0?'+':split.net<0?'−':''}${Math.abs(Math.round(split.net))}`:''}</small></span>
-        <span className="psa-diverge" role="img" aria-label={split?`${platformLabel(platform)}: negatif ${Math.round(row.negative/(row.positive+row.neutral+row.negative)*100)}%, netral ${Math.round(row.neutral/(row.positive+row.neutral+row.negative)*100)}%, positif ${Math.round(row.positive/(row.positive+row.neutral+row.negative)*100)}% dari yang dianalisis`:'Belum dianalisis'}>
+        <span className="psa-diverge" role="img" aria-label={split?(text=>`${platformLabel(platform)}: negatif ${text.negative}, netral ${text.neutral}, positif ${text.positive} dari yang dianalisis`)(toneShares(row).text):'Belum dianalisis'}>
           {split?<><span className="psa-diverge-side" data-side="left">{[...split.left].reverse().map(seg=><i key={seg.key} style={{width:`${seg.share/scale*100}%`,background:colors[seg.key]}}/>)}</span><span className="psa-diverge-side" data-side="right">{split.right.map(seg=><i key={seg.key} style={{width:`${seg.share/scale*100}%`,background:colors[seg.key]}}/>)}</span></>:<span className="psa-diverge-empty"/>}
         </span>
         <span className="psa-platform-counts">{shown.map(([key,label])=><Link key={key} aria-label={`${platformLabel(platform)}, ${label}: ${row[key]} posting`} title={label} to={link({platform,sentiment:key})}><span className="psa-dot" data-tone={key} aria-hidden="true"/>{formatCount(row[key])}</Link>)}</span>

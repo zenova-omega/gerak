@@ -15,3 +15,15 @@ test('archive restores its frozen scope and values independently from a live pro
  assert.equal(restored.topic.label,'Old title');
  assert.throws(()=>restoreArchive({version:2,snapshot:payload.snapshot}));
 });
+
+test('an archive filed under older calculation rules, or before rules were recorded, is said to be recounted',async()=>{
+ const {recounted}=await import('./pulseArchive.js');
+ const {RULES}=await import('./pulseMeasures.js');
+ assert.equal(recounted({}),true,'filed before rule versions were recorded');
+ assert.equal(recounted({rules:null}),true);
+ assert.equal(recounted({rules:{...RULES}}),false,'the rules in force today');
+ assert.equal(recounted({rules:{...RULES,day:'day_v0'}}),true,'one rule older');
+ const {account,...withoutAccount}=RULES;
+ assert.equal(recounted({rules:withoutAccount}),true,'a rule that did not exist when it was filed');
+ assert.equal(recounted({rules:{...RULES,tone_share:'tone_share_v2'}}),false,'a newer version is not older');
+});

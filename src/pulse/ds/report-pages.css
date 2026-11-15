@@ -105,6 +105,9 @@
 .rp-doc.rp-doc.rp-doc .rp-table :is(th, td) { padding: 7px 9px; border: 0; border-bottom: 1px solid var(--ps-line); background: none; color: var(--ps-ink); font-size: 13px; line-height: 1.4; text-align: left; vertical-align: middle; }
 .rp-doc.rp-doc.rp-doc .rp-table thead th { padding-top: 0; border-bottom-color: var(--ps-ink); color: var(--ps-muted); font-size: 12px; vertical-align: bottom; }
 .rp-doc.rp-doc.rp-doc .rp-table :is(th, td).rp-num { text-align: right; white-space: nowrap; }
+/* The post count beside an interaction total (the posts whose interactions are known), on the same line so the
+   account rows keep their height and the A4 sheet keeps its row count. */
+.rp-doc.rp-doc.rp-doc .rp-table .rp-count { margin-left: 4px; color: var(--ps-muted); font-size: 10px; }
 .rp-doc.rp-doc.rp-doc .rp-table :is(th, td).rp-cell-bar { width: 46mm; padding-left: 18px; }
 .rp-doc.rp-doc.rp-doc .rp-table :is(th, td).rp-cell-rank { width: 9mm; color: var(--ps-muted); }
 .rp-doc.rp-doc.rp-doc .rp-table :is(th, td):first-child { padding-left: 0; }
@@ -115,6 +118,9 @@
 .rp-doc.rp-doc .rp-platform > svg { flex: 0 0 auto; color: var(--ps-muted); }
 .rp-account { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .rp-account > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The account table is auto layout: without this the name cell grows with a long name and pushes the Interaksi column
+   past the sheet. Like the places table, the name takes only the room the number columns leave, and is cut there. */
+.rp-doc.rp-doc.rp-doc .rp-page[data-section=sources] .rp-table-tight th[scope=row] { max-width: 0; width: 100%; overflow: hidden; }
 
 /* An account is its picture with the platform mark, as everywhere in PULSE. The initials sit underneath, so they
    show when a picture could not be embedded in the PDF and was left out. */

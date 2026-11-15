@@ -71,3 +71,16 @@ test('a project where no post reports any interaction keeps publication order wh
   ];
   assert.deepEqual(filterPosts(rows, { sort: 'engagement' }).map(p => p.id), ['a', 'b', 'c']);
 });
+
+test('a post\'s tone is tone_share_v1: both stored forms, any letter case, the server\'s measures first', () => {
+  const { postSentiment, sentimentCounts } = postFilters;
+  assert.equal(postSentiment({ metrics: { sentiment: 'negative' } }), postSentiment({ metrics: { sentiment: { label: 'negative' } } }));
+  assert.equal(postSentiment({ metrics: { sentiment: { label: ' Positive ' } } }), 'positive');
+  assert.equal(postSentiment({ metrics: { sentiment: 'NEUTRAL' } }), 'neutral');
+  assert.equal(postSentiment({ metrics: { sentiment: { label: 'mixed' } } }), 'unknown');
+  assert.equal(postSentiment({ metrics: {} }), 'unknown');
+  assert.equal(postSentiment({}), 'unknown');
+  assert.equal(postSentiment({ measures: { tone: 'negative' }, metrics: {} }), 'negative', 'the tone the server sent');
+  assert.deepEqual(sentimentCounts([{ metrics: { sentiment: 'negative' } }, { metrics: { sentiment: { label: 'Negative' } } }, { metrics: {} }]),
+    { positive: 0, neutral: 0, negative: 2, unknown: 1 });
+});

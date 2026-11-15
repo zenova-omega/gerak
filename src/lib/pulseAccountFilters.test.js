@@ -27,12 +27,26 @@ test('follower counts come from the posts of the same account on the same platfo
     { author: 'Kompas TV', platform: 'youtube', metrics: {} },
   ];
   const index = followerIndex(posts);
-  assert.equal(index.get('x|warga_satu').count, 480, 'the most recently collected post wins');
-  assert.equal(index.get('instagram|kreator.id').count, 90, 'without a collection time the larger figure wins');
+  assert.equal(index.get('x:warga_satu').count, 480, 'the most recently collected post wins');
+  assert.equal(index.get('instagram:kreator.id').count, 90, 'without a collection time the larger figure wins');
   const filled = withFollowers(rows, posts);
   assert.deepEqual(filled.map(row => row.followers), [null, 480, null, null, 90, null]);
   assert.equal(rows[1].followers, undefined, 'input rows are not changed');
   assert.deepEqual(withFollowers(rows, null).map(row => row.followers), [null, null, null, null, null, null]);
+});
+
+test('follower counts are matched to a row by its account_v1 key, whatever name the post carries', () => {
+  const posts = [
+    { author: 'Kanal Lama', platform: 'youtube', crawled_at: '2026-11-10T00:00:00Z', metrics: { author_id: 'UC1', author_followers: 1200 } },
+    { author: 'warga.solo', platform: 'threads', crawled_at: '2026-11-12T00:00:00Z', metrics: { author_followers: 30 } },
+    { author: 'Kanal Lain', platform: 'youtube', crawled_at: '2026-11-13T00:00:00Z', metrics: { author_id: 'UC2', author_followers: 99 } },
+  ];
+  const keyed = [
+    { key: 'youtube:UC1', author: 'Kanal Baru', platform: 'youtube', mentions: 2, engagement: 7 },
+    { key: 'threads:warga.solo', author: '@Warga.Solo', platform: 'threads', mentions: 2, engagement: 11 },
+    { key: 'youtube:UC3', author: 'Kanal Lain', platform: 'youtube', mentions: 1, engagement: 1 },
+  ];
+  assert.deepEqual(withFollowers(keyed, posts).map(row => row.followers), [1200, 30, null], 'a channel of the same title is another account');
 });
 
 test('platform chips list only platforms with accounts, social first', () => {
@@ -115,4 +129,9 @@ test('filters round-trip through the URL beside the other query keys', () => {
   assert.equal(withoutAccountFilters(written).toString(), 'topic=t1&platforms=x&sentiment=negative');
   assert.deepEqual(readAccountFilters('acc_sort=drop&acc_platforms=,,'), { platforms: null, query: '', sort: 'engagement' });
   assert.deepEqual(readAccountFilters(''), { platforms: null, query: '', sort: 'engagement' });
+});
+
+test('a follower count on a post without a name reaches its channel row by id', () => {
+  const posts = [{ author: '', platform: 'youtube', crawled_at: '2026-11-10T00:00:00Z', metrics: { author_id: 'UC9', author_followers: 640 } }];
+  assert.deepEqual(withFollowers([{ key: 'youtube:UC9', author: null, platform: 'youtube', mentions: 1, engagement: 5 }], posts).map(row => row.followers), [640]);
 });

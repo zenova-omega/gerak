@@ -58,3 +58,36 @@ test('the map sizes circles by followers, rings them by platform and draws each 
     assert.doesNotMatch(html.slice(html.indexOf('class="nx-legend')).split('</div>')[0], /—/);
   } finally { await server.close(); }
 });
+
+test('an account no post names (account_v1: a channel known by its id) is drawn and listed as "Nama tidak tersedia"', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom' });
+  try {
+    const { default: Explorer } = await server.ssrLoadModule('/src/components/admin/pulse/NetworkExplorer.jsx');
+    const evidence = id => [{ id, author: '', platform: 'youtube', title: 'Video ' + id, published_at: '2026-11-10T00:00:00Z', url: 'https://example.com/' + id }];
+    const nodes = [
+      { id: 'youtube:UC9', label: null, platform: 'youtube', observed: true, connections: 1, followers: null },
+      { id: 'youtube:UC1', label: 'Kanal', platform: 'youtube', observed: true, connections: 1, followers: null },
+    ];
+    const edges = [{ source: 'youtube:UC1', target: 'youtube:UC9', kind: 'similarity', count: 1, evidence: [...evidence('a'), ...evidence('b')] }];
+    const data = { nodes, edges, accounts: nodes.map(node => ({ id: node.id, label: node.label, evidence: evidence(node.id) })), analyzed_posts: 2 };
+    const html = renderToStaticMarkup(React.createElement(Explorer, { data, posts: [] }));
+    assert.match(html, /aria-label="Pilih akun Nama tidak tersedia, YouTube, jumlah pengikut tidak diketahui"/);
+    assert.doesNotMatch(html, /null/);
+  } finally { await server.close(); }
+});
+
+test('the faces beside a repeated text are its accounts by account_v1, one per account the count names', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom' });
+  try {
+    const { default: Analysis } = await server.ssrLoadModule('/src/components/admin/pulse/NetworkAnalysis.jsx');
+    const entry = (id, platform, author, day) => ({ id, author, platform, title: 'teks sama', published_at: `2026-11-${day}T03:00:00Z`, url: 'https://example.com/' + id });
+    // One X handle written two ways and one renamed YouTube channel (its id is on the full post, not on the timeline entry).
+    const timeline = [entry('1', 'x', 'Okezonenews', '10'), entry('2', 'x', '@okezonenews', '11'), entry('3', 'youtube', 'Kanal Lama', '09'), entry('4', 'youtube', 'Kanal Baru', '12')];
+    const posts = timeline.map(row => ({ ...row, metrics: row.platform === 'youtube' ? { author_id: 'UC1' } : {} }));
+    const data = { nodes: [], edges: [], accounts: [], earliest: [], analyzed_posts: 4, total_posts: 4,
+      narratives: [{ id: '1', title: 'teks sama', post_count: 4, account_count: 2, later_accounts: 1, timeline, metrics: {}, engagement: null, interaction_posts: 0 }] };
+    const html = renderToStaticMarkup(React.createElement(Analysis, { data, posts }));
+    const faces = html.match(/<span class="pn-faces" aria-hidden="true">([\s\S]*?)<\/span><b>/)[1];
+    assert.equal((faces.match(/ps-profile-avatar/g) || []).length, 2);
+  } finally { await server.close(); }
+});

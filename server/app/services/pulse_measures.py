@@ -249,6 +249,36 @@ def account_key(platform: str | None, author: str | None, metrics: dict | None) 
     return f'{platform}:{identity}' if identity else None
 
 
+def account_name(posts) -> str | None:
+    """account_v1: the name shown for an account is the `author` text, as written, of its most recently published post
+    that has one. A post without a readable time comes after every dated post; on a tie the first post given wins."""
+    name, latest = None, None
+    for post in posts or []:
+        author = post.get('author') if isinstance(post, dict) else None
+        if not _trim(author):
+            continue
+        moment = read_time(post.get('published_at'))
+        if name is None or (moment is not None and (latest is None or moment > latest)):
+            name, latest = author, moment
+    return name
+
+
+def post_account(post) -> str | None:
+    """account_v1 of a post: the `measures.account` it carries, else its key from platform, author and metrics. A post
+    without a name still belongs to an account when its platform keys by id; its name is then unknown (None)."""
+    if not isinstance(post, dict):
+        return None
+    measures = post.get('measures')
+    if isinstance(measures, dict) and measures.get('account') is not None:
+        return measures['account']
+    return account_key(post.get('platform'), post.get('author'), post.get('metrics'))
+
+
+def account_count(posts) -> int:
+    """account_v1: how many accounts posted these, distinct keys; a post without a key is no account."""
+    return len({key for key in map(post_account, posts or []) if key})
+
+
 def post_measures(published_at, platform, author, metrics, post_id=None) -> dict:
     return {'day': local_day(published_at), 'clock': has_clock(published_at), 'interactions': interactions(metrics),
             'account': account_key(platform, author, metrics), 'tone': tone(metrics)}

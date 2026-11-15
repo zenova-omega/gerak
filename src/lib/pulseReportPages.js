@@ -3,12 +3,12 @@
  * A figure nobody observed is `null` and is never read as zero; a share is read over what has been analysed. */
 import { pulseDay } from './pulseData.js';
 import { sentimentCounts } from './pulsePostFilters.js';
-import { engagementSummary, postInteractions } from './pulseEngagement.js';
+import { engagementSummary } from './pulseEngagement.js';
 import { inVoice, leading, neutralBreakdown, publicOpinion, shares } from './pulseVoice.js';
 import { responseEvidence } from './pulseResponse.js';
 import { buildConversationGroups, groupDayRange, leadingGroups } from './pulseConversationGroups.js';
 import { accountSpread, spreadByDay, spreadTotals } from './pulsePlaces.js';
-import { weekStart } from './pulseMeasures.js';
+import { accountCount, toneShares, weekStart } from './pulseMeasures.js';
 
 /** Every section of the report, in the default order. A section is one page; `posts` may take two. */
 export const reportSections = [
@@ -142,10 +142,11 @@ export function axisTicks(max, target = 4) {
 }
 
 /** One voice or one platform: how many posts, how many analysed, and the split of the analysed ones in whole
- * percentages that add up to 100. `lead` is null until something is analysed. */
+ * percentages that add up to 100 (tone_share_v1). `shareText` is what to print ("<1%" for a sliver), null until
+ * something is analysed. `lead` is null until something is analysed. */
 function reading(posts) {
   const counts = sentimentCounts(posts), analysed = posts.length - counts.unknown;
-  return { total: posts.length, analysed, unknown: counts.unknown, counts, shares: shares(counts, tones), lead: leading(counts), kinds: neutralBreakdown(posts) };
+  return { total: posts.length, analysed, unknown: counts.unknown, counts, shares: shares(counts, tones), shareText: toneShares(counts).text, lead: leading(counts), kinds: neutralBreakdown(posts) };
 }
 
 /** Everything the pages print, worked out once from a report made by `buildReport`. */
@@ -184,17 +185,17 @@ export function reportData(report) {
     .sort((a, b) => (Number.isFinite(b.likes) ? b.likes : -1) - (Number.isFinite(a.likes) ? a.likes : -1)).slice(0, 4);
   const built = buildConversationGroups(posts);
   return {
-    total, analysed, unknown: counts.unknown, counts, shares: shares(counts, tones), lead: leading(counts),
+    total, analysed, unknown: counts.unknown, counts, shares: shares(counts, tones), shareText: toneShares(counts).text, lead: leading(counts),
     coverage: total ? Math.round(analysed / total * 100) : 0,
-    accounts: new Set(posts.filter(post => post.author).map(post => JSON.stringify([post.platform, post.author]))).size,
-    interactions: engagement.interactions, interactionPosts: posts.filter(post => postInteractions(post.metrics) !== null).length,
+    accounts: accountCount(posts),   // account_v1
+    interactions: engagement.interactions, interactionPosts: engagement.interactionPosts,
     days: days.length, undated: total - days.reduce((sum, day) => sum + day.total, 0), peakDay, trend,
     voices: { public: reading(inVoice(posts, 'public')), news: reading(inVoice(posts, 'news')) },
     platforms,
     places: placeFigures(posts),
     opinion: {
       ...opinion, target: evidence.target, loaded: Boolean(report?.responseAnalysis?.loaded) && !report?.responseAnalysis?.error,
-      shares: shares(opinion.counts, tones), stanceRead, stanceShares: shares(opinion.stance, ['supports', 'opposes', 'unclear']),
+      shares: shares(opinion.counts, tones), shareText: toneShares(opinion.counts).text, stanceRead, stanceShares: shares(opinion.stance, ['supports', 'opposes', 'unclear']),
       liked,
     },
     groups: {
@@ -225,7 +226,7 @@ export function fallbackSummary(data, { platformName = key => key } = {}) {
   else if (!voice.lead) sentences.push(`Nada posting warganet belum dapat disimpulkan karena ${count(voice.total)} posting itu belum dianalisis.`);
   else {
     const rest = tones.filter(key => key !== voice.lead).sort((a, b) => voice.shares[b] - voice.shares[a]);
-    sentences.push(`Dari ${count(voice.analysed)} posting warganet yang sudah dianalisis, nada ${toneWords[voice.lead]} paling banyak (${voice.shares[voice.lead]}%), disusul ${rest.map(key => `${toneWords[key]} ${voice.shares[key]}%`).join(' dan ')}.`);
+    sentences.push(`Dari ${count(voice.analysed)} posting warganet yang sudah dianalisis, nada ${toneWords[voice.lead]} paling banyak (${voice.shareText[voice.lead]}), disusul ${rest.map(key => `${toneWords[key]} ${voice.shareText[key]}`).join(' dan ')}.`);
   }
   const top = data.platforms[0];
   if (top) sentences.push(data.platforms.length > 1

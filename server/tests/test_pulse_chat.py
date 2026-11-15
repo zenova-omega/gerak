@@ -423,3 +423,39 @@ async def test_data_block_group_total_says_over_how_many_posts(db):
     group = context['last_7_days']['conversation_groups'][0]
     assert (group['interactions'], group['interaction_posts']) == (1000, 1)
     assert any('"Kelompok utama"' in line and 'interaksi 1000 dari 1 posting' in line for line in chat.render_context(context).splitlines())
+
+
+
+@pytest.mark.asyncio
+async def test_data_block_groups_count_accounts_by_account_v1(db):
+    """account_v1: an X handle written two ways and a Threads account with an id on one row only are one account each."""
+    topic = WatchTopic(id='ak-topic', label='Akun', query='akun', is_active=False)
+    issue = Issue(id='ak-issue', topic_id='ak-topic', title='Kelompok akun')
+    db.add_all([topic, issue]); await db.flush()
+    def post(id, platform, author, metrics=None):
+        return SourceItem(id=id, topic_id='ak-topic', issue_id='ak-issue', source='xpoz', platform=platform, url=f'https://example.com/{id}',
+                          text=f'posting {id}', author=author, published_at=NOW - timedelta(hours=5), metrics=metrics or {})
+    db.add_all([post('ak1', 'x', 'Okezonenews'), post('ak2', 'x', '@okezonenews'),
+                post('ak3', 'threads', '@Warga.Solo', {'author_id': '1789'}), post('ak4', 'threads', 'warga.solo')])
+    await db.flush()
+    context = (await chat.build_context(db, 'ak-topic', NOW))['context']
+    assert context['conversation_groups_in_scope'][0]['accounts'] == 2
+
+
+
+@pytest.mark.asyncio
+async def test_data_block_reads_a_post_tone_by_tone_share_v1_in_either_stored_form(db):
+    """tone_share_v1 on Tanya AI's data block: a label stored as a plain string or as an object, in any letter case, is
+    the same tone; anything else is "belum dianalisis"."""
+    db.add(WatchTopic(id='tone-topic', label='Nada', query='nada', is_active=False)); await db.flush()
+    def post(id, metrics, hours):
+        return SourceItem(id=id, topic_id='tone-topic', source='t', platform='x', url=f'https://example.com/{id}', text=f'posting {id}',
+                          author=f'akun_{id}', published_at=NOW - timedelta(hours=hours), metrics=metrics)
+    db.add_all([post('plain', {'sentiment': 'negative'}, 3), post('object', {'sentiment': {'label': 'negative'}}, 4),
+                post('cased', {'sentiment': {'label': ' Positive '}}, 5), post('other', {'sentiment': {'label': 'mixed'}}, 6), post('none', {}, 7)])
+    await db.flush()
+    context = (await chat.build_context(db, 'tone-topic', NOW))['context']
+    assert context['totals']['sentiment'] == {'negative': 2, 'positive': 1, 'unknown': 2}
+    assert {p['author']: p['sentiment'] for p in context['evidence_posts']}['akun_plain'] == 'negative'
+    assert chat._sentiment({'sentiment': 'neutral'}) == chat._sentiment({'sentiment': {'label': 'neutral'}}) == 'neutral'
+

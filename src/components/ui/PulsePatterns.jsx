@@ -6,6 +6,7 @@ import { ProjectPostsContext } from '../../pulse/projectPosts';
 import { postInteractions } from '../../lib/pulseEngagement';
 import { postSentiment, sentimentLabels } from '../../lib/pulsePostFilters';
 import { accountPostsLink } from '../../lib/pulseDrilldown';
+import { postAccount } from '../../lib/pulseMeasures';
 import InfoTip from '../../pulse/InfoTip';
 import PostAvatar from '../admin/pulse/PostAvatar';
 import {platformLabel} from '../admin/pulse/PlatformIcon';
@@ -20,17 +21,18 @@ export function PulseSourceHeading({post,rank,children,linkProfile=false}) {
  const all=useContext(ProjectPostsContext),routed=useInRouterContext();
  const search=typeof window==='undefined'?'':window.location.search;
  const account=useMemo(()=>{
-  if(!all||!post.author)return null;
-  const rows=all.filter(p=>p.author===post.author&&p.platform===post.platform);
+  const key=all?postAccount(post):null;   // account_v1: every name the account posted under
+  if(!key)return null;
+  const rows=all.filter(p=>postAccount(p)===key);
   if(rows.length<2)return null;   // one post: the card already says everything
   const sums=rows.map(p=>postInteractions(p.metrics)).filter(v=>v!=null),tone={positive:0,neutral:0,negative:0,unknown:0};
   for(const p of rows)tone[postSentiment(p)]++;
-  return {posts:rows.length,interactions:sums.length?sums.reduce((a,b)=>a+b,0):null,tone};
- },[all,post.author,post.platform]);
+  return {key,posts:rows.length,interactions:sums.length?sums.reduce((a,b)=>a+b,0):null,tone};
+ },[all,post]);
  return <header className="pu-source-heading">
   {rank!=null&&<span className="pu-rank" aria-label={`Peringkat ${rank}`}>{String(rank).padStart(2,'0')}</span>}
   <PostAvatar post={post}/>
-  <div className="pu-source-name" data-has-account={account?'':undefined} tabIndex={account&&!profile?0:undefined}>{account&&<aside className="pu-account-pop" role="tooltip"><header><PlatformTag size="sm" platform={post.platform}/><strong>{name}</strong></header><dl><div><dt>Posting dalam cakupan</dt><dd>{formatCount(account.posts)}</dd></div><div><dt>Total interaksi</dt><dd>{account.interactions==null?'—':formatCount(account.interactions)}</dd></div></dl><p>{['positive','neutral','negative'].filter(k=>account.tone[k]).map(k=>`${formatCount(account.tone[k])} ${sentimentLabels[k].toLowerCase()}`).join(' · ')||'Sentimen belum dianalisis'}</p>{routed&&<Link to={accountPostsLink(search,{author:post.author,platform:post.platform})}>Lihat semua postingnya <PulseArrow/></Link>}</aside>}<strong>{profile?<a href={profile} target="_blank" rel="noopener noreferrer">{name}</a>:name}</strong><small>{platformLabel(post.platform)} · {pulseDate(post.published_at)}</small></div>
+  <div className="pu-source-name" data-has-account={account?'':undefined} tabIndex={account&&!profile?0:undefined}>{account&&<aside className="pu-account-pop" role="tooltip"><header><PlatformTag size="sm" platform={post.platform}/><strong>{name}</strong></header><dl><div><dt>Posting dalam cakupan</dt><dd>{formatCount(account.posts)}</dd></div><div><dt>Total interaksi</dt><dd>{account.interactions==null?'—':formatCount(account.interactions)}</dd></div></dl><p>{['positive','neutral','negative'].filter(k=>account.tone[k]).map(k=>`${formatCount(account.tone[k])} ${sentimentLabels[k].toLowerCase()}`).join(' · ')||'Sentimen belum dianalisis'}</p>{routed&&<Link to={accountPostsLink(search,{key:account.key,author:post.author,platform:post.platform})}>Lihat semua postingnya <PulseArrow/></Link>}</aside>}<strong>{profile?<a href={profile} target="_blank" rel="noopener noreferrer">{name}</a>:name}</strong><small>{platformLabel(post.platform)} · {pulseDate(post.published_at)}</small></div>
   {children&&<div className="pu-source-actions">{children}</div>}
  </header>;
 }

@@ -4,14 +4,15 @@ import { platformLabel } from '../components/admin/pulse/PlatformIcon';
 import { PulseArrow } from '../components/ui/PulseArrow';
 import { answerView, chartRows } from '../lib/pulseChatAnswer';
 import { formatCount, pulseDate, safeSourceUrl } from '../lib/pulseData';
+import { zone } from '../lib/pulseMeasures';
 import './ds/chat-answer.css';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-/** "2026-11-10 12:13" (the server's WIB stamp) as "10 Nov, 12.13 WIB". Anything else is shown as it came. */
+/** "2026-11-10 12:13" (the server's stamp in the installation's zone) as "10 Nov, 12.13 WIB". Anything else is shown as it came. */
 function stamp(value) {
   const found = String(value || '').match(/^\d{4}-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
   if (!found) return value || '';
-  return `${Number(found[2])} ${months[Number(found[1]) - 1]}` + (found[3] ? `, ${found[3]}.${found[4]} WIB` : '');
+  return `${Number(found[2])} ${months[Number(found[1]) - 1]}` + (found[3] ? `, ${found[3]}.${found[4]} ${zone().name}` : '');
 }
 
 /** Text with its bold runs and its evidence marks. A mark is a small round number that jumps to its row below. */

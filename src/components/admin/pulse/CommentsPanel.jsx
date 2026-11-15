@@ -97,7 +97,7 @@ const percentText = value => formatCount(Math.round(value * 10) / 10) + '%';
 /** The figures of the comments in view, on one strip. `reading` is 'loading' or 'failed' while the results of the
  * analysis have not arrived: that is said as it is, never as "nothing analysed yet". Shares are read over the analysed comments and the coverage
  * is said once; comments still waiting are a count without a share. Top emoticons follow on a second line. */
-function CommentSummary({ counts, emoji, reading }) {
+export function CommentSummary({ counts, emoji, reading }) {
   const emojiLabel = useId();
   const shares = analysedShares(counts), { total, analysed } = shares, waiting = total - analysed;
   return <div className="pcb-summary" role="group" aria-label="Ringkasan komentar dalam pilihan ini">
@@ -107,7 +107,7 @@ function CommentSummary({ counts, emoji, reading }) {
         <small>{reading === 'loading' ? 'Memuat hasil analisis…' : reading === 'failed' ? 'Hasil analisis belum bisa dimuat. Dicoba lagi otomatis.' : !analysed ? 'Nada komentar tampil setelah analisis berjalan.' : waiting ? `Persentase dihitung dari yang sudah dianalisis. ${formatCount(waiting)} komentar menunggu giliran.` : 'Persentase dihitung dari seluruh komentar ini.'}</small>
       </div>
       {analysed > 0 && <div className="pcb-tone">
-        <ul className="pcb-shares" aria-label="Nada komentar yang sudah dianalisis">{tones.map(([key, label]) => <li key={key} data-tone={key} title={`${formatCount(counts[key])} dari ${formatCount(analysed)} komentar yang sudah dianalisis`}><span><i aria-hidden="true" />{label}</span> <span><strong>{percentText(shares.percent(key))}</strong> <small>{formatCount(counts[key])}<span className="pu-sr"> komentar</span></small></span></li>)}</ul>
+        <ul className="pcb-shares" aria-label="Nada komentar yang sudah dianalisis">{tones.map(([key, label]) => <li key={key} data-tone={key} title={`${formatCount(counts[key])} dari ${formatCount(analysed)} komentar yang sudah dianalisis`}><span><i aria-hidden="true" />{label}</span> <span><strong>{shares.text(key) ?? percentText(shares.percent(key))}</strong> <small>{formatCount(counts[key])}<span className="pu-sr"> komentar</span></small></span></li>)}</ul>
         <div className="pcb-bar" aria-hidden="true">{tones.filter(([key]) => counts[key] > 0).map(([key]) => <i key={key} data-tone={key} style={{ flexGrow: counts[key] }} />)}</div>
       </div>}
     </div>

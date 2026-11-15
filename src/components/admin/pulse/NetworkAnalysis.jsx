@@ -14,15 +14,22 @@ import { PulseMetricRow } from '../../ui/PulseMetricRow';
 import AccountSignal, { PatternTag } from './AccountSignal';
 import { formatCount, safeSourceUrl, pulseDate } from '../../../lib/pulseData';
 import { focusFromSearch } from '../../../lib/pulseDrilldown';
+import { accountName, postAccount } from '../../../lib/pulseMeasures';
 
 // The map brings the province outlines with it, so it is fetched only when its view is opened.
 const RegionSpreadMap = lazy(() => import('../../../pulse/RegionSpreadMap'));
 
-/** The distinct accounts of one group of similar posts, in order of appearance. */
-function repeatedAccounts(row) {
+/** The distinct accounts (account_v1) of one group of similar posts, in order of appearance, each under its latest
+ * name. A timeline entry carries no metrics, so its key is read from the full post with the same id. */
+function repeatedAccounts(row, byId) {
   const seen = new Map();
-  for (const post of row.timeline || []) if (post.author && !seen.has(post.platform + '|' + post.author)) seen.set(post.platform + '|' + post.author, { author: post.author, platform: post.platform });
-  return [...seen.values()];
+  for (const post of row.timeline || []) {
+    const key = postAccount(byId.get(String(post.id)) ?? post);
+    if (!key) continue;
+    if (!seen.has(key)) seen.set(key, { key, platform: post.platform, rows: [] });
+    seen.get(key).rows.push(post);
+  }
+  return [...seen.values()].map(({ rows, ...face }) => ({ ...face, author: accountName(rows) }));
 }
 
 function Evidence({ rows = [] }) {
@@ -30,7 +37,8 @@ function Evidence({ rows = [] }) {
 }
 
 /** The two answers people open this page for, before any map: who sits at the centre, and what is being repeated. */
-function NetworkInsights({ data, onOpenNarrative }) {
+function NetworkInsights({ data, posts, onOpenNarrative }) {
+  const byId = new Map((posts || []).map(post => [String(post.id), post]));
   const hubs = [...data.nodes].filter(node => node.connections > 0).sort((a, b) => b.connections - a.connections || b.posts - a.posts).slice(0, 6);
   const kinds = data.edges.reduce((tally, edge) => { tally[edge.kind] = (tally[edge.kind] || 0) + 1; return tally; }, {});
   const mentions = kinds.mention || 0, similar = kinds.similarity || 0, links = mentions + similar;
@@ -41,10 +49,10 @@ function NetworkInsights({ data, onOpenNarrative }) {
       {links > 0 && <div className="pn-mix"><div className="sig-bar" role="img" aria-label={`${mentions} hubungan menyebut akun, ${similar} hubungan konten serupa`}>{mentions > 0 && <span style={{ flexGrow: mentions, background: 'var(--ps-chart-1)' }} />}{similar > 0 && <span style={{ flexGrow: similar, background: 'var(--ps-chart-3)' }} />}</div><ul><li><i style={{ background: 'var(--ps-chart-1)' }} /><strong>{formatCount(mentions)}</strong> menyebut akun</li><li><i style={{ background: 'var(--ps-chart-3)' }} /><strong>{formatCount(similar)}</strong> konten serupa</li></ul></div>}
     </section></div>
     <div className="lay-6"><section className="pulse-panel pn-card" aria-label="Konten yang paling banyak diulang"><div className="pulse-panel-heading"><div><h2>Konten yang paling banyak diulang</h2><p>Teks serupa yang muncul di beberapa akun, dengan jumlah interaksi semua postingnya. Bukan bukti koordinasi.</p></div></div>
-      {repeated.length ? <ol className="pn-repeated">{repeated.map(row => { const faces = repeatedAccounts(row); return <li key={row.id}>
+      {repeated.length ? <ol className="pn-repeated">{repeated.map(row => { const faces = repeatedAccounts(row, byId); return <li key={row.id}>
         <button type="button" className="pn-repeated-text" onClick={() => onOpenNarrative(row.id)} aria-label={`${row.account_count} akun mengulang: ${(row.title || '').slice(0, 80)}. Lihat urutannya.`}>{(row.title || 'Tanpa teks').slice(0, 110)}</button>
         <div className="pn-repeated-facts">
-          <span className="pn-repeated-who"><span className="pn-faces" aria-hidden="true">{faces.slice(0, 5).map(face => <AccountAvatar key={face.platform + face.author} size="xs" author={face.author} platform={face.platform} />)}</span><b>{formatCount(row.account_count)} akun</b><span>· {formatCount(row.post_count)} posting</span></span>
+          <span className="pn-repeated-who"><span className="pn-faces" aria-hidden="true">{faces.slice(0, 5).map(face => <AccountAvatar key={face.key} size="xs" author={face.author} platform={face.platform} />)}</span><b>{formatCount(row.account_count)} akun</b><span>· {formatCount(row.post_count)} posting</span></span>
           <PulseMetricRow hideEmpty metrics={row.metrics} label={`Interaksi gabungan ${formatCount(row.post_count)} posting dalam kelompok ini`} />
         </div>
       </li>; })}</ol> : <p className="pulse-analysis-note">Belum ada kelompok yang memenuhi ambang kemiripan lintas akun.</p>}
@@ -65,7 +73,7 @@ export default function NetworkAnalysis({ data, posts }) {
   const accounts = data.accounts.filter(a => (accountFilter === 'all' || (accountFilter === 'pattern' ? a.pattern : a.signals.length)) && `${a.label} ${a.platform}`.toLowerCase().includes(accountSearch.trim().toLowerCase()));
   return <section id="pulse-network" className="pulse-network-analysis" aria-label="Analisis penyebaran narasi">
     <PulseStatGrid label="Ringkasan analisis jaringan"><PulseStat label="Posting dianalisis" value={data.analyzed_posts ?? null} share={data.total_posts && data.analyzed_posts != null ? data.analyzed_posts / data.total_posts * 100 : null} shareLabel={`dari ${formatCount(data.total_posts)} posting`}/><PulseStat label="Akun teramati" value={data.accounts.length}/><PulseStat label="Kelompok konten serupa" value={data.narratives.length} note="Lintas akun, bukan bukti koordinasi"/><PulseStat label="Akun dengan sinyal" value={flagged} share={data.accounts.length ? flagged / data.accounts.length * 100 : null} shareLabel="dari akun teramati" note={patterned ? `${formatCount(patterned)} berpola mirip buzzer` : 'Perlu ditinjau, bukan penetapan bot'} onClick={() => { setSection('signals'); setAccountFilter(patterned ? 'pattern' : 'signals'); }}/></PulseStatGrid>
-    <NetworkInsights data={data} onOpenNarrative={id => { setNarrativeId(id); setSection('origins'); }} />
+    <NetworkInsights data={data} posts={posts} onOpenNarrative={id => { setNarrativeId(id); setSection('origins'); }} />
     <div className="ps-network-switch pu-tag-group" role="group" aria-label="Fokus analisis"><PulseTag size="lg" tone="accent" icon={GitBranch} pressed={section==='network'} onClick={()=>setSection('network')}>Hubungan akun</PulseTag><PulseTag size="lg" tone="accent" icon={Clock} pressed={section==='origins'} onClick={()=>setSection('origins')}>Awal & konten serupa</PulseTag><PulseTag size="lg" tone="accent" icon={ScanSearch} pressed={section==='signals'} onClick={()=>setSection('signals')}>Sinyal akun</PulseTag><PulseTag size="lg" tone="accent" icon={MapPinned} pressed={section==='map'} onClick={()=>setSection('map')}>Peta sebaran</PulseTag></div>
     {section!=='map'&&<p className="ps-network-scope">Hubungan akun bukan lokasi geografis atau bukti koordinasi.</p>}
     {section==='map'&&<Suspense fallback={<PulseSkeleton label="Memuat peta sebaran…" stats={0} panels={1} rows={0} />}><RegionSpreadMap posts={posts} /></Suspense>}

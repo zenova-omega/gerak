@@ -9,6 +9,7 @@ import NetworkAccountNode from './NetworkAccountNode';
 import { accountPhoto } from '../../../lib/pulseAccountPhoto.js';
 import { chronologyRows } from '../../../lib/pulseChronology.js';
 import { hasClock } from '../../../lib/pulseMeasures.js';
+import { postSentiment } from '../../../lib/pulsePostFilters.js';
 import InfoTip from '../../../pulse/InfoTip';
 import PostAvatar from './PostAvatar';
 import AccountAvatar from './AccountAvatar';
@@ -50,7 +51,8 @@ function headline(row, full) {
 }
 /** One post, one card: when and where, what it says, then the numbers it carries. */
 function PostCard({ row, full, showAuthor = false }) {
-  const href = safeSourceUrl(row.url), text = headline(row, full), sentiment = full?.metrics?.sentiment?.label;
+  // tone_share_v1: the post's tone in either stored form; a post not analysed yet carries no tag.
+  const href = safeSourceUrl(row.url), text = headline(row, full), tone = postSentiment(full), sentiment = tone === 'unknown' ? null : tone;
   const measured = ['likes', 'comments', 'shares', 'views', 'engagement'].some(key => Number.isFinite(full?.metrics?.[key]));
   return <li className="nxi-card">
     <div className="nxi-card-meta">{showAuthor && row.author ? <><AccountAvatar size="xs" author={row.author} platform={row.platform || full?.platform} photo={full ? accountPhoto(full) : undefined} /><strong>{row.author}</strong></> : <PlatformIcon platform={row.platform || full?.platform} size={14}/>}<time>{row.published_at ? pulseDate(row.published_at) : 'Tanggal tidak tersedia'}</time>{sentiment && <SentimentTag size="sm" value={sentiment} />}</div>
@@ -185,8 +187,8 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
               selected: moving a focused circle in the document would drop keyboard focus. */}
           {[...nodes].sort((a,b)=>radiusOf(b.id)-radiusOf(a.id)||a.id.localeCompare(b.id)).map(n=><NetworkAccountNode key={n.id} node={n} radius={radiusOf(n.id)} followers={followersOf.get(n.id)??null} far={Boolean(pointed)&&n.id!==pointed&&!near.has(n.id)} position={projected[n.id]} photo={accountPhoto(n,frame.accounts.find(a=>a.id===n.id),posts)} selected={n.id===active?.id} color={platformColor(n.platform)} onPreview={()=>setHovered(n.id)} onLeave={()=>setHovered('')} onSelect={()=>{setSelected(n.id);setHovered('');document.getElementById(arrow+'-scroll')?.scrollTo({top:0})}}/>)}
           <g className="nx-names" aria-hidden="true">{nodes.filter(n=>labels.has(n.id)).map(n=>{
-            const at=projected[n.id],r=radiusOf(n.id),picked=n.id===active?.id;
-            return <text key={n.id} className="nx-node-name" data-picked={picked?'':undefined} data-far={pointed&&n.id!==pointed&&!near.has(n.id)?'':undefined} x={at.x} y={labels.get(n.id)==='above'?at.y-r-(picked?10:6):at.y+r+(picked?18:14)} textAnchor="middle">{n.label.length>20?n.label.slice(0,18)+'…':n.label}</text>;
+            const at=projected[n.id],r=radiusOf(n.id),picked=n.id===active?.id,name=n.label||'Nama tidak tersedia';
+            return <text key={n.id} className="nx-node-name" data-picked={picked?'':undefined} data-far={pointed&&n.id!==pointed&&!near.has(n.id)?'':undefined} x={at.x} y={labels.get(n.id)==='above'?at.y-r-(picked?10:6):at.y+r+(picked?18:14)} textAnchor="middle">{name.length>20?name.slice(0,18)+'…':name}</text>;
           })}</g>
         </svg>{!nodes.length&&<div className="nx-empty"><p>Belum ada hubungan akun untuk filter dan waktu ini. Ini bukan berarti tidak ada posting.</p><button onClick={()=>setIncludeIsolated(true)}>Tampilkan akun tanpa hubungan</button></div>}
         {mode==='3d'&&<div className="nx-rotation"><label>Putar ruang <input type="range" min="-180" max="180" value={angle} onChange={e=>setAngle(Number(e.target.value))}/></label><label>Kemiringan <input type="range" min="-60" max="60" value={tilt} onChange={e=>setTilt(Number(e.target.value))}/></label></div>}
@@ -196,7 +198,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
       <header className="nxi-head">
         <PostAvatar post={{author:active?.label||'',platform:active?.platform,profile_image_url:activePhoto}}/>
         <div className="nxi-who">
-          <select aria-label="Akun explorer" value={active?.id||''} onChange={e=>setSelected(e.target.value)}>{!nodes.length&&<option value="">Belum ada akun</option>}{nodes.map(n=><option value={n.id} key={n.id}>{n.label}</option>)}</select>
+          <select aria-label="Akun explorer" value={active?.id||''} onChange={e=>setSelected(e.target.value)}>{!nodes.length&&<option value="">Belum ada akun</option>}{nodes.map(n=><option value={n.id} key={n.id}>{n.label||'Nama tidak tersedia'}</option>)}</select>
           <p>{!active?'Belum ada akun dalam sampel':hovered&&hovered!==selected?'Pratinjau · klik lingkaran untuk mengunci':active.observed?`${formatCount(evidence.length)} posting · ${formatCount(connections.length)} hubungan${followers!=null?` · ${formatCount(followers)} pengikut`:''}`:'Hanya disebut akun lain'}</p>
         </div>
         {(signals.length>0||(full&&top.has(active?.id))||!full)&&<div className="nxi-tags">
@@ -214,7 +216,7 @@ export default function NetworkExplorer({ data, posts = [], initialMode = '2d' }
       </section>
       {connections.length>0&&<section className="nxi-section" aria-label="Hubungan akun">
         <h3>Hubungan<span className="nxi-count">{formatCount(connections.length)}</span><InfoTip label="Tentang hubungan">Menyebut akun bukan bukti repost; kemiripan konten bukan bukti sebab-akibat.</InfoTip></h3>
-        {connections.map((e,i)=>{const other=data.nodes.find(n=>n.id===(e.source===active?.id?e.target:e.source));return <details className="nxi-link" key={e.source+e.target+e.kind} open={i===0&&!evidence.length}><summary><span className="nxi-link-kind" aria-hidden="true">{e.kind==='mention'?(e.source===active?.id?'→':'←'):'↔'}</span><span className="pu-sr">{e.kind==='mention'?(e.source===active?.id?'Menyebut':'Disebut oleh'):'Konten serupa dengan'} </span><strong>{other?.label}</strong><span className="nxi-count">{formatCount(e.count)} bukti</span></summary><ul className="nxi-cards">{e.evidence.map((row,k)=><PostCard key={row.id+':'+k} row={row} full={byId.get(String(row.id))} showAuthor/>)}</ul></details>})}
+        {connections.map((e,i)=>{const other=data.nodes.find(n=>n.id===(e.source===active?.id?e.target:e.source));return <details className="nxi-link" key={e.source+e.target+e.kind} open={i===0&&!evidence.length}><summary><span className="nxi-link-kind" aria-hidden="true">{e.kind==='mention'?(e.source===active?.id?'→':'←'):'↔'}</span><span className="pu-sr">{e.kind==='mention'?(e.source===active?.id?'Menyebut':'Disebut oleh'):'Konten serupa dengan'} </span><strong>{other?.label||'Nama tidak tersedia'}</strong><span className="nxi-count">{formatCount(e.count)} bukti</span></summary><ul className="nxi-cards">{e.evidence.map((row,k)=><PostCard key={row.id+':'+k} row={row} full={byId.get(String(row.id))} showAuthor/>)}</ul></details>})}
       </section>}
       <details className="nxi-profile"><summary>Profil & atribut sumber</summary><ChronologyProfile node={active} account={account}/></details>
     </div></aside></div>

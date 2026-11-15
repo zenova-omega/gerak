@@ -5,6 +5,7 @@ import { PulseTag } from '../components/ui/PulseTag';
 import { PulseArrow } from '../components/ui/PulseArrow';
 import { formatCount } from '../lib/pulseData';
 import { sentimentCounts, sentimentLabels } from '../lib/pulsePostFilters';
+import { toneShares } from '../lib/pulseMeasures';
 import { sentimentColor } from '../lib/pulseChartTheme';
 import { stanceLabels, stanceShort } from '../lib/pulseResponse';
 import { inVoice, kindHints, kindLabels, kindOrder, leading, neutralBreakdown, shares, voiceLabels } from '../lib/pulseVoice';
@@ -12,18 +13,20 @@ import { inVoice, kindHints, kindLabels, kindOrder, leading, neutralBreakdown, s
 const order = ['negative', 'neutral', 'positive'];
 const headline = { negative: 'negatif', neutral: 'netral', positive: 'positif' };
 
-/** One voice: its leading share, the full split as a bar with a legend, and what its neutral part is made of. */
+/** One voice: its leading share, the full split as a bar with a legend, and what its neutral part is made of.
+ * tone_share_v1: the three are shares of the analysed posts; "belum dianalisis" is a count beside them, shown or hidden by the toggle. */
 function Voice({ title, tip, basis, unit, counts, kinds, hideUnknown, primary = false, active, empty, action, children }) {
   const keys = [...order, ...(hideUnknown ? [] : ['unknown'])];
-  const pct = shares(counts, keys), lead = leading(counts), shown = keys.filter(key => counts[key] > 0);
+  const tone = toneShares(counts), lead = leading(counts), shown = keys.filter(key => counts[key] > 0);
+  const said = key => (key === 'unknown' ? `${formatCount(counts.unknown)} ${unit}` : tone.text[key]);
   const neutral = counts.neutral, kindKeys = kindOrder.filter(key => kinds[key] > 0), kindPct = shares(kinds, kindOrder);
   const Heading = primary ? 'h2' : 'h3';
   return <article className="pvo-voice" data-primary={primary || undefined} data-active={active || undefined} data-mood={lead || 'unknown'}>
     <header><Heading>{title}</Heading>{tip}{action}</header>
     {lead ? <>
-      <p className="pvo-lead"><strong>{pct[lead]}%</strong> {headline[lead]}<small>{basis}</small></p>
-      <div className="pvo-bar" role="img" aria-label={`${title}: ` + shown.map(key => `${sentimentLabels[key]} ${pct[key]}%`).join(', ')}>{shown.map(key => <span key={key} data-hatch={key === 'unknown' ? '' : undefined} style={{ flexGrow: counts[key], background: key === 'unknown' ? undefined : sentimentColor[key] }} />)}</div>
-      <ul className="pvo-legend">{shown.map(key => <li key={key} title={`${formatCount(counts[key])} ${unit}`}><span className="psa-dot" data-tone={key} aria-hidden="true" />{sentimentLabels[key]} <b>{pct[key]}%</b></li>)}</ul>
+      <p className="pvo-lead"><strong>{tone.text[lead]}</strong> {headline[lead]}<small>{basis}</small></p>
+      <div className="pvo-bar" role="img" aria-label={`${title}: ` + shown.map(key => `${sentimentLabels[key]} ${said(key)}`).join(', ')}>{shown.map(key => <span key={key} data-hatch={key === 'unknown' ? '' : undefined} style={{ flexGrow: counts[key], background: key === 'unknown' ? undefined : sentimentColor[key] }} />)}</div>
+      <ul className="pvo-legend">{shown.map(key => <li key={key} title={`${formatCount(counts[key])} ${unit}`}><span className="psa-dot" data-tone={key} aria-hidden="true" />{sentimentLabels[key]} <b>{said(key)}</b></li>)}</ul>
       {neutral > 0 && kindKeys.length > 0 && <div className="pvo-kinds"><span>Netral terdiri dari</span><ul>{kindKeys.map(key => <li key={key} title={kindHints[key]} data-kind={key}>{kindLabels[key]} <b>{kindPct[key]}%</b></li>)}</ul></div>}
       {children}
     </> : <p className="pvo-empty">{empty}</p>}
@@ -38,7 +41,7 @@ export default function VoiceOverview({ posts, opinion, loaded, hideUnknown, onH
   const waiting = sides.reduce((sum, side) => sum + side.counts.unknown, 0);
   const coverage = opinion.total ? opinion.analysed / opinion.total * 100 : 0;
   const stanceKeys = ['supports', 'opposes', 'unclear'], stancePct = shares(opinion.stance, stanceKeys);
-  const postBasis = (side, noun) => hideUnknown ? `dari ${formatCount(side.rows.length - side.counts.unknown)} ${noun} yang sudah dianalisis` : `dari ${formatCount(side.rows.length)} ${noun}`;
+  const postBasis = (side, noun) => `dari ${formatCount(side.rows.length - side.counts.unknown)} ${noun} yang sudah dianalisis`;
   return <section className="pvo" aria-label="Sentimen menurut siapa yang bicara">
     <Voice primary title="Opini publik" unit="komentar" hideUnknown counts={opinion.counts} kinds={opinion.kinds}
       tip={<InfoTip label="Tentang opini publik"><p>Dibaca dari komentar di bawah posting, tempat warganet menanggapi. Posting dan berita dibaca terpisah di bawahnya.</p><p>Komentar paling disukai pada posting teramai dianalisis lebih dulu, jadi angka ini sampel yang terus bertambah, bukan survei.</p></InfoTip>}

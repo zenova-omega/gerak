@@ -71,7 +71,7 @@ def test_accounts_carry_the_largest_follower_count_their_posts_report():
     accounts = {account['id']: account for account in data['accounts']}
     assert nodes['x:big']['followers'] == 5400 and accounts['x:big']['followers'] == 5400
     # Unknown stays unknown: not zero, for a source without the figure and for an account that was only mentioned.
-    assert nodes['news:Media']['followers'] is None and accounts['news:Media']['followers'] is None
+    assert nodes['news:media']['followers'] is None and accounts['news:media']['followers'] is None
     assert nodes['x:quiet']['observed'] is False and nodes['x:quiet']['followers'] is None
 
 
@@ -82,6 +82,27 @@ def test_follower_counts_that_are_not_counts_are_ignored():
     assert analyze_network(rows)['nodes'][0]['followers'] is None
     rows[0]['metrics'] = {'author_followers': 0}          # a reported zero is a count
     assert analyze_network(rows)['nodes'][0]['followers'] == 0
+
+
+def test_one_account_by_account_v1_in_nodes_mentions_and_narratives():
+    """account_v1: the same X handle written two ways, a renamed YouTube channel and a Threads account with an id on one
+    row only are one account each; a mention reaches the account in any letter case; a blank name is no account; the
+    label is the most recently published name, whatever order the posts come in."""
+    thread = 'warga solo membahas jadwal pemadaman listrik bergilir di kota minggu ini'
+    rows = [post('2', '@okezonenews', 'kabar terbaru hari ini', '2026-11-11T08:00:00'), post('1', 'Okezonenews', 'kabar kemarin', '2026-11-10T08:00:00'),
+            post('3', 'Pembaca', 'kata @OkezoneNews soal ini'),
+            post('5', 'Kanal Baru', 'video dua', '2026-11-12T08:00:00', platform='youtube') | {'metrics': {'author_id': 'UC1'}},
+            post('4', 'Kanal Lama', 'video satu', '2026-11-09T08:00:00', platform='youtube') | {'metrics': {'author_id': 'UC1'}},
+            post('6', '@Warga.Solo', thread, '2026-11-12T08:00:00', platform='threads') | {'metrics': {'author_id': '1789'}},
+            post('7', 'warga.solo', thread, '2026-11-08T08:00:00', platform='threads'),
+            post('8', 'Tetangga', thread, '2026-11-13T08:00:00', platform='threads'),
+            post('9', '  ', 'tanpa nama @Pembaca')]
+    data = analyze_network(rows)
+    assert {n['id']: n['label'] for n in data['nodes']} == {'x:okezonenews': '@okezonenews', 'x:pembaca': 'Pembaca', 'youtube:UC1': 'Kanal Baru',
+                                                          'threads:warga.solo': '@Warga.Solo', 'threads:tetangga': 'Tetangga'}
+    assert [(e['source'], e['target']) for e in data['edges'] if e['kind'] == 'mention'] == [('x:pembaca', 'x:okezonenews')]
+    assert {a['id']: a['posts'] for a in data['accounts']} == {'x:okezonenews': 2, 'x:pembaca': 1, 'youtube:UC1': 2, 'threads:warga.solo': 2, 'threads:tetangga': 1}
+    assert data['narratives'][0]['account_count'] == 2
 
 
 

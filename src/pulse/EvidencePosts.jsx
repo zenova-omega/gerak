@@ -7,7 +7,7 @@ import {SentimentTag} from '../components/ui/PulseTag';
 import {PulseMetricRow} from '../components/ui/PulseMetricRow';
 import {sentimentColor} from '../lib/pulseChartTheme';
 import {contentShares,postInteractions} from '../lib/pulseEngagement';
-import {interactionsTotal,sharesTotal} from '../lib/pulseMeasures';
+import {accountCount,accountName,interactionsTotal,postAccount,sharesTotal,toneShares} from '../lib/pulseMeasures';
 import {sourceText} from '../lib/pulseOverview';
 import {sentimentLabels,postSentiment} from '../lib/pulsePostFilters';
 import {formatCount,pulseDate,safeSourceUrl} from '../lib/pulseData';
@@ -22,13 +22,14 @@ import {sumOf,dateRange} from './evidenceFigures';
 function EvidenceSummary({posts,oneContent=false}){
  const tone={positive:0,neutral:0,negative:0};
  for(const p of posts){const key=postSentiment(p);if(key in tone)tone[key]++;}
- const analysed=tone.positive+tone.neutral+tone.negative,accounts=new Set(posts.map(p=>p.platform+'|'+p.author)).size;
+ const analysed=tone.positive+tone.neutral+tone.negative,accounts=accountCount(posts);
  const interactions=interactionsTotal(posts);
- const figures=[['posting',posts.length],['akun',accounts],[`interaksi dari ${formatCount(interactions.posts)} posting`,interactions.value],['dibagikan',oneContent?contentShares(posts):sharesTotal(posts)],['tayangan',sumOf(posts,'views')]].filter(([,value])=>value!=null);
- const tones=['negative','neutral','positive'].filter(key=>tone[key]>0),range=dateRange(posts);
+ // Interactions always show: an unknown total reads "—" (formatCount), never a number or a missing figure.
+ const figures=[['posting',posts.length],['akun',accounts],[interactions.posts?`interaksi dari ${formatCount(interactions.posts)} posting`:'interaksi',interactions.value,true],['dibagikan',oneContent?contentShares(posts):sharesTotal(posts)],['tayangan',sumOf(posts,'views')]].filter(([,value,always])=>always||value!=null);
+ const tones=['negative','neutral','positive'].filter(key=>tone[key]>0),range=dateRange(posts),share=toneShares(tone).text;   // tone_share_v1
  return <section className="ped-summary sig" aria-label="Ringkasan posting pilihan">
   <div className="sig-figures">{figures.map(([label,value])=><div className="sig-figure" key={label}><strong>{formatCount(value)}</strong><span>{label}</span></div>)}{range&&<div className="sig-figure"><strong data-kind="text">{range}</strong><span>terbit</span></div>}</div>
-  {analysed>0&&(tones.length===1?<SentimentTag value={tones[0]}/>:<div className="ped-tone"><div className="sig-bar" role="img" aria-label={tones.map(key=>`${sentimentLabels[key]} ${Math.round(tone[key]/analysed*100)}%`).join(', ')}>{tones.map(key=><span key={key} style={{flexGrow:tone[key],background:sentimentColor[key]}}/>)}</div><ul>{tones.map(key=><li key={key}><i style={{background:sentimentColor[key]}}/><strong>{Math.round(tone[key]/analysed*100)}%</strong><span>{sentimentLabels[key].toLowerCase()}</span></li>)}</ul></div>)}
+  {analysed>0&&(tones.length===1?<SentimentTag value={tones[0]}/>:<div className="ped-tone"><div className="sig-bar" role="img" aria-label={tones.map(key=>`${sentimentLabels[key]} ${share[key]}`).join(', ')}>{tones.map(key=><span key={key} style={{flexGrow:tone[key],background:sentimentColor[key]}}/>)}</div><ul>{tones.map(key=><li key={key}><i style={{background:sentimentColor[key]}}/><strong>{share[key]}</strong><span>{sentimentLabels[key].toLowerCase()}</span></li>)}</ul></div>)}
  </section>;
 }
 const sameText=p=>(sourceText(p)||'').replace(/\s+/g,' ').trim().toLowerCase();
@@ -41,9 +42,9 @@ function EvidencePosts({posts,limit=20,oneContent=false}){
 function EvidenceCopies({posts}){
  const [open,setOpen]=useState(false),first=posts[0],caption=sourceText(first)||'Teks belum tersedia';
  const totals={likes:sumOf(posts,'likes'),comments:sumOf(posts,'comments'),shares:contentShares(posts),views:sumOf(posts,'views')};   // copies of one text are one piece of content
- const accounts=new Set(posts.map(p=>p.platform+'|'+p.author)).size,oneAccount=accounts===1;
+ const keys=posts.map(postAccount),accounts=accountCount(posts),oneAccount=keys.every(key=>key&&key===keys[0]);   // every post from one account
  return <li className="ped-copies">
-  <header><span className="ped-copies-mark" aria-hidden="true"><Copy size={16}/></span><div><strong>{formatCount(posts.length)} posting dengan teks yang sama</strong><small>{oneAccount?`Semuanya dari ${first.author||'satu akun'} · ${platformLabel(first.platform)}`:`Dari ${formatCount(accounts)} akun`} · {dateRange(posts)}</small></div><SentimentTag value={postSentiment(first)}/></header>
+  <header><span className="ped-copies-mark" aria-hidden="true"><Copy size={16}/></span><div><strong>{formatCount(posts.length)} posting dengan teks yang sama</strong><small>{oneAccount?`Semuanya dari ${accountName(posts)||'satu akun'} · ${platformLabel(first.platform)}`:`Dari ${formatCount(accounts)} akun`} · {dateRange(posts)}</small></div><SentimentTag value={postSentiment(first)}/></header>
   <p className="ped-text">{caption.slice(0,420)}{caption.length>420?'…':''}</p>
   <PulseMetricRow metrics={totals} platform={first.platform}/>
   <table className="ped-accounts"><caption className="pu-sr">Posting dengan teks ini</caption><thead><tr><th scope="col">{oneAccount?'Waktu terbit':'Akun'}</th><th scope="col">Interaksi</th><th scope="col"><span className="pu-sr">Tautan</span></th></tr></thead>

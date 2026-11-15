@@ -15,7 +15,7 @@ import {postSentiment} from '../lib/pulsePostFilters';
 import {formatCount} from '../lib/pulseData';
 import {platformColor,sentimentColor} from '../lib/pulseChartTheme';
 import {sumOf,dateRange} from './evidenceFigures';
-import {interactionsTotal} from '../lib/pulseMeasures';
+import {accountCount,interactionsTotal} from '../lib/pulseMeasures';
 import './ds/narrative-panel.css';
 
 const tone=net=>net<=-20?'negative':net>=20?'positive':'neutral';
@@ -74,7 +74,7 @@ export default function NarrativePanel({narratives=[],onOpen,postsLink}){
    {unrated>0&&<p className="po-panel-note">{formatCount(unrated)} narasi belum punya posting yang dianalisis, jadi belum digambar. Tetap ada di daftar.</p>}
    <ol className="po-narrative-list">{narratives.slice(0,6).map((g,i)=>{
     const where=narrativePlatforms(g.posts),names=where.rows.map(row=>`${platformLabel(row.platform)} (${formatCount(row.count)})`).concat(where.more?[`${where.more} platform lain`]:[]),whereText=names.length>1?names.slice(0,-1).join(', ')+' dan '+names.at(-1):names[0]||'';
-    const accounts=new Set(g.posts.map(p=>p.platform+'|'+p.author)).size,total=interactionsTotal(g.posts),kpis=[['Interaksi',total.value,PulseBeat,`Interaksi dari ${formatCount(total.posts)} posting`],['Dibagikan',contentShares(g.posts),PulseShare],['Tayangan',sumOf(g.posts,'views'),PulseView]],tones=g.posts.reduce((t,p)=>{t[postSentiment(p)]=(t[postSentiment(p)]||0)+1;return t;},{}),lead=['negative','neutral','positive'].sort((a,b)=>(tones[b]||0)-(tones[a]||0))[0];
+    const accounts=accountCount(g.posts),total=interactionsTotal(g.posts),kpis=[['Interaksi',total.value,PulseBeat,`Interaksi dari ${formatCount(total.posts)} posting`],['Dibagikan',contentShares(g.posts),PulseShare],['Tayangan',sumOf(g.posts,'views'),PulseView]],tones=g.posts.reduce((t,p)=>{t[postSentiment(p)]=(t[postSentiment(p)]||0)+1;return t;},{}),lead=['negative','neutral','positive'].sort((a,b)=>(tones[b]||0)-(tones[a]||0))[0];
     return <li key={g.id}><button type="button" onClick={()=>onOpen('Kelompok percakapan',g.posts,{oneContent:true})} aria-label={`Narasi ${i+1}: ${g.title.slice(0,140)}. ${g.posts.length} posting dari ${accounts} akun${whereText?`, di ${whereText}`:''}. Periksa posting.`}><span className="po-narrative-rank" aria-hidden="true">{i+1}</span><span className="po-narrative-body"><strong>{g.title.slice(0,140)}{g.title.length>140?'…':''}</strong><small>{dateRange(g.posts)&&<time>{dateRange(g.posts)}</time>}{dateRange(g.posts)?' · ':''}{formatCount(g.posts.length)} posting · {formatCount(accounts)} akun{where.rows.length>0&&<span className="po-narrative-platforms" aria-hidden="true">{where.rows.map(row=><span key={row.platform} title={platformLabel(row.platform)} style={{'--ps-plat':platformColor(row.platform)}}><PlatformIcon platform={row.platform} size={14}/><b>{formatCount(row.count)}</b></span>)}{where.more>0&&<span title="Platform lain">+{where.more}</span>}</span>}</small><span className="po-narrative-kpis">{kpis.map(([label,value,icon,title])=><span key={label} title={title||label}>{createElement(icon,{size:14})}<b>{value==null?'—':formatCount(value)}</b>{label.toLowerCase()}</span>)}{tones[lead]>0&&<SentimentTag size="sm" value={lead}/>}</span></span><PulseArrow/></button></li>;})}</ol>
   </>:<PulsePanelEmpty title="Belum ada narasi berulang" action={postsLink&&<Link className="po-more" to={postsLink}>Buka semua posting <PulseArrow/></Link>}>Belum ada kelompok berisi lebih dari satu posting pada pilihan ini.</PulsePanelEmpty>}
  </AnalyticsPanel>;

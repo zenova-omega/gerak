@@ -102,6 +102,19 @@ test('without a stored summary the report writes plain sentences from the data',
   for (const sentence of fallbackSummary(data, { platformName })) assert.doesNotMatch(sentence, /—|undefined|NaN|null/);
 });
 
+test('the report prints tone shares as tone_share_v1 writes them: of the analysed posts, a sliver is <1%', () => {
+  const posts = [post('p', 'x', 3, { label: 'positive' }), ...Array.from({ length: 299 }, (_, index) => post('n' + index, 'x', 3, { label: 'neutral' })), post('u', 'x', 3)];
+  const data = reportData(buildReport({ posts }, { id: 't', label: 'Uji' }, {}, '2026-11-14T00:00:00Z'));
+  assert.deepEqual(data.shares, { positive: 0, neutral: 100, negative: 0 });
+  assert.deepEqual(data.shareText, { positive: '<1%', neutral: '100%', negative: '0%' });
+  assert.deepEqual(data.voices.public.shareText, { positive: '<1%', neutral: '100%', negative: '0%' });
+  assert.deepEqual(data.platforms[0].shareText, { positive: '<1%', neutral: '100%', negative: '0%' });
+  assert.equal(fallbackSummary(data)[1], 'Dari 300 posting warganet yang sudah dianalisis, nada netral paling banyak (100%), disusul positif <1% dan negatif 0%.');
+  const waiting = reportData(buildReport({ posts: [post('a', 'x', 2)] }, {}, {}, '2026-11-14T00:00:00Z'));
+  assert.equal(waiting.shareText, null, 'nothing analysed: no percentage to print');
+  assert.equal(waiting.voices.public.shareText, null);
+});
+
 test('the fallback summary says what is missing instead of guessing', () => {
   const empty = reportData(buildReport({ posts: [] }, {}, {}, '2026-11-14T00:00:00Z'));
   assert.deepEqual(fallbackSummary(empty), ['Belum ada posting pada periode dan platform yang dipilih.']);
@@ -254,4 +267,36 @@ test('long reports count weeks from Monday to Sunday, clipped to the days with d
   assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total], ['2026-01-01', '2026-01-04', 3], 'Thursday to Sunday');
   assert.deepEqual([long.rows[1].date, long.rows[1].end, long.rows[1].total], ['2026-01-05', '2026-01-11', 4]);
   assert.deepEqual([long.rows.at(-1).date, long.rows.at(-1).end], ['2026-06-29', '2026-06-30']);
+});
+
+test('the report\'s interaction total and its post count come from one rule, reading the server\'s measures', () => {
+  const posts = [
+    { id: 'm', platform: 'x', author: 'A', published_at: '2026-11-10T03:00:00Z', metrics: {}, measures: { interactions: 9 } },
+    { id: 'n', platform: 'x', author: 'B', published_at: '2026-11-10T04:00:00Z', metrics: { likes: true } },
+  ];
+  const data = reportData(buildReport({ posts }, { id: 't', label: 'Uji' }, {}, '2026-11-14T00:00:00Z'));
+  assert.equal(data.interactions, 9);
+  assert.equal(data.interactionPosts, 1);
+});
+
+test('the report counts accounts by account_v1: a handle written two ways, a renamed channel and a Threads id on one row are one account each', () => {
+  const posts = [
+    { ...post('k1', 'x', 10, { author: 'Okezonenews' }) }, { ...post('k2', 'x', 11, { author: '@okezonenews' }) },
+    { ...post('k3', 'youtube', 9, { author: 'Kanal Lama' }), metrics: { author_id: 'UC1' } },
+    { ...post('k4', 'youtube', 12, { author: 'Kanal Baru' }), metrics: { author_id: 'UC1' } },
+    { ...post('k5', 'threads', 12, { author: '@Warga.Solo' }), metrics: { author_id: '1789' } },
+    { ...post('k6', 'threads', 8, { author: 'warga.solo' }) },
+    { ...post('k7', 'x', 8, { author: '' }) },
+  ];
+  assert.equal(reportData(buildReport({ posts }, { id: 't', label: 'Uji' }, {}, '2026-11-14T00:00:00Z')).accounts, 3);
+});
+
+test('the report counts a channel whose posts have no name as one account, and a post with neither name nor id as none', () => {
+  const posts = [
+    { ...post('n1', 'youtube', 12, { author: null }), metrics: { author_id: 'UC1' } },
+    { ...post('n2', 'youtube', 10, { author: 'Kanal' }), metrics: { author_id: 'UC1' } },
+    { ...post('n3', 'youtube', 11, { author: '' }), metrics: { author_id: 'UC9' } },
+    { ...post('n4', 'x', 11, { author: '' }) },
+  ];
+  assert.equal(reportData(buildReport({ posts }, { id: 't', label: 'Uji' }, {}, '2026-11-14T00:00:00Z')).accounts, 2);
 });

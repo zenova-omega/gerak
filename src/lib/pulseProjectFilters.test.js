@@ -68,3 +68,67 @@ test('filtered network earliest evidence stays chronological rather than ranking
  const result=filters.scopeProjectData({posts:unequal,network:{accounts:[],nodes:[],edges:[]}},{platforms:['x']}).network;
  assert.deepEqual(result.earliest.map(p=>p.id),['old','x1']);
 });
+
+test('a scoped project counts interactions and shares by the measures module, each total with its post count',()=>{
+ const rows=[
+  {id:'a',platform:'x',author:'A',published_at:'2026-11-10T03:00:00Z',metrics:{likes:'4',shares:'2',views:2.5}},
+  {id:'b',platform:'x',author:'A',published_at:'2026-11-10T04:00:00Z',metrics:{views:3,engagement:6,shares:-1}},
+  {id:'c',platform:'x',author:'C',published_at:'2026-11-10T05:00:00Z',metrics:{likes:true,comments:1.5}},
+ ];
+ const result=filters.scopeProjectData({posts:rows},{});
+ assert.deepEqual(result.metric_totals.engagement,{value:12,coverage:2});
+ assert.deepEqual(result.metric_totals.shares,{value:2,coverage:1},'a digit string counts; a negative number is not reported');
+ assert.deepEqual(result.metric_totals.views,{value:3,coverage:1},'a float is not reported');
+ const byAuthor=Object.fromEntries(result.influencers.map(row=>[row.author,row]));
+ assert.deepEqual([byAuthor.A.engagement,byAuthor.A.interaction_posts],[12,2]);
+ assert.deepEqual([byAuthor.C.engagement,byAuthor.C.interaction_posts],[null,0],'nothing known: unknown with 0 posts, never 0');
+});
+
+test('a narrowed network recounts each account\'s interactions and their post count together',()=>{
+ const rows=[
+  {id:'k1',platform:'x',author:'A',metrics:{likes:'3'}},{id:'k2',platform:'x',author:'A',metrics:{likes:true}},
+  {id:'gone',platform:'instagram',author:'A',metrics:{likes:50}},
+ ];
+ const network={accounts:[{id:'x:a',platform:'x',label:'A',evidence:rows,signals:[],engagement:53,interaction_posts:2},
+  {id:'x:z',platform:'x',label:'Z',evidence:[rows[1]],signals:[],engagement:null,interaction_posts:0}],nodes:[],edges:[]};
+ const accounts=filters.scopeProjectData({posts:rows,network},{platforms:['x']}).network.accounts;
+ assert.deepEqual(accounts.map(a=>[a.id,a.engagement,a.interaction_posts]),[['x:a',3,1],['x:z',null,0]]);
+});
+
+// account_v1: one X handle written two ways, a renamed YouTube channel, a Threads account with an id on one row only.
+const sameAccounts=[
+ {id:'k1',platform:'x',author:'Okezonenews',published_at:'2026-11-10T08:00:00Z',url:'https://x.com/1',metrics:{likes:1}},
+ {id:'k2',platform:'x',author:'@okezonenews',published_at:'2026-11-11T08:00:00Z',url:'https://x.com/2',metrics:{likes:2}},
+ {id:'k3',platform:'youtube',author:'Kanal Lama',published_at:'2026-11-09T08:00:00Z',url:'https://youtube.com/3',metrics:{author_id:'UC1',likes:3}},
+ {id:'k4',platform:'youtube',author:'Kanal Baru',published_at:'2026-11-12T08:00:00Z',url:'https://youtube.com/4',metrics:{author_id:'UC1',likes:4}},
+ {id:'k5',platform:'threads',author:'@Warga.Solo',published_at:'2026-11-12T09:00:00Z',url:'https://threads.net/5',metrics:{author_id:'1789',likes:5}},
+ {id:'k6',platform:'threads',author:'warga.solo',published_at:'2026-11-08T08:00:00Z',url:'https://threads.net/6',metrics:{likes:6}},
+];
+
+test('a scoped project keeps one row per account by account_v1, with its key and its most recently published name',()=>{
+ const rows=filters.scopeProjectData({posts:sameAccounts},{}).influencers;
+ assert.deepEqual(Object.fromEntries(rows.map(row=>[row.key,[row.author,row.platform,row.mentions,row.engagement]])),{
+  'x:okezonenews':['@okezonenews','x',2,3],'youtube:UC1':['Kanal Baru','youtube',2,7],'threads:warga.solo':['@Warga.Solo','threads',2,11]});
+ const before=filters.scopeProjectData({posts:sameAccounts},{to:'2026-11-10'}).influencers;
+ assert.equal(before.find(row=>row.key==='youtube:UC1').author,'Kanal Lama','the name is the latest inside the chosen period');
+});
+
+test('a narrowed network names each account by its most recently published post inside the scope',()=>{
+ const evidence=sameAccounts.slice(2,4).map(({metrics,...row})=>row);
+ const network={accounts:[{id:'youtube:UC1',platform:'youtube',label:'Kanal Baru',evidence,signals:[]}],
+  nodes:[{id:'youtube:UC1',platform:'youtube',label:'Kanal Baru',observed:true}],edges:[]};
+ const scoped=filters.scopeProjectData({posts:sameAccounts,network},{to:'2026-11-10'}).network;
+ assert.deepEqual([scoped.accounts[0].label,scoped.nodes[0].label],['Kanal Lama','Kanal Lama']);
+});
+
+test('a scoped project keeps a channel whose post has no name, and reads the key the server sent',()=>{
+ const rows=[
+  {id:'n1',platform:'youtube',author:null,published_at:'2026-11-12T08:00:00Z',metrics:{author_id:'UC1',likes:1}},
+  {id:'n2',platform:'youtube',author:'Kanal',published_at:'2026-11-10T08:00:00Z',metrics:{author_id:'UC1',likes:1}},
+  {id:'n3',platform:'youtube',author:'',published_at:'2026-11-11T08:00:00Z',metrics:{author_id:'UC9',likes:5}},
+  {id:'n4',platform:'x',author:'',published_at:'2026-11-11T08:00:00Z',metrics:{likes:7}},
+  {id:'n5',platform:'x',author:'Lain',published_at:'2026-11-11T09:00:00Z',metrics:{likes:2},measures:{account:'x:dikirim',interactions:2}},
+ ];
+ const out=filters.scopeProjectData({posts:rows},{}).influencers;
+ assert.deepEqual(Object.fromEntries(out.map(row=>[row.key,[row.author,row.mentions]])),{'youtube:UC1':['Kanal',2],'youtube:UC9':[null,1],'x:dikirim':['Lain',1]});
+});

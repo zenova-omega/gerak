@@ -17,7 +17,7 @@ from ..services.ingest.common import observed_engagement, count
 from ..services.pulse_lock import topic_crawl_guard, CrawlInProgress
 from ..services.pulse_comments import collect_top_comments
 from ..services.pulse_public import label_for_reader, lane_for_reader, lane_from_reader, lanes_for_reader, metrics_for_reader
-from ..services.pulse_measures import interactions_total, period_closed_bounds
+from ..services.pulse_measures import account_count, interactions_total, period_closed_bounds
 
 router = APIRouter()
 
@@ -159,7 +159,7 @@ def _issue_dict(i: Issue, items=()) -> dict:
         "platforms": i.platforms or [],
         "sentiment": i.sentiment, "summary": i.summary,
         "grouping": {"method": "simhash_64", "max_distance": 3,
-                     "authors": len({(s.platform, s.author) for s in items if s.author}),
+                     "authors": account_count([{"platform": s.platform or "unknown", "author": s.author, "metrics": s.metrics} for s in items]),   # account_v1
                      "note": "Kemiripan judul dan teks dengan posting acuan pertama. Bukan bukti repost, koordinasi, atau kesamaan sikap."},
         "first_seen_at": i.first_seen_at, "last_seen_at": i.last_seen_at,
     }

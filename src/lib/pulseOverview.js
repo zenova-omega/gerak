@@ -1,7 +1,6 @@
 import { sentimentCounts, postSentiment } from './pulsePostFilters.js';
 import { sentimentTimeline } from './pulseSentiment.js';
-import {postInteractions} from './pulseEngagement.js';
-import { byInteractions, hasClock, localDay, readTime } from './pulseMeasures.js';
+import { accountName, byInteractions, hasClock, interactionsTotal, localDay, postAccount, readTime } from './pulseMeasures.js';
 
 // "Kanal pertama" (clock_v1): a channel's first post is found by its day; on that day a post with a clock comes before
 // one whose source gave a date only, which never takes part in the order by time.
@@ -38,12 +37,12 @@ export function overviewEvidence(input=[],{platforms=null,excludedIds=[],previou
   const excluded=new Set(excludedIds);
   const filter=p=>!excluded.has(p.id)&&(platforms===null||platforms.includes(p.platform));
   const posts=input.filter(filter),counts=sentimentCounts(posts),authors=new Map(),sources=new Map(),groups=new Map(),content=new Set();
-  let engagement=null,engagementCoverage=0,updatedAt=null;
+  let updatedAt=null;
   for(const p of posts){
     content.add(contentKey(p));
-    const own=postInteractions(p.metrics);if(own!==null){engagement=(engagement??0)+own;engagementCoverage++;}
     if(p.crawled_at&&(!updatedAt||p.crawled_at>updatedAt))updatedAt=p.crawled_at;
-    if(p.author){const key=JSON.stringify([p.platform,p.metrics?.author_id||p.author]);const row=authors.get(key)||{author:p.author,platform:p.platform,mentions:0,engagement:null,post:p};row.mentions++;if(own!==null)row.engagement=(row.engagement??0)+own;authors.set(key,row);}
+    const account=postAccount(p);   // account_v1; a post without a name can still have one
+    if(account){const row=authors.get(account)||{key:account,author:p.author,platform:p.platform,mentions:0,engagement:null,interaction_posts:0,post:p,rows:[]};row.mentions++;row.rows.push(p);authors.set(account,row);}
     const source=sources.get(p.platform)||{platform:p.platform,count:0,firstPublished:null,firstObserved:null,dateOnly:0};source.count++;
     if(firstOrder(p.published_at)&&(!source.firstPublished||byFirst(p.published_at,source.firstPublished)<0))source.firstPublished=p.published_at;
     if(firstOrder(p.published_at)&&!hasClock(p.published_at))source.dateOnly++;
@@ -51,6 +50,8 @@ export function overviewEvidence(input=[],{platforms=null,excludedIds=[],previou
     sources.set(p.platform,source);
     const key=p.issue_id||contentKey(p);if(!groups.has(key))groups.set(key,{id:key,title:p.title||p.text||'Posting tanpa teks',posts:[],previous:0});groups.get(key).posts.push(p);
   }
+  const {value:engagement,posts:engagementCoverage}=interactionsTotal(posts);
+  for(const row of authors.values()){const total=interactionsTotal(row.rows);row.engagement=total.value;row.interaction_posts=total.posts;row.author=accountName(row.rows);delete row.rows;}
   const previous=previousPosts===null?null:previousPosts.filter(filter);
   if(previous)for(const p of previous){const key=p.issue_id||contentKey(p);if(groups.has(key))groups.get(key).previous++;}
   return {posts,counts,analyzed:posts.length-counts.unknown,engagement,engagementCoverage,updatedAt,

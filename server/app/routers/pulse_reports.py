@@ -10,7 +10,7 @@ from ..models.pulse_report import PulseReport
 from ..services.pulse_identity import require_pulse_access, session_identity, optional_bearer
 from ..models.pulse_identity import PulseAudit
 from ..services.pulse_public import without_engine
-from ..services.pulse_measures import in_period, local_day
+from ..services.pulse_measures import RULES, in_period, local_day
 
 async def archive_access(request:Request,credentials=Depends(optional_bearer),db=Depends(get_db)):
     if credentials and not getattr(request.app.state,'pulse_only',False):
@@ -111,6 +111,9 @@ class ArchiveCreate(BaseModel):
         # A report is handed around, so it is filed without the engine behind its labels.
         self.snapshot=without_engine({k:s[k] for k in ('topic','period','generatedAt','posts','responseAnalysis')})
         self.snapshot['selectedPlatforms']=platforms
+        # The calculation rules in force at filing, written by the server. A report is rebuilt with the rules of the day
+        # it is opened; the page compares these with the current ones and says when its figures were recounted.
+        self.snapshot['rules']=dict(RULES)
         return self
 
 def metadata(row):

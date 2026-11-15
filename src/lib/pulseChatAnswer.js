@@ -4,6 +4,7 @@
 // paragraphs and lists, with one number per piece of evidence. Pure: no React, no DOM.
 import { sentimentLabels } from './pulsePostFilters.js';
 import { sentimentColor } from './pulseChartTheme.js';
+import { toneShares } from './pulseMeasures.js';
 
 const CODE = /\[([A-Z]\d{1,2})\]/g;
 const BULLET = /^\s*(?:[-•*]|\d{1,2}[.)])\s+(.*)$/;
@@ -80,7 +81,8 @@ const dayLabel = date => `${Number(date.slice(8))} ${months[Number(date.slice(5,
  * @param {(platform: string) => string} platformName how a platform is called on the page
  * @returns {{key: string, label: string, value: number, width: number, share: string|null, color: string, peak?: boolean}[]}
  *   `width` is the bar in percent of the longest. `share` is set only where the rows are parts of one whole
- *   (sentiment, platforms); provinces and groups are top lists that overlap, so they carry none.
+ *   (sentiment, platforms); provinces and groups are top lists that overlap, so they carry none. A sentiment share is
+ *   tone_share_v1 (`toneShares`): of the analysed posts, "<1%" for a sliver; "belum dianalisis" is a count without a share.
  */
 export function chartRows(chart, platformName = name => name) {
   const rows = chart?.rows || [], most = Math.max(0, ...rows.map(row => row.value || 0)), whole = rows.reduce((sum, row) => sum + (row.value || 0), 0);
@@ -89,10 +91,11 @@ export function chartRows(chart, platformName = name => name) {
     const peak = rows.findIndex(row => row.value === most && most > 0);
     return rows.map((row, index) => ({ key: row.date, label: dayLabel(row.date), value: row.value || 0, width: width(row.value), share: null, color: 'var(--ps-chart-1)', peak: index === peak }));
   }
+  const tones = rows.some(row => row.tone) ? toneShares(Object.fromEntries(rows.filter(row => row.tone).map(row => [row.tone, row.value]))).text : null;
   return rows.map((row, index) => {
     const parts = Boolean(row.tone || row.platform);
     return { key: row.tone || row.platform || row.code || row.label || String(index), label: row.tone ? sentimentLabels[row.tone] || row.tone : row.platform ? platformName(row.platform) || row.platform : row.label,
-      value: row.value || 0, width: width(row.value), share: parts ? `${whole > 0 ? Math.round((row.value || 0) / whole * 100) : 0}%` : null,
+      value: row.value || 0, width: width(row.value), share: row.tone ? tones?.[row.tone] ?? null : parts ? `${whole > 0 ? Math.round((row.value || 0) / whole * 100) : 0}%` : null,
       color: row.tone ? sentimentColor[row.tone] || 'var(--ps-chart-1)' : 'var(--ps-chart-1)' };
   });
 }

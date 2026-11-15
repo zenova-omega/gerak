@@ -190,3 +190,14 @@ def test_evaluation_period_names_the_installation_zone(monkeypatch):
     from app.services import pulse_measures
     monkeypatch.setattr(pulse_measures, 'zone', lambda: (540, 'WIT'))
     assert pulse_evaluation.period_label('2026-11-11', '2026-11-12') == {'from': '2026-11-11', 'to': '2026-11-12', 'timezone': 'WIT', 'basis': 'published_at'}
+
+
+async def test_the_machine_label_is_read_by_tone_share_v1_in_either_stored_form(evaluation):
+    """The model's tone is the module's tone: a plain string or an object, any letter case; any other label is unknown."""
+    db, client = evaluation
+    await add(db, 'plain', machine='negative', manual='negative')
+    await add(db, 'cased', machine={'label': ' Positive '}, manual='positive')
+    await add(db, 'other', machine={'label': 'mixed'}, manual='neutral')
+    body = (await get(client)).json()
+    assert (body['reviewed_count'], body['paired_count'], body['matches']) == (3, 2, 2)
+    assert body['confusion_matrix']['positive']['positive'] == 1

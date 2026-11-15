@@ -58,3 +58,13 @@ test('sentimentDate is day_v1: any written zone, a space or fractions read alike
   assert.equal(sentimentDate({ published_at: null }), null);
   assert.equal(sentimentDate({ published_at: '2026-11-10T17:00:00', measures: { day: '2026-11-11' } }), '2026-11-11');
 });
+
+test('the daily tone counts read a post\'s tone one way (tone_share_v1): both stored forms, any letter case, the server\'s measures first', () => {
+  const rows = sentimentTimeline([
+    { published_at: '2026-11-03T01:00:00Z', metrics: { sentiment: 'negative' } },
+    { published_at: '2026-11-03T02:00:00Z', metrics: { sentiment: { label: ' Negative ' } } },
+    { published_at: '2026-11-03T03:00:00Z', measures: { day: '2026-11-03', tone: 'positive' }, metrics: {} },
+    { published_at: '2026-11-03T04:00:00Z', metrics: { sentiment: { label: 'mixed' } } },
+  ]);
+  assert.deepEqual(rows, [{ date: '2026-11-03', positive: 1, neutral: 0, negative: 2, unknown: 1, total: 4 }]);
+});

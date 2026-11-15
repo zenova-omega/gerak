@@ -17,3 +17,14 @@ test('a comment shows its own sentiment and stated stance with reasons, not the 
   assert.match(sided,/Perlu ditinjau/);
  }finally{await server.close();}
 });
+
+test('the comment summary prints tone shares as tone_share_v1 writes them: of the analysed comments, one of 300 is <1%', async () => {
+ const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+ try {
+  const { CommentSummary } = await server.ssrLoadModule('/src/components/admin/pulse/CommentsPanel.jsx');
+  const html = renderToStaticMarkup(React.createElement(CommentSummary, { counts: { positive: 1, neutral: 299, negative: 0, unknown: 4 }, emoji: [], reading: null }));
+  assert.match(html, /data-tone="positive"[^>]*>(?:(?!<\/li>).)*<strong>&lt;1%<\/strong>/);
+  assert.match(html, /data-tone="neutral"[^>]*>(?:(?!<\/li>).)*<strong>100%<\/strong>/);
+  assert.match(html, /data-tone="negative"[^>]*>(?:(?!<\/li>).)*<strong>0%<\/strong>/);
+ } finally { await server.close(); }
+});

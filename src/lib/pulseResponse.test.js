@@ -31,3 +31,15 @@ test('shares of a breakdown are read over what has been analysed, never over the
   assert.equal(waiting.analysed, 0);
   assert.equal(waiting.percent('negative'), null);               // nothing analysed: no figure at all
 });
+
+test('tone shares of comments are tone_share_v1: whole numbers that add up to 100, a sliver is <1%; stances keep their own reading', async () => {
+  const { analysedShares } = await import('./pulseResponse.js');
+  const tones = analysedShares({ positive: 1, neutral: 1, negative: 1, unknown: 9 });
+  assert.deepEqual(['positive', 'neutral', 'negative'].map(tones.percent), [34, 33, 33]);
+  const sliver = analysedShares({ positive: 1, neutral: 299, negative: 0, unknown: 3 });
+  assert.deepEqual(['positive', 'neutral', 'negative', 'unknown'].map(sliver.text), ['<1%', '100%', '0%', null]);
+  assert.equal(analysedShares({ positive: 0, neutral: 0, negative: 0, unknown: 12 }).text('negative'), null, 'nothing analysed: nothing to print');
+  const stance = analysedShares({ supports: 1, opposes: 2, unclear: 0, unknown: 5 });
+  assert.equal(stance.percent('opposes'), 2 / 3 * 100);
+  assert.equal(stance.text('opposes'), null, 'a stance share is printed by its own reader');
+});

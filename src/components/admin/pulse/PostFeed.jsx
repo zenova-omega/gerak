@@ -9,6 +9,7 @@ import { PulseLike, PulseComment, PulseShare, PulseView } from '../../ui/PulseMe
 import { postInteractions } from '../../../lib/pulseEngagement';
 import { PulseEngagement } from '../../ui/PulseEngagement';
 import { formatCount, pulseDate } from '../../../lib/pulseData';
+import { accountName, postAccount } from '../../../lib/pulseMeasures';
 import { postMedia } from '../../../lib/pulseMedia';
 import PostMediaPreview from './PostMediaPreview';
 import { platformLabel } from './PlatformIcon';
@@ -60,11 +61,11 @@ function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
   </article>;
 }
 
-export default function PostFeed({ posts = [], period, onPeriodChange, initialSentiment, initialAuthor='', initialPlatform='', initialProvince='', initialDay='', initialDayTo='', initialQuery='', topicId='' }) {
+export default function PostFeed({ posts = [], period, onPeriodChange, initialSentiment, initialAuthor='', initialAccount='', initialPlatform='', initialProvince='', initialDay='', initialDayTo='', initialQuery='', topicId='' }) {
   const isDay=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value));
   // One day, or a first and last day when a week or month was picked on the trend chart.
   const day=isDay(initialDay)?initialDay:'',dayTo=day&&isDay(initialDayTo)&&initialDayTo>=day?initialDayTo:day;
-  const [filters, setFilters] = useState({...defaultPostFilters,query:initialQuery,from:day,to:dayTo,exactAuthor:initialAuthor,province:provinceNames[initialProvince]?initialProvince:'',platforms:initialPlatform?initialPlatform.split(',').filter(Boolean):null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
+  const [filters, setFilters] = useState({...defaultPostFilters,query:initialQuery,from:day,to:dayTo,exactAuthor:initialAuthor,account:initialAccount,province:provinceNames[initialProvince]?initialProvince:'',platforms:initialPlatform?initialPlatform.split(',').filter(Boolean):null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
   const [page, setPage] = useState(0);
   const [layout, setLayout] = useState('list');
   const [reviewState, setReviewState] = useState({topicId:'', loaded:false, rows:[], error:''});
@@ -94,7 +95,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
     <details className="pm-timeline-disclosure"><summary>Timeline percakapan</summary><MentionTimeline posts={posts} filters={period?{...filters,...period}:filters} globalPeriod={!!period} onApply={next=>{if(onPeriodChange)onPeriodChange({from:next.from,to:next.to});else setFilters(next);setPage(0);}}/></details>
     <PostFilterDrawer posts={effectivePosts} filters={filters} topicId={topicId} globalPeriod={!!period} onApply={next=>{setFilters(next);setPage(0);}}/>
     </div>
-    <div className="ps-active-filters" aria-label="Filter aktif">{Object.entries(filters).filter(([k,v])=>k!=='sort' && v!==defaultPostFilters[k]).map(([key,value])=><PulseTag key={key} size="lg" variant="outline" onRemove={()=>{setFilters({...filters,[key]:defaultPostFilters[key]});setPage(0);}} removeLabel={'Hapus filter '+key}>{({query:'Teks',author:'Akun',exactAuthor:'Akun terpilih',province:'Menyebut tempat di',sentiments:'Sentimen',platforms:'Platform',minEngagement:'Min. interaksi',media:'Media',from:'Mulai',to:'Selesai'})[key]}: {Array.isArray(value)?value.map(v=>sentimentLabels[v]||platformLabel(v)).join(', ')||'Tidak ada':key==='province'?provinceNames[value]:value}</PulseTag>)}</div>
+    <div className="ps-active-filters" aria-label="Filter aktif">{Object.entries(filters).filter(([k,v])=>k!=='sort' && v!==defaultPostFilters[k]).map(([key,value])=><PulseTag key={key} size="lg" variant="outline" onRemove={()=>{setFilters({...filters,[key]:defaultPostFilters[key]});setPage(0);}} removeLabel={'Hapus filter '+key}>{({query:'Teks',author:'Akun',exactAuthor:'Akun terpilih',account:'Akun terpilih',province:'Menyebut tempat di',sentiments:'Sentimen',platforms:'Platform',minEngagement:'Min. interaksi',media:'Media',from:'Mulai',to:'Selesai'})[key]}: {Array.isArray(value)?value.map(v=>sentimentLabels[v]||platformLabel(v)).join(', ')||'Tidak ada':key==='province'?provinceNames[value]:key==='account'?accountName(posts.filter(p=>postAccount(p)===value))||'Nama tidak tersedia':value}</PulseTag>)}</div>
     <div className="pm-results-toolbar"><p role="status"><strong>{formatCount(rows.length)}</strong> posting cocok <span>· {rows.length ? current * 12 + 1 : 0}–{Math.min((current+1)*12,rows.length)} ditampilkan</span></p><div className="pm-view-switch" role="group" aria-label="Tampilan posting"><PulseButton aria-pressed={layout==='list'} onClick={()=>setLayout('list')}><List size={16}/>Daftar</PulseButton><PulseButton aria-pressed={layout==='grid'} onClick={()=>setLayout('grid')}><LayoutGrid size={16}/>Grid media</PulseButton></div></div>
     <div className="pm-results-layout"><div className="pm-results-main">
     <div className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}

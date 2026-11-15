@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Download, LoaderCircle, Printer } from 'lucide-react';
 import api from '../lib/api';
 import { buildReport, reportArchive } from '../lib/pulseReport';
+import { recounted } from '../lib/pulseArchive';
 import { pulseDate } from '../lib/pulseData';
 import { reportData, reportPages, reportSettings, settingsPayload, storedSummary } from '../lib/pulseReportPages';
 import { PulseButton } from '../components/ui/PulseUI';
@@ -102,6 +103,15 @@ function usePreviewScale() {
   return [frame, scale];
 }
 
+/** What an opened archive is, above its pages. It is rebuilt with the calculation rules in force today, so one line
+ * says so when it was filed under older ones, or before rule versions were recorded. */
+export function ArchivedContext({ archive, onBack }) {
+  return <p className="pr-archived-context" data-screen-only="" role="status">
+    <span>Menampilkan arsip <strong>{archive.title}</strong>, disimpan {pulseDate(archive.created_at)}. Angka, periode, dan platform mengikuti arsip itu, bukan data terkini.{recounted(archive.snapshot) && <span className="pr-archived-rules">Angka laporan ini dihitung ulang dengan aturan perhitungan terbaru.</span>}</span>
+    <PulseButton size="sm" onClick={onBack}>Kembali ke data terkini</PulseButton>
+  </p>;
+}
+
 export default function ProjectReport(props) {
   const topicId = props.topic?.id;
   const responseState = useResponseAnalysis(topicId);
@@ -175,10 +185,7 @@ function ReportWorkspace({ data, topic, period, selectedPlatforms = null, respon
         <ReportArchive topicId={topic.id} report={opened?.report || (analysisReady ? live : null)} onOpen={(value, archive) => { setOpened({ report: value, archive }); setPdf({ status: 'idle', text: '' }); }} />
       </div>
     </details>
-    {opened && <p className="pr-archived-context" data-screen-only="" role="status">
-      <span>Menampilkan arsip <strong>{opened.archive.title}</strong>, disimpan {pulseDate(opened.archive.created_at)}. Angka, periode, dan platform mengikuti arsip itu, bukan data terkini.</span>
-      <PulseButton size="sm" onClick={() => setOpened(null)}>Kembali ke data terkini</PulseButton>
-    </p>}
+    {opened && <ArchivedContext archive={opened.archive} onBack={() => setOpened(null)} />}
     <div className="pr-layout">
       <ReportBuilder sections={settings.sections} brand={settings.brand} pages={pages} status={settings.status} onSections={settings.setSections} onBrand={settings.setBrand} onRetry={settings.retry} />
       <section className="pr-preview" ref={frame} style={{ '--rp-scale': scale }} aria-label="Pratinjau laporan">

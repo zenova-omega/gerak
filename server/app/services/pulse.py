@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.pulse import WatchTopic, Issue, SourceItem, PulseCrawlRun
 from .ingest.common import observed_engagement, credential, count
 from .pulse_public import metrics_for_reader
-from .pulse_measures import RULES, interactions, interactions_total, local_day, post_measures, reported, shares_total, zone
+from .pulse_measures import RULES, account_name, interactions, interactions_total, local_day, post_account, post_measures, reported, shares_total, zone
 import httpx
 from .dedup import simhash, is_near_duplicate
 from .ai import get_ai_service
@@ -228,15 +228,6 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
         platforms[platform] += 1
         if item.published_at:
             timeline[local_day(item.published_at)] += 1
-        if item.author:
-            key = ((item.metrics or {}).get("author_id") or item.author, platform)
-            author = influencers.setdefault(key, {"author": item.author, "platform": platform,
-                                                  "mentions": 0, "engagement": None, "interaction_posts": 0, "url": item.url})
-            author["mentions"] += 1
-            author.setdefault("_metrics", []).append(item.metrics)
-    for author in influencers.values():
-        total = interactions_total(author.pop("_metrics"))
-        author["engagement"], author["interaction_posts"] = total["value"], total["posts"]
     # No provider currently supplies verified point coordinates with provenance.
     # In particular, profile locations and place centroids are NOT observed locations.
     posts = [{"id": item.id, "issue_id": item.issue_id, "platform": item.platform or "unknown", "url": item.url,
@@ -249,6 +240,18 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
         snapshot = comment_snapshots.get((post['platform'], post['url']))
         if snapshot is not None:
             post['metrics']['comment_snapshot'] = snapshot
+    for post in posts:
+        key = post_account(post)   # account_v1: the post's measures.account; a post without a name can still have one
+        if key:
+            row = influencers.setdefault(key, {"key": key, "author": None, "platform": post["platform"], "mentions": 0,
+                                               "engagement": None, "interaction_posts": 0, "url": post["url"], "_posts": []})
+            row["mentions"] += 1
+            row["_posts"].append(post)
+    for row in influencers.values():
+        rows = row.pop("_posts")
+        total = interactions_total(rows)
+        row["engagement"], row["interaction_posts"] = total["value"], total["posts"]
+        row["author"] = account_name(rows)   # None when no post of the account has a name
     from .pulse_profiles import attach_profiles
     await attach_profiles(db, posts)   # account pictures and follower counts looked up separately
     totals = {}
@@ -264,7 +267,7 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
     return {"total_mentions": len(items), "posts": posts, "metric_totals": totals, "network": analyze_network(posts),
             "platforms": [{"platform": p, "count": n} for p, n in sorted(platforms.items())],
             "timeline": [{"date": d, "count": n} for d, n in sorted(timeline.items())],
-            "influencers": sorted(influencers.values(), key=lambda a: (a["engagement"] is None, -(a["engagement"] or 0), -a["mentions"], a["author"], a["platform"])),
+            "influencers": sorted(influencers.values(), key=lambda a: (a["engagement"] is None, -(a["engagement"] or 0), -a["mentions"], a["author"] is None, a["author"] or "", a["platform"])),
             "locations": [], "unknown_location_count": len(items),
             "measures": {"zone": dict(zip(("offset_minutes", "name"), zone())), "rules": RULES}}
 

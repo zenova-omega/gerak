@@ -63,7 +63,9 @@ test('evidence figures read reported numbers only, and the drawer names its shar
   assert.equal(figure(render(React.createElement(EvidencePosts,{posts}))),'2','a set of posts (a day, a platform): shares_total, a repost adds none of its own');
   assert.equal(figure(render(React.createElement(EvidencePosts,{posts,oneContent:true}))),'100','one piece of content: content_shares');
   const unknown=render(React.createElement(EvidencePosts,{posts:[{id:'n',platform:'x',author:'c',text:'teks',metrics:{views:4}}]}));
-  assert.doesNotMatch(unknown,/<span>interaksi<\/span>/,'unknown interactions are not printed as a figure');
+  const interactionFigure=html=>html.match(/<strong>([^<]*)<\/strong><span>interaksi[^<]*<\/span>/)?.[1];
+  assert.equal(interactionFigure(unknown),'—','no post reports an interaction: the total reads "—", never a number');
+  assert.equal(interactionFigure(render(React.createElement(EvidencePosts,{posts:[{id:'z',platform:'x',author:'d',text:'teks',metrics:{likes:0}}]}))),'0','a reported zero is a known 0');
   // The drawer renders in a portal (nothing on the server), so its element tree is walked for what it hands over.
   const handed=selection=>{const found=[];walk(EvidenceSheet({selection,onClose:()=>{}}),node=>{if(node.type===EvidencePosts)found.push(node.props);});return found;};
   assert.deepEqual(handed({title:'Kelompok percakapan',posts,oneContent:true}).map(props=>props.oneContent),[true],'opened from a group: one piece of content');
@@ -145,16 +147,115 @@ test('interaction totals of a drawer and of a narrative row say over how many po
  } finally {await server.close();}
 });
 
+test('a drawer and a narrative row count accounts by account_v1, and one account is named by its latest name',async()=>{
+ const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
+ try {
+  const {EvidencePosts}=await server.ssrLoadModule('/src/pulse/EvidencePosts.jsx');
+  const {default:Panel}=await server.ssrLoadModule('/src/pulse/NarrativePanel.jsx');
+  const {overviewEvidence}=await server.ssrLoadModule('/src/lib/pulseOverview.js');
+  // One X handle written two ways and a Threads account with an id on one row only: two accounts.
+  const posts=[
+   {id:'1',issue_id:'n',platform:'x',author:'Okezonenews',text:'teks yang sama',published_at:'2026-11-10T03:00:00Z',metrics:{likes:1}},
+   {id:'2',issue_id:'n',platform:'x',author:'@okezonenews',text:'teks yang sama',published_at:'2026-11-11T03:00:00Z',metrics:{likes:1}},
+   {id:'3',issue_id:'n',platform:'threads',author:'@Warga.Solo',text:'teks yang sama',published_at:'2026-11-12T03:00:00Z',metrics:{author_id:'1789',likes:1}},
+   {id:'4',issue_id:'n',platform:'threads',author:'warga.solo',text:'teks yang sama',published_at:'2026-11-09T03:00:00Z',metrics:{likes:1}},
+  ];
+  const render=element=>renderToStaticMarkup(React.createElement(MemoryRouter,null,element));
+  const drawer=render(React.createElement(EvidencePosts,{posts}));
+  assert.match(drawer,/<strong>2<\/strong><span>akun<\/span>/);
+  assert.match(drawer,/Dari 2 akun/,'the copies of one text say how many accounts posted them');
+  assert.match(render(React.createElement(Panel,{narratives:overviewEvidence(posts).narratives,onOpen:()=>{}})),/4 posting dari 2 akun/);
+  assert.match(render(React.createElement(EvidencePosts,{posts:posts.slice(0,2)})),/Semuanya dari @okezonenews · X · /,'one account: its most recently published name');
+  // One named post and one without a name or an id: not "all from one account", and the nameless post is no account.
+  const mixed=render(React.createElement(EvidencePosts,{posts:[posts[0],{...posts[1],id:'5',author:''}]}));
+  assert.doesNotMatch(mixed,/Semuanya dari/);
+  assert.match(mixed,/Dari 1 akun · /);
+  // A channel whose posts carry no name is one account, counted by its id.
+  const nameless=[{id:'6',issue_id:'m',platform:'youtube',author:'',text:'judul sama',published_at:'2026-11-10T03:00:00Z',metrics:{author_id:'UC9'}},
+   {id:'7',issue_id:'m',platform:'youtube',author:null,text:'judul sama',published_at:'2026-11-11T03:00:00Z',metrics:{author_id:'UC9'}}];
+  assert.match(render(React.createElement(EvidencePosts,{posts:nameless})),/<strong>1<\/strong><span>akun<\/span>/);
+  assert.match(render(React.createElement(Panel,{narratives:overviewEvidence(nameless).narratives,onOpen:()=>{}})),/2 posting dari 1 akun/);
+ } finally {await server.close();}
+});
+
 test('the guide of every page that prints a set\'s shares says an uncollected original\'s shares are not in it',async()=>{
  const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
  try {
   const meta=await server.ssrLoadModule('/src/pulse/pageMeta.js');
   const pages=meta.pageMeta||meta.default;
-  const sentence='Dibagikan pada sekumpulan posting hanya menjumlahkan bagikan milik tiap posting, jadi bagikan dari posting asli yang tidak ikut terkumpul tidak dihitung.';
+  const setRule='Dibagikan pada sekumpulan posting hanya menjumlahkan bagikan milik tiap posting, jadi bagikan dari posting asli yang tidak ikut terkumpul tidak dihitung.';
+  const oneContent='Untuk satu konten, yaitu satu narasi atau posting dengan teks yang sama, angka dibagikan adalah yang lebih besar antara bagikan miliknya sendiri dan angka yang dibawa repost dari posting aslinya.';
   for(const page of ['overview','posts','accounts','network']){
    const text=pages[page].guide.join(' ');
-   assert.ok(text.includes(sentence),`${page} guide`);
+   assert.ok(text.includes(setRule),`${page} guide states the rule for a set of posts`);
    assert.doesNotMatch(text,/—/);
   }
+  for(const page of ['overview','posts','accounts','network']){
+   const text=pages[page].guide.join(' ');
+   assert.ok(text.includes(oneContent),`${page} shows narratives, conversation groups or copies, so its guide names the exception`);
+   assert.doesNotMatch(text,/ikut dihitung sekali/,'one content takes the larger figure, never own plus carried');
+  }
  } finally {await server.close();}
+});
+
+test('the account card on a post gathers the account\'s posts by account_v1 and links them by its key',async()=>{
+ const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
+ try {
+  const {PulseSourceHeading}=await server.ssrLoadModule('/src/components/ui/PulsePatterns.jsx');
+  const {ProjectPostsContext}=await server.ssrLoadModule('/src/pulse/projectPosts.js');
+  const posts=[
+   {id:'1',platform:'x',author:'Okezonenews',text:'satu',published_at:'2026-11-10T03:00:00Z',metrics:{likes:1}},
+   {id:'2',platform:'x',author:'@okezonenews',text:'dua',published_at:'2026-11-11T03:00:00Z',metrics:{likes:2}},
+   {id:'3',platform:'x',author:'Lain',text:'tiga',published_at:'2026-11-11T04:00:00Z',metrics:{likes:3}},
+  ];
+  const html=renderToStaticMarkup(React.createElement(ProjectPostsContext.Provider,{value:posts},React.createElement(MemoryRouter,null,React.createElement(PulseSourceHeading,{post:posts[1]}))));
+  assert.match(html,/<dt>Posting dalam cakupan<\/dt><dd>2<\/dd>/,'both names of one account');
+  assert.match(html,/href="\/pulse\/posts\?platform=x&amp;account=x%3Aokezonenews"/);
+ } finally {await server.close();}
+});
+
+test('an account picture is looked up by the name as account_v1 reads it, and a nameless account borrows no picture',async()=>{
+ const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
+ try {
+  const {default:AccountAvatar}=await server.ssrLoadModule('/src/components/admin/pulse/AccountAvatar.jsx');
+  const {ProjectPostsContext}=await server.ssrLoadModule('/src/pulse/projectPosts.js');
+  const posts=[
+   {id:'1',platform:'x',author:'@Okezone',metrics:{profile_image_url:'https://pbs.twimg.com/okezone.jpg'}},
+   {id:'2',platform:'x',author:'',metrics:{profile_image_url:'https://pbs.twimg.com/nameless.jpg'}},
+  ];
+  const draw=props=>renderToStaticMarkup(React.createElement(ProjectPostsContext.Provider,{value:posts},React.createElement(AccountAvatar,props)));
+  assert.match(draw({author:'okezone',platform:'x'}),/src="https:\/\/pbs\.twimg\.com\/okezone\.jpg"/);
+  assert.doesNotMatch(draw({author:'',platform:'x'}),/<img/,'no name, no account: the initials stand in');
+ } finally {await server.close();}
+});
+
+test('an account picture is found by name on platforms whose account_v1 key is the provider id (YouTube, Instagram)',async()=>{
+ const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
+ try {
+  const {default:AccountAvatar}=await server.ssrLoadModule('/src/components/admin/pulse/AccountAvatar.jsx');
+  const {ProjectPostsContext}=await server.ssrLoadModule('/src/pulse/projectPosts.js');
+  const {postAccount}=await server.ssrLoadModule('/src/lib/pulseMeasures.js');
+  const posts=[
+   {id:'1',platform:'youtube',author:'Kompas TV',metrics:{author_id:'UC5BMIWZe9isJXLZZWPWvBlg',profile_image_url:'https://yt3.ggpht.com/kompastv.jpg'}},
+   {id:'2',platform:'instagram',author:'@KompasCom',metrics:{author_id:'1789',profile_image_url:'https://scontent.cdninstagram.com/kompascom.jpg'}},
+  ];
+  // The premise: these posts' account is their provider id, which a caller that knows only a name cannot build.
+  assert.deepEqual(posts.map(postAccount),['youtube:UC5BMIWZe9isJXLZZWPWvBlg','instagram:1789']);
+  const draw=props=>renderToStaticMarkup(React.createElement(ProjectPostsContext.Provider,{value:posts},React.createElement(AccountAvatar,props)));
+  assert.match(draw({author:'Kompas TV',platform:'youtube'}),/src="https:\/\/yt3\.ggpht\.com\/kompastv\.jpg"/);
+  assert.match(draw({author:'kompascom',platform:'instagram'}),/src="https:\/\/scontent\.cdninstagram\.com\/kompascom\.jpg"/);
+ } finally {await server.close();}
+});
+
+test('the tone of a drawer\'s posts is tone_share_v1: shares of the analysed posts that add up to 100, one of 300 is <1%', async () => {
+ const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+ try {
+  const { EvidencePosts } = await server.ssrLoadModule('/src/pulse/EvidencePosts.jsx');
+  const post = (id, sentiment) => ({ id, platform: 'x', author: 'a' + id, text: 'teks ' + id, published_at: '2026-11-10T03:00:00Z', metrics: sentiment ? { sentiment } : {} });
+  const sliver = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(EvidencePosts, { posts: [post('p', 'negative'), ...Array.from({ length: 299 }, (_, index) => post('n' + index, { label: 'neutral' })), post('u')] })));
+  assert.match(sliver, /aria-label="Negatif &lt;1%, Netral 100%"/);
+  assert.match(sliver, /<strong>&lt;1%<\/strong><span>negatif<\/span>/);
+  const thirds = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(EvidencePosts, { posts: [post('a', 'negative'), post('b', 'neutral'), post('c', 'positive')] })));
+  assert.match(thirds, /aria-label="Negatif 33%, Netral 33%, Positif 34%"/, 'whole numbers that add up to 100');
+ } finally { await server.close(); }
 });

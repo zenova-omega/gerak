@@ -138,6 +138,21 @@ test('the Threads row says what the saved token can do, from stored facts only',
   assert.doesNotMatch(said(threadsStatus(row(account, { last_attempt: { status: 'succeeded', error: null } }), context)), /ditolak/);
 });
 
+test('source times and the token end day follow the installation zone (day_v1), not a zone written by hand', async () => {
+  const { setZone, zone } = await import('../lib/pulseMeasures.js');
+  const { threadsStatus } = await import('./sourcesCoverage.js');
+  const before = zone();
+  const row = { platform: 'threads', provider: 'threads', configured: true, keyword_collection_available: false, last_attempt: null,
+    connection: { connected: true, username: 'akun.uji', permissions_verified: true, search_permission: false, expires_at: '2027-01-14T15:30:00' } };
+  const said = () => threadsStatus(row, { topicId: 't', now: new Date('2026-11-15T02:00:00Z') }).lines.join(' ');
+  try {
+    assert.match(said(), /berlaku sampai 14 Jan 2027/, '22.30 WIB on 14 Jan');
+    setZone({ offset_minutes: 540, name: 'WIT' });
+    assert.match(formatSourceTime('2026-11-10T21:00:00'), /^11 Nov 2026.+06\.00 WIT$/);
+    assert.match(said(), /berlaku sampai 15 Jan 2027/, '00.30 WIT on 15 Jan');
+  } finally { setZone(before); }
+});
+
 test('with the paid public search on, the Threads row needs no connection and says what a collection costs', async () => {
   const { threadsStatus } = await import('./sourcesCoverage.js');
   const context = { topicId: 'topic-1', readOnly: false, busy: false };

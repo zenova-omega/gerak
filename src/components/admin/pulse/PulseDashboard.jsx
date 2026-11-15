@@ -5,6 +5,7 @@ import { Activity, RefreshCw, Download, Database, ExternalLink, MapPin, ShieldCh
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useTopics, useIssues, usePulseAnalytics } from '../../../hooks/usePulse';
 import { allegationLabel, formatCount, providerResults, pulseError } from '../../../lib/pulseData';
+import { localTime, zone } from '../../../lib/pulseMeasures';
 import { PlatformIcon, platformLabel } from './PlatformIcon';
 import PlatformCheckboxes from './PlatformCheckboxes';
 import TopicManager from './TopicManager';
@@ -116,7 +117,7 @@ function AccountRanking({ accounts, posts }) {
     </div>}
     {leaders.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + sortName}>{leaders.map(row => <PulseStat key={row.rank} media={<AccountAvatar author={row.author} platform={row.platform} />} label={`#${formatCount(row.rank)} · ${platformLabel(row.platform)}`} value={row[sort]} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {sortUnit}</>} />)}</PulseStatGrid></div>}
     {ranking.rows.length ? <>
-      <div className="pulse-table-wrap"><table className="pulse-ranking pa-table"><thead><tr><th scope="col">Akun / sumber</th><th scope="col" aria-sort={sortColumn('mentions')}>Posting <PulseArrow/></th><th scope="col" aria-sort={sortColumn('engagement')}>Interaksi</th><th scope="col" aria-sort={sortColumn('followers')}>Pengikut</th><th scope="col"><span className="sr-only">Bukti</span></th></tr></thead><tbody>{page.visible.map((row, index) => <AccountRankingRow key={row.platform + ':' + row.author + ':' + index} row={row} sort={sort} search={drilldown} />)}</tbody></table></div>
+      <div className="pulse-table-wrap"><table className="pulse-ranking pa-table"><thead><tr><th scope="col">Akun / sumber</th><th scope="col" aria-sort={sortColumn('mentions')}>Posting <PulseArrow/></th><th scope="col" aria-sort={sortColumn('engagement')}>Interaksi</th><th scope="col" aria-sort={sortColumn('followers')}>Pengikut</th><th scope="col"><span className="sr-only">Bukti</span></th></tr></thead><tbody>{page.visible.map((row, index) => <AccountRankingRow key={row.key + ':' + index} row={row} sort={sort} search={drilldown} />)}</tbody></table></div>
       {ranking.rows.length > accountPageSize && <div className="pa-more">{page.remaining > 0 && <PulseButton onClick={showMore}>Tampilkan {formatCount(page.next)} lagi</PulseButton>}<p ref={moreStatus} tabIndex={-1} role="status">{page.remaining > 0 ? `${formatCount(page.visible.length)} dari ${formatCount(ranking.rows.length)} akun ditampilkan, ${formatCount(page.remaining)} lagi belum.` : `Semua ${formatCount(ranking.rows.length)} akun sudah ditampilkan.`}</p></div>}
     </> : ranking.total > 0 ? <div className="pa-empty"><PulsePanelEmpty title="Tidak ada akun yang cocok">Ubah kata pencarian, pilih platform lain, atau hapus semua filter.</PulsePanelEmpty></div> : <Empty>Belum ada akun untuk diperingkat. Metrik yang tidak tersedia bukan nol.</Empty>}
     <p className="pulse-footnote">Nomor peringkat dihitung di antara platform yang dipilih dan tidak berubah saat nama dicari. Pengikut adalah angka terakhir yang tercatat pada posting akun. Angka di sini bukan jangkauan maupun skor pengaruh. “—” berarti angka tidak tersedia, bukan nol.</p>
@@ -127,6 +128,7 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
   const analysisNavigate=useNavigate();
   const sentiment=analysisParams.get('sentiment');
   const postAuthor=analysisParams.get('author') || '';
+  const postAccountKey=analysisParams.get('account') || '';   // account_v1 key from an account row
   const postPlatform=analysisParams.get('platform') || '';
   const postProvince=analysisParams.get('province') || '';   // from the spread map: posts that name one province
   const openSentiment=value=>{const next=new URLSearchParams(analysisParams);next.set('sentiment',value);analysisNavigate('/pulse/posts?'+next.toString());};
@@ -196,7 +198,7 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     {['all', 'network'].includes(view) && <NetworkAnalysis key={'network-' + (data.posts?.[0]?.id || 'empty')} data={data.network} posts={data.posts || []} locations={data.locations||[]} unknownCount={data.unknown_location_count||0} />}
     {['all', 'comments'].includes(view) && <>{responsePanel}<CommentsPanel key={'comments-' + (data.posts?.[0]?.id || 'empty')} posts={data.posts || []} topicId={topic?.id||analysisParams.get('topic')} /></>}
     {view === 'posts' && <TrendChart dense title="Tren posting" posts={data.posts || []} period={period} selected={pickedDay ? { from: pickedDay, to: pickedDayTo || pickedDay } : null} onPick={row => pickDates(row.from, row.to)} onClear={() => pickDates('', '')} />}
-    {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postPlatform,postProvince,pickedDay,pickedDayTo,analysisParams.get('find')].join(':')} initialProvince={postProvince} initialQuery={analysisParams.get('find') || ''} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={pickedDay} initialDayTo={pickedDayTo} initialSentiment={sentiment} initialAuthor={postAuthor} initialPlatform={postPlatform} />}
+    {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postAccountKey,postPlatform,postProvince,pickedDay,pickedDayTo,analysisParams.get('find')].join(':')} initialProvince={postProvince} initialQuery={analysisParams.get('find') || ''} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={pickedDay} initialDayTo={pickedDayTo} initialSentiment={sentiment} initialAuthor={postAuthor} initialAccount={postAccountKey} initialPlatform={postPlatform} />}
     {view === 'all' && <div id="pulse-infographics-view"><InfographicsPanel ranged={false} posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></div>}
   </>;
 }
@@ -288,7 +290,7 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
     {standalone && flagged.ids.length > 0 && view !== 'monitor' && (view === 'posts'
       ? <p className="po-relevance-note">Menampilkan semua posting, termasuk {formatCount(flagged.ids.length)} yang ditandai tidak relevan. Halaman analisis tidak menghitungnya kecuali disertakan.</p>
       : <label className="po-relevance po-relevance-bar"><input type="checkbox" role="switch" className="pu-switch-input" checked={includeFlagged} onChange={event => toggleFlagged(event.target.checked)} /> Sertakan {formatCount(flagged.ids.length)} posting yang ditandai tidak relevan<InfoTip label="Tentang posting tidak relevan">Berlaku di Ikhtisar, Sentimen, Akun & sumber, Jaringan, Komentar dan Laporan. Halaman Posting selalu menampilkan semuanya agar tandanya bisa dibatalkan.</InfoTip></label>)}
-    {standalone && loadedAt && view !== 'monitor' && <p className="po-data-stamp">Angka dimuat pukul {loadedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(':', '.')} WIB. Selama pengumpulan berjalan, halaman yang dibuka lebih lambat bisa menunjukkan angka lebih besar.</p>}
+    {standalone && loadedAt && view !== 'monitor' && <p className="po-data-stamp">Angka dimuat pukul {new Date(localTime(loadedAt)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).replace(':', '.')} {zone().name}. Selama pengumpulan berjalan, halaman yang dibuka lebih lambat bisa menunjukkan angka lebih besar.</p>}
     {standalone && <SentimentProgress key={topicId} topicId={topicId} posts={analytics.loading?undefined:scopedData?.posts} onChange={analytics.refetch} quiet/>}
     {needsLogin && <div className="pulse-auth-note"><ShieldCheck size={21} /><div><strong>Analytics live memerlukan login admin asli.</strong><p>Login demo tidak memberi akses API. Gunakan kredensial admin pada formulir login; data contoh tidak ditampilkan di Pulse.</p></div><Link className="pulse-button primary" to="/login?returnTo=pulse">Masuk dengan akun admin</Link></div>}
     <div className="pulse-layout">

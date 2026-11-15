@@ -37,3 +37,21 @@ test('the daily chart comes first, and the emotions under it are its key and its
   assert.match(html, /<th[^>]*>10 Nov<\/th>/);
  } finally { await server.close(); }
 });
+
+test('the emotion chart names the installation zone of its days (day_v1), never WIB written by hand', async () => {
+ const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+ try {
+  const { setZone, zone } = await server.ssrLoadModule('/src/lib/pulseMeasures.js');
+  const { default: Panel } = await server.ssrLoadModule('/src/pulse/EmotionAnalytics.jsx');
+  const before = zone();
+  setZone({ offset_minutes: 540, name: 'WIT' });
+  try {
+   const posts = [{ id: 'a', published_at: '2026-11-10T05:00:00Z', platform: 'x', author: 'akun_a', text: 'Isi a', metrics: { emotion: { label: 'anger', confidence: 0.9, reason: 'alasan' } } }];
+   const html = renderToStaticMarkup(React.createElement(Panel, { posts }));
+   assert.match(html, /per hari \(WIT\)/);
+   assert.match(html, /tanggal WIT/);
+   assert.match(html, /Data harian · WIT/);
+   assert.doesNotMatch(html, /\bWIB\b/);
+  } finally { setZone(before); }
+ } finally { await server.close(); }
+});

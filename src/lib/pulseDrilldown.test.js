@@ -45,3 +45,20 @@ test('a link to Posting can carry a province, and drops the one it came with', a
   assert.equal(postsEvidenceLink('topic=p1&province=ID-JB&author=lama', { province: 'ID-JI' }), '/pulse/posts?topic=p1&province=ID-JI');
   assert.equal(postsEvidenceLink('topic=p1&province=ID-JB', { author: '@a', platform: 'x' }), '/pulse/posts?topic=p1&author=%40a&platform=x');
 });
+
+test('an account row opens its posts by its account_v1 key, whatever name each post carries', () => {
+  const url = new URL(accountPostsLink('?topic=p1&author=lama&account=x%3Alain', { key: 'x:okezonenews', author: '@okezonenews', platform: 'x' }), 'http://localhost');
+  assert.equal(url.searchParams.get('account'), 'x:okezonenews');
+  assert.equal(url.searchParams.has('author'), false, 'the name alone would leave out the post written "Okezonenews"');
+  assert.equal(url.searchParams.get('platform'), 'x');
+  assert.equal(url.searchParams.get('topic'), 'p1');
+  assert.equal(postsEvidenceLink('topic=p1&account=x%3Aa', { day: '2026-11-11' }), '/pulse/posts?topic=p1&day=2026-11-11', 'a stale account filter is cleared');
+  const posts = [
+    { id: '1', platform: 'x', author: 'Okezonenews', metrics: {} }, { id: '2', platform: 'x', author: '@okezonenews', metrics: {} },
+    { id: '3', platform: 'youtube', author: 'Kanal Lama', metrics: { author_id: 'UC1' } }, { id: '4', platform: 'youtube', author: 'Kanal Baru', metrics: { author_id: 'UC1' } },
+    { id: '5', platform: 'x', author: 'lain', metrics: {}, measures: { account: 'x:okezonenews' } },
+  ];
+  assert.deepEqual(filterPosts(posts, { account: 'x:okezonenews' }).map(p => p.id), ['1', '2', '5']);
+  assert.deepEqual(filterPosts(posts, { account: 'youtube:UC1' }).map(p => p.id), ['3', '4']);
+  assert.deepEqual(filterPosts(posts, { exactAuthor: 'Kanal Baru' }).map(p => p.id), ['4'], 'a link shared before still opens by name');
+});

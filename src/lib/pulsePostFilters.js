@@ -1,14 +1,13 @@
 import { postMedia } from './pulseMedia.js';
 import { postInteractions } from './pulseEngagement.js';
-import { byInteractions, inPeriod, localDay, readTime } from './pulseMeasures.js';
+import { byInteractions, inPeriod, localDay, postAccount, readTime, tone } from './pulseMeasures.js';
 // `province` is applied by the Posting page with `namesProvince` (pulsePlaces.js), not by filterPosts: the place reader
 // depends on this module's neighbours, and a filter here would close an import circle.
-export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',province:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
+export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',account:'',province:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
 export const sentimentLabels = {positive:'Positif',neutral:'Netral',negative:'Negatif',unknown:'Belum dianalisis'};
+/** A post's tone (tone_share_v1): the one the server sent in `measures`, else the module's reading of the stored label. */
 export function postSentiment(post) {
-  const raw = post.metrics?.sentiment;
-  const label = typeof raw === 'string' ? raw : raw?.label;
-  return ['positive','neutral','negative'].includes(label) ? label : 'unknown';
+  return post?.measures?.tone ?? tone(post);
 }
 export function sentimentCounts(posts) {
   return posts.reduce((counts,post)=>{counts[postSentiment(post)]++;return counts;},{positive:0,neutral:0,negative:0,unknown:0});
@@ -39,6 +38,7 @@ export function filterPosts(posts, filters) {
       && `${p.title || ''} ${p.text || ''} ${p.author || ''}`.toLowerCase().includes(f.query.trim().toLowerCase())
       && (p.author || '').toLowerCase().includes(f.author.trim().toLowerCase())
       && (!f.exactAuthor || p.author === f.exactAuthor)
+      && (!f.account || postAccount(p) === f.account)   // account_v1: every name the account posted under
       && inPeriod(p.published_at, f.from, f.to)
       && (f.minEngagement === '' || (postInteractions(p.metrics) != null && postInteractions(p.metrics) >= Number(f.minEngagement)))
       && (f.media === 'all' || (f.media === 'available' ? media : !media));

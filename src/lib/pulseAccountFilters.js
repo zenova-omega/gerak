@@ -1,6 +1,7 @@
 /** Filtering, sorting and paging for the "Akun & sumber teratas" ranking. Pure: no React, no DOM.
- * A row is one account on one platform: {author, platform, mentions, engagement, followers?, url?}.
+ * A row is one account on one platform: {key, author, platform, mentions, engagement, followers?, url?}; `key` is account_v1.
  * An unknown number is `null` and is never read as zero. */
+import { accountKey, postAccount } from './pulseMeasures.js';
 
 export const accountPageSize = 50;
 export const accountSorts = ['engagement', 'mentions', 'followers'];
@@ -22,29 +23,27 @@ const byPlatformOrder = (a, b) => {
   return (left < 0 ? platformOrder.length : left) - (right < 0 ? platformOrder.length : right) || a.localeCompare(b);
 };
 
-/** One key per account, written the way AccountAvatar matches a post to an account. */
-export function accountKey(platform, author) {
-  return `${platform || ''}|${String(author || '').trim().replace(/^@/, '').toLowerCase()}`;
-}
-
-/** The follower count each account last reported, read from `metrics.author_followers` on its posts.
+/** The follower count each account (account_v1 key) last reported, read from `metrics.author_followers` on its posts.
  * The most recently collected post wins; without a collection time the larger figure does. */
 export function followerIndex(posts = []) {
   const index = new Map();
   for (const post of posts || []) {
     const count = post?.metrics?.author_followers;
-    if (!known(count) || count < 0 || !post.author) continue;
+    if (!known(count) || count < 0) continue;
     const seen = Date.parse(post.crawled_at || post.first_observed_at || '') || 0;
-    const key = accountKey(post.platform, post.author), current = index.get(key);
+    const key = postAccount(post);
+    if (!key) continue;
+    const current = index.get(key);
     if (!current || seen > current.seen || (seen === current.seen && count > current.count)) index.set(key, { count, seen });
   }
   return index;
 }
 
-/** Rows with `followers` filled in where a post of that account carries the figure; `null` where none does. */
+/** Rows with `followers` filled in where a post of that account carries the figure; `null` where none does.
+ * A row is matched by its `key`; a row from before rows carried one, by its platform and name. */
 export function withFollowers(rows = [], posts = []) {
   const index = followerIndex(posts);
-  return (rows || []).map(row => ({ ...row, followers: known(row.followers) ? row.followers : index.get(accountKey(row.platform, row.author))?.count ?? null }));
+  return (rows || []).map(row => ({ ...row, followers: known(row.followers) ? row.followers : index.get(row.key ?? accountKey(row))?.count ?? null }));
 }
 
 /** Platforms that have at least one account, in chip order. */

@@ -31,6 +31,15 @@ test('top account badge excludes unknown/zero engagement and includes cutoff tie
   const rows=[{platform:'x',author:'@A',metrics:{engagement:10}},{platform:'x',author:'a',metrics:{engagement:5}},{platform:'x',author:'B',metrics:{engagement:null}},{platform:'x',author:'C',metrics:{engagement:15}},{platform:'x',author:'D',metrics:{engagement:0}}];
   assert.deepEqual([...replay.topViralAccounts(rows,1)].sort(),['x:a','x:c']);
 });
+test('top account badge adds up each account by account_v1, the key the network nodes carry', () => {
+  const rows=[
+    {platform:'threads',author:'@Warga.Solo',metrics:{author_id:'1789',likes:5}},{platform:'threads',author:'warga.solo',metrics:{likes:6}},
+    {platform:'youtube',author:'Kanal Lama',metrics:{author_id:'UC1',likes:3}},{platform:'youtube',author:'Kanal Baru',metrics:{author_id:'UC1',likes:4}},
+    {platform:'news',author:'Kompas.com',metrics:{likes:8}},{platform:'news',author:'KOMPAS.com',metrics:{likes:1}},
+  ];
+  assert.deepEqual([...replay.topViralAccounts(rows,1)],['threads:warga.solo']);
+  assert.deepEqual([...replay.topViralAccounts(rows,3)].sort(),['news:kompas.com','threads:warga.solo','youtube:UC1']);
+});
 test('layout remains stable across replay frames and positions are finite', () => {
   assert.equal(typeof replay.networkPositions, 'function');
   const positions=replay.networkPositions(data);
@@ -56,4 +65,8 @@ test('viral accounts rank by interactions_v1: parts first, a digit string counts
   assert.deepEqual([...replay.topViralAccounts(rows,1)],['x:a'],'the reported likes, not the stale stored total');
   assert.deepEqual([...replay.topViralAccounts(rows,2)].sort(),['x:a','x:b'],'nothing reported: the stored total stands in');
   assert.deepEqual([...replay.topViralAccounts([{platform:'x',author:'C',metrics:{views:9}}],3)],[],'no interaction known: no viral account');
+});
+test('top account badge counts a post without a name for its channel by id', () => {
+  const rows=[{platform:'youtube',author:'',metrics:{author_id:'UC9',likes:9}},{platform:'youtube',author:'Kanal',metrics:{author_id:'UC1',likes:2}}];
+  assert.deepEqual([...replay.topViralAccounts(rows,1)],['youtube:UC9']);
 });

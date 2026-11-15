@@ -129,6 +129,23 @@ test('tooltip: the shares are drawn as one bar and each row keeps its count and 
   assert.match(markup, /Positif<b>82<\/b><em>7%<\/em>/);
 });
 
+test('tooltip: tone shares are tone_share_v1, of the analysed posts; "belum dianalisis" keeps its count and has no share', async () => {
+  const rows = [
+    { dataKey: 'positive', name: 'Positif', value: 1, color: 'green' },
+    { dataKey: 'neutral', name: 'Netral', value: 299, color: 'grey' },
+    { dataKey: 'negative', name: 'Negatif', value: 0, color: 'red' },
+    { dataKey: 'unknown', name: 'Belum dianalisis', value: 100, fill: 'url(#hatch)' },
+  ];
+  const markup = await tipHtml({ payload: rows, top: undefined });
+  assert.match(markup, /Positif<b>1<\/b><em>&lt;1%<\/em>/, 'one post of 300 is a sliver, not 0%');
+  assert.match(markup, /Netral<b>299<\/b><em>100%<\/em>/, 'the same with the unknown row shown or hidden');
+  assert.match(markup, /Belum dianalisis<b>100<\/b><\/li>/);
+  const hidden = await tipHtml({ payload: rows.slice(0, 3), top: undefined });
+  assert.match(hidden, /Netral<b>299<\/b><em>100%<\/em>/);
+  const waiting = await tipHtml({ payload: [{ ...rows[2] }, rows[3]], top: undefined });
+  assert.doesNotMatch(waiting, /<em>/, 'nothing analysed that day: no percentage at all');
+});
+
 test('tooltip: without shares there is no bar and no percent', async () => {
   const markup = await tipHtml({ percent: false });
   assert.doesNotMatch(markup, /pu-hover-bar/);

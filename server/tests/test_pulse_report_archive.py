@@ -99,3 +99,27 @@ async def test_archive_period_check_uses_days_of_the_installation_zone(archive_e
     assert (await client.post('/api/admin/pulse/reports',headers=headers,json=body)).status_code==422
     body['snapshot']['posts'][0]['published_at']='2026-11-13T14:30:00+0000'
     assert (await client.post('/api/admin/pulse/reports',headers=headers,json=body)).status_code==201
+
+@pytest.mark.asyncio
+async def test_a_filed_report_records_the_rule_versions_it_was_filed_under(archive_env,monkeypatch):
+    # Decision 7 of the calculation dictionary: a report records the rule versions in force when it was filed.
+    from app.services import pulse_measures
+    client,headers=archive_env
+    body=payload()
+    body['snapshot']['rules']={'day':'day_v0'}   # a browser cannot choose the versions: the server writes its own
+    created=await client.post('/api/admin/pulse/reports',headers=headers,json=body)
+    assert created.status_code==201,created.text
+    assert 'rules' not in created.json(),'the listing and the filing answer stay as they were'
+    saved=(await client.get(f"/api/admin/pulse/reports/{created.json()['id']}?topic_id=a")).json()
+    assert saved['snapshot']['rules']==pulse_measures.RULES
+    assert saved['snapshot']['posts'][0]['text']=='Original caption'
+    # Newer rules from here on, patched where the router reads them: a report filed now records them, and the report
+    # filed before keeps its own when it is opened again (were GET to write RULES, it would read day_v2 here).
+    from app.routers import pulse_reports
+    monkeypatch.setattr(pulse_reports,'RULES',{**pulse_measures.RULES,'day':'day_v2'})
+    newer=await client.post('/api/admin/pulse/reports',headers=headers,json=payload())
+    assert newer.status_code==201,newer.text
+    later=(await client.get(f"/api/admin/pulse/reports/{newer.json()['id']}?topic_id=a")).json()
+    assert later['snapshot']['rules']['day']=='day_v2'
+    again=(await client.get(f"/api/admin/pulse/reports/{created.json()['id']}?topic_id=a")).json()
+    assert again['snapshot']['rules']['day']=='day_v1','opening a report never rewrites what it was filed under'

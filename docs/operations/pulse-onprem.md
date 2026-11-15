@@ -61,3 +61,14 @@ References: [OWASP password storage](https://cheatsheetseries.owasp.org/cheatshe
 ### Report PDF
 
 The API container carries Chromium to turn the report into a PDF (`POST /api/admin/pulse/reports/pdf`). The browser sends the report pages as one HTML document; the server checks that the document points at nothing outside itself (no scripts, frames, remote or local addresses, only embedded pictures and ordinary links) and refuses it otherwise, then renders it with Chromium started without network. `PULSE_CHROMIUM` names the binary; `PULSE_CHROMIUM_NO_SANDBOX=true` is set in the image because a container usually cannot give Chromium its own sandbox. If no Chromium is found the endpoint answers 503 and the app offers the browser's print dialog instead. The image grows by roughly 300 MB. This image has not been built on this machine (the Docker daemon was unavailable): on the deployment host, build it and download one report to confirm fonts and page breaks. nginx accepts a 12 MB body for this one route.
+
+### Time zone of the figures
+
+Every day, week and hour in PULSE is counted in one fixed zone of the installation, set on the API by two settings that are changed together:
+
+- `PULSE_ZONE_OFFSET_MINUTES` (default `420`, WIB): whole minutes east of UTC, from 0 to 1439 (WITA is `480`, WIT `540`). Zones west of UTC are not supported in this version; a value outside that range is refused when the settings are read.
+- `PULSE_ZONE_NAME` (default `WIB`): the short name printed after a time on the pages that read it (the report, the Sentimen, Emosi and Respons pages, Tanya AI, the Sumber page).
+
+Not every label follows `PULSE_ZONE_NAME` yet. These shipped files still write "WIB" by hand, so on a WITA or WIT installation their words say WIB while the figures beside them follow the setting: `src/pulse/ProjectPeriod.jsx` (the period info tip), `src/pulse/TrendChart.jsx` and `src/pulse/ProjectOverview.jsx` (trend chart captions), `src/pulse/OverviewAnalytics.jsx`, `src/pulse/SentimentEvaluation.jsx`, `src/components/admin/pulse/InfographicsPanel.jsx` (hour chart) and, in the same folder, `MentionTimeline.jsx`, `MetricHistory.jsx`, `PostFilterDrawer.jsx`, `QuotaBreakdown.jsx` ("reset 07.00 WIB" for the UTC quota day), `src/lib/pulseRadar.js` (Beranda), `src/pulse/SummaryInfographics.jsx`, and `server/app/services/pulse_summary.py` (the AI summary's instructions).
+
+Restart the API after a change. The browser takes the zone from the project data it loads (`measures.zone` in the analytics answer, also at `GET /api/admin/pulse/measures`), so the app is not rebuilt; a page that has not loaded project data yet prints WIB. Collection windows (look-back and backfill) keep UTC dates and do not follow this setting. Filed reports are recounted with the rules in force when they are opened and say so when they were filed under older ones.

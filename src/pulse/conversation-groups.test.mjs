@@ -24,3 +24,15 @@ test('conversation groups show only evidence inside the chosen scope and say wha
   assert.match(text,/1 posting belum dikelompokkan/);
  }finally{await server.close();}
 });
+
+test('a group\'s tone prints the module\'s text: one post of 300 is <1%, never 0% (tone_share_v1)', async () => {
+ const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+ try {
+  const { default: Groups } = await server.ssrLoadModule('/src/pulse/ConversationGroups.jsx');
+  const posts = Array.from({ length: 300 }, (_, index) => ({ id: 'p' + index, issue_id: 'g', platform: 'x', author: 'akun' + index, text: 'Teks sama', metrics: { sentiment: index ? 'neutral' : { label: 'positive' } } }));
+  const html = renderToStaticMarkup(React.createElement(Groups, { posts, platforms: ['x'], period: {} }));
+  assert.match(html, /aria-label="Sentimen 300 posting: positif &lt;1%, netral 100%"/);
+  assert.match(html, /Positif <b>&lt;1%<\/b>/);
+  assert.doesNotMatch(html, /Positif <b>0%<\/b>/);
+ } finally { await server.close(); }
+});

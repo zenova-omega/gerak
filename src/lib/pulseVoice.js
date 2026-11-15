@@ -4,6 +4,9 @@
 // written to sound neutral, so one combined sentiment figure mostly measures how much news was collected.
 // Public opinion itself is read from comments, where people answer what was posted.
 import { postSentiment } from './pulsePostFilters.js';
+import { toneShares } from './pulseMeasures.js';
+
+const TONES = ['positive', 'neutral', 'negative'];
 
 export const voiceLabels = { public: 'Suara warganet', news: 'Pemberitaan', all: 'Semua sumber' };
 export const voiceOf = post => (post?.platform === 'news' ? 'news' : 'public');
@@ -61,8 +64,14 @@ export function leading(counts) {
   return analysed ? ['negative', 'neutral', 'positive'].reduce((best, key) => (counts[key] > counts[best] ? key : best), 'negative') : null;
 }
 
-/** Whole-number shares that add up to 100 (largest remainder), so a bar's legend never reads 99% or 101%. */
+/** Whole-number shares that add up to 100 (largest remainder), so a bar's legend never reads 99% or 101%.
+ * Tone counts (keys holding positive, neutral and negative) are tone_share_v1 (`toneShares`): of the analysed posts only,
+ * `unknown` has no share (null). To print a tone's share use `toneShares(counts).text`, which writes a sliver as "<1%". */
 export function shares(counts, keys) {
+  if (TONES.every(key => keys.includes(key))) {
+    const { percent } = toneShares(counts);
+    return Object.fromEntries(keys.map(key => [key, TONES.includes(key) ? (percent ? percent[key] : 0) : null]));
+  }
   const total = keys.reduce((sum, key) => sum + (counts[key] || 0), 0);
   if (!total) return Object.fromEntries(keys.map(key => [key, 0]));
   const exact = keys.map(key => [key, (counts[key] || 0) / total * 100]);

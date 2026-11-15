@@ -210,7 +210,36 @@
     {"note": "another platform: id when present", "in": {"platform": "facebook", "author": "Page", "metrics": {"author_id": "fb1"}}, "out": "facebook:fb1"},
     {"note": "another platform: name otherwise", "in": {"platform": "facebook", "author": "@Page ", "metrics": {}}, "out": "facebook:page"},
     {"note": "no author and no id", "in": {"platform": "x", "author": "  ", "metrics": {}}, "out": null},
-    {"note": "no platform", "in": {"platform": null, "author": "someone", "metrics": {}}, "out": null}
+    {"note": "no platform", "in": {"platform": null, "author": "someone", "metrics": {}}, "out": null},
+    {"note": "YouTube: a row whose name is blank is still its channel", "in": {"platform": "youtube", "author": "  ", "metrics": {"author_id": "UC1"}}, "out": "youtube:UC1"}
+  ],
+  "post_account": [
+    {"note": "the key the server sent is read", "in": {"platform": "x", "author": "lain", "metrics": {}, "measures": {"account": "x:okezonenews"}}, "out": "x:okezonenews"},
+    {"note": "computed when the post carries no measures", "in": {"platform": "x", "author": "@Okezonenews", "metrics": {}}, "out": "x:okezonenews"},
+    {"note": "computed when its measures carry no account", "in": {"platform": "x", "author": "@Okezonenews", "metrics": {}, "measures": {"interactions": 3}}, "out": "x:okezonenews"},
+    {"note": "a YouTube post without a name but with a channel id belongs to that channel", "in": {"platform": "youtube", "author": " ", "metrics": {"author_id": "UC1"}}, "out": "youtube:UC1"},
+    {"note": "no name and no id: no account", "in": {"platform": "x", "author": " ", "metrics": {}}, "out": null}
+  ],
+  "account_count": [
+    {"note": "a handle written two ways, a Threads id on one row and a nameless channel with an id: three accounts; a post without a key is none",
+     "in": [{"platform": "x", "author": "Okezonenews", "metrics": {}}, {"platform": "x", "author": "@okezonenews", "metrics": {}},
+            {"platform": "threads", "author": "@Warga.Solo", "metrics": {"author_id": "1789"}}, {"platform": "threads", "author": "warga.solo", "metrics": {}},
+            {"platform": "youtube", "author": " ", "metrics": {"author_id": "UC1"}}, {"platform": "x", "author": "", "metrics": {}}], "out": 3},
+    {"note": "the same name on two platforms is two accounts", "in": [{"platform": "x", "author": "A", "metrics": {}}, {"platform": "instagram", "author": "A", "metrics": {}}], "out": 2},
+    {"note": "a key the server sent counts as sent", "in": [{"platform": "x", "author": "a", "metrics": {}, "measures": {"account": "x:b"}}, {"platform": "x", "author": "b", "metrics": {}}], "out": 1},
+    {"note": "no posts", "in": [], "out": 0}
+  ],
+  "account_name": [
+    {"note": "a renamed channel shows its most recently published name", "in": [{"author": "Kompas TV Lama", "published_at": "2026-11-01T08:00:00"}, {"author": "Kompas TV", "published_at": "2026-11-10T08:00:00"}], "out": "Kompas TV"},
+    {"note": "the order the posts come in does not matter", "in": [{"author": "Kompas TV", "published_at": "2026-11-10T08:00:00"}, {"author": "Kompas TV Lama", "published_at": "2026-11-01T08:00:00"}], "out": "Kompas TV"},
+    {"note": "times are compared as instants, zone included", "in": [{"author": "Okezonenews", "published_at": "2026-11-10T03:00:00"}, {"author": "@okezonenews", "published_at": "2026-11-10T08:00:00+07:00"}], "out": "Okezonenews"},
+    {"note": "a post without a readable time never wins over a dated one", "in": [{"author": "Tanpa Tanggal", "published_at": null}, {"author": "Bertanggal", "published_at": "2026-11-01T08:00:00"}, {"author": "Rusak", "published_at": "kemarin"}], "out": "Bertanggal"},
+    {"note": "a blank name is skipped", "in": [{"author": "  ", "published_at": "2026-11-12T08:00:00"}, {"author": null, "published_at": "2026-11-13T08:00:00"}, {"author": "Okezonenews", "published_at": "2026-11-10T08:00:00"}], "out": "Okezonenews"},
+    {"note": "the same time: the first post given wins", "in": [{"author": "@okezonenews", "published_at": "2026-11-10T08:00:00"}, {"author": "Okezonenews", "published_at": "2026-11-10T08:00:00"}], "out": "@okezonenews"},
+    {"note": "no post has a time: the first post given wins", "in": [{"author": "Pertama"}, {"author": "Kedua"}], "out": "Pertama"},
+    {"note": "the name is kept as written", "in": [{"author": "@Okezonenews ", "published_at": "2026-11-10T08:00:00"}], "out": "@Okezonenews "},
+    {"note": "no name at all", "in": [{"author": " ", "published_at": "2026-11-10T08:00:00"}], "out": null},
+    {"note": "no posts", "in": [], "out": null}
   ],
   "local_time": [
     {"note": "the zone's wall clock of a naive UTC time", "in": "2026-11-10T08:13:34", "out": "2026-11-10T15:13:34"},

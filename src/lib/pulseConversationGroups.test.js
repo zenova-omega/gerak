@@ -92,6 +92,18 @@ test('a group knows its accounts, platforms, days and sentiment mix',()=>{
  assert.equal(late.lastDay,'2026-11-10','18.30 UTC is already the next day in WIB');
 });
 
+test('a group counts accounts by account_v1 and names each by its most recently published post',()=>{
+ // One X handle written two ways, a renamed YouTube channel, a Threads account with an id on one row only.
+ const group=buildConversationGroups([
+  post('1','k','x','Okezonenews','10'),post('2','k','x','@okezonenews','11'),
+  post('3','k','youtube','Kanal Lama','09',null,{author_id:'UC1'}),post('4','k','youtube','Kanal Baru','12',null,{author_id:'UC1'}),
+  post('5','k','threads','@Warga.Solo','12',null,{author_id:'1789'}),post('6','k','threads','warga.solo','08'),
+ ]).groups[0];
+ assert.equal(group.accountCount,3);
+ assert.deepEqual(group.accounts.map(row=>[row.key,row.author,row.platform,row.posts]),[
+  ['threads:warga.solo','@Warga.Solo','threads',2],['youtube:UC1','Kanal Baru','youtube',2],['x:okezonenews','@okezonenews','x',2]]);
+});
+
 test('platform filter keeps groups that appear on a chosen platform, with all of their posts',()=>{
  assert.deepEqual(ids(conversationGroups(posts,{},{platforms:['instagram']})),['big']);
  assert.equal(conversationGroups(posts,{},{platforms:['instagram']}).groups[0].size,5);
@@ -196,10 +208,16 @@ test('the leaders are the largest real groups of the scope, whatever the list is
 });
 
 test('the sentiment mix is a share of analysed posts in whole numbers that add up to 100',()=>{
- assert.deepEqual(sentimentShares({positive:1,neutral:1,negative:1,unknown:4}),{total:7,analysed:3,unknown:4,parts:[{key:'positive',count:1,percent:34},{key:'neutral',count:1,percent:33},{key:'negative',count:1,percent:33}]});
- assert.deepEqual(sentimentShares({positive:0,neutral:1,negative:3,unknown:1}).parts,[{key:'neutral',count:1,percent:25},{key:'negative',count:3,percent:75}]);
+ // tone_share_v1: every part also carries the text to print (toneShares), so a sliver reads "<1%"; the percentages are unchanged.
+ assert.deepEqual(sentimentShares({positive:1,neutral:1,negative:1,unknown:4}),{total:7,analysed:3,unknown:4,parts:[{key:'positive',count:1,percent:34,text:'34%'},{key:'neutral',count:1,percent:33,text:'33%'},{key:'negative',count:1,percent:33,text:'33%'}]});
+ assert.deepEqual(sentimentShares({positive:0,neutral:1,negative:3,unknown:1}).parts,[{key:'neutral',count:1,percent:25,text:'25%'},{key:'negative',count:3,percent:75,text:'75%'}]);
  assert.deepEqual(sentimentShares({positive:0,neutral:0,negative:0,unknown:2}),{total:2,analysed:0,unknown:2,parts:[]});
  for(const mix of [{positive:1,neutral:2,negative:4},{positive:7,neutral:11,negative:13},{positive:1,neutral:0,negative:5}])assert.equal(sentimentShares(mix).parts.reduce((sum,part)=>sum+part.percent,0),100);
+});
+
+test('the sentiment mix of a group is tone_share_v1: a tone with one post of 300 prints <1%, never 0%',()=>{
+ assert.deepEqual(sentimentShares({positive:1,neutral:299,negative:0,unknown:5}).parts,[{key:'positive',count:1,percent:0,text:'<1%'},{key:'neutral',count:299,percent:100,text:'100%'}]);
+ assert.deepEqual(sentimentShares({positive:'2',neutral:2,negative:3}).parts.map(part=>part.percent),[29,28,43],'counts read as the module reads them');
 });
 
 test('a range of days is written once, without repeating the month or the year',()=>{
@@ -221,4 +239,13 @@ test('a group\'s first and last day follow the installation zone (day_v1)', asyn
     const group = buildConversationGroups(rows, {}).groups.find(g => g.id === 'z');
     assert.deepEqual([group.firstDay, group.lastDay], ['2026-11-11', '2026-11-12']);
   } finally { setZone({ offset_minutes: 420, name: 'WIB' }); }
+});
+
+test('a group counts a post without a name for its channel by id, and gives a nameless account no name',()=>{
+ const group=buildConversationGroups([
+  post('1','q','youtube',null,'12',null,{author_id:'UC1'}),post('2','q','youtube','Kanal','10',null,{author_id:'UC1'}),
+  post('3','q','youtube','','11',null,{author_id:'UC9'}),post('4','q','x','','11'),
+ ]).groups[0];
+ assert.equal(group.accountCount,2);
+ assert.deepEqual(group.accounts.map(row=>[row.key,row.author,row.posts]),[['youtube:UC1','Kanal',2],['youtube:UC9',null,1]]);
 });

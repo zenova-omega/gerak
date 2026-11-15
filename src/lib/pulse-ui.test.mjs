@@ -18,7 +18,7 @@ test('standalone project selection, account drill-down and refresh use stored po
   await page.getByRole('link', { name: 'Lihat 1 posting dari Test account', exact: true }).click();
   await page.getByText('Stored GERAK evidence', { exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, '/pulse/posts');
-  assert.equal(new URL(page.url()).searchParams.get('author'), 'Test account');
+  assert.equal(new URL(page.url()).searchParams.get('account'), 'news:test account');
   await page.getByLabel('Cari dalam posting', { exact: true }).fill('does-not-exist');
   await page.getByRole('status').filter({ hasText: '0 posting cocok' }).waitFor();
   assert.equal(await page.getByText('Stored GERAK evidence', { exact: true }).count(), 0);

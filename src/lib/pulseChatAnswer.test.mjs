@@ -49,7 +49,8 @@ test('an answer stored before answers had a shape still reads well: plain paragr
 
 test('charts come from the server as rows; the page only names and orders what it draws', () => {
   const tones = chartRows({ key: 'sentimen', kind: 'bars', unit: 'posting', rows: [{ tone: 'positive', value: 10 }, { tone: 'neutral', value: 60 }, { tone: 'negative', value: 30 }, { tone: 'unknown', value: 0 }] });
-  assert.deepEqual(tones.map(row => [row.label, row.value, row.share, row.width]), [['Positif', 10, '10%', 17], ['Netral', 60, '60%', 100], ['Negatif', 30, '30%', 50], ['Belum dianalisis', 0, '0%', 0]]);
+  // tone_share_v1: "belum dianalisis" is a count beside the three, never a share (was '0%').
+  assert.deepEqual(tones.map(row => [row.label, row.value, row.share, row.width]), [['Positif', 10, '10%', 17], ['Netral', 60, '60%', 100], ['Negatif', 30, '30%', 50], ['Belum dianalisis', 0, null, 0]]);
   assert.ok(tones.every(row => row.color.startsWith('var(--ps-sent-')), 'sentiment keeps its own colours');
   const platforms = chartRows({ key: 'platform', kind: 'bars', rows: [{ platform: 'youtube', value: 3 }, { platform: 'x', value: 1 }] }, name => ({ youtube: 'YouTube', x: 'X' })[name]);
   assert.deepEqual(platforms.map(row => [row.label, row.share]), [['YouTube', '75%'], ['X', '25%']]);
@@ -58,4 +59,14 @@ test('charts come from the server as rows; the page only names and orders what i
   const days = chartRows({ key: 'harian', kind: 'days', rows: [{ date: '2026-11-09', value: 5 }, { date: '2026-11-10', value: 20 }, { date: '2026-11-11', value: 0 }] });
   assert.deepEqual(days.map(row => [row.label, row.value, row.width, row.peak]), [['9 Nov', 5, 25, false], ['10 Nov', 20, 100, true], ['11 Nov', 0, 0, false]]);
   assert.deepEqual(chartRows(null), []);
+});
+
+test('a sentiment chart in an answer prints tone_share_v1: shares of the analysed posts, one of 300 is <1%, nothing analysed prints none', () => {
+  const chart = rows => chartRows({ key: 'sentimen', kind: 'bars', unit: 'posting', rows });
+  const share = rows => chart(rows).map(row => [row.label, row.share]);
+  assert.deepEqual(share([{ tone: 'positive', value: 1 }, { tone: 'neutral', value: 299 }, { tone: 'negative', value: 0 }, { tone: 'unknown', value: 700 }]),
+    [['Positif', '<1%'], ['Netral', '100%'], ['Negatif', '0%'], ['Belum dianalisis', null]]);
+  assert.deepEqual(share([{ tone: 'positive', value: 1 }, { tone: 'neutral', value: 1 }, { tone: 'negative', value: 1 }]), [['Positif', '34%'], ['Netral', '33%'], ['Negatif', '33%']]);
+  assert.deepEqual(share([{ tone: 'positive', value: 0 }, { tone: 'neutral', value: 0 }, { tone: 'negative', value: 0 }, { tone: 'unknown', value: 9 }]),
+    [['Positif', null], ['Netral', null], ['Negatif', null], ['Belum dianalisis', null]]);
 });

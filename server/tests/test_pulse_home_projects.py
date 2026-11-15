@@ -76,3 +76,18 @@ async def test_a_project_without_any_schedule_is_listed_as_not_collecting(client
     [row] = await rows(client, admin_token, topic)
     assert row['collecting'] is False and row['posts_total'] == 0 and row['posts_24h'] == 0 and row['posts_prev_24h'] == 0
     assert row['series_7d'] == [0] * 7 and row['sentiment_7d'] == {'positive': 0, 'neutral': 0, 'negative': 0, 'unknown': 0}
+
+
+@pytest.mark.asyncio
+async def test_a_project_week_of_tone_reads_each_post_by_tone_share_v1_in_either_stored_form(client, db, admin_token, now):
+    """Both stored label forms, in any letter case, give the same tone; any other label is "belum dianalisis"."""
+    topic = WatchTopic(label='Dua bentuk label', query='bentuk')
+    db.add(topic)
+    await db.flush()
+    stored = [{'sentiment': 'negative'}, {'sentiment': {'label': 'negative'}}, {'sentiment': {'label': ' Positive '}}, {'sentiment': 'NEUTRAL'},
+              {'sentiment': {'label': 'mixed'}}, {'sentiment': None}, {}]
+    db.add_all([SourceItem(topic_id=topic.id, source='rss', platform='news', url=f'https://news.example/{topic.id}/form{index}', text='x',
+                           published_at=now - timedelta(hours=2), metrics=metrics) for index, metrics in enumerate(stored)])
+    await db.flush()
+    [row] = await rows(client, admin_token, topic)
+    assert row['sentiment_7d'] == {'positive': 1, 'neutral': 1, 'negative': 2, 'unknown': 3}

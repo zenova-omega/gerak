@@ -90,3 +90,20 @@ async def test_busy_lane_is_left_alone_and_answers_are_validated(store):
     assert kinds.parse_kinds(json.dumps({'results': [{'n': 1, 'kind': 'call'}, {'n': 1, 'kind': 'question'}, {'n': 3, 'kind': 'call'}, {'n': True, 'kind': 'call'}, 'x']}), 2) == {1: 'call'}
     with pytest.raises(ValueError):
         kinds.parse_kinds('[]', 2)
+
+
+async def test_a_neutral_post_is_read_by_tone_share_v1_in_either_stored_form(store):
+    """A plain-string label or one in another letter case is neutral too (pulse_measures.tone), so it gets a form instead
+    of staying "Belum dirinci"; a plain string is stored as an object that keeps the label as it was."""
+    async with store() as db:
+        db.add(SourceItem(id='plain', topic_id='t', source='xpoz', platform='x', url='https://x/5', text='Siapa yang setuju?', metrics={'sentiment': 'neutral'}))
+        db.add(SourceItem(id='cased', topic_id='t', source='xpoz', platform='x', url='https://x/6', text='Bagaimana nasibnya?', metrics={'sentiment': {'label': ' Neutral '}}))
+        db.add(SourceItem(id='loud', topic_id='t', source='xpoz', platform='x', url='https://x/7', text='Tolak!', metrics={'sentiment': 'NEGATIVE'}))
+        await db.commit()
+    ai = KindAI('question')
+    assert await kinds.run_one(store, ai) == 'done'
+    assert sorted(row['text'] for row in ai.asked[0]['texts']) == ['Bagaimana nasibnya?', 'Kapan aturannya berlaku?', 'Siapa yang setuju?']
+    async with store() as db:
+        assert (await db.get(SourceItem, 'plain')).metrics['sentiment'] == {'label': 'neutral', 'kind': 'question'}
+        assert (await db.get(SourceItem, 'cased')).metrics['sentiment'] == {'label': ' Neutral ', 'kind': 'question'}
+        assert (await db.get(SourceItem, 'loud')).metrics['sentiment'] == 'NEGATIVE'

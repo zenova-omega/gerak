@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 const KEY = 'pulse-hide-unanalysed', EVENT = 'pulse-hide-unanalysed';
 const read = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
 
-/** One preference for every chart that has a "Belum dianalisis" series: hide it and read the shares of the analysed sample only. */
+/** One preference for every chart that has a "Belum dianalisis" series: show or hide its rows and segment. It never changes
+ * a percentage: a tone's share is always of the analysed posts (tone_share_v1, `toneShares` in pulseMeasures.js). */
 export default function useHideUnknown() {
   const [hidden, setHidden] = useState(read);
   useEffect(() => {

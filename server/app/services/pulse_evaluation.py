@@ -12,6 +12,7 @@ from sqlalchemy import select, func
 from ..models.pulse import SourceItem
 from ..models.pulse_review import PostReview
 from .pulse_review import require_topic
+from . import pulse_measures
 
 LABELS = ('positive', 'neutral', 'negative')
 SAMPLE_LIMIT = 20
@@ -43,9 +44,8 @@ async def evaluate_sentiment(db, topic_id, *, start=None, end=None, platforms=No
     try:
         async for post_id, metrics, text, manual in rows:
             reviewed += 1
-            raw = metrics.get('sentiment') if isinstance(metrics, dict) else None
-            machine = raw.get('label') if isinstance(raw, dict) else raw
-            if not isinstance(machine, str) or machine not in LABELS:
+            machine = pulse_measures.tone(metrics)   # tone_share_v1: either stored form, any letter case
+            if machine not in LABELS:
                 continue
             paired += 1
             matches += int(machine == manual)

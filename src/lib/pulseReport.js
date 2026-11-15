@@ -2,8 +2,7 @@ import {sentimentCounts} from './pulsePostFilters.js';
 import {sentimentTimeline} from './pulseSentiment.js';
 import {filterPosts} from './pulsePostFilters.js';
 import {projectPlatformOptions} from './pulseProjectFilters.js';
-import { postInteractions } from './pulseEngagement.js';
-import { byInteractions } from './pulseMeasures.js';
+import { accountName, byInteractions, interactionsTotal, postAccount } from './pulseMeasures.js';
 
 export function freezeReport(draft,generatedAt=new Date().toISOString()) {
   if(!draft.responseAnalysis.loaded||draft.responseAnalysis.error)return null;
@@ -18,13 +17,14 @@ export function buildReport(data,topic={},period={},generatedAt=new Date().toISO
   const counts=sentimentCounts(posts), platforms={}, authors=new Map();
   for(const p of posts){
     platforms[p.platform]=(platforms[p.platform]||0)+1;
-    if(!p.author)continue;
-    const key=JSON.stringify([p.platform,p.author]);
-    const row=authors.get(key)||{author:p.author,platform:p.platform,mentions:0,engagement:null};
+    const key=postAccount(p);   // account_v1; a post without a name can still have one
+    if(!key)continue;
+    const row=authors.get(key)||{key,author:p.author,platform:p.platform,mentions:0,engagement:null,interaction_posts:0,rows:[]};
     row.mentions++;
-    if(postInteractions(p.metrics)!==null)row.engagement=(row.engagement??0)+postInteractions(p.metrics);
+    row.rows.push(p);
     authors.set(key,row);
   }
+  for(const row of authors.values()){const total=interactionsTotal(row.rows);row.engagement=total.value;row.interaction_posts=total.posts;row.author=accountName(row.rows);delete row.rows;}
   const sourceCoverage=[...new Set([...projectPlatformOptions,...(selectedPlatforms||[]),...Object.keys(platforms)])].map(platform=>({
     platform,count:platforms[platform]||0,
     status:selectedPlatforms!==null&&!selectedPlatforms.includes(platform)?'excluded':platforms[platform]?'observed':'empty',

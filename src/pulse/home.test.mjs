@@ -41,6 +41,17 @@ const cards = html => html.split(/(?=<div[^>]*class="[^"]*hmp-card)/).slice(1);
 const cardOf = (html, label) => cards(html).find(card => card.includes('>' + label + '<')) || '';
 const view = props => render('/src/pulse/Home.jsx', 'HomeView', { radar, projects, filters: none, canCreate: true, now, onFilters() {}, onSelect() {}, onRefresh() {}, ...props });
 
+test('a project card with nothing analysed yet prints no percentage; "belum dianalisis" carries the whole count (tone_share_v1)', async () => {
+  const rows = [project('w', 'Menunggu analisis', { sentiment_7d: { positive: 0, neutral: 0, negative: 0, unknown: 1240 } }),
+    project('s', 'Satu dari tiga ratus', { sentiment_7d: { positive: 1, neutral: 299, negative: 0, unknown: 0 } })];
+  const html = await render('/src/pulse/HomeProjects.jsx', 'default', { rows, canCreate: true, now });
+  const tone = card => card.slice(card.indexOf('hmp-tone'));
+  const waiting = tone(cardOf(html, 'Menunggu analisis'));
+  assert.match(waiting, /aria-label="Sentimen 7 hari: Belum dianalisis 1\.240 posting"/);
+  assert.doesNotMatch(text(waiting), /%|NaN/);
+  assert.match(cardOf(html, 'Satu dari tiga ratus'), /aria-label="Sentimen 7 hari: Positif &lt;1%, Netral 100%"/, 'one post of 300 is a sliver, not 0%');
+});
+
 test('a project card shows the last day against the day before, a week as a line, and how the week felt', async () => {
   const html = await render('/src/pulse/HomeProjects.jsx', 'default', { rows: projects, canCreate: true, now });
   const first = cardOf(html, 'Isu Pengunduran Diri Gibran');
@@ -55,8 +66,9 @@ test('a project card shows the last day against the day before, a week as a line
   const second = cardOf(html, 'Isu Penyadapan Presiden');
   assert.match(text(second), /Posting 24 jam 96 -22% dari 24 jam sebelumnya/);
   assert.match(second, /data-hatch=""/, 'posts without a reading are hatched, never a flat grey');
-  assert.match(text(second), /Belum dianalisis 75%/);
-  assert.match(second, /aria-label="Sentimen 7 hari: Positif 25%, Belum dianalisis 75%"/);
+  // tone_share_v1: a share is of the analysed posts and "belum dianalisis" is a count (was Positif 25%, Belum dianalisis 75%).
+  assert.match(text(second), /Belum dianalisis 3 posting/);
+  assert.match(second, /aria-label="Sentimen 7 hari: Positif 100%, Belum dianalisis 3 posting"/);
   assert.doesNotMatch(text(second), /alert baru/, 'no alert, no tag');
   assert.match(text(cardOf(html, 'cawapres')), /Posting 24 jam 50 0% dari 24 jam sebelumnya/);
   assert.match(text(cardOf(html, 'cawapres')), /belum pernah terkumpul/);

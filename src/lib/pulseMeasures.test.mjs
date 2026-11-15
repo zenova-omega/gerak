@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   RULES, setZone, zone, readTime, hasClock, localDay, localTime, weekStart, inPeriod, reported, interactions,
-  sharesTotal, contentShares, interactionsTotal, byInteractions, tone, toneShares, accountKey, postMeasures,
+  sharesTotal, contentShares, interactionsTotal, byInteractions, tone, toneShares, accountKey, accountName, postAccount, accountCount, postMeasures,
 } from './pulseMeasures.js';
 
 const CASES = JSON.parse(readFileSync(new URL('../../shared/pulse-measures.cases.json', import.meta.url), 'utf8'));
@@ -65,6 +65,9 @@ each('interaction_order', item => assert.deepEqual([...item.in].sort(byInteracti
 each('tone', item => assert.equal(tone({ metrics: item.in }), item.out));
 each('tone_shares', item => assert.deepEqual(toneShares(item.in), item.out));
 each('account', item => assert.equal(accountKey(item.in), item.out));
+each('account_name', item => assert.equal(accountName(item.in), item.out));
+each('post_account', item => assert.equal(postAccount(item.in), item.out));
+each('account_count', item => assert.equal(accountCount(item.in), item.out));
 
 test('postMeasures computes a post\'s own figures, or reads the ones the server sent', () => {
   const post = { published_at: '2026-11-10T17:00:00', platform: 'x', author: '@Okezonenews', metrics: { likes: 2, comments: '1', sentiment: 'neutral' } };

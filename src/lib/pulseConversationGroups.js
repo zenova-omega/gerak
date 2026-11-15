@@ -6,7 +6,7 @@ import { filterPosts, postSentiment } from './pulsePostFilters.js';
 import { sourceText } from './pulseOverview.js';
 import { contentShares, postInteractions } from './pulseEngagement.js';
 import { formatCount, pulseDay } from './pulseData.js';
-import { localDay, readTime } from './pulseMeasures.js';
+import { accountName, localDay, postAccount, readTime, reported, toneShares } from './pulseMeasures.js';
 
 export const groupPageSize = 20;
 export const groupSorts = ['posts', 'accounts', 'interactions', 'recent'];
@@ -33,13 +33,12 @@ function describe(id, posts) {
     const platform = post.platform || 'unknown';
     platforms.set(platform, (platforms.get(platform) || 0) + 1);
     tone[postSentiment(post)]++;
-    // An account is counted per platform: the same name on X and on Instagram is two accounts.
-    const identity = post.metrics?.author_id || post.author;
-    if (identity) {
-      const key = JSON.stringify([post.platform, String(identity)]);
-      const row = accounts.get(key) || { author: post.author || '', platform: post.platform, posts: 0 };
-      if (!row.author && post.author) row.author = post.author;
+    // account_v1: an account is counted per platform: the same name on X and on Instagram is two accounts.
+    const key = postAccount(post);
+    if (key) {
+      const row = accounts.get(key) || { key, author: post.author, platform: post.platform, posts: 0, rows: [] };
       row.posts++;
+      row.rows.push(post);
       accounts.set(key, row);
     }
     const own = postInteractions(post.metrics);
@@ -54,7 +53,7 @@ function describe(id, posts) {
     id, posts, size: posts.length,
     title: posts.map(sourceText).find(Boolean) || 'Teks sumber belum tersedia',
     // Most posts first; accounts with the same number keep the order in which they first posted.
-    accounts: [...accounts.values()].sort((a, b) => b.posts - a.posts),
+    accounts: [...accounts.values()].map(({ rows, ...row }) => ({ ...row, author: accountName(rows) })).sort((a, b) => b.posts - a.posts),
     accountCount: accounts.size,
     platforms: [...platforms].map(([platform, count]) => ({ platform, count })).sort((a, b) => b.count - a.count || byPlatformOrder(a.platform, b.platform)),
     sentiment: { ...tone, analysed, lead },
@@ -103,21 +102,14 @@ export function groupDayRange(firstDay, lastDay) {
   return `${first.slice(0, 4) === last.slice(0, 4) ? pulseDay(first).replace(/\s+\d{4}$/, '') : pulseDay(first)} – ${pulseDay(last)}`;
 }
 
-/** The sentiment mix of one group, read over the posts that have been analysed. Percentages are whole numbers that
- * add up to 100; posts still waiting are a count, never a share.
- * @returns {{total: number, analysed: number, unknown: number, parts: {key: string, count: number, percent: number}[]}} */
+/** The sentiment mix of one group, read over the posts that have been analysed (tone_share_v1, `toneShares`).
+ * Percentages are whole numbers that add up to 100; `text` is what to print, "<1%" for a sliver. Posts still waiting
+ * are a count, never a share.
+ * @returns {{total: number, analysed: number, unknown: number, parts: {key: string, count: number, percent: number, text: string}[]}} */
 export function sentimentShares(sentiment) {
-  const tone = sentiment || {};
-  const rows = ['positive', 'neutral', 'negative'].map(key => ({ key, count: tone[key] || 0 })).filter(row => row.count > 0);
-  const analysed = rows.reduce((sum, row) => sum + row.count, 0), unknown = tone.unknown || 0;
-  const exact = rows.map(row => row.count / (analysed || 1) * 100), floors = exact.map(Math.floor);
-  let left = analysed ? 100 - floors.reduce((sum, value) => sum + value, 0) : 0;
-  // Largest remainder: the points lost to rounding go to the parts that were cut the most.
-  for (const index of exact.map((value, i) => [value - floors[i], i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).map(([, i]) => i)) {
-    if (left <= 0) break;
-    floors[index]++; left--;
-  }
-  return { total: analysed + unknown, analysed, unknown, parts: rows.map((row, index) => ({ ...row, percent: floors[index] })) };
+  const { analysed, unknown, percent, text } = toneShares(sentiment);
+  const rows = ['positive', 'neutral', 'negative'].map(key => ({ key, count: reported(sentiment?.[key]) ?? 0 })).filter(row => row.count > 0);
+  return { total: analysed + unknown, analysed, unknown, parts: rows.map(row => ({ ...row, percent: percent[row.key], text: text[row.key] })) };
 }
 
 /** A selection the data can answer: unknown values dropped; nothing or everything selected means all (`null`). */

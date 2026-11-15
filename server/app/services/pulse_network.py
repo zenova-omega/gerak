@@ -4,7 +4,7 @@ import re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 
-from .pulse_measures import content_shares, interactions_total, reported
+from .pulse_measures import account_key, account_name, content_shares, interactions_total, post_account, reported
 
 
 def timestamp(value):
@@ -20,13 +20,6 @@ def normalized(post):
     text = post.get('text') if post.get('platform') == 'x' else post.get('title')
     text = re.sub(r'https?://\S+|(?<!\w)@[A-Za-z0-9_]+', ' ', text or '')
     return ' '.join(re.findall(r'\w+', text.lower()))
-
-
-def account_key(post):
-    platform = post.get('platform') or 'unknown'
-    # X handles are case insensitive. Other platforms use provider IDs when present.
-    identity = (post.get('author') or '').lstrip('@').lower() if platform == 'x' else str((post.get('metrics') or {}).get('author_id') or post.get('author') or '')
-    return f'{platform}:{identity}'
 
 
 def observed_total(rows, key):
@@ -58,11 +51,13 @@ def analyze_network(posts):
     sample = posts[:1000]
     by_account, nodes, edges = defaultdict(list), {}, {}
     for p in sample:
-        if not p.get('author'):
+        key = post_account(p)
+        if not key:
             continue
-        key = account_key(p)
         by_account[key].append(p)
-        nodes[key] = {'id': key, 'label': p['author'], 'platform': p.get('platform'), 'observed': True}
+        nodes[key] = {'id': key, 'label': None, 'platform': p.get('platform'), 'observed': True}
+    for key, rows in by_account.items():
+        nodes[key]['label'] = account_name(rows)   # account_v1: the most recently published name; None when none has one
 
     def link(source, target, kind, p):
         if source == target:
@@ -74,12 +69,13 @@ def analyze_network(posts):
             edge['evidence'].append(evidence(p))
 
     for p in sample:
-        if p.get('platform') != 'x' or not p.get('author'):
+        source = post_account(p)
+        if p.get('platform') != 'x' or not source:
             continue
         for handle in set(re.findall(r'(?<![\w@])@([A-Za-z0-9_]{1,15})\b', p.get('text') or '')):
-            target = 'x:' + handle.lower()
+            target = account_key('x', handle, None)   # a mention names a handle: the X key of account_v1
             nodes.setdefault(target, {'id': target, 'label': '@' + handle, 'platform': 'x', 'observed': False})
-            link(account_key(p), target, 'mention', p)
+            link(source, target, 'mention', p)
 
     # Greedy representative-based lexical clusters: no transitive similarity chains.
     groups = []
@@ -98,20 +94,20 @@ def analyze_network(posts):
     shared = Counter()   # per account: similar-content groups it shares with at least two other accounts
     for group in groups:
         rows = group['posts']
-        authors = {account_key(p) for p in rows if p.get('author')}
+        authors = {key for key in map(post_account, rows) if key}
         if len(authors) < 2:
             continue
         if len(authors) >= 3:
             shared.update(authors)
         dated = [p for p in rows if timestamp(p.get('published_at'))]
         first = dated[0] if dated else None
-        later = {account_key(p) for p in dated if first and timestamp(p['published_at']) > timestamp(first['published_at']) and account_key(p) != account_key(first)}
+        later = {post_account(p) for p in dated if first and timestamp(p['published_at']) > timestamp(first['published_at']) and post_account(p) != post_account(first)} - {None}
         # Similarity edges have no causal direction and point to evidence on both sides.
-        anchor = next((p for p in rows if p.get('author')), None)
+        anchor = next((p for p in rows if post_account(p)), None)
         for p in rows:
-            if anchor and p.get('author'):
-                link(account_key(anchor), account_key(p), 'similarity', anchor)
-                link(account_key(anchor), account_key(p), 'similarity', p)
+            if anchor and post_account(p):
+                link(post_account(anchor), post_account(p), 'similarity', anchor)
+                link(post_account(anchor), post_account(p), 'similarity', p)
         narratives.append({'id': str(rows[0]['id']), 'title': rows[0].get('title') or rows[0].get('text', '')[:160],
                            'post_count': len(rows), 'account_count': len(authors), 'later_accounts': len(later),
                            'first_observed': evidence(first) if first else None,

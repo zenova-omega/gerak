@@ -106,8 +106,8 @@ def _figure(value):
 
 
 def _sentiment(metrics):
-    label = ((metrics or {}).get('sentiment') or {}).get('label') if isinstance((metrics or {}).get('sentiment'), dict) else None
-    return label if label in ('positive', 'neutral', 'negative') else 'unknown'
+    """A post's tone by tone_share_v1: either stored form, any letter case; anything else is 'unknown'."""
+    return pulse_measures.tone(metrics)
 
 
 def _surge(snapshots):
@@ -209,7 +209,7 @@ async def build_context(db, topic_id, now, *, start=None, end=None, platforms=No
             by_day = Counter(_wib_day(item.published_at) for item in members if item.published_at)
             first = min((item.published_at for item in members if item.published_at), default=None)
             out.append({'title': (titles.get(issue_id) or members[0].title or members[0].text or '')[:160],
-                        'posts': len(members), 'accounts': len({(item.platform, item.author) for item in members if item.author}),
+                        'posts': len(members), 'accounts': pulse_measures.account_count([{'platform': item.platform or 'unknown', 'author': item.author, 'metrics': item.metrics} for item in members]),
                         'platforms': sorted({item.platform or 'unknown' for item in members}),
                         'first_published_at': _published(first), 'peak_day': by_day.most_common(1)[0][0] if by_day else None,
                         'interactions': _known_interactions(members)[0], 'interaction_posts': _known_interactions(members)[1],

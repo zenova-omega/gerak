@@ -72,11 +72,11 @@ function GroupTone({ sentiment }) {
   const mix = sentimentShares(sentiment);
   if (!mix.analysed) return <div className="pcg-tone" data-empty=""><span className="pcg-tone-label">Sentimen</span><SentimentTag size="sm" value="unknown" /></div>;
   const basis = mix.unknown ? `${formatCount(mix.analysed)} dari ${formatCount(mix.total)} posting dianalisis` : `${formatCount(mix.total)} posting`;
-  const spoken = mix.parts.map(part => `${sentimentLabels[part.key].toLowerCase()} ${part.percent}%`).join(', ');
+  const spoken = mix.parts.map(part => `${sentimentLabels[part.key].toLowerCase()} ${part.text}`).join(', ');
   return <div className="pcg-tone">
     <span className="pcg-tone-label">Sentimen <span>· {basis}</span></span>
     <span className="pcg-tone-bar" role="img" aria-label={`Sentimen ${basis}: ${spoken}`}>{mix.parts.map(part => <i key={part.key} style={{ flexGrow: part.count, '--swatch': sentimentColor[part.key] }} />)}</span>
-    <ul className="pcg-tone-key" aria-hidden="true">{mix.parts.map(part => <li key={part.key}><i className="pu-swatch" style={{ '--swatch': sentimentColor[part.key] }} />{sentimentLabels[part.key]} <b>{part.percent}%</b></li>)}</ul>
+    <ul className="pcg-tone-key" aria-hidden="true">{mix.parts.map(part => <li key={part.key}><i className="pu-swatch" style={{ '--swatch': sentimentColor[part.key] }} />{sentimentLabels[part.key]} <b>{part.text}</b></li>)}</ul>
   </div>;
 }
 

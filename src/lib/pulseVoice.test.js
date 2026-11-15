@@ -52,3 +52,13 @@ test('shares are whole numbers that add up to one hundred', () => {
   assert.deepEqual(shares({ positive: 0, neutral: 0, negative: 0 }, ['positive', 'neutral', 'negative']), { positive: 0, neutral: 0, negative: 0 });
   assert.deepEqual(shares({ negative: 45, neutral: 52, positive: 3 }, ['negative', 'neutral', 'positive']), { negative: 45, neutral: 52, positive: 3 });
 });
+
+test('shares of tone counts are tone_share_v1: of the analysed posts only, ties in the order positive, neutral, negative', () => {
+  const tones = ['negative', 'neutral', 'positive'];
+  assert.deepEqual(shares({ positive: 1, neutral: 1, negative: 1 }, tones), { negative: 33, neutral: 33, positive: 34 });
+  // "Belum dianalisis" is a count beside the three, never inside them.
+  assert.deepEqual(shares({ positive: 1, neutral: 0, negative: 1, unknown: 2 }, [...tones, 'unknown']), { negative: 50, neutral: 0, positive: 50, unknown: null });
+  assert.deepEqual(shares({ positive: 1, neutral: 299, negative: 0, unknown: 7 }, tones), { negative: 0, neutral: 100, positive: 0 });
+  // Other counts (forms of a neutral text, stances) keep the plain largest remainder over the keys given.
+  assert.deepEqual(shares({ supports: 1, opposes: 1, unclear: 1 }, ['opposes', 'supports', 'unclear']), { opposes: 34, supports: 33, unclear: 33 });
+});

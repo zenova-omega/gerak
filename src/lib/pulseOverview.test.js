@@ -78,3 +78,40 @@ test('top posts follow the interactions order and a project without any reported
   assert.equal(unknown.engagement,null);assert.equal(unknown.engagementCoverage,0);
   assert.deepEqual(unknown.topPosts.map(p=>p.id),['a','b'],'nothing known: publication order');
 });
+
+test('overview totals and account totals use the measures module and carry their post count', () => {
+  const rows=[
+    {id:'a',platform:'x',author:'A',published_at:'2026-11-10T10:00:00Z',metrics:{},measures:{interactions:9}},
+    {id:'b',platform:'x',author:'A',published_at:'2026-11-10T11:00:00Z',metrics:{likes:'2'}},
+    {id:'c',platform:'x',author:'B',published_at:'2026-11-10T12:00:00Z',metrics:{likes:true}},
+  ];
+  const r=overviewEvidence(rows);
+  assert.deepEqual([r.engagement,r.engagementCoverage],[11,2]);
+  const by=Object.fromEntries(r.accounts.map(row=>[row.author,row]));
+  assert.deepEqual([by.A.engagement,by.A.interaction_posts],[11,2]);
+  assert.deepEqual([by.B.engagement,by.B.interaction_posts],[null,0]);
+});
+
+test('accounts are counted by account_v1 and show their most recently published name', () => {
+  // One X handle written two ways, a renamed YouTube channel, a Threads account with an id on one row only.
+  const rows=[
+    {id:'k1',platform:'x',author:'Okezonenews',published_at:'2026-11-10T08:00:00Z',metrics:{likes:1}},
+    {id:'k2',platform:'x',author:'@okezonenews',published_at:'2026-11-11T08:00:00Z',metrics:{likes:2}},
+    {id:'k3',platform:'youtube',author:'Kanal Lama',published_at:'2026-11-09T08:00:00Z',metrics:{author_id:'UC1',likes:3}},
+    {id:'k4',platform:'youtube',author:'Kanal Baru',published_at:'2026-11-12T08:00:00Z',metrics:{author_id:'UC1',likes:4}},
+    {id:'k5',platform:'threads',author:'@Warga.Solo',published_at:'2026-11-12T09:00:00Z',metrics:{author_id:'1789',likes:5}},
+    {id:'k6',platform:'threads',author:'warga.solo',published_at:'2026-11-08T08:00:00Z',metrics:{likes:6}},
+  ];
+  assert.deepEqual(overviewEvidence(rows).accounts.map(row=>[row.key,row.author,row.mentions,row.engagement]),[
+    ['threads:warga.solo','@Warga.Solo',2,11],['youtube:UC1','Kanal Baru',2,7],['x:okezonenews','@okezonenews',2,3]]);
+});
+
+test('a post without a name counts for its channel by id; an account no post names has no name', () => {
+  const rows=[
+    {id:'n1',platform:'youtube',author:null,published_at:'2026-11-12T08:00:00Z',metrics:{author_id:'UC1',likes:1}},
+    {id:'n2',platform:'youtube',author:'Kanal',published_at:'2026-11-10T08:00:00Z',metrics:{author_id:'UC1',likes:1}},
+    {id:'n3',platform:'youtube',author:'',published_at:'2026-11-11T08:00:00Z',metrics:{author_id:'UC9',likes:5}},
+    {id:'n4',platform:'x',author:'',published_at:'2026-11-11T08:00:00Z',metrics:{likes:7}},
+  ];
+  assert.deepEqual(overviewEvidence(rows).accounts.map(row=>[row.key,row.author,row.mentions]),[['youtube:UC9',null,1],['youtube:UC1','Kanal',2]]);
+});

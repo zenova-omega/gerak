@@ -47,7 +47,7 @@ async def test_analytics_observed_engagement_and_unknown_locations(client, db, a
     assert data["total_mentions"] == 2
     assert data["timeline"] == [{"date": "2026-01-02", "count": 2}]
     assert data["platforms"] == [{"platform": "x", "count": 1}, {"platform": "youtube", "count": 1}]
-    assert data["influencers"][0] == {"author": "B", "platform": "x", "mentions": 1, "engagement": 10, "interaction_posts": 1, "url": "https://x.com/i/status/2"}
+    assert data["influencers"][0] == {"key": "x:b", "author": "B", "platform": "x", "mentions": 1, "engagement": 10, "interaction_posts": 1, "url": "https://x.com/i/status/2"}
     assert data["influencers"][1]["engagement"] == 3
     assert data["locations"] == [] and data["unknown_location_count"] == 2
 
@@ -413,6 +413,68 @@ async def test_interaction_totals_in_issue_card_and_influencers_carry_their_post
     assert (issue["engagement_total"], issue["interaction_posts"]) == (10, 2)
     data = (await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id}, headers=h)).json()
     assert (data["influencers"][0]["engagement"], data["influencers"][0]["interaction_posts"]) == (10, 2)
+
+
+@pytest.mark.asyncio
+async def test_influencers_and_network_count_one_account_by_account_v1(client, db, admin_token):
+    """account_v1: an X handle written two ways, a renamed YouTube channel and a Threads account with an id on one row
+    only are one account each. The row carries its `key`; the name shown is the most recently published one; the
+    network has the same accounts under the same names."""
+    t = WatchTopic(label="akun", query="akun")
+    db.add(t)
+    await db.flush()
+
+    def row(n, platform, author, day, metrics=None):
+        return {"source": "youtube" if platform == "youtube" else "xpoz", "platform": platform, "url": f"https://example.com/akun/{n}",
+                "author": author, "title": f"posting {n} tentang topik berbeda {n * 7}", "published_at": datetime(2026, 11, day, 8),
+                "metrics": {"likes": 1, **(metrics or {})}}
+    await ingest_items(db, t, [
+        row(1, "x", "Okezonenews", 10), row(2, "x", "@okezonenews", 11),
+        row(3, "youtube", "Kanal Lama", 10, {"author_id": "UC1"}), row(4, "youtube", "Kanal Baru", 12, {"author_id": "UC1"}),
+        row(5, "threads", "@Warga.Solo", 12, {"author_id": "1789"}), row(6, "threads", "warga.solo", 9),
+    ])
+    data = (await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id}, headers={"Authorization": f"Bearer {admin_token}"})).json()
+    rows = {r["key"]: (r["author"], r["mentions"], r["engagement"]) for r in data["influencers"]}
+    assert rows == {"x:okezonenews": ("@okezonenews", 2, 2), "youtube:UC1": ("Kanal Baru", 2, 2), "threads:warga.solo": ("@Warga.Solo", 2, 2)}
+    assert {post["measures"]["account"] for post in data["posts"]} == set(rows)
+    network = data["network"]
+    assert {a["id"]: (a["label"], a["posts"]) for a in network["accounts"]} == {key: (name, n) for key, (name, n, _) in rows.items()}
+    assert {node["id"]: node["label"] for node in network["nodes"]} == {key: name for key, (name, _, _) in rows.items()}
+
+
+@pytest.mark.asyncio
+async def test_a_post_without_a_name_belongs_to_its_channel_and_its_row_has_no_name(client, db, admin_token):
+    """account_v1: a YouTube post whose name is only spaces belongs to its channel by id. The row and the node carry
+    no name (None, never a made-up one), and a row tied with it on every figure still sorts."""
+    t = WatchTopic(label="tanpa nama", query="tanpa nama")
+    db.add(t)
+    await db.flush()
+    await ingest_items(db, t, [
+        {"source": "youtube", "platform": "youtube", "url": "https://youtube.com/watch?v=n1", "author": "  ", "title": "video pertama tanpa nama kanal",
+         "published_at": datetime(2026, 11, 10, 8), "metrics": {"author_id": "UC1", "likes": 1}},
+        {"source": "youtube", "platform": "youtube", "url": "https://youtube.com/watch?v=n2", "author": "Kanal", "title": "rekaman kedua dari kanal lain",
+         "published_at": datetime(2026, 11, 10, 9), "metrics": {"author_id": "UC2", "likes": 1}},
+    ])
+    res = await client.get("/api/admin/pulse/analytics", params={"topic_id": t.id}, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    data = res.json()
+    assert [(r["key"], r["author"]) for r in data["influencers"]] == [("youtube:UC2", "Kanal"), ("youtube:UC1", None)]
+    assert {n["id"]: n["label"] for n in data["network"]["nodes"]} == {"youtube:UC1": None, "youtube:UC2": "Kanal"}
+
+
+@pytest.mark.asyncio
+async def test_issue_card_counts_the_accounts_of_a_group_by_account_v1(client, db, admin_token):
+    """account_v1 in the issue card's `grouping.authors`: an X handle written two ways and a Threads account with an id
+    on one row only are one account each."""
+    t = WatchTopic(label="kartu akun", query="kartu akun")
+    db.add(t)
+    await db.flush()
+    rows = [("x", "Okezonenews", {}), ("x", "@okezonenews", {}), ("threads", "@Warga.Solo", {"author_id": "1789"}), ("threads", "warga.solo", {})]
+    await ingest_items(db, t, [{"source": "xpoz", "platform": platform, "url": f"https://example.com/kartu/{index}", "author": author,
+                                "title": "judul yang sama untuk satu kelompok", "metrics": {"likes": 1, **metrics}}
+                               for index, (platform, author, metrics) in enumerate(rows)])
+    issues = (await client.get("/api/admin/pulse/issues", params={"topic_id": t.id}, headers={"Authorization": f"Bearer {admin_token}"})).json()
+    assert [issue["grouping"]["authors"] for issue in issues] == [2]
 
 
 @pytest.mark.asyncio

@@ -164,6 +164,21 @@ def test_account(case):
     assert m.account_key(post['platform'], post['author'], post['metrics']) == case['out']
 
 
+@pytest.mark.parametrize('case', cases('account_name'))
+def test_account_name(case):
+    assert m.account_name(case['in']) == case['out']
+
+
+@pytest.mark.parametrize('case', cases('post_account'))
+def test_post_account(case):
+    assert m.post_account(case['in']) == case['out']
+
+
+@pytest.mark.parametrize('case', cases('account_count'))
+def test_account_count(case):
+    assert m.account_count(case['in']) == case['out']
+
+
 def test_post_measures_bundles_the_rules():
     measures = m.post_measures('2026-11-10T17:00:00', 'x', '@Okezonenews', {'likes': 2, 'comments': '1', 'sentiment': 'neutral'}, 'p1')
     assert measures == {'day': m.local_day('2026-11-10T17:00:00'), 'clock': True, 'interactions': 3, 'account': 'x:okezonenews', 'tone': 'neutral'}

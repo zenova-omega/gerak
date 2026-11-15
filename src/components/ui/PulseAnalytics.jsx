@@ -1,5 +1,6 @@
 import { formatCount } from '../../lib/pulseData';
 import { sharePercent } from '../../lib/pulseChartTheme';
+import { toneShares } from '../../lib/pulseMeasures';
 import { PulseDelta } from './PulseTag';
 import AccountAvatar from '../admin/pulse/AccountAvatar';
 
@@ -30,22 +31,24 @@ export function PulseStatGrid({ label, children, className = '' }) {
  * Anatomy, top to bottom: label · value with its change · one visual (a share meter or a trend line) · note.
  * - `delta` is the change against a comparison; `deltaIntent` colours it by meaning (good green, bad red),
  *   never by direction alone. `deltaNote` says what it is compared with.
- * - `share` (0 to 100) draws a meter with the percentage; `shareLabel` says of what.
+ * - `share` (0 to 100) draws a meter with the percentage; `shareLabel` says of what. `shareText` prints the
+ *   percentage as given (a tone share from `toneShares(...).text`, where a sliver reads "<1%") instead of rounding `share`.
  * - `trend` draws the line; when both are given the meter sits under the value and the line beside it.
  * @param {{label: string, value: number|string|null, note?: import('react').ReactNode, icon?: import('react').ElementType,
  *   tone?: 'positive'|'negative'|'neutral-sentiment'|'unknown', delta?: number|null, deltaUnit?: string,
- *   deltaIntent?: 'neutral'|'good'|'bad', deltaNote?: string, share?: number|null, shareLabel?: string,
+ *   deltaIntent?: 'neutral'|'good'|'bad', deltaNote?: string, share?: number|null, shareText?: string, shareLabel?: string,
  *   trend?: number[], href?: string, onClick?: Function}} props
  */
-export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareLabel, trend, media, href, onClick, as: Link, to }) {
+export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareText, shareLabel, trend, media, href, onClick, as: Link, to }) {
   const text = typeof value === 'string';
   const hasShare = Number.isFinite(share);
   const percent = hasShare ? Math.max(0, Math.min(100, share)) : 0;
+  const printed = shareText || `${percent < 1 && percent > 0 ? '<1' : Math.round(percent)}%`;
   const body = <>
     {media && <span className="pu-stat-media">{media}</span>}
     <span className="pu-stat-label">{tone ? <i aria-hidden="true" /> : Icon && <Icon size={14} aria-hidden="true" />}{label}</span>
     <span className="pu-stat-value"><strong data-kind={text ? 'text' : undefined}>{text ? value : value == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(value)}</strong><PulseDelta value={delta} unit={deltaUnit} intent={deltaIntent} />{deltaNote && Number.isFinite(delta) && <small className="pu-stat-delta-note">{deltaNote}</small>}</span>
-    {hasShare && <span className="pu-stat-meter" role="img" aria-label={`${Math.round(percent)}%${shareLabel ? ' ' + shareLabel : ''}`}><span className="pu-stat-meter-track"><i style={{ width: `${percent}%` }} /></span><b>{percent < 1 && percent > 0 ? '<1' : Math.round(percent)}%</b>{shareLabel && <small>{shareLabel}</small>}</span>}
+    {hasShare && <span className="pu-stat-meter" role="img" aria-label={`${shareText || `${Math.round(percent)}%`}${shareLabel ? ' ' + shareLabel : ''}`}><span className="pu-stat-meter-track"><i style={{ width: `${percent}%` }} /></span><b>{printed}</b>{shareLabel && <small>{shareLabel}</small>}</span>}
     {note && <span className="pu-stat-note">{note}</span>}
     {trend && <span className="pu-stat-spark"><Sparkline values={trend} /></span>}
   </>;
@@ -64,17 +67,22 @@ export function PulseLegend({ items, label = 'Keterangan warna' }) {
 /** Recharts tooltip in the PULSE surface language. Pass as `content={<PulseChartTooltip/>}`.
  * The head carries the label and, with `total`, the sum of the rows. `percent` adds each row's share of the rows shown
  * and draws those shares as one bar. `top(label)` may return up to three `{id, author, platform, photo, text, value}`
- * rows to preview what is behind the bar; `topUnit` names what their `value` counts. */
+ * rows to preview what is behind the bar; `topUnit` names what their `value` counts.
+ * Tone rows (positive, neutral, negative) take tone_share_v1: shares of the analysed posts only, "<1%" for a sliver, and
+ * an `unknown` row keeps its count without a share. */
 export function PulseChartTooltip({ active, payload, label, labelFormatter, total = false, note, top, percent = false, topTitle = 'Posting teratas', topUnit }) {
   if (!active || !payload?.length) return null;
   const rows = payload.filter(row => Number.isFinite(row.value));
   const sum = rows.reduce((value, row) => value + row.value, 0);
+  const isTone = key => ['positive', 'neutral', 'negative'].includes(key);
+  const tones = rows.some(row => isTone(row.dataKey)) ? toneShares(Object.fromEntries(rows.map(row => [row.dataKey, row.value]))) : null;
+  const share = row => (tones ? (isTone(row.dataKey) && tones.text ? tones.text[row.dataKey] : null) : `${Math.round(row.value / sum * 100)}%`);
   const hatched = row => row.payload?.__hatch === row.dataKey || row.dataKey === 'unknown' ? '' : undefined;
   const list = top ? top(label) : [];
   return <div className="pu-hover-card pu-chart-tooltip">
     <header className="pu-hover-head"><strong>{labelFormatter ? labelFormatter(label) : label}</strong>{total && rows.length > 1 && <span>Total <b>{formatCount(sum)}</b></span>}</header>
     {percent && sum > 0 && <span className="pu-hover-bar" aria-hidden="true">{rows.filter(row => row.value > 0).map(row => <i key={row.dataKey} data-hatch={hatched(row)} style={{ flexGrow: row.value, '--swatch': row.color || row.fill }} />)}</span>}
-    <ul className="pu-hover-rows">{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={hatched(row)} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}</b>{percent && sum > 0 && <em>{Math.round(row.value / sum * 100)}%</em>}</li>)}</ul>
+    <ul className="pu-hover-rows">{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={hatched(row)} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}</b>{percent && sum > 0 && share(row) && <em>{share(row)}</em>}</li>)}</ul>
     {note && <p className="pu-hover-foot">{note}</p>}
     {list.length > 0 && <section className="pu-chart-top-wrap">
       <p className="pu-chart-top-head"><span>{topTitle}</span>{topUnit && <span>{topUnit}</span>}</p>

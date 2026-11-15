@@ -180,3 +180,26 @@ export function accountKey(post) {
   else identity = id || handle(post?.author);
   return identity ? `${platform}:${identity}` : null;
 }
+
+/** account_v1: the name shown for an account is the `author` text, as written, of its most recently published post
+ * that has one. A post without a readable time comes after every dated post; on a tie the first post given wins. */
+export function accountName(posts) {
+  let name = null, latest = null;
+  for (const post of posts || []) {
+    if (!trim(post?.author)) continue;
+    const time = readTime(post.published_at);
+    if (name === null || (time !== null && (latest === null || time > latest))) { name = post.author; latest = time; }
+  }
+  return name;
+}
+
+/** account_v1 of a post: the `measures.account` the server sent, else its key from platform, author and metrics. A post
+ * without a name still belongs to an account when its platform keys by id; its name is then unknown (null). */
+export function postAccount(post) {
+  return postMeasures(post).account ?? accountKey(post);
+}
+
+/** account_v1: how many accounts posted these, distinct keys; a post without a key is no account. */
+export function accountCount(posts) {
+  return new Set((posts || []).map(postAccount).filter(Boolean)).size;
+}

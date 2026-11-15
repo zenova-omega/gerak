@@ -22,6 +22,8 @@
 .pulse-standalone.pulse-standalone .pa-table th[aria-sort] { color: var(--ps-ink); }
 .pa-table th[aria-sort]::after { content: ""; display: inline-block; width: 0; height: 0; margin-left: 6px; border-inline: 4px solid transparent; border-top: 5px solid currentColor; vertical-align: middle; }
 .pa-table td.pa-sorted { font-weight: var(--ps-weight-strong, 650); }
+/* The post count under an interaction total: the posts whose interactions are known. */
+.pa-table .pa-count { display: block; color: var(--ps-muted); font-size: var(--ps-control-font-xs, .75rem); font-weight: 400; }
 
 /* ---------- Paging and the empty result ---------- */
 .pa-more { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ps-space-2, 8px) var(--ps-space-4, 16px); padding: var(--ps-space-4, 16px) var(--ps-surface-pad, 20px); border-top: 1px solid var(--ps-line); }

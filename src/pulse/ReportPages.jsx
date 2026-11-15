@@ -9,6 +9,7 @@ import { PlatformIcon, platformLabel } from '../components/admin/pulse/PlatformI
 import { ProjectPostsContext } from './projectPosts';
 import RegionMiniMap from './RegionMiniMap';
 import { formatCount, pulseDate, pulseDay, safeSourceUrl } from '../lib/pulseData';
+import { zone } from '../lib/pulseMeasures';
 import { sentimentColor, sentimentOrder } from '../lib/pulseChartTheme';
 import { postSentiment, sentimentLabels } from '../lib/pulsePostFilters';
 import { postInteractions } from '../lib/pulseEngagement';
@@ -52,11 +53,12 @@ function Sheet({ page, frame, title, lede, cover = false, children }) {
 }
 const Empty = ({ children }) => <p className="rp-empty">{children}</p>;
 
-/** A key that names every colour. `value` is a count, `share` a whole percentage; either may be left out. */
+/** A key that names every colour. `value` is a count, `share` a whole percentage; either may be left out. A tone's share
+ * is printed from `shareText` (tone_share_v1), where a sliver reads "<1%". */
 function Legend({ items, label = 'Keterangan warna' }) {
   return <ul className="rp-legend" aria-label={label}>{items.map(item => <li key={item.key}>
     <i className="rp-swatch" data-hatch={item.hatch ? '' : undefined} style={item.hatch ? undefined : { '--seg': item.color }} aria-hidden="true" />
-    <span>{item.label}</span>{item.value != null && <b>{formatCount(item.value)}</b>}{item.share != null && <em>{item.share}%</em>}
+    <span>{item.label}</span>{item.value != null && <b>{formatCount(item.value)}</b>}{item.share != null && <em>{item.shareText ?? `${item.share}%`}</em>}
   </li>)}</ul>;
 }
 /** Parts of one whole on a single bar. `label` says in words what the bar shows, for a reader who cannot see it. */
@@ -66,7 +68,7 @@ function Bar({ parts, label, slim = false }) {
   </div>;
 }
 const toneParts = counts => tones.map(key => ({ key, label: sentimentLabels[key], value: counts[key], color: sentimentColor[key] }));
-const toneWords = (counts, split) => tones.map(key => `${sentimentLabels[key]} ${split[key]}%`).join(', ') + (counts.unknown ? `, ${formatCount(counts.unknown)} belum dianalisis` : '');
+const toneWords = (counts, text) => tones.map(key => `${sentimentLabels[key]} ${text[key]}`).join(', ') + (counts.unknown ? `, ${formatCount(counts.unknown)} belum dianalisis` : '');
 
 function CoverPage({ page, frame }) {
   const { report, brand, data } = frame;
@@ -167,10 +169,10 @@ function TrendPage({ page, frame }) {
   </Sheet>;
   const busiest = [...report.days].sort((a, b) => b.total - a.total || a.date.localeCompare(b.date)).slice(0, 5);
   return <Sheet page={page} frame={frame} title={page.title}
-    lede={`Jumlah posting per ${trend.unit === 'day' ? 'hari' : 'minggu'} menurut tanggal terbit (WIB), dibagi menurut sentimen.`}>
+    lede={`Jumlah posting per ${trend.unit === 'day' ? 'hari' : 'minggu'} menurut tanggal terbit (${zone().name}), dibagi menurut sentimen.`}>
     <TrendChart trend={trend} />
     <Legend label="Keterangan warna grafik" items={[
-      ...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: data.counts[key], share: data.analysed ? data.shares[key] : null })),
+      ...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: data.counts[key], share: data.analysed ? data.shares[key] : null, shareText: data.analysed ? data.shareText[key] : null })),
       { key: 'unknown', label: sentimentLabels.unknown, hatch: true, value: data.counts.unknown },
     ]} />
     <p className="rp-note">Persentase dihitung dari {formatCount(data.analysed)} posting yang sudah dianalisis ({data.coverage}% dari {formatCount(data.total)} posting). Posting yang belum dianalisis tidak dianggap netral.{data.undated > 0 ? ` ${formatCount(data.undated)} posting tanpa tanggal terbit tidak masuk grafik.` : ''}</p>
@@ -196,9 +198,9 @@ function Voice({ title, voice, none }) {
     {!voice.total ? <Empty>{none}</Empty> : <>
       <p className="rp-sub">{formatCount(voice.total)} posting, {voice.unknown ? `${formatCount(voice.analysed)} sudah dianalisis` : 'semuanya sudah dianalisis'}</p>
       {!voice.lead ? <Empty>Belum ada posting yang dianalisis, jadi nadanya belum dapat dibaca.</Empty> : <>
-        <p className="rp-leading"><strong>{voice.shares[voice.lead]}%</strong><span>{sentimentLabels[voice.lead].toLowerCase()}, bagian terbesar dari {formatCount(voice.analysed)} posting yang dianalisis</span></p>
-        <Bar label={`${title}: ${toneWords(voice.counts, voice.shares)}`} parts={toneParts(voice.counts)} />
-        <Legend label={`Keterangan warna ${title.toLowerCase()}`} items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: voice.counts[key], share: voice.shares[key] }))} />
+        <p className="rp-leading"><strong>{voice.shareText[voice.lead]}</strong><span>{sentimentLabels[voice.lead].toLowerCase()}, bagian terbesar dari {formatCount(voice.analysed)} posting yang dianalisis</span></p>
+        <Bar label={`${title}: ${toneWords(voice.counts, voice.shareText)}`} parts={toneParts(voice.counts)} />
+        <Legend label={`Keterangan warna ${title.toLowerCase()}`} items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: voice.counts[key], share: voice.shares[key], shareText: voice.shareText[key] }))} />
         {voice.unknown > 0 && <p className="rp-note">{formatCount(voice.unknown)} posting belum dianalisis dan tidak masuk persentase.</p>}
         {neutral > 0 && <div className="rp-kinds">
           <h4>Netral terdiri dari</h4>
@@ -227,8 +229,8 @@ function VoicesPage({ page, frame }) {
           <th scope="row"><span className="rp-platform"><PlatformIcon platform={row.platform} size={14} />{platformName(row.platform)}</span></th>
           <td className="rp-num">{formatCount(row.total)}</td>
           <td className="rp-num">{formatCount(row.analysed)}</td>
-          <td className="rp-cell-bar">{row.analysed ? <Bar slim label={`${platformName(row.platform)}: ${toneWords(row.counts, row.shares)}`} parts={toneParts(row.counts)} /> : <span className="rp-muted">belum dianalisis</span>}</td>
-          {tones.map(key => <td className="rp-num" key={key}>{row.analysed ? `${row.shares[key]}%` : '—'}</td>)}
+          <td className="rp-cell-bar">{row.analysed ? <Bar slim label={`${platformName(row.platform)}: ${toneWords(row.counts, row.shareText)}`} parts={toneParts(row.counts)} /> : <span className="rp-muted">belum dianalisis</span>}</td>
+          {tones.map(key => <td className="rp-num" key={key}>{row.analysed ? row.shareText[key] : '—'}</td>)}
         </tr>)}</tbody>
       </table>
       <Legend items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key] }))} />
@@ -251,9 +253,9 @@ function OpinionPage({ page, frame }) {
     {opinion.analysed > 0 ? <div className="rp-pair">
       <section className="rp-voice">
         <h3>Sentimen komentar</h3>
-        <p className="rp-leading"><strong>{opinion.shares[opinion.lead]}%</strong><span>{sentimentLabels[opinion.lead].toLowerCase()}, bagian terbesar dari {formatCount(opinion.analysed)} komentar</span></p>
-        <Bar label={`Sentimen komentar: ${toneWords({ ...opinion.counts, unknown: 0 }, opinion.shares)}`} parts={toneParts(opinion.counts)} />
-        <Legend label="Keterangan warna sentimen komentar" items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: opinion.counts[key], share: opinion.shares[key] }))} />
+        <p className="rp-leading"><strong>{opinion.shareText[opinion.lead]}</strong><span>{sentimentLabels[opinion.lead].toLowerCase()}, bagian terbesar dari {formatCount(opinion.analysed)} komentar</span></p>
+        <Bar label={`Sentimen komentar: ${toneWords({ ...opinion.counts, unknown: 0 }, opinion.shareText)}`} parts={toneParts(opinion.counts)} />
+        <Legend label="Keterangan warna sentimen komentar" items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: opinion.counts[key], share: opinion.shares[key], shareText: opinion.shareText[key] }))} />
       </section>
       <section className="rp-voice">
         <h3>Sikap terhadap isu</h3>
@@ -306,12 +308,12 @@ function SourcesPage({ page, frame }) {
       <h3>{accountsTitle}</h3>
       {accounts.length ? <table className="rp-table rp-table-tight">
         <thead><tr><th scope="col" className="rp-cell-rank">No.</th><th scope="col">Akun atau sumber</th><th scope="col">Platform</th><th scope="col" className="rp-num">Posting</th><th scope="col" className="rp-num">Interaksi</th></tr></thead>
-        <tbody>{accounts.map((account, index) => <tr key={account.platform + ':' + account.author}>
+        <tbody>{accounts.map((account, index) => <tr key={account.key ?? index}>
           <td className="rp-cell-rank">{index + 1}</td>
-          <th scope="row"><span className="rp-account"><Face author={account.author} platform={account.platform} size="sm" /><span>{account.author}</span></span></th>
+          <th scope="row"><span className="rp-account"><Face author={account.author} platform={account.platform} size="sm" /><span>{account.author || 'Nama tidak tersedia'}</span></span></th>
           <td>{platformName(account.platform)}</td>
           <td className="rp-num">{formatCount(account.mentions)}</td>
-          <td className="rp-num"><strong>{formatCount(account.engagement)}</strong></td>
+          <td className="rp-num"><strong>{formatCount(account.engagement)}</strong>{account.engagement != null && account.interaction_posts != null && <small className="rp-count">{`dari ${formatCount(account.interaction_posts)} posting`}</small>}</td>
         </tr>)}</tbody>
       </table> : <Empty>Posting pada periode ini tidak membawa nama akun.</Empty>}
       <p className="rp-note">Interaksi adalah suka, komentar, dan bagikan yang teramati pada posting akun itu dalam periode ini. Bukan jangkauan dan bukan skor pengaruh. “—” berarti angka tidak tersedia, bukan nol.</p>
@@ -397,7 +399,7 @@ function NarrativesPage({ page, frame }) {
         <p className="rp-group-text">{group.title}</p>
         <dl className="rp-group-facts">
           <div><dt>Posting</dt><dd>{formatCount(group.posts)}</dd></div>
-          <div><dt>Akun</dt><dd><span className="rp-faces" aria-hidden="true">{group.faces.slice(0, 4).map(face => <Face key={face.platform + ':' + face.author} author={face.author} platform={face.platform} size="xs" />)}</span>{formatCount(group.accounts)}</dd></div>
+          <div><dt>Akun</dt><dd><span className="rp-faces" aria-hidden="true">{group.faces.slice(0, 4).map((face, index) => <Face key={face.key ?? index} author={face.author} platform={face.platform} size="xs" />)}</span>{formatCount(group.accounts)}</dd></div>
           <div><dt>Rentang tanggal</dt><dd>{group.range || '—'}</dd></div>
           <div><dt>Dibagikan</dt><dd>{group.shares == null ? '—' : `${formatCount(group.shares)}×`}</dd></div>
           <div><dt>Interaksi</dt><dd>{formatCount(group.interactions)}</dd></div>
@@ -420,7 +422,7 @@ function MethodPage({ page, frame }) {
     <dl className="rp-facts rp-facts-wide">
       <div><dt>Project</dt><dd>{report.topic.label}</dd></div>
       <div><dt>Kata kunci</dt><dd className="rp-clamp" title={report.topic.query || undefined}>{report.topic.query || 'Tidak tersedia'}</dd></div>
-      <div><dt>Periode</dt><dd>{frame.period}{!frame.chosenPeriod && data.total > 0 ? ' (seluruh data tersimpan)' : ''}, tanggal terbit dalam WIB</dd></div>
+      <div><dt>Periode</dt><dd>{frame.period}{!frame.chosenPeriod && data.total > 0 ? ' (seluruh data tersimpan)' : ''}, tanggal terbit dalam {zone().name}</dd></div>
       <div><dt>Disusun</dt><dd>{pulseDate(report.generatedAt)}</dd></div>
     </dl>
     <section className="rp-block rp-block-tight">

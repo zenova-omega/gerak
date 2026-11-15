@@ -71,3 +71,18 @@ test('a cited group says over how many posts its interactions are counted, and a
   assert.match(text(unknown), /12 akun · — interaksi · mulai/);
   assert.doesNotMatch(text(unknown), /dari 0 posting/);
 });
+
+test('a group\'s first time names the installation zone (day_v1), never WIB written by hand', async () => {
+  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  try {
+    const { setZone, zone } = await server.ssrLoadModule('/src/lib/pulseMeasures.js');
+    const { default: ChatAnswer } = await server.ssrLoadModule('/src/pulse/ChatAnswer.jsx');
+    const before = zone();
+    setZone({ offset_minutes: 540, name: 'WIT' });
+    try {
+      const html = renderToStaticMarkup(React.createElement(ChatAnswer, { turn: { ...turn, charts: [] }, index: 2 }));
+      assert.match(text(html), /mulai 10 Nov, 12\.13 WIT/);
+      assert.doesNotMatch(html, /\bWIB\b/);
+    } finally { setZone(before); }
+  } finally { await server.close(); }
+});

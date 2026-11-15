@@ -24,6 +24,7 @@
 .pr-more .pr-archive { margin: 0; padding-bottom: 0; border-bottom: 0; }
 .pulse-standalone .pr-archived-context { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: 16px 0 0; line-height: 1.5; }
 .pr-archived-context > span { flex: 1 1 280px; min-width: 0; max-width: 72ch; }
+.pr-archived-rules { display: block; margin-top: 4px; }   /* the recount line sits on a line of its own */
 
 .pr-layout { display: grid; gap: 20px; min-width: 0; margin-top: 20px; }
 .pr-layout > * { min-width: 0; }

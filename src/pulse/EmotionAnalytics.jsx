@@ -7,6 +7,7 @@ import { PlatformLabel } from '../components/admin/pulse/PlatformIcon';
 import PostAvatar from '../components/admin/pulse/PostAvatar';
 import { emotionEvidence, emotionFaces, emotionLabels, emotionSummary, filledDays, postEmotion } from '../lib/pulseEmotion';
 import { formatCount, safeSourceUrl, pulseDate } from '../lib/pulseData';
+import { zone } from '../lib/pulseMeasures';
 import { sourceText } from '../lib/pulseOverview';
 import { allRange, rangeBounds, resolveRange, withinRange } from '../lib/pulseRange';
 import { sentimentDate } from '../lib/pulseSentiment';
@@ -85,8 +86,8 @@ export default function EmotionAnalytics({ posts = [] }) {
 
     {data.days.length > 0 && <div className="pea-trend">
       <h3>Perkembangan emosi</h3>
-      <p className="pea-caption">Posting yang menyatakan emosi, per hari (WIB). Yang tanpa emosi jelas tidak digambar. Klik batang untuk melihat postingnya.{skipsDays && ' Rentang ini panjang, jadi hari tanpa posting dilewati; pilih rentang yang lebih pendek untuk melihat tiap hari.'}</p>
-      <ChartContainer config={series} className="pea-chart aspect-auto" role="img" aria-label="Grafik batang bertumpuk: jumlah posting per emosi dan tanggal WIB. Angkanya ada pada Data harian di bawah grafik.">
+      <p className="pea-caption">Posting yang menyatakan emosi, per hari ({zone().name}). Yang tanpa emosi jelas tidak digambar. Klik batang untuk melihat postingnya.{skipsDays && ' Rentang ini panjang, jadi hari tanpa posting dilewati; pilih rentang yang lebih pendek untuk melihat tiap hari.'}</p>
+      <ChartContainer config={series} className="pea-chart aspect-auto" role="img" aria-label={`Grafik batang bertumpuk: jumlah posting per emosi dan tanggal ${zone().name}. Angkanya ada pada Data harian di bawah grafik.`}>
         <BarChart data={drawn} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="22%">
           <CartesianGrid vertical={false} />
           <XAxis dataKey="date" tickFormatter={dayLabel} tickLine={false} axisLine={false} tickMargin={8} minTickGap={20} />
@@ -111,7 +112,7 @@ export default function EmotionAnalytics({ posts = [] }) {
         </button>)}</div>
     </div>}
 
-    {data.days.length > 0 && <details className="pea-data"><summary>Data harian · WIB</summary><div className="pea-table"><table>
+    {data.days.length > 0 && <details className="pea-data"><summary>Data harian · {zone().name}</summary><div className="pea-table"><table>
       <thead><tr><th scope="col">Tanggal</th>{Object.values(emotionLabels).map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
       <tbody>{data.days.map(row => <tr key={row.date}><th scope="row">{dayLabel(row.date)}</th>{Object.keys(emotionLabels).map(key =>
         <td key={key}><button type="button" onClick={() => choose(key, row.date)} aria-label={`${dayLabel(row.date)}, ${emotionLabels[key]}: ${row[key]} posting`}>{row[key]}</button></td>)}</tr>)}</tbody>

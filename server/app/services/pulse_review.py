@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from ..models.pulse import WatchTopic, SourceItem
 from ..models.pulse_review import PostReview
+from . import pulse_measures
 
 LABELS = {'positive', 'neutral', 'negative'}
 
@@ -26,9 +27,8 @@ async def list_reviews(db, topic_id):
         .where(PostReview.topic_id == topic_id).order_by(PostReview.post_id))).all()
     paired = correct = 0
     for review, metrics in rows:
-        raw = (metrics or {}).get('sentiment')
-        label = raw.get('label') if isinstance(raw, dict) else raw
-        if isinstance(label, str) and label in LABELS and review.manual_sentiment in LABELS:
+        label = pulse_measures.tone(metrics)   # tone_share_v1: either stored form, any letter case
+        if label in LABELS and review.manual_sentiment in LABELS:
             paired += 1
             correct += int(label == review.manual_sentiment)
     return {'topic_id': topic_id, 'reviews': [review_payload(r) for r, _ in rows],

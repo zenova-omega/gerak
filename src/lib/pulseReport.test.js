@@ -78,3 +78,42 @@ test('report top posts follow the interactions order: ties by earlier publicatio
   assert.equal(report.accounts.find(row=>row.author==='B').engagement,null);
   assert.equal(report.accounts.find(row=>row.author==='C').engagement,5);
 });
+
+test('report accounts carry their interaction total with its post count, by the measures module', () => {
+  const data={posts:[
+    {id:'a',author:'A',platform:'x',metrics:{},measures:{interactions:9},published_at:'2026-11-10T10:00:00Z'},
+    {id:'b',author:'A',platform:'x',metrics:{likes:'2'},published_at:'2026-11-10T11:00:00Z'},
+    {id:'c',author:'A',platform:'x',metrics:{likes:true},published_at:'2026-11-10T12:00:00Z'},
+    {id:'d',author:'B',platform:'x',metrics:{views:3},published_at:'2026-11-10T13:00:00Z'},
+  ]};
+  const accounts=buildReport(data,{label:'T'},{},'2026-11-15T00:00:00Z').accounts;
+  const by=Object.fromEntries(accounts.map(row=>[row.author,row]));
+  assert.deepEqual([by.A.engagement,by.A.interaction_posts,by.A.mentions],[11,2,3]);
+  assert.deepEqual([by.B.engagement,by.B.interaction_posts],[null,0]);
+});
+
+test('the report account table has one row per account by account_v1, named by its most recently published post', () => {
+  // One X handle written two ways, a renamed YouTube channel, a Threads account with an id on one row only.
+  const data={posts:[
+    {id:'k1',platform:'x',author:'Okezonenews',published_at:'2026-11-10T08:00:00Z',metrics:{likes:1}},
+    {id:'k2',platform:'x',author:'@okezonenews',published_at:'2026-11-11T08:00:00Z',metrics:{likes:2}},
+    {id:'k3',platform:'youtube',author:'Kanal Lama',published_at:'2026-11-09T08:00:00Z',metrics:{author_id:'UC1',likes:3}},
+    {id:'k4',platform:'youtube',author:'Kanal Baru',published_at:'2026-11-12T08:00:00Z',metrics:{author_id:'UC1',likes:4}},
+    {id:'k5',platform:'threads',author:'@Warga.Solo',published_at:'2026-11-12T09:00:00Z',metrics:{author_id:'1789',likes:5}},
+    {id:'k6',platform:'threads',author:'warga.solo',published_at:'2026-11-08T08:00:00Z',metrics:{likes:6}},
+  ]};
+  const accounts=buildReport(data,{label:'T'},{},'2026-11-15T00:00:00Z').accounts;
+  assert.deepEqual(accounts.map(row=>[row.key,row.author,row.mentions,row.engagement]),[
+    ['threads:warga.solo','@Warga.Solo',2,11],['youtube:UC1','Kanal Baru',2,7],['x:okezonenews','@okezonenews',2,3]]);
+});
+
+test('the report account table keeps a channel whose post has no name, without inventing a name', () => {
+  const data={posts:[
+    {id:'n1',platform:'youtube',author:null,published_at:'2026-11-12T08:00:00Z',metrics:{author_id:'UC1',likes:1}},
+    {id:'n2',platform:'youtube',author:'Kanal',published_at:'2026-11-10T08:00:00Z',metrics:{author_id:'UC1',likes:1}},
+    {id:'n3',platform:'youtube',author:'',published_at:'2026-11-11T08:00:00Z',metrics:{author_id:'UC9',likes:5}},
+    {id:'n4',platform:'x',author:'',published_at:'2026-11-11T08:00:00Z',metrics:{likes:7}},
+  ]};
+  const accounts=buildReport(data,{label:'T'},{},'2026-11-15T00:00:00Z').accounts;
+  assert.deepEqual(accounts.map(row=>[row.key,row.author,row.mentions]),[['youtube:UC9',null,1],['youtube:UC1','Kanal',2]]);
+});

@@ -91,3 +91,16 @@ async def test_review_auth_csrf_and_viewer_read_only(reviews_env):
     client.cookies.clear()
     assert (await client.get('/api/admin/pulse/reviews?topic_id=a')).status_code == 401
     assert (await client.put(path, headers=headers, json={'relevance':'irrelevant'})).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_evaluation_reads_the_machine_label_by_tone_share_v1(reviews_env):
+    """A label stored as a plain string or with another letter case is the same tone (pulse_measures.tone)."""
+    client, db, headers = reviews_env
+    db.add_all([SourceItem(id='plain', topic_id='a', source='rss', url='https://example.test/plain', metrics={'sentiment': 'negative'}),
+                SourceItem(id='cased', topic_id='a', source='rss', url='https://example.test/cased', metrics={'sentiment': {'label': ' Neutral '}})])
+    await db.commit()
+    for ident, label in [('plain', 'negative'), ('cased', 'neutral')]:
+        assert (await client.put(f'/api/admin/pulse/reviews/{ident}?topic_id=a', headers=headers, json={'manual_sentiment': label})).status_code == 200
+    state = (await client.get('/api/admin/pulse/reviews?topic_id=a')).json()
+    assert state['evaluation'] == {'paired_count': 2, 'correct_count': 2, 'accuracy': 1.0}

@@ -2,6 +2,7 @@
 // a movement or the time of the last refresh is said. Nothing here fetches or reads the clock by itself; the page
 // reads one stored refresh and every filter is answered from it, so looking never starts a collection.
 import { formatCount } from './pulseData.js';
+import { toneShares } from './pulseMeasures.js';
 import { placesIn, provinceNames } from './pulsePlaces.js';
 import { placePoint } from './pulseRegionMap.js';
 
@@ -291,12 +292,14 @@ export function projectChange(row) {
 }
 
 const toneLabels = { positive: 'Positif', neutral: 'Netral', negative: 'Negatif', unknown: 'Belum dianalisis' };
-/** The tone of a project's last seven days as bar segments, always in the order positive, neutral, negative, unknown. */
+/** The tone of a project's last seven days as bar segments, always in the order positive, neutral, negative, unknown.
+ * tone_share_v1 (`toneShares`): a tone's share is of the analysed posts; "belum dianalisis" has no share (null) and its
+ * `shareText` is its count, so a project with nothing analysed prints no percentage at all. */
 export function projectTones(row) {
-  const counts = row?.sentiment_7d || {}, total = ['positive', 'neutral', 'negative', 'unknown'].reduce((sum, key) => sum + (counts[key] || 0), 0);
-  if (!total) return [];
+  const counts = row?.sentiment_7d || {}, tone = toneShares(counts);
   return ['positive', 'neutral', 'negative', 'unknown'].filter(key => counts[key] > 0).map(key => ({
-    key, label: toneLabels[key], value: counts[key], share: Math.round(counts[key] / total * 100), shareText: counts[key] / total < 0.01 ? '<1%' : `${Math.round(counts[key] / total * 100)}%`,
+    key, label: toneLabels[key], value: counts[key],
+    ...(key === 'unknown' ? { share: null, shareText: `${formatCount(counts.unknown)} posting` } : { share: tone.percent[key], shareText: tone.text[key] }),
     color: `var(--ps-sent-${key})`, ...(key === 'unknown' ? { hatch: true } : {}),
   }));
 }

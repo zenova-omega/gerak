@@ -1,3 +1,5 @@
+import { localTime, zone } from '../lib/pulseMeasures.js';
+
 export function canManageSources(user) { return ['owner', 'admin'].includes(user?.role); }
 
 export function collectionBlock({ topicId, readOnly, busy, source, budget }) {
@@ -42,7 +44,7 @@ export function formatSourceTime(value) {
   const utc = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : value + 'Z';
   const date = new Date(utc);
   if (!Number.isFinite(date.getTime())) return 'Belum tersedia';
-  return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(date) + ' WIB';
+  return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(new Date(localTime(date))) + ' ' + zone().name;
 }
 
 /** How old the provider balance on screen is, in whole hours, or null when it was never read.
@@ -121,7 +123,7 @@ export function threadsStatus(source, { topicId, readOnly, busy, now = new Date(
   } else {
     lines.push(`Akun terhubung: @${connection.username}.`);
     const ends = typeof connection.expires_at === 'string' ? new Date(/(?:Z|[+-]\d{2}:\d{2})$/i.test(connection.expires_at) ? connection.expires_at : connection.expires_at + 'Z') : null;
-    const day = ends && Number.isFinite(ends.getTime()) ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'Asia/Jakarta' }).format(ends) : null;
+    const day = ends && Number.isFinite(ends.getTime()) ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(localTime(ends))) : null;
     if (day && ends <= now) {
       lines.push(`Token sudah berakhir ${day}. Simpan token baru.`);
       reason = 'Token sudah berakhir.';

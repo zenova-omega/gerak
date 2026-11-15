@@ -8,11 +8,12 @@ import asyncio
 import json
 import uuid
 from datetime import datetime, timedelta
-from sqlalchemy import select, update, or_
+from sqlalchemy import func, select, update, or_
 from ..models.pulse import SourceItem
 from ..models.pulse_sentiment import SentimentLane
 from ..models.pulse_response_analysis import ResponseAnalysisJob as Job
 from .pulse_response_analysis import KINDS, current_subject
+from . import pulse_measures
 
 BATCH = 10
 TEXT = 1200
@@ -41,16 +42,26 @@ def parse_kinds(raw, count):
 
 
 def _neutral_without_kind(sentiment):
-    return isinstance(sentiment, dict) and sentiment.get('label') == 'neutral' and sentiment.get('kind') not in KINDS
+    """Neutral by tone_share_v1 (`pulse_measures.tone`: either stored form, any letter case) and without a form yet."""
+    return pulse_measures.tone({'sentiment': sentiment}) == 'neutral' and not (isinstance(sentiment, dict) and sentiment.get('kind') in KINDS)
+
+
+def _with_kind(sentiment, kind):
+    """The stored reading with its form; a plain-string label becomes an object that keeps the label as it was."""
+    return {**(sentiment if isinstance(sentiment, dict) else {'label': sentiment}), 'kind': kind}
 
 
 async def candidates(db):
     """('post' | 'comment', [(id, text)]) for up to BATCH neutral texts that have no form yet."""
-    label, kind = SourceItem.metrics[('sentiment', 'label')].as_string(), SourceItem.metrics[('sentiment', 'kind')].as_string()
-    rows = (await db.execute(select(SourceItem.id, SourceItem.title, SourceItem.text).where(
-        SourceItem.platform != 'news', label == 'neutral', kind.is_(None), SourceItem.id.notin_(_gave_up))
+    # The stored label in either form (the object's label, else a plain string), narrowed in SQL by letter case and
+    # spaces; the module's tone decides.
+    stored = func.coalesce(SourceItem.metrics[('sentiment', 'label')].as_string(), SourceItem.metrics['sentiment'].as_string())
+    kind = SourceItem.metrics[('sentiment', 'kind')].as_string()
+    rows = (await db.execute(select(SourceItem.id, SourceItem.title, SourceItem.text, stored.label('stored')).where(
+        SourceItem.platform != 'news', func.lower(func.trim(stored)) == 'neutral', kind.is_(None), SourceItem.id.notin_(_gave_up))
         .order_by(SourceItem.crawled_at.desc(), SourceItem.id).limit(BATCH))).all()
-    posts = [(row.id, (row.text or row.title or '').strip()) for row in rows if (row.text or row.title or '').strip()]
+    posts = [(row.id, (row.text or row.title or '').strip()) for row in rows
+             if (row.text or row.title or '').strip() and pulse_measures.tone({'sentiment': row.stored}) == 'neutral']
     if posts:
         return 'post', posts
     label, kind = Job.result[('sentiment', 'label')].as_string(), Job.result[('sentiment', 'kind')].as_string()
@@ -115,13 +126,13 @@ async def run_one(session_factory, ai, lane='local'):
                 item = await db.get(SourceItem, row_id)
                 sentiment = (item.metrics or {}).get('sentiment') if item else None
                 if _neutral_without_kind(sentiment):
-                    item.metrics = {**item.metrics, 'sentiment': {**sentiment, 'kind': kind}}
+                    item.metrics = {**item.metrics, 'sentiment': _with_kind(sentiment, kind)}
                     stored += 1
             else:
                 job = await db.get(Job, row_id)
                 sentiment = (job.result or {}).get('sentiment') if job and job.status == 'done' else None
                 if _neutral_without_kind(sentiment):
-                    job.result = {**job.result, 'sentiment': {**sentiment, 'kind': kind}}
+                    job.result = {**job.result, 'sentiment': _with_kind(sentiment, kind)}
                     stored += 1
         await db.commit()
     return 'done' if stored else 'failed'
