@@ -45,10 +45,11 @@ export default function RadarMap({ issues = [], selectedIssue = null, province =
   const rows = provinceRows(issues, provincesRead);
 
   return <section className="rdm" aria-label="Peta isu per provinsi">
-    <div className="rdm-head">
-      <p className="rdm-caption">{selectedIssue ? <>Sebaran isu: <strong>{selectedIssue.title}</strong></> : province ? <>Provinsi dipilih: <strong>{provinceName(province)}</strong></> : 'Pilih provinsi untuk melihat isu di sana.'}</p>
+    {/* How to use the map is in its card's info button; the head says only what is drawn when something is chosen. */}
+    {(selectedIssue || province) && <div className="rdm-head">
+      <p className="rdm-caption">{selectedIssue ? <>Sebaran isu: <strong>{selectedIssue.title}</strong></> : <>Provinsi dipilih: <strong>{provinceName(province)}</strong></>}</p>
       {province && <PulseButton size="sm" onClick={() => onProvince('')}>Seluruh Indonesia</PulseButton>}
-    </div>
+    </div>}
     <div className="rdm-frame" onPointerLeave={() => setTip(null)}>
       <svg className="rdm-svg" viewBox={shapes.viewBox.join(' ')} role="group" aria-label="Peta Indonesia per provinsi">
         <defs><pattern id="rdm-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect className="rdm-hatch-ground" width="5" height="5" /><line className="rdm-hatch-line" x1="0" y1="0" x2="0" y2="5" /></pattern></defs>

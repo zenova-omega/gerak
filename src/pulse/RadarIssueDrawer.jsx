@@ -15,7 +15,7 @@ export function RadarIssueDetail({ summary, detail = null, error = false, canCre
   return <div className="rdi-detail">
     {summary.reason && <p className="rdi-reason">{summary.reason}</p>}
     <p className="rdi-figures">{figureLine(summary).map(part => <span key={part}>{part}</span>)}</p>
-    {error ? <p className="rdi-fresh" role="alert">Bukti isu ini tidak dapat dimuat. Tutup lalu buka lagi untuk mencoba.</p>
+    {error ? <p className="rdi-fresh" role="alert">Bukti tidak dapat dimuat.</p>
       : !detail ? <PulseLoader label="Memuat bukti…" />
       : radarPlatforms.slice(1).map(([id, label]) => {
         const items = (detail.evidence || []).filter(item => item.platform === id);
@@ -24,8 +24,7 @@ export function RadarIssueDetail({ summary, detail = null, error = false, canCre
     <section><h3>Keyword yang disarankan</h3>
       <p className="rdi-tags">{split(query.q || summary.title).map(term => <KeywordTag key={term}>{term}</KeywordTag>)}
         {split(query.required).map(term => <KeywordTag key={'r' + term}>wajib: {term}</KeywordTag>)}{split(query.excluded).map(term => <KeywordTag key={'x' + term}>tanpa: {term}</KeywordTag>)}</p>
-      {canCreate && !summary.project && <p className="rdi-fresh">Keyword bisa diubah di Pencarian cepat. Pengumpulan baru dimulai setelah Anda menekan cari di sana.</p>}
-    </section>
+          </section>
     <div className="rdi-action"><IssueAction issue={summary} canCreate={canCreate} createLabel="Buat project dari isu ini" /></div>
   </div>;
 }

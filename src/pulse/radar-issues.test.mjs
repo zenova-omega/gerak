@@ -42,38 +42,42 @@ const rows = html => (html.match(/<ol[^>]*class="rdi-list"[\s\S]*?<\/ol>/)?.[0] 
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
 const group = (html, name) => html.match(new RegExp(`<div[^>]*role="group"[^>]*aria-label="${name}"[^>]*>[\\s\\S]*?</div>`))?.[0] || '';
 const buttons = markup => [...markup.matchAll(/<button[^>]*>([^<]*)</g)].map(match => match[1]);
+// A chip of the first card: its name and, apart from it, its count.
+const chips = markup => [...markup.matchAll(/<button[^>]*class="rdl-chip"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
+// The figures of the refresh, one entry of the line each.
+const figures = html => [...html.matchAll(/<div><dt>[\s\S]*?<\/dd><\/div>/g)].map(match => text(match[0]));
 
 // ── The first card: what the page answers, when it was made, and the choices that apply to the whole page ────────────
 
 test('the first card names the scope, says when the list was made, carries the brief and the page-wide switches', async () => {
   const html = await lead({ payload });
-  assert.match(html, /<h2[^>]*>Isu yang ramai di Indonesia<\/h2>/);
+  assert.match(html, /<h2[^>]*>Isu yang ramai di Indonesia</);
   assert.match(text(html), /Diperbarui 08\.10 WIB, tiap 30 menit/);
   assert.match(text(html), /Pengunduran diri Wapres mendominasi \[1\]\./);
   const categories = group(html, 'Kategori isu');
-  assert.match(categories, /class="pu-segmented"/);
-  assert.deepEqual(buttons(categories), ['Semua 12', 'Politik 11', 'Olahraga 1'], 'a category with nothing in it is not offered');
-  assert.deepEqual(buttons(group(html, 'Platform')), ['Semua platform', 'Berita', 'Google'], 'a platform with no issue in this refresh is not offered');
+  assert.match(categories, /class="rdl-chips"/);
+  assert.deepEqual(chips(categories), ['Semua 12', 'Politik 11', 'Olahraga 1'], 'a category with nothing in it is not offered');
+  assert.deepEqual(chips(group(html, 'Platform')), ['Semua platform', 'Berita', 'Google'], 'a platform with no issue in this refresh is not offered');
   assert.match(html, /<button[^>]*>(?:<svg[\s\S]*?<\/svg>)?Perbarui sekarang<\/button>/);
   assert.match(await lead({ payload: { ...payload, running: true } }), /<button[^>]*disabled=""[^>]*>[\s\S]*?Memperbarui…/);
   assert.doesNotMatch(await lead({ payload, canCreate: false }), /Perbarui sekarang/, 'a viewer cannot start a refresh');
 });
 
-test('a filter is shown as pressed, takes the row numbers out of the brief, and a province is a chip that can be dropped', async () => {
+test('a filter is shown as pressed, takes the row numbers out of the brief, and a province is chosen from a list that can go back to the whole country', async () => {
   const filtered = await lead({ payload, filters: { ...none, category: 'politik' } });
-  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*aria-pressed="true"[^>]*>Politik 11</);
+  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*aria-pressed="true"[^>]*>Politik<span class="rdl-count">11</);
   assert.match(text(filtered), /Pengunduran diri Wapres mendominasi\./);
   assert.doesNotMatch(text(filtered), /\[1\]/);
   const province = await lead({ payload, filters: { ...none, province: 'ID-JI' } });
-  assert.match(province, /<h2[^>]*>Isu yang ramai di Jawa Timur<\/h2>/);
-  assert.match(province, /<button[^>]*aria-label="Kembali ke seluruh Indonesia"[^>]*>[\s\S]*?Provinsi: Jawa Timur/);
+  assert.match(province, /<h2[^>]*>Isu yang ramai di Jawa Timur</);
+  assert.match(province, /<select[^>]*aria-label="Wilayah"[^>]*><option value="">Seluruh Indonesia<\/option>[\s\S]*?<option value="ID-JI" selected="">Jawa Timur · 2 isu<\/option>/);
   assert.doesNotMatch(text(province), /mendominasi/, 'the national brief is not shown over a province list');
-  assert.deepEqual(buttons(group(province, 'Kategori isu')), ['Semua 4', 'Politik 1', 'Hukum 1', 'Olahraga 2']);
+  assert.deepEqual(chips(group(province, 'Kategori isu')), ['Semua 4', 'Politik 1', 'Hukum 1', 'Olahraga 2']);
 });
 
 test('each state of the radar has its own words in the first card', async () => {
   const empty = { ...payload, state: 'empty', updated_at: null, issues: [], brief: null, last_attempt: null };
-  assert.match(text(await lead({ payload: empty })), /Radar belum pernah berjalan\. Pembaruan pertama dimulai dalam beberapa menit\./);
+  assert.match(text(await lead({ payload: empty })), /Radar belum pernah berjalan\. Pembaruan pertama segera dimulai\./);
   const off = text(await lead({ payload: { ...empty, enabled: false } }));
   assert.match(off, /Radar belum pernah berjalan\. Pembaruan otomatis mati/);
   assert.match(off, /Jalankan sekarang/);
@@ -86,20 +90,20 @@ test('each state of the radar has its own words in the first card', async () => 
   assert.match(text(await lead({ payload: { ...payload, state: 'stale', enabled: false } })), /Data terakhir 08\.10 WIB\. Pembaruan otomatis mati\./);
   assert.match(text(await lead({ payload: { ...payload, last_attempt: { state: 'raw', at: '2026-11-15T01:25:00' } } })), /Pembaruan 08\.25 WIB tidak berhasil\. Daftar di bawah dari 08\.10 WIB\./);
   const raw = await lead({ payload: { ...payload, state: 'raw', issues: [], brief: null } });
-  assert.match(text(raw), /Daftar mentah per platform\. Isu belum bisa disusun pada pembaruan ini/);
+  assert.match(text(raw), /Daftar mentah per platform\. Isu belum bisa disusun\./);
   assert.doesNotMatch(raw, /role="group"/, 'raw lists have no categories to switch');
   assert.match(text(await lead({ payload: null })), /Memuat isu/);
 });
 
-test('the figures strip counts the refresh, with meters for coverage', async () => {
+test('the figures of the refresh, one line in the first card, count the refresh and its coverage', async () => {
   const html = await render({ payload }, '/src/pulse/RadarFigures.jsx');
-  const cells = html.split(/(?=<div class="pu-stat")/).slice(1).map(text);
+  const cells = figures(html);
   assert.equal(cells.length, 4);
   assert.match(cells[0], /^Isu tersusun 14 12 nasional, 2 lokal$/);
   assert.match(cells[1], /^Sinyal dibaca 227 berita 122, pencarian 54, video 51$/);
   assert.match(cells[2], /^Daftar provinsi terbaca 2 dari 34 6% terbaca$/);
   assert.match(cells[3], /^Isu teratas dipantau 1 dari 10 10% dicakup project$/);
-  assert.match(html, /role="group"[^>]*aria-label="Angka pembaruan ini"/);
+  assert.match(html, /<dl class="rdf" aria-label="Angka pembaruan ini">/);
   const bare = await render({ payload: { ...payload, signals: {}, provinces_read: null } }, '/src/pulse/RadarFigures.jsx');
   assert.match(text(bare), /Sinyal dibaca —/, 'a figure the refresh did not report is unavailable, not zero');
 });
@@ -110,11 +114,11 @@ test('ten ordered rows, each with rank, title, category, movement, reason, a met
   const html = await render({ payload });
   const list = rows(html);
   assert.equal(list.length, 10);
-  assert.match(text(list[0]), /^1 Pengunduran diri Wapres Politik Naik 4 Sudah dipantau Ramai di berita nasional\. Berita 212 artikel Google 5\.000\+ pencarian ramai di 2 provinsi Buka project$/);
+  assert.match(text(list[0]), /^1 Pengunduran diri Wapres Politik Naik 4 Sudah dipantau ramai di 2 provinsi Ramai di berita nasional\. Berita 212 artikel Google 5\.000\+ pencarian Buka project$/);
   assert.match(text(list[1]), /^2 Pertemuan di Bogor Politik Baru Ramai di berita nasional\. Berita 64 artikel Pantau$/);
   assert.match(text(list[2]), /Olahraga Turun 2/);
   assert.match(list[0], /<button[^>]*class="rdi-title"[^>]*>Pengunduran diri Wapres<\/button>/, 'the title opens the evidence');
-  assert.match(html, /<h2[^>]*>Isu teratas<\/h2>/);
+  assert.match(html, /<h2[^>]*>Isu teratas</);
   assert.doesNotMatch(list.slice(0, 3).join(''), /rdi-track/, 'the three cards state their figures in words, without bars');
   const meters = [...list[3].matchAll(/<i[^>]*style="width:([\d.]+)%"/g)].map(match => Number(match[1]));
   assert.deepEqual(meters, [4.2], 'from the fourth row each meter is drawn against the loudest listed issue on that platform');
@@ -201,7 +205,7 @@ test('the evidence view shows why, the sources by platform, the proposed keyword
   const loading = await render({ summary, detail: null }, '/src/pulse/RadarIssueDrawer.jsx', 'RadarIssueDetail');
   assert.match(text(loading), /Memuat bukti/);
   const failed = await render({ summary, detail: null, error: true }, '/src/pulse/RadarIssueDrawer.jsx', 'RadarIssueDetail');
-  assert.match(text(failed), /Bukti isu ini tidak dapat dimuat\./);
+  assert.match(text(failed), /Bukti tidak dapat dimuat\./);
   const viewer = await render({ summary, detail, canCreate: false }, '/src/pulse/RadarIssueDrawer.jsx', 'RadarIssueDetail');
   assert.doesNotMatch(viewer, /Buat project/);
 });
@@ -228,14 +232,15 @@ test('a row shows X with a bar when it was counted, and TikTok and Instagram as 
   assert.match(meter('tiktok') + meter('instagram') + meter('x'), /<svg/, 'each platform is named by its mark');
   assert.match(text(list[1]), /X 3 posting contoh/);
   const html = await render({ payload: socialPayload });
-  assert.match(text(html), /Tanda \+ berarti batas bawah: sedikitnya sebanyak itu yang tercatat\./, 'what the plus means is on the page, not only on hover');
-  assert.doesNotMatch(text(await render({ payload: { ...payload, issues: [issue(1, 'Hanya berita', 'politik', { news: { count: 4 } })] } })), /Tanda \+/);
+  // What the plus means is behind the list's info button, opened by a tap or the keyboard as well as by hover.
+  assert.match(html, /class="ps-info-trigger"[^>]*aria-label="Tentang urutan isu"/);
+  assert.doesNotMatch(text(html), /Tanda \+/, 'not a line under the list any more');
   assert.match(html, /<ol[^>]*class="rdi-list"[^>]*role="list"/, 'a list without markers is still announced as a list');
   assert.doesNotMatch(list[1], /rdi-track/, 'found on X but not counted: no bar');
 });
 
 test('the platform switch offers the social platforms when the refresh has them, and each orders or keeps the list as it should', async () => {
-  assert.deepEqual(buttons(group(await lead({ payload: socialPayload }), 'Platform')), ['Semua platform', 'Berita', 'X', 'TikTok', 'Instagram']);
+  assert.deepEqual(chips(group(await lead({ payload: socialPayload }), 'Platform')), ['Semua platform', 'Berita', 'X', 'TikTok', 'Instagram']);
   const onX = await render({ payload: socialPayload, filters: { ...none, platform: 'x' } });
   assert.deepEqual(rows(onX).map(row => text(row).split(' ').slice(1, 3).join(' ')), ['Laga bola', 'Antrean BBM', 'Tagar BBM']);
   assert.match(text(onX), /Diurutkan menurut posting di X yang terpantau sejak kemarin\./);
@@ -247,7 +252,7 @@ test('the platform switch offers the social platforms when the refresh has them,
 });
 
 test('the figures strip counts what X found, and the raw view lists X only when it was searched', async () => {
-  const cells = (await render({ payload: socialPayload }, '/src/pulse/RadarFigures.jsx')).split(/(?=<div class="pu-stat")/).slice(1).map(text);
+  const cells = figures(await render({ payload: socialPayload }, '/src/pulse/RadarFigures.jsx'));
   assert.match(cells[1], /^Sinyal dibaca 234 berita 122, pencarian 54, video 51, X 7$/);
   const lists = { news: [{ title: 'Judul berita', url: null, source: 'Kompas', figure: 4 }], youtube: [], search: [] };
   const raw = await render({ payload: { ...payload, state: 'raw', issues: [], brief: null, raw: lists } });
@@ -285,9 +290,9 @@ test('each platform with a figure has its own ranked column: position, issue, it
   assert.match(html, /<div[^>]*class="rpt"[^>]*data-columns="2"[^>]*role="group"[^>]*aria-label="Isu teratas per platform"/);
   const cards = columns(html);
   assert.deepEqual(cards.map(card => text(card.match(/<h2[^>]*>[\s\S]*?<\/h2>/)[0])), ['Teratas di Berita', 'Teratas di Google']);
-  assert.match(text(cards[0]), /Jumlah artikel\./);
+  assert.match(cards[0], /class="ps-info-trigger"[^>]*aria-label="Tentang angka Berita"/, 'what the column counts is behind its info button');
   const news = topRows(cards[0]);
-  assert.equal(news.length, 10);
+  assert.equal(news.length, 5, 'five rows until someone asks for ten');
   assert.equal(text(news[0]), '1 Pengunduran diri Wapres 212 artikel');
   assert.equal(text(news[1]), '2 Pertemuan di Bogor 64 artikel');
   assert.deepEqual([...cards[0].matchAll(/<i[^>]*style="width:([\d.]+)%"/g)].slice(0, 2).map(match => Number(match[1])), [100, 30.2]);
@@ -303,7 +308,7 @@ test('with X counted there are four columns; an issue opened elsewhere is marked
   assert.deepEqual(columns(four).map(card => text(card.match(/<h2[^>]*>[\s\S]*?<\/h2>/)[0])), ['Teratas di Berita', 'Teratas di X', 'Teratas di YouTube', 'Teratas di Google']);
   const onX = columns(four)[1];
   assert.deepEqual(topRows(onX).map(text), ['1 Laga bola 9.700+ posting', '2 Antrean BBM 625+ posting']);
-  assert.match(text(onX), /Terpantau sejak kemarin\./);
+  assert.match(onX, /aria-label="Tentang angka X"/);
   assert.match(onX, /title="Sedikitnya 9\.700 posting terpantau sejak kemarin"/, 'what the plus sign means is one hover away');
   assert.match(topRows(onX)[0], /<li[^>]*data-selected=""[\s\S]*aria-pressed="true"/);
   assert.doesNotMatch(four, /Teratas di (TikTok|Instagram)/, 'a sample has no order');
@@ -326,13 +331,13 @@ test('the three highest are cards with a picture from their own sources, and the
   assert.match(img, /src="https:\/\/i\.ytimg\.com\/vi\/vid00000001\/mqdefault\.jpg"/);
   for (const attribute of [/alt=""/, /loading="lazy"/, /decoding="async"/, /referrerPolicy="no-referrer"/i, /width="\d+"/, /height="\d+"/]) assert.match(img, attribute);
   assert.match(list[0], /class="rdi-pic"[^>]*data-size="feature"[^>]*data-kind="video"/, 'a video says so with a play mark');
-  assert.match(text(list[0]), /Gambar dari Kanal Bola/, 'a large picture names where it is from');
+  assert.match(list[0], /<span class="rdi-pic-credit" title="Gambar dari Kanal Bola">Kanal Bola<\/span>/, 'a large picture names where it is from, on the picture');
   assert.match(list[1], /class="rdi-pic rdi-pic-fallback"[^>]*data-size="feature"/, 'no picture: the category is drawn instead');
   assert.doesNotMatch(list[1], /<img/);
   assert.match(list[3], /<span class="rdi-pic"[^>]*data-size="row"[^>]*title="Gambar dari Kompas\.com"[\s\S]*?<img[^>]*src="https:\/\/encrypted-tbn2\.gstatic\.com\/images\?q=tbn:ANd9GcTerm000000000"/);
   assert.doesNotMatch(text(list[3]), /Gambar dari/, 'a small picture carries its source on hover, not as a line');
   assert.match(list[4], /class="rdi-pic rdi-pic-fallback"[^>]*data-size="row"/);
-  assert.match(text(list[0]), /^1 Pengunduran diri Wapres Politik Naik 4/, 'the position stays first, the picture adds no words');
+  assert.match(text(list[0]), /^1 Kanal Bola Pengunduran diri Wapres Politik Naik 4/, 'the position stays first; the picture adds only where it is from');
 });
 
 test('a picture link from anywhere else is never put on the page', async () => {

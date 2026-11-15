@@ -7,8 +7,8 @@ import { visibleIssues } from '../lib/pulseRadar';
 import { pageMeta } from './pageMeta';
 import AnalyticsPanel from './AnalyticsPanel';
 import HomeProjects from './HomeProjects';
-import { CategoryMix, ProvinceRanking } from './RadarBreakdowns';
-import RadarFigures from './RadarFigures';
+import InfoTip from './InfoTip';
+import { PlatformTrail, ProvinceRanking } from './RadarBreakdowns';
 import RadarIssueDrawer from './RadarIssueDrawer';
 import RadarIssues from './RadarIssues';
 import RadarLead from './RadarLead';
@@ -16,14 +16,15 @@ import RadarMap, { MAP_SOURCE } from './RadarMap';
 import RadarPlatformTops from './RadarPlatformTops';
 import './ds/home.css';
 
-const OFFLINE = 'Tidak dapat terhubung ke server PULSE. Periksa koneksi lalu coba lagi.';
+const OFFLINE = 'Tidak dapat terhubung ke server PULSE.';
 const STORE = 'pulse-home-filters';
 const SLOW_MS = 300000, FAST_MS = 8000;
 
 /**
- * Beranda as it is drawn, on the product's twelve-column grid:
- * the answer card (12) · the figures strip (12) · the map with the province ranking (8 + 4) · the issue list with
- * the composition of the scope (8 + 4) · a top ten per platform (three or four columns) · the project cards (4 + 4 + 4).
+ * Beranda as it is drawn, on the product's twelve-column grid, so the issues are on the first screen:
+ * the answer card with the figures of the refresh and the page's filters (12) · the issue list (8) beside a side column
+ * with the map, the province ranking and the platform trail (4) · the project cards (4 + 4 + 4) · a column per platform,
+ * five rows each until asked for ten (three or four columns). Explanations sit behind info buttons.
  * Everything comes in as props.
  */
 export function HomeView({ radar, projects, error = '', notice = '', filters, selectedKey = '', canCreate = false, refreshing = false, now = new Date(), onFilters = () => {}, onSelect = () => {}, onRefresh = () => {}, onRetry = () => {} }) {
@@ -35,22 +36,22 @@ export function HomeView({ radar, projects, error = '', notice = '', filters, se
   // The map answers "where", whatever platform orders the list: it follows the category and nothing else.
   const mapped = listed ? visibleIssues(radar.issues, { category: filters.category }) : [];
   const rows = listed ? visibleIssues(radar.issues, filters) : [];
+  const mapTitle = <>Peta sebaran isu<InfoTip label="Tentang peta"><p>Provinsi tempat isu pada daftar masuk pencarian populer. Pilih provinsi, atau buka satu isu untuk melihat sebarannya.</p><p>{MAP_SOURCE}</p></InfoTip></>;
   return <section className="hm">{head}
     {notice && <div className="hm-error"><PulseNotice role="alert"><p>{notice}</p></PulseNotice></div>}
     <div className="lay-grid"><div className="lay-12"><RadarLead payload={radar} filters={filters} onFilters={onFilters} canCreate={canCreate} onRefresh={onRefresh} refreshing={refreshing} now={now} /></div></div>
-    {listed && <RadarFigures payload={radar} />}
-    {listed && <div className="lay-grid">
-      <div className="lay-8"><AnalyticsPanel title="Peta sebaran isu" description="Provinsi tempat isu pada daftar masuk pencarian populer. Pilih provinsi, atau buka satu isu untuk melihat sebarannya." footer={MAP_SOURCE}>
-        <RadarMap issues={mapped} selectedIssue={selected} province={filters.province} provincesRead={radar.provinces_read} onProvince={province => onFilters({ ...filters, province })} />
-      </AnalyticsPanel></div>
-      <div className="lay-4"><ProvinceRanking issues={mapped} filters={filters} /></div>
-    </div>}
     {(listed || raw) && <div className="lay-grid">
       <div className={listed ? 'lay-8' : 'lay-12'}><RadarIssues payload={radar} filters={filters} onFilters={onFilters} selectedKey={selected ? selectedKey : ''} onSelect={onSelect} canCreate={canCreate} /></div>
-      {listed && <div className="lay-4"><CategoryMix payload={radar} filters={filters} listed={rows} /></div>}
+      {listed && <div className="lay-4 hm-rail">
+        <AnalyticsPanel title={mapTitle} label="Peta sebaran isu" className="hm-map">
+          <RadarMap issues={mapped} selectedIssue={selected} province={filters.province} provincesRead={radar.provinces_read} onProvince={province => onFilters({ ...filters, province })} />
+        </AnalyticsPanel>
+        <ProvinceRanking issues={mapped} filters={filters} />
+        <PlatformTrail filters={filters} listed={rows} />
+      </div>}
     </div>}
-    {listed && <RadarPlatformTops issues={radar.issues} filters={filters} selectedKey={selected ? selectedKey : ''} onSelect={onSelect} />}
     <HomeProjects rows={projects} canCreate={canCreate} now={now} />
+    {listed && <RadarPlatformTops issues={radar.issues} filters={filters} selectedKey={selected ? selectedKey : ''} onSelect={onSelect} />}
   </section>;
 }
 

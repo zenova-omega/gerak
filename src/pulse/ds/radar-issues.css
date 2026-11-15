@@ -11,23 +11,47 @@
 .pulse-standalone .rdl .pu-panel-heading > div:first-child > p { margin-top: 4px; }
 .pulse-standalone .rdl-facts { display: flex; flex-wrap: wrap; gap: 2px 0; color: var(--ps-muted); font-size: .8125rem; line-height: 1.5; }
 .pulse-standalone .rdl-facts > span + span::before { content: ""; display: inline-block; width: 3px; height: 3px; margin: 0 10px 2px; border-radius: 50%; background: currentColor; opacity: .6; vertical-align: middle; }
-.pulse-standalone .rdl-filters { display: grid; gap: 12px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ps-line); }
+/* The figures of the refresh (RadarFigures.jsx): one quiet line of four, under the brief, not a strip of cards. */
+.pulse-standalone .rdf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; margin: 0; }
+.pulse-standalone .rdf > div { min-width: 0; }
+.pulse-standalone .rdf dt { color: var(--ps-muted); font-size: .75rem; font-weight: 600; line-height: 1.4; }
+.pulse-standalone .rdf dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin: 2px 0 0; }
+.pulse-standalone .rdf dd > strong { color: var(--ps-ink); font-size: 1.125rem; font-weight: 650; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rdf dd > small { min-width: 0; color: var(--ps-muted); font-size: .75rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+
+/* The page's filters: chips that show their count, a province from a list, and how much a filter hides. */
+.pulse-standalone .rdl-filters { display: grid; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ps-line); }
 .pulse-standalone .rdl-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: start; gap: 8px 16px; }
-.pulse-standalone .rdl-row-name { padding-top: 9px; color: var(--ps-muted); font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-.pulse-standalone .rdl-row-body { display: flex; flex-wrap: wrap; align-items: center; min-width: 0; }
-.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; background: none; border-radius: 0; }
-.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button { border-radius: var(--ps-radius-control); color: var(--ps-muted); font-variant-numeric: tabular-nums; font-weight: var(--ps-weight-label); }
-.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button:hover:not(:disabled, [aria-pressed=true]) { background: var(--ps-soft); color: var(--ps-ink); }
-.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button[aria-pressed=true],
-.pulse-standalone.pulse-standalone .rdl-filters .pu-segmented > button[aria-pressed=true]:hover { background: var(--ps-lavender); border-color: transparent; color: var(--ps-accent-ink); font-weight: var(--ps-weight-strong); }
-.pulse-standalone .rdl-active { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; padding-left: 92px; color: var(--ps-muted); font-size: .875rem; }
+.pulse-standalone .rdl-row-name { padding-top: 8px; color: var(--ps-muted); font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.pulse-standalone .rdl-row-body { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-width: 0; }
+.pulse-standalone .rdl-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pulse-standalone.pulse-standalone .rdl-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; min-height: 32px; padding: 0 8px 0 11px; border: 1px solid var(--ps-line); border-radius: 999px; background: transparent; color: var(--ps-ink); font: inherit; font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1; white-space: nowrap; cursor: pointer; transition: background-color .15s cubic-bezier(.25, 1, .5, 1), border-color .15s cubic-bezier(.25, 1, .5, 1); }
+.pulse-standalone .rdl-chip > svg { flex: none; color: var(--ps-muted); }
+.pulse-standalone.pulse-standalone .rdl-chip:hover:not([aria-pressed=true]) { background: var(--ps-soft); border-color: color-mix(in oklch, var(--ps-ink) 24%, var(--ps-line)); }
+.pulse-standalone.pulse-standalone .rdl-chip:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone.pulse-standalone .rdl-chip[aria-pressed=true] { background: var(--ps-lavender); border-color: transparent; color: var(--ps-accent-ink); font-weight: var(--ps-weight-strong); }
+.pulse-standalone .rdl-chip[aria-pressed=true] > svg { color: currentColor; }
+.pulse-standalone .rdl-count { min-width: 1.75em; padding: 1px 6px; border-radius: 999px; background: var(--ps-soft); color: var(--ps-muted); font-size: .75rem; font-weight: 600; line-height: 1.4; text-align: center; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rdl-chip[aria-pressed=true] .rdl-count { background: color-mix(in oklch, var(--ps-accent-ink) 14%, transparent); color: currentColor; }
+/* A native list, so every province is a keyboard and screen-reader away. The product's select (analytics-kit.css), at the
+   height of the chips beside it and with their round ends. */
+.pulse-standalone.pulse-standalone.pulse-standalone .rdl-filters select.rdl-select { height: 32px; min-height: 32px; max-width: 100%; padding: 0 36px 0 12px; border-color: var(--ps-line); border-radius: 999px; box-shadow: none; font-size: .8125rem; font-weight: var(--ps-weight-label); background-position: right 17px top 50%, right 12px top 50%; }
+.pulse-standalone .rdl-select option { background: var(--ps-panel); color: var(--ps-ink); }
+.pulse-standalone .rdl-active { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; color: var(--ps-muted); font-size: .875rem; }
 .pulse-standalone .rdl-active b { color: var(--ps-ink); font-weight: var(--ps-weight-strong); font-variant-numeric: tabular-nums; }
 .pulse-standalone .rdl-clear { padding: 4px 0; border: 0; background: none; color: var(--ps-accent); font: inherit; font-weight: var(--ps-weight-label); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .pulse-standalone .rdl-clear:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; border-radius: 4px; }
+.pulse-standalone .rdl .pu-panel-heading h2 .ps-info-trigger, .pulse-standalone .hm .pu-panel-heading h2 .ps-info-trigger { margin: -4px 0 -4px 4px; }
+@media (max-width: 900px) { .pulse-standalone .rdf { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) {
-  .pulse-standalone .rdl-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .pulse-standalone .rdl-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .pulse-standalone .rdl-row-name { padding-top: 0; }
-  .pulse-standalone .rdl-active { padding-left: 0; }
+  /* Chips scroll sideways on a phone rather than stacking four rows deep. */
+  .pulse-standalone .rdl-chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: -4px; padding: 2px 4px 6px; scrollbar-width: none; }
+  .pulse-standalone .rdl-chips::-webkit-scrollbar { display: none; }
+}
+@media (pointer: coarse) {
+  .pulse-standalone.pulse-standalone .rdl-chip, .pulse-standalone.pulse-standalone.pulse-standalone .rdl-filters select.rdl-select { height: 44px; min-height: 44px; }
 }
 
 /* The list: the three highest as cards across the top (a picture, then the issue), the rest as ranked rows with a small
@@ -37,7 +61,7 @@
 .pulse-standalone .rdi-list > .rdi-feature { grid-column: auto; display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding: 0 0 20px; border-top: 0; }      /* stretch: the row rule's start would shrink the body to its narrowest word */
 .pulse-standalone .rdi-list > .rdi-feature + .rdi-row:not(.rdi-feature) { border-top: 1px solid var(--ps-line); }
 .pulse-standalone .rdi-feature > .rdi-body { flex: 1; }
-.pulse-standalone .rdi-feature .rdi-reason { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.pulse-standalone .rdi-feature .rdi-reason { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .pulse-standalone .rdi-feature > .rdi-action { min-height: 0; }
 .pulse-standalone .rdi-feature .rdi-rank { position: absolute; left: 8px; top: 8px; min-width: 28px; padding: 2px 8px; border-radius: 8px; background: var(--ps-panel); color: var(--ps-ink); font-size: .9375rem; line-height: 1.4; text-align: center; }
 .pulse-standalone .rdi-feature[data-selected] { background: none; box-shadow: none; }
@@ -67,6 +91,9 @@
 .pulse-standalone.pulse-standalone .rdi-title:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pulse-standalone.pulse-standalone .rdi-title:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
 .pulse-standalone .rdi-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 0; }
+.pulse-standalone .rdi-tags > .rdi-spread { margin: 0 0 0 2px; font-size: .75rem; }
+/* Where a large picture is from, on the picture itself; the play mark keeps the other corner. */
+.pulse-standalone .rdi-pic-credit { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 52px); overflow: hidden; padding: 2px 8px; border-radius: 6px; background: color-mix(in oklch, var(--ps-ink) 72%, transparent); color: var(--ps-panel); font-size: .6875rem; font-weight: 500; line-height: 1.5; text-overflow: ellipsis; white-space: nowrap; }
 .pulse-standalone .rdi-reason { margin: 6px 0 0; max-width: 70ch; color: var(--ps-muted); font-size: .875rem; line-height: 1.5; text-wrap: pretty; }
 
 /* Meters, each in its own cell whether or not the issue is on it, so a platform lines up down the list. First row: the
@@ -102,6 +129,11 @@
 .pulse-standalone .rpt[data-columns="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pulse-standalone .rpt[data-columns="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .pulse-standalone .rpt > .pu-analytics-panel { min-width: 0; margin: 0; }
+/* A column is a quarter of the row: its title a step under a panel title (analytics-kit.css sets every h2 of the
+   content), so "Teratas di YouTube" and its info button keep one line. */
+.pulse-standalone.pulse-standalone .ps-content .rpt > .rpt-card .pu-panel-heading h2 { font-size: 1rem; line-height: 1.35; }
+.pulse-standalone .rpt-more { display: flex; justify-content: center; margin: calc(-1 * var(--ps-surface-gap) + 12px) 0 var(--ps-surface-gap); }
+.pulse-standalone .rpt-more > button { text-decoration: none; }
 .pulse-standalone .rpt-card .pu-panel-heading h2 { display: flex; align-items: center; gap: 8px; font-size: 1rem; line-height: 1.35; }
 .pulse-standalone .rpt-card .pu-panel-heading h2 > svg { flex: none; color: var(--ps-muted); }
 .pulse-standalone .rpt-list { margin: 0; padding: 0; list-style: none; }

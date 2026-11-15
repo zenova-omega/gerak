@@ -7,6 +7,7 @@ import { PulseTag } from '../components/ui/PulseTag';
 import { formatCount, safeSourceUrl } from '../lib/pulseData';
 import { categoryLabel, issueImage, movementText, platformMeters, projectHref, provinceName, radarPlatforms, SAMPLED, searchHref, SOCIAL, visibleIssues } from '../lib/pulseRadar';
 import AnalyticsPanel from './AnalyticsPanel';
+import InfoTip from './InfoTip';
 import IssuePicture from './IssuePicture';
 import './ds/radar-issues.css';
 
@@ -50,23 +51,27 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
   const rows = visibleIssues(payload.issues, filters);
   const platformName = radarPlatforms.find(([id]) => id === platform)?.[1];
   const sampled = SAMPLED.includes(platform);
+  // A chosen province or platform changes what the order means, so it is said under the title; the combined order is the
+  // default and is explained behind the info button with the rest.
   const description = province ? `Isu yang masuk pencarian populer ${provinceName(province)}.` : sampled ? `Isu yang ditemukan di ${platformName}, dalam urutan gabungan.`
-    : platform === 'x' ? 'Diurutkan menurut posting di X yang terpantau sejak kemarin.' : platform ? `Diurutkan menurut angka ${platformName}.`
-    : 'Urutan menggabungkan posisi isu di tiap platform; isu di lebih banyak platform berada lebih atas.';
+    : platform === 'x' ? 'Diurutkan menurut posting di X yang terpantau sejak kemarin.' : platform ? `Diurutkan menurut angka ${platformName}.` : undefined;
   const unread = province && Array.isArray(payload.provinces_read) && !payload.provinces_read.includes(province);
   const missing = unread ? `Daftar pencarian populer ${provinceName(province)} tidak terbaca` : category ? `Belum ada isu ${categoryLabel(category)}`
     : sampled ? `Belum ada isu yang ditemukan di ${platformName}` : platform ? `Belum ada isu dengan angka ${platformName}` : `Belum ada isu yang masuk pencarian populer ${provinceName(province)}`;
 
-  // A plus sign is a lower bound (searches, and posts counted on X). Said once under the list, for everyone, not only on hover.
+  // A plus sign is a lower bound (searches, and posts counted on X). Said once, behind the list's info button.
   const bounded = rows.some(issue => issue.platforms?.search || Number.isFinite(issue.platforms?.x?.count));
-  return <AnalyticsPanel title="Isu teratas" description={description} className="rdi" footer={bounded ? 'Tanda + berarti batas bawah: sedikitnya sebanyak itu yang tercatat.' : undefined}>
+  const title = <>Isu teratas<InfoTip label="Tentang urutan isu"><p>Urutan menggabungkan posisi isu di tiap platform; isu di lebih banyak platform berada lebih atas.</p>
+    <p>Garis di samping angka dibandingkan dengan isu paling ramai pada daftar di platform itu. TikTok dan Instagram berupa sampel, jadi hanya disebut jumlah yang ditemukan.</p>
+    {bounded && <p>Tanda + berarti batas bawah: sedikitnya sebanyak itu yang tercatat.</p>}</InfoTip></>;
+  return <AnalyticsPanel title={title} label="Isu teratas" description={description} className="rdi">
     {rows.length ? <ol className="rdi-list" role="list">{rows.map((issue, index) => {
       // Movement belongs to the combined order: with one platform ordering the list it would point at another list.
       const move = platform ? null : movementText(issue.movement), MoveIcon = movementIcon[issue.movement?.kind];
       const meters = platformMeters(issue, rows), provinces = (issue.regions || []).length;
       const featured = index < FEATURED, rank = <span className="rdi-rank" aria-hidden="true">{index + 1}</span>, credit = featured && issueImage(issue)?.source;
       return <li className={featured ? 'rdi-row rdi-feature' : 'rdi-row'} key={issue.key} data-selected={selectedKey === issue.key ? '' : undefined}>
-        {featured ? <IssuePicture issue={issue} size="feature" onActivate={() => onSelect(issue.key)}>{rank}</IssuePicture>
+        {featured ? <IssuePicture issue={issue} size="feature" onActivate={() => onSelect(issue.key)}>{rank}{credit && <span className="rdi-pic-credit" title={`Gambar dari ${credit}`}>{credit}</span>}</IssuePicture>
           : <>{rank}<IssuePicture issue={issue} size="row" onActivate={() => onSelect(issue.key)} /></>}
         <div className="rdi-body">
           <h3><button type="button" className="rdi-title" aria-pressed={selectedKey === issue.key} onClick={() => onSelect(issue.key)}>{issue.title}</button></h3>
@@ -75,6 +80,7 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
             {move && <PulseTag size="sm" variant="outline" tone={issue.movement.kind === 'new' ? 'accent' : 'neutral'} icon={MoveIcon}>{move}</PulseTag>}
             {issue.project && <PulseTag size="sm" tone="success">Sudah dipantau</PulseTag>}
             {issue.scope === 'local' && <PulseTag size="sm" variant="outline">{provinces > 1 ? `hanya ramai di ${provinces} provinsi` : 'hanya ramai di provinsi ini'}</PulseTag>}
+            {provinces > 0 && issue.scope !== 'local' && <span className="rdi-spread">ramai di {provinces} provinsi</span>}
           </p>
           {issue.reason && <p className="rdi-reason">{issue.reason}</p>}
           {meters.length > 0 && <ul className="rdi-meters" data-compact={featured ? '' : undefined} aria-label="Angka per platform">{meters.map(meter => <li key={meter.id} data-platform={meter.id} data-plain={meter.ratio === null || featured ? '' : undefined} title={meter.hint || meter.label}>
@@ -83,8 +89,6 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
             {meter.ratio !== null && !featured && <span className="rdi-track" aria-hidden="true"><i style={{ width: `${Math.max(2, Math.round(meter.ratio * 1000) / 10)}%` }} /></span>}
             <span className="rdi-meter-text">{meter.text}</span>
           </li>)}</ul>}
-          {provinces > 0 && issue.scope !== 'local' && <p className="rdi-spread">ramai di {provinces} provinsi</p>}
-          {credit && <p className="rdi-credit">Gambar dari {credit}</p>}
         </div>
         <div className="rdi-action"><IssueAction issue={issue} canCreate={canCreate} /></div>
       </li>;

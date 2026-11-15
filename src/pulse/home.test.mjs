@@ -96,22 +96,20 @@ test('paused projects sit under their own disclosure and an empty installation o
   assert.match(text(await render('/src/pulse/HomeProjects.jsx', 'default', { rows: null, canCreate: true, now })), /Memuat project/);
 });
 
-test('the page follows the product grid: the answer, the figures, map with its ranking, list with its composition, a top ten per platform, projects', async () => {
+test('the page follows the product grid: the answer with its figures and filters, the list beside the map and rankings, projects, a column per platform', async () => {
   const html = await view({});
   assert.match(html, /<h1[^>]*>Beranda<\/h1>/);
-  const marks = ['Isu yang ramai di Indonesia</h2>', 'class="pu-stat-grid', 'Peta sebaran isu</h2>', 'Provinsi paling ramai</h2>', 'Isu teratas</h2>', 'Komposisi isu</h2>', 'aria-label="Isu teratas per platform"', 'id="hm-projects"'];
+  const marks = ['aria-label="Isu yang ramai di Indonesia"', 'aria-label="Angka pembaruan ini"', 'aria-label="Isu teratas"', 'aria-label="Peta sebaran isu"', 'aria-label="Provinsi paling ramai"', 'aria-label="Jejak platform"', 'id="hm-projects"', 'aria-label="Isu teratas per platform"'];
   const order = marks.map(mark => html.indexOf(mark));
   assert.ok(order.every((at, index) => at > 0 && (index === 0 || at > order[index - 1])), `in this order: ${order}`);
-  assert.equal((html.match(/class="lay-8"/g) || []).length, 2);
+  assert.equal((html.match(/class="lay-8"/g) || []).length, 1);
   assert.match(html, /<a[^>]*href="#hm-projects"[^>]*>Project aktif<\/a>/, 'a way to jump past the radar');
-  assert.match(text(html), /Peta memakai pencarian populer per provinsi dan tempat yang disebut berita\. X, TikTok, dan Instagram tidak memberi lokasi\./);
+  assert.match(html, /class="ps-info-trigger"[^>]*aria-label="Tentang peta"/, 'what the map cannot know is behind its info button');
 });
 
-test('the rankings beside the map and the list are links that set the same choices as the switches', async () => {
+test('the rankings beside the list are links that set the same choices as the filters', async () => {
   const html = await view({ filters: { ...none, category: 'politik' } });
   assert.match(html, /<a[^>]*href="\/pulse\?cat=politik&amp;prov=ID-JI"[^>]*>(?:(?!<\/a>)[\s\S])*Jawa Timur/, 'a province keeps the category that is chosen');
-  assert.match(html, /<a[^>]*href="\/pulse"[^>]*>(?:(?!<\/a>)[\s\S])*Politik/, 'the chosen category is dropped by its own row');
-  assert.match(html, /<a[^>]*href="\/pulse\?cat=olahraga"[^>]*>(?:(?!<\/a>)[\s\S])*Olahraga/);
   assert.match(html, /<a[^>]*href="\/pulse\?cat=politik&amp;pf=news"[^>]*>(?:(?!<\/a>)[\s\S])*Berita/);
   assert.match(text(html), /Jejak platform/);
 });
