@@ -42,5 +42,86 @@ export function formatSourceTime(value) {
   const utc = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : value + 'Z';
   const date = new Date(utc);
   if (!Number.isFinite(date.getTime())) return 'Belum tersedia';
-  return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(date) + ' UTC';
+  return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(date) + ' WIB';
+}
+
+/** How old the provider balance on screen is, in whole hours, or null when it was never read.
+ * The balance is refreshed automatically; this is for the case where that has stopped working. */
+export function balanceAgeHours(checkedAt, now = Date.now()) {
+  if (typeof checkedAt !== 'string' || !checkedAt) return null;
+  const time = Date.parse(/(?:Z|[+-]\d{2}:\d{2})$/i.test(checkedAt) ? checkedAt : checkedAt + 'Z');
+  return Number.isFinite(time) ? Math.max(0, Math.floor((now - time) / 3600000)) : null;
+}
+
+/** What the app shell says when collection has stopped, from `GET /sources/balance`. Null while collection is fine and
+ * during a short wait the provider asked for, which ends by itself. The source of the data is never named. */
+export function collectionNotice(status) {
+  if (status?.state === 'empty') return {
+    title: 'Saldo sumber data habis.',
+    text: 'Posting dan komentar baru tidak dikumpulkan sampai saldo diisi lagi. Setelah diisi, pengumpulan lanjut sendiri. Analisis data yang sudah tersimpan tetap berjalan.',
+  };
+  if (status?.state === 'access') return {
+    title: 'Akses ke sumber data ditolak.',
+    text: 'Posting dan komentar baru tidak dikumpulkan sampai administrator memeriksa kunci akses. Analisis data yang sudah tersimpan tetap berjalan.',
+  };
+  return null;
+}
+
+/** The project's lookback as the first and last calendar day (UTC) of a complete pull: `days` days ending today. */
+export function lookbackRange(days, now = new Date()) {
+  const day = date => date.toISOString().slice(0, 10);
+  const span = Math.min(92, Math.max(1, Math.round(days) || 7));
+  return { from: day(new Date(now.getTime() - (span - 1) * 86400000)), to: day(now) };
+}
+
+const threadsRefusals = {
+  permission: 'token tidak membawa izin pencarian keyword',
+  token: 'token tidak berlaku lagi',
+  quota: 'jatah pencarian harian habis',
+  network: 'Threads tidak dapat dihubungi',
+  not_configured: 'token belum disimpan',
+};
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+/** What the Threads row can say and whether a keyword collection can be asked for, from stored facts only.
+ * A connected account is not the same as a token that may search: the permission is read from the platform at the
+ * connection check, and unknown is treated as "not yet", never as "yes". */
+export function threadsStatus(source, { topicId, readOnly, busy, now = new Date() } = {}) {
+  const connection = source?.connection;
+  const lines = [];
+  let reason = null;
+  if (!source?.configured) {
+    lines.push('Token Threads belum disimpan di server.');
+    reason = 'Simpan token Threads terlebih dahulu.';
+  } else if (!connection) {
+    lines.push('Koneksi belum diperiksa. Tekan Periksa koneksi Threads.');
+    reason = 'Periksa koneksi terlebih dahulu.';
+  } else if (!connection.connected) {
+    lines.push('Koneksi ditolak: token salah, kedaluwarsa, atau milik akun lain.');
+    reason = 'Koneksi Threads belum berhasil.';
+  } else {
+    lines.push(`Akun terhubung: @${connection.username}.`);
+    const ends = typeof connection.expires_at === 'string' ? new Date(/(?:Z|[+-]\d{2}:\d{2})$/i.test(connection.expires_at) ? connection.expires_at : connection.expires_at + 'Z') : null;
+    const day = ends && Number.isFinite(ends.getTime()) ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'Asia/Jakarta' }).format(ends) : null;
+    if (day && ends <= now) {
+      lines.push(`Token sudah berakhir ${day}. Simpan token baru.`);
+      reason = 'Token sudah berakhir.';
+    } else if (day) {
+      lines.push(ends - now < WEEK ? `Token berakhir ${day}. Perbarui sebelum tanggal itu.` : `Token berlaku sampai ${day}.`);
+    }
+    if (connection.search_permission === true) {
+      lines.push('Token membawa izin pencarian keyword. Sebelum aplikasi disetujui Threads, pencarian hanya menjangkau posting akun yang terhubung. Posting publik lain terbaca setelah persetujuan.');
+    } else if (connection.search_permission === false) {
+      lines.push('Token ini belum membawa izin pencarian keyword, jadi pencarian ditolak. Simpan token baru yang menyertakan izin itu.');
+      reason ??= 'Token belum membawa izin pencarian keyword.';
+    } else {
+      lines.push('Izin token belum berhasil dibaca. Periksa koneksi lagi.');
+      reason ??= 'Izin token belum diketahui.';
+    }
+  }
+  const refused = source?.last_attempt?.status === 'failed' ? threadsRefusals[source.last_attempt.error] : null;
+  if (refused) lines.push(`Pengumpulan terakhir ditolak: ${refused}.`);
+  if (!reason && !source?.keyword_collection_available) reason = 'Pencarian keyword belum tersedia. Periksa koneksi lagi.';
+  if (!reason) reason = readOnly ? 'Akses baca saja. Pengumpulan memerlukan administrator.' : busy ? 'Tunggu hingga permintaan saat ini selesai.' : !topicId ? 'Pilih satu topik sebelum mengumpulkan data.' : null;
+  return { lines, canCollect: !reason, reason };
 }

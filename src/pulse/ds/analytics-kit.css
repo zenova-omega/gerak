@@ -3,13 +3,13 @@
    Data tokens below describe what was measured. Never borrow one for the other. */
 .pulse-standalone {
   /* Sentiment: solid marks charts, soft + ink build tags. */
-  --ps-sent-positive: oklch(63% 0.13 155);
+  --ps-sent-positive: oklch(60% 0.13 155);
   --ps-sent-positive-soft: oklch(94% 0.04 155);
   --ps-sent-positive-ink: oklch(35% 0.08 155);
   --ps-sent-negative: oklch(60% 0.17 25);
   --ps-sent-negative-soft: oklch(94% 0.035 25);
   --ps-sent-negative-ink: oklch(41% 0.14 25);
-  --ps-sent-neutral: oklch(68% 0.025 255);
+  --ps-sent-neutral: oklch(61% 0.025 255);
   --ps-sent-neutral-soft: oklch(94% 0.01 255);
   --ps-sent-neutral-ink: oklch(38% 0.025 255);
   --ps-sent-unknown: oklch(86% 0.008 285);
@@ -24,15 +24,15 @@
   --ps-plat-threads: oklch(50% 0.02 285);
   --ps-plat-news: oklch(55% 0.09 200);
   --ps-plat-reddit: oklch(62% 0.19 40);
-  --ps-plat-web: oklch(66% 0.12 75);
+  --ps-plat-web: oklch(62% 0.12 75);
 
   /* Categorical series for charts without sentiment or platform meaning. */
   --ps-chart-1: oklch(55% 0.15 295);
-  --ps-chart-2: oklch(62% 0.1 195);
-  --ps-chart-3: oklch(72% 0.13 75);
+  --ps-chart-2: oklch(60% 0.1 195);
+  --ps-chart-3: oklch(62% 0.13 75);
   --ps-chart-4: oklch(62% 0.15 10);
   --ps-chart-5: oklch(58% 0.13 250);
-  --ps-chart-6: oklch(64% 0.12 150);
+  --ps-chart-6: oklch(60% 0.12 150);
   --ps-chart-grid: oklch(91% 0.008 285);
   --ps-chart-axis: var(--ps-muted);
 
@@ -135,6 +135,8 @@
 :is(button, a).pu-tag:hover { border-color: var(--ps-muted); }
 :is(button, a).pu-tag:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
 button.pu-tag[aria-pressed=false] { --tag-bg: transparent; --tag-line: var(--ps-control-line); --tag-ink: var(--ps-ink); }
+/* An unpressed toggle has no fill, so the icon of a pastel tone cannot keep that tone's ink: it would be dark on a dark panel. */
+button.pu-tag[aria-pressed=false]:is([data-tone=accent], [data-tone=success], [data-tone=warning]) { --tag-mark: var(--ps-muted); }
 button.pu-tag[aria-pressed=true] { --tag-line: currentColor; }
 button.pu-tag:disabled { opacity: .55; cursor: not-allowed; }
 .pu-tag-remove { display: inline-flex; margin-right: -2px; opacity: .7; }
@@ -169,6 +171,8 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pu-stat[data-tone=negative] { --stat-mark: var(--ps-sent-negative); }
 .pu-stat[data-tone=neutral-sentiment] { --stat-mark: var(--ps-sent-neutral); }
 .pu-stat[data-tone=unknown] { --stat-mark: var(--ps-sent-unknown); }
+/* The swatch of "not analysed" is an outline, like its tag: the fill is nearly the panel's own colour in both themes. */
+.pu-stat[data-tone=unknown] .pu-stat-label > i { background: transparent; border: 1.5px solid var(--ps-control-line); }
 .pulse-standalone .pu-stat-grid > .pu-stat.pu-stat { background: var(--ps-panel); padding: 16px 20px 18px; border: 0; border-radius: 0; color: var(--ps-ink); text-decoration: none; }
 .pulse-standalone .pu-breakdown-row.pu-breakdown-row { border: 0; background: transparent; }
 .pulse-standalone :is(a, button).pu-breakdown-row.pu-breakdown-row:hover { background: var(--ps-soft); }
@@ -328,13 +332,13 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
   /* Reports print on paper: every themed token returns to its light value, so a report
      printed from the dark theme is not a dark page. */
   .pulse-standalone.pulse-standalone, .pulse-standalone[data-theme=dark] {
-    --ps-bg: #fafafa; --ps-panel: #fafafa; --ps-soft: oklch(94% 0.009 285); --ps-ink: #24232a; --ps-muted: #5b5965; --ps-line: #c7c5cc; --ps-accent: #493663; --ps-selected: oklch(96% 0.018 295); --ps-control-line: oklch(67% 0.018 285);
+    --ps-bg: #fafafa; --ps-panel: #fafafa; --ps-soft: oklch(94% 0.009 285); --ps-ink: #24232a; --ps-muted: #5b5965; --ps-line: #c7c5cc; --ps-accent: #493663; --ps-selected: oklch(96% 0.018 295); --ps-control-line: oklch(62% 0.018 285);
     --ps-danger: oklch(93% 0.032 20); --ps-danger-ink: oklch(39% 0.12 20); --ps-info: oklch(93% 0.028 245); --ps-info-ink: oklch(36% 0.075 245);
-    --ps-sent-positive: oklch(63% 0.13 155); --ps-sent-positive-soft: oklch(94% 0.04 155); --ps-sent-positive-ink: oklch(35% 0.08 155);
+    --ps-sent-positive: oklch(60% 0.13 155); --ps-sent-positive-soft: oklch(94% 0.04 155); --ps-sent-positive-ink: oklch(35% 0.08 155);
     --ps-sent-negative: oklch(60% 0.17 25); --ps-sent-negative-soft: oklch(94% 0.035 25); --ps-sent-negative-ink: oklch(41% 0.14 25);
-    --ps-sent-neutral: oklch(68% 0.025 255); --ps-sent-neutral-soft: oklch(94% 0.01 255); --ps-sent-neutral-ink: oklch(38% 0.025 255); --ps-sent-unknown: oklch(80% 0.008 285);
-    --ps-plat-instagram: oklch(58% 0.19 0); --ps-plat-tiktok: oklch(32% 0.012 285); --ps-plat-x: oklch(42% 0.012 255); --ps-plat-youtube: oklch(57% 0.2 27); --ps-plat-facebook: oklch(52% 0.16 258); --ps-plat-threads: oklch(50% 0.02 285); --ps-plat-news: oklch(55% 0.09 200); --ps-plat-web: oklch(66% 0.12 75);
-    --ps-chart-1: oklch(55% 0.15 295); --ps-chart-2: oklch(62% 0.1 195); --ps-chart-3: oklch(72% 0.13 75); --ps-chart-4: oklch(62% 0.15 10); --ps-chart-5: oklch(58% 0.13 250); --ps-chart-6: oklch(64% 0.12 150); --ps-chart-grid: oklch(91% 0.008 285);
+    --ps-sent-neutral: oklch(61% 0.025 255); --ps-sent-neutral-soft: oklch(94% 0.01 255); --ps-sent-neutral-ink: oklch(38% 0.025 255); --ps-sent-unknown: oklch(80% 0.008 285);
+    --ps-plat-instagram: oklch(58% 0.19 0); --ps-plat-tiktok: oklch(32% 0.012 285); --ps-plat-x: oklch(42% 0.012 255); --ps-plat-youtube: oklch(57% 0.2 27); --ps-plat-facebook: oklch(52% 0.16 258); --ps-plat-threads: oklch(50% 0.02 285); --ps-plat-news: oklch(55% 0.09 200); --ps-plat-web: oklch(62% 0.12 75);
+    --ps-chart-1: oklch(55% 0.15 295); --ps-chart-2: oklch(60% 0.1 195); --ps-chart-3: oklch(62% 0.13 75); --ps-chart-4: oklch(62% 0.15 10); --ps-chart-5: oklch(58% 0.13 250); --ps-chart-6: oklch(60% 0.12 150); --ps-chart-grid: oklch(91% 0.008 285);
   }
   .pulse-standalone .ps-info-trigger, .pu-stat-spark, .pulse-standalone .pr-evidence-footer > a { display: none !important; }
   .pu-stat-grid > .pu-stat { min-height: 0; }
@@ -453,7 +457,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .po-signal-label { font-size: .75rem; font-weight: 600; color: var(--ps-muted); }
 .po-signals strong { font-size: 1rem; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .po-signals small { font-size: .75rem; line-height: 1.5; color: var(--ps-muted); }
-.po-signal-action { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .8125rem; font-weight: 600; color: var(--ps-accent-ink, var(--ps-accent)); }
+.po-signal-action { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .8125rem; font-weight: 600; color: var(--ps-accent); }
 .po-brief-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; padding: 8px 24px; font-size: .8125rem; color: var(--ps-muted); }
 .pulse-standalone .po-brief-foot .po-relevance { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; padding: 0; color: var(--ps-ink); cursor: pointer; }
 .pulse-standalone .po-brief-foot .po-quality { display: inline-flex; align-items: center; gap: 4px; margin: 0; }
@@ -548,7 +552,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pulse-standalone .pm-workspace .pulse-post > :is(details, section.ps-account-preview > details) > summary,
 .pulse-standalone .pm-workspace .pulse-post > section.ps-account-preview details > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0; font-size: .8125rem; font-weight: 600; color: var(--ps-ink); cursor: pointer; }
 .pulse-standalone .pm-workspace .pulse-post > details[open] { padding-bottom: 16px; }
-.pulse-standalone .pm-workspace .pulse-post > details > summary:hover { color: var(--ps-accent-ink, var(--ps-accent)); }
+.pulse-standalone .pm-workspace .pulse-post > details > summary:hover { color: var(--ps-accent); }
 .pulse-standalone .pm-workspace .pulse-post > footer { order: 20; margin: 0 20px; padding: 12px 0 16px; border-top: 1px solid var(--ps-line); font-size: .75rem; line-height: 1.5; color: var(--ps-muted); }
 .pulse-standalone .pm-workspace .pulse-post > details:last-of-type { margin-bottom: 0; }
 @media (max-width: 700px) {
@@ -986,6 +990,8 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pu-search > svg { position: absolute; left: var(--ps-field-icon-inset); width: var(--ps-field-icon); height: var(--ps-field-icon); color: var(--ps-muted); pointer-events: none; }
 .pulse-standalone.pulse-standalone.pulse-standalone .pu-search > input { width: 100%; padding-left: calc(var(--ps-field-icon-inset) + var(--ps-field-icon) + 10px); }
 .pu-search > input::placeholder { color: var(--ps-muted); }
+/* Every field: the browser's own placeholder grey is too dim on a dark panel. */
+.pulse-standalone :is(input, textarea)::placeholder { color: var(--ps-muted); opacity: 1; }
 .pulse-standalone .ps-project-toolbar { gap: 8px var(--ps-topbar-gap); }
 .pulse-standalone .ps-project-toolbar > .ps-global-search { flex: 1 1 220px; max-width: var(--ps-search-width); margin: 0; }
 .pulse-standalone .ps-project-toolbar > .ps-project-actions { margin-left: auto; }
@@ -1240,6 +1246,10 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .oi-views b { font-size: 1rem; font-weight: 650; color: var(--ps-ink); }
 .oi-cover { position: absolute; inset: 0; border-radius: var(--ps-radius-control); }
 .oi-cover:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+/* The cover link lies over the whole row. A general "links get a tint on hover" rule must never paint it, or the row's
+   own text disappears behind an opaque block. The row shows the hover instead, behind its content. */
+.pulse-standalone .oi-top .oi-cover, .pulse-standalone .oi-top .oi-cover:hover, .pulse-standalone .oi-top .oi-cover:focus-visible { background: transparent; }
+.oi-top > li:has(.oi-cover:hover) { background: color-mix(in oklch, var(--ps-soft) 70%, transparent); box-shadow: 0 0 0 8px color-mix(in oklch, var(--ps-soft) 70%, transparent); border-radius: 4px; }
 .oi-bubbles { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; min-height: 220px; margin: 0; padding: 8px 0; list-style: none; }
 .oi-bubbles > li { position: relative; display: grid; place-items: center; width: var(--size); height: var(--size); border-radius: 50%; background: color-mix(in oklch, var(--tint) 13%, var(--ps-panel)); transform: translateY(var(--shift)) rotate(var(--tilt)); }
 .oi-bubbles > li > span:first-child { font-size: calc(var(--size) * .5); line-height: 1; }
@@ -1334,6 +1344,8 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pu-chart-tooltip b > em { margin-left: 8px; font-style: normal; font-weight: 500; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
 .pulse-standalone .psa-tile > strong { color: var(--ps-ink); }
 @media (prefers-reduced-motion: reduce) { .pu-switch-track, .pu-switch-track > i { transition: none; } }
+/* In a panel heading the label may wrap: a narrow column has no room for it on one line. */
+.pulse-standalone .pu-panel-actions .pu-switch { white-space: normal; }
 @media print { .pu-switch { display: none; } }
 
 /* Sentiment keeps its own marks: a coloured dot beside the label. Emoji belong to the emoji analysis only. */
@@ -1393,7 +1405,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .sig-figure > span { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
 .sig-spark { display: inline-flex; color: var(--ps-accent); margin-left: auto; }
 .sig-start { gap: 12px; }
-.sig-date { display: grid; place-items: center; min-width: 64px; padding: 8px 10px; border-radius: var(--ps-radius-control); background: var(--ps-accent-ink); color: var(--ps-lavender); font-size: .875rem; font-weight: 700; white-space: nowrap; }
+.sig-date { display: grid; place-items: center; min-width: 64px; padding: 8px 10px; border-radius: var(--ps-radius-control); background: var(--ps-mark-bg); color: var(--ps-mark-ink); font-size: .875rem; font-weight: 700; white-space: nowrap; }
 .sig-start > div { display: grid; gap: 4px; justify-items: start; min-width: 0; }
 .sig-start strong { font-size: .9375rem; font-weight: 650; overflow-wrap: anywhere; }
 .sig-viral > svg { color: var(--ps-accent); flex: 0 0 auto; }
@@ -1427,7 +1439,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pulse-standalone .sig-timeline > li > p { margin: 0; padding-left: 12px; }
 .sig-watch { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: watch; }
 .pulse-standalone .sig-watch > li { counter-increment: watch; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 12px 14px; border-radius: var(--ps-radius-control); background: var(--ps-selected); font-size: .875rem; line-height: 1.5; }
-.sig-watch > li::before { content: counter(watch); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ps-accent-ink); color: var(--ps-lavender); font-size: .75rem; font-weight: 700; }
+.sig-watch > li::before { content: counter(watch); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ps-mark-bg); color: var(--ps-mark-ink); font-size: .75rem; font-weight: 700; }
 @media (max-width: 700px) { .sig-timeline > li { grid-template-columns: 76px minmax(0, 1fr); } .sig-timeline > li::before { left: 83px; } .sig-timeline > li::after { left: 79px; } }
 @media print { .sig, .sig-date, .sig-watch > li, .sig-bar > span { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 
@@ -1595,12 +1607,9 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 @media (hover: none) { .pu-source-name[data-has-account]:is(:hover, :focus-within) > .pu-account-pop, .pcm-card[data-has-source]:is(:hover, :focus-within) > .pcm-source-pop { display: none; } }
 @media (prefers-reduced-motion: reduce) { .pu-source-name[data-has-account]:is(:hover, :focus-within) > .pu-account-pop, .pcm-card[data-has-source]:is(:hover, :focus-within) > .pcm-source-pop { animation: none; } }
 
-/* Evidence range picker on Sentimen: presets first, a single day or a custom range on request. */
-.psa-range { display: flex; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: 8px 12px; min-width: 0; }
-.psa-range-custom { display: flex; flex-wrap: wrap; gap: 8px 12px; }
-.pulse-standalone .psa-range label { display: grid; gap: 4px; font-size: .75rem; font-weight: 600; color: var(--ps-muted); }
-.pulse-standalone.pulse-standalone.pulse-standalone .psa-range input[type=date] { width: 160px; }
-@media (max-width: 900px) { .psa-range { justify-content: flex-start; } }
+/* Evidence range on Sentimen: the shared range filter (range-filter.css), to the right of the sentiment chips. */
+.pulse-standalone .psa-controls > .pu-range { justify-content: flex-end; text-align: right; }
+@media (max-width: 900px) { .pulse-standalone .psa-controls > .pu-range { justify-content: flex-start; text-align: left; } }
 
 /* ── Jaringan: answers first, then the map with slim controls and the time scrubber under it ── */
 .pulse-standalone .pulse-network-analysis { display: grid; gap: var(--ps-surface-gap); }
@@ -1614,14 +1623,22 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pn-mix li { display: inline-flex; align-items: center; gap: 6px; }
 .pn-mix li > i { width: 10px; height: 10px; border-radius: 3px; }
 .pn-mix li > strong { font-size: .875rem; font-weight: 700; color: var(--ps-ink); font-variant-numeric: tabular-nums; }
-.pn-repeated { display: grid; gap: 4px; list-style: none; }
-.pulse-standalone .pn-repeated button { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; width: 100%; padding: 10px 0 12px; border: 0; border-radius: 0; background: none; color: var(--ps-ink); font: inherit; text-align: left; cursor: pointer; }
-.pulse-standalone .pn-repeated button:hover .pn-repeated-text { text-decoration: underline; text-underline-offset: 3px; }
-.pulse-standalone .pn-repeated button:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
-.pn-repeated-text { font-size: .875rem; font-weight: 600; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.pn-repeated b { font-size: .8125rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pn-repeated i { position: absolute; left: 0; bottom: 4px; height: 4px; border-radius: 2px; background: var(--ps-accent); }
-.pn-repeated button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 4px; height: 4px; border-radius: 2px; background: color-mix(in oklch, var(--ps-accent) 14%, transparent); }
+/* Repeated content: the text, then who repeated it (their faces, a count) and the numbers of all its posts added up.
+   No bar: a count of three or four accounts reads better as three or four faces than as a length. */
+.pn-repeated { display: grid; gap: 0; list-style: none; }
+.pn-repeated > li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 0; border-top: 1px solid var(--ps-line); min-width: 0; }
+.pn-repeated > li:first-child { border-top: 0; padding-top: 0; }
+.pulse-standalone .pn-repeated button.pn-repeated-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; width: 100%; min-height: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; box-shadow: none; color: var(--ps-ink); font-size: .875rem; font-weight: 600; line-height: 1.45; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.pulse-standalone .pn-repeated button.pn-repeated-text:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pulse-standalone .pn-repeated button.pn-repeated-text:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pn-repeated-facts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; min-width: 0; }
+.pn-repeated-who { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: .8125rem; color: var(--ps-muted); white-space: nowrap; }
+.pn-repeated-who > b { color: var(--ps-ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.pn-faces { display: inline-flex; align-items: center; gap: 2px; margin-right: 2px; }
+.pulse-standalone .pn-repeated-facts > .pu-metric-row { gap: 4px 12px; }
+.pulse-standalone .pn-repeated-facts > .pu-metric-row dd { font-size: .8125rem; }
+.pulse-standalone .pn-repeated-facts > .pu-metric-row .pu-metric-total { padding-right: 12px; }
+.pulse-standalone .pn-repeated-facts > .pu-metric-row .pu-metric-total dd { font-size: .9375rem; }
 .pulse-standalone .ps-network-scope { margin: -8px 0 0; }
 .pulse-standalone .nx .nx-graph { max-height: 560px; }
 
@@ -1636,7 +1653,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pulse-standalone .pcm-foot > .pcm-post { flex: 1 1 0; min-width: 0; }
 .pulse-standalone .pcm-foot > a { flex: 0 0 auto; white-space: nowrap; }
 /* Long account names stay on one line and end in an ellipsis instead of pushing the card wider. */
-.pulse-standalone :is(.oi-top > li > div, .ped-who > span, .ped-accounts th, .pn-repeated button > span, .sig-start > div, .pcm-who, .ped-copies > header > div) { min-width: 0; }
+.pulse-standalone :is(.oi-top > li > div, .ped-who > span, .ped-accounts th, .sig-start > div, .pcm-who, .ped-copies > header > div) { min-width: 0; }
 .pulse-standalone :is(.oi-top strong, .ped-who strong, .sig-start strong, .pcm-source > header strong) { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pulse-standalone .ped-copies > header strong, .pulse-standalone .ped-copies > header small { overflow-wrap: anywhere; }
 
@@ -1657,6 +1674,15 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 @keyframes pu-ring { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(2.3); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .pu-loader-mark > b, .pu-loader-mark > i { animation: none; } .pu-loader-mark > i { display: none; } }
 .pulse-standalone .ps-loading { display: grid; place-content: center; justify-items: center; gap: 28px; min-height: 100dvh; }
+/* Page change: the new page renders underneath, laid out but not shown, while the content area shows the loader.
+   `visibility` keeps every measurement real (charts size themselves once) and takes the hidden page out of the tab order. */
+.pulse-standalone .ps-page { position: relative; }
+.pulse-standalone .ps-page[data-opening] > :not(.ps-page-opening) { visibility: hidden; }
+.pulse-standalone .ps-page-opening { position: absolute; inset: 0 0 auto; z-index: 1; display: grid; place-items: center; min-height: min(56dvh, 480px); }
+.pulse-standalone .ps-page:not([data-opening]) > * { animation: ps-page-in .18s ease-out; }
+@keyframes ps-page-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pulse-standalone .ps-page:not([data-opening]) > * { animation: none; } }
+@media print { .pulse-standalone .ps-page > * { animation: none; visibility: visible; } .pulse-standalone .ps-page-opening { display: none; } }
 .pulse-standalone .pc-pending { margin: 0; }
 
 /* ── Switch drawn on a checkbox (boolean view options) ── */
@@ -1742,7 +1768,7 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 
 .pulse-standalone .nx > .nx-replay { display: grid; grid-template-columns: auto auto minmax(120px, 1fr) auto auto auto; align-items: center; gap: 12px; padding: 8px 20px; border-block: 1px solid var(--ps-line); background: var(--ps-soft); }
 .pulse-standalone .nx :is(.nxe-play, .nxe-all) { display: inline-flex; align-items: center; gap: 6px; min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); border: 1px solid var(--ps-control-line); border-radius: var(--ps-radius-control); background: var(--ps-panel); color: var(--ps-ink); font-size: var(--ps-control-font-sm); font-weight: 600; white-space: nowrap; cursor: pointer; }
-.pulse-standalone .nx .nxe-play { background: var(--ps-accent-ink); border-color: var(--ps-accent-ink); color: var(--ps-lavender); }
+.pulse-standalone .nx .nxe-play { background: var(--ps-mark-bg); border-color: var(--ps-mark-bg); color: var(--ps-mark-ink); }
 .pulse-standalone .nx .nxe-play:disabled { opacity: .5; cursor: default; }
 .pulse-standalone .nx .nxe-time { font-size: .6875rem; font-weight: 600; color: var(--ps-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pulse-standalone .nx .nxe-track { display: grid; min-width: 0; }
@@ -1891,3 +1917,91 @@ button.pu-tag:hover .pu-tag-remove { opacity: 1; }
 .pulse-standalone .pu-account-line { display: inline-flex; align-items: center; gap: 6px; min-width: 0; vertical-align: middle; }
 .pulse-standalone .pu-breakdown-label > .ps-profile-avatar { margin-right: 2px; }
 .pulse-standalone .pulse-signals-list summary > .ps-profile-avatar { margin-right: 4px; }
+
+/* ── Evidence cards: list and grid ───────────────────────────────────────────
+   List: on a wide panel a card is two columns, the caption in a reading column and the reading
+   with its numbers beside it, so no half of the card stays empty. Narrow panels stack as before.
+   Grid: three cards across, each one stacked and trimmed, for scanning many posts at once. */
+.pulse-standalone .psa-evidence { container-type: inline-size; container-name: evidence; }
+.pulse-standalone .psa-change > .pm-view-switch { flex: 0 0 auto; background: var(--ps-panel); }
+.pulse-standalone .psa-change > .pm-view-switch .pu-button[aria-pressed=true] { background: var(--ps-lavender); border-color: transparent; color: var(--ps-accent-ink); }
+@container evidence (min-width: 860px) {
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card { display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); grid-template-rows: auto auto 1fr; gap: 12px 28px; }
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card > .pu-source-heading { grid-column: 1 / -1; }
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card > .pse-story { grid-column: 1; grid-row: 2 / span 2; }
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card > :is(.pse-reading, .pulse-analysis-pending) { grid-column: 2; grid-row: 2; align-self: start; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card > .pse-reading > p { flex: 0 1 auto; }
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card > .pse-foot { grid-column: 2; grid-row: 3; align-self: start; padding-top: 0; border-top: 0; }
+  .pulse-standalone .psa-evidence[data-layout=list] > .pse-card .pse-story.has-media { grid-template-columns: 148px minmax(0, 1fr); }
+}
+.pulse-standalone .psa-evidence[data-layout=grid] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: stretch; }
+.pulse-standalone .psa-evidence[data-layout=grid] > .pse-card { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto auto; gap: 12px; align-content: start; padding: var(--ps-surface-pad-sm); }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-source-heading { flex-wrap: wrap; gap: 8px 12px; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-source-name { flex: 1 1 0; min-width: 0; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-source-name :is(strong, small) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-source-actions { flex: 1 1 100%; margin-left: 0; justify-content: flex-start; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-source-actions > a:last-child { margin-left: auto; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pse-story.has-media { grid-template-columns: minmax(0, 1fr); }
+.pulse-standalone .psa-evidence[data-layout=grid] .pse-thumbnail .pulse-media-figure img { width: 100%; height: auto; max-height: none; aspect-ratio: 16 / 9; object-fit: cover; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-source-excerpt { font-size: .875rem; line-height: 1.6; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pse-reading { flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pse-reading > p { flex: 0 1 auto; font-size: .8125rem; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pse-foot { align-items: flex-start; flex-direction: column; gap: 8px; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pse-foot > a { margin-left: 0; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-metric-row { gap: 4px 12px; }
+.pulse-standalone .psa-evidence[data-layout=grid] .pu-metric-row .pu-metric-total { padding-right: 12px; }
+/* On a phone both views are one stacked column, so the switch would change nothing worth a control. */
+@media (max-width: 700px) { .pulse-standalone .psa-change > .pm-view-switch { display: none; } }
+.pulse-standalone .psa-evidence + .po-panel-note { margin-top: 12px; }
+
+/* A KPI tile about one account leads with its avatar. */
+.pu-stat[data-has-media] { grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; }
+.pu-stat[data-has-media] > .pu-stat-media { grid-column: 1; grid-row: 1 / span 2; align-self: center; display: flex; }
+.pu-stat[data-has-media] > :is(.pu-stat-label, .pu-stat-value) { grid-column: 2; }
+.pu-stat[data-has-media] > .pu-stat-note { grid-column: 1 / -1; }
+/* Comments rail: the switch sits on its own line above the tiles it changes. */
+.pulse-standalone .pcm-stats-toggle { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.pulse-standalone .pcm-stats-note { margin: 8px 0 0; font-size: .75rem; line-height: 1.5; color: var(--ps-muted); }
+
+/* A repost on a post card's metric row: it has no interactions of its own, so the row names whose shares it carried. */
+.pu-metric-row .pu-metric-repost, .pm-post-summary dl > .pu-metric-repost { flex-basis: 100%; gap: 8px; }
+.pu-metric-row .pu-metric-repost dt, .pm-post-summary .pu-metric-repost dt { padding: 2px 8px; border-radius: 999px; background: var(--ps-soft); border: 1px solid var(--ps-line); font-size: .6875rem; font-weight: 600; color: var(--ps-ink); }
+.pu-metric-row .pu-metric-repost dd, .pm-post-summary .pu-metric-repost dd { font-size: .8125rem; font-weight: 500; color: var(--ps-muted); }
+
+/* A summary written before newer posts arrived says so above its text, where the figures are read, not only in the footer. */
+.pulse-standalone .ais-stale { margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; background: var(--ps-panel); font-size: .8125rem; font-weight: 600; line-height: 1.45; color: var(--ps-ink); }
+@media print { .ais-stale { display: none; } }
+
+/* The shell's collection notice: one line above the project bar, only while collection has stopped. */
+.pulse-standalone .ps-collection-notice { margin: 0 0 12px; }
+.pulse-standalone .ps-collection-notice .pu-notice { font-size: .875rem; line-height: 1.5; }
+.pulse-standalone .ps-collection-notice a { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; font-weight: 650; white-space: nowrap; }
+@media print { .ps-collection-notice { display: none; } }
+
+/* Interaction split: the bar with a legend that names each colour and its share of all interactions. */
+.pu-eng-split { display: grid; gap: 6px; flex: 1 1 220px; max-width: 460px; min-width: 0; }
+.pu-eng-split .pu-eng-bar { flex: none; max-width: none; width: 100%; }
+.pu-eng-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; font-size: .75rem; color: var(--ps-muted); }
+.pu-eng-legend > li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.pu-eng-legend > li > i { width: 10px; height: 10px; border-radius: 3px; background: var(--part); }
+.pu-eng-legend b { font-weight: 650; color: var(--ps-ink); font-variant-numeric: tabular-nums; }
+@media print { .pu-eng-legend > li > i { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+/* ── New project: the waiting screen while every source sends what it has ── */
+.pwu { display: grid; gap: 16px; margin-top: 20px; padding: 24px; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-surface, 16px); background: var(--ps-panel); color: var(--ps-ink); }
+.pwu > header h2 { margin: 0; font-size: 1.25rem; font-weight: 650; text-wrap: balance; }
+.pulse-standalone .pwu > header p, .pulse-standalone .pwu > footer p { margin: 6px 0 0; max-width: 68ch; font-size: .875rem; line-height: 1.55; color: var(--ps-muted); }
+.pwu-time { height: 8px; border-radius: 4px; overflow: hidden; background: var(--ps-soft); }
+.pwu-time > i { display: block; height: 100%; background: var(--ps-accent); transform-origin: left center; transition: transform 1s linear; }
+.pulse-standalone .pwu-clock { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; font-size: .875rem; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pwu-clock b { margin-right: 6px; font-size: 1.125rem; font-weight: 650; color: var(--ps-ink); }
+.pwu-rows { display: grid; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ps-line); }
+.pwu-rows > li { display: grid; grid-template-columns: minmax(120px, 180px) minmax(0, 1fr); gap: 8px 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--ps-line); font-size: .875rem; }
+.pwu-source { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; }
+.pwu-state { color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pwu-rows > li[data-state=running] .pwu-state, .pwu-rows > li[data-state=done] .pwu-state { color: var(--ps-ink); }
+.pwu-rows > li[data-state=done] .pwu-state { font-weight: 600; }
+.pwu > footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.pulse-standalone .pwu > footer p { margin: 0; flex: 1 1 320px; }
+@media (max-width: 520px) { .pwu { padding: 16px; } .pwu-rows > li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+@media (prefers-reduced-motion: reduce) { .pwu-time > i { transition: none; } }

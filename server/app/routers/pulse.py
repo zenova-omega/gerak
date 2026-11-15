@@ -16,6 +16,7 @@ from ..services.pulse import crawl_topic_run, ingest_items, enrich_issue, pulse_
 from ..services.ingest.common import observed_engagement, count
 from ..services.pulse_lock import topic_crawl_guard, CrawlInProgress
 from ..services.pulse_comments import collect_top_comments
+from ..services.pulse_public import label_for_reader, lane_for_reader, lane_from_reader, lanes_for_reader, metrics_for_reader
 
 router = APIRouter()
 
@@ -36,7 +37,7 @@ async def quick_search(q: str = Query('', max_length=200), keywords: str | None 
             'id': item.id, 'topic_id': item.topic_id, 'platform': item.platform, 'url': item.url,
             'title': item.title, 'text': item.text, 'author': item.author,
             'published_at': item.published_at, 'crawled_at': item.crawled_at,
-            'metrics': {**(item.metrics or {}), 'engagement': observed_engagement(item.metrics)},
+            'metrics': {**metrics_for_reader(item.metrics), 'engagement': observed_engagement(item.metrics)},
         })
     return {'query': term, 'keywords': groups, 'scope': 'stored_only', 'posts': list(posts.values()),
             'truncated': len(rows) > 500, 'limit': 500}
@@ -44,20 +45,23 @@ async def quick_search(q: str = Query('', max_length=200), keywords: str | None 
 
 @router.get('/sentiment/status')
 async def sentiment_status(admin: User = Depends(require_admin)):
+    # Availability only. Which engine does the analysis, and where it runs, is an operations detail.
+    from ..services.ai import background_mode, is_configured
     settings = get_settings()
-    local = settings.AI_PROVIDER == 'ollama'
-    configured = local or (settings.AI_PROVIDER == 'claude' and bool(settings.ANTHROPIC_API_KEY))
-    return {'configured': configured, 'provider': settings.AI_PROVIDER if configured else None,
-            'local': local, 'model': (settings.OLLAMA_MODEL if local else settings.ANTHROPIC_MODEL) if configured else None,
-            'mode': 'automatic_local_and_manual' if local and settings.PULSE_SENTIMENT_ENABLED else 'manual_per_post', 'max_characters': 6000}
+    return {'configured': is_configured(settings),
+            'mode': 'automatic_and_manual' if background_mode(settings) else 'manual_per_post', 'max_characters': 6000}
 
 
 @router.get('/sentiment/progress')
 async def sentiment_progress(topic_id: str | None = None, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     from ..services.pulse_sentiment import progress
     settings = get_settings()
-    return {**await progress(db,topic_id), 'enabled': settings.PULSE_MONITOR_ENABLED and settings.PULSE_SENTIMENT_ENABLED and settings.AI_PROVIDER=='ollama',
-            'model': settings.OLLAMA_MODEL, 'concurrency':1, 'max_attempts':3}
+    from ..services.ai import background_mode, hosted
+    mode = background_mode(settings)
+    # `ai_state`: 'ok', 'access' (the AI service refuses the key or the credit: someone has to act) or 'busy' (it clears by itself).
+    return {**await progress(db,topic_id), 'enabled': bool(settings.PULSE_MONITOR_ENABLED and mode),
+            'ai_state': hosted.state() if mode == 'hosted' else 'ok',
+            'concurrency': settings.PULSE_AI_PARALLEL if mode == 'hosted' else 1, 'max_attempts':3}
 
 
 @router.post('/items/{item_id}/sentiment')
@@ -69,8 +73,8 @@ async def analyze_post_sentiment(item_id: str, db: AsyncSession = Depends(get_db
     if item is None:
         raise HTTPException(404, 'Posting tidak ditemukan.')
     existing = (item.metrics or {}).get('sentiment')
-    if isinstance(existing, dict) and existing.get('method') in ('claude_post_v1', 'ollama_post_v1'):
-        return existing  # Explicit one-post action, cached to avoid repeat charges.
+    if isinstance(existing, dict) and str(existing.get('method') or '').endswith('_post_v1'):   # already labelled by an engine
+        return label_for_reader(existing)  # Explicit one-post action, cached to avoid repeat charges.
     ai = get_ai_service()
     if ai is None:
         raise HTTPException(409, 'Provider AI belum dikonfigurasi di backend. Posting tetap belum dianalisis.')
@@ -89,11 +93,12 @@ async def analyze_post_sentiment(item_id: str, db: AsyncSession = Depends(get_db
     except Exception:
         raise HTTPException(502, 'Analisis tidak berhasil. Tidak ada label sentimen baru yang disimpan.')
     local = get_settings().AI_PROVIDER == 'ollama'
-    result.update(method='ollama_post_v1' if local else 'claude_post_v1', model=get_settings().OLLAMA_MODEL if local else get_settings().ANTHROPIC_MODEL,
+    engine = getattr(ai, 'name', None) or ('ollama' if local else 'claude')
+    result.update(method=f'{engine}_post_v1', model=getattr(ai, 'model', None) or (get_settings().OLLAMA_MODEL if local else get_settings().ANTHROPIC_MODEL),
                   analyzed_at=datetime.utcnow().isoformat() + 'Z', characters=len(content))
-    item.metrics = {**(item.metrics or {}), 'sentiment': result}
+    item.metrics = {**(item.metrics or {}), 'sentiment': result}   # the record keeps what produced the label
     await db.flush()
-    return result
+    return label_for_reader(result)
 
 
 @router.get('/seed-preview')
@@ -117,7 +122,7 @@ async def seed_preview(url: str = Query(max_length=2048), db: AsyncSession = Dep
         return {'url': canonical, 'status': 'stored', 'post': {
             'id': item.id, 'url': canonical, 'title': item.title, 'text': item.text,
             'platform': item.platform, 'author': item.author, 'published_at': item.published_at,
-            'metrics': item.metrics or {},
+            'metrics': metrics_for_reader(item.metrics),
         }}
     return {'url': canonical, 'status': 'not_collected', 'post': None}
 
@@ -125,7 +130,7 @@ async def seed_preview(url: str = Query(max_length=2048), db: AsyncSession = Dep
 def _topic_dict(t: WatchTopic) -> dict:
     return {
         "id": t.id, "label": t.label, "query": t.query,
-        "sources": t.sources, "browserless_targets": t.browserless_targets,
+        "sources": [lane_for_reader(source) for source in t.sources or []], "browserless_targets": t.browserless_targets,
         "is_active": t.is_active, "crawl_interval_minutes": t.crawl_interval_minutes,
         "last_crawled_at": t.last_crawled_at, "created_at": t.created_at,
         "seed_post": t.seed.data if t.seed else None,
@@ -160,7 +165,7 @@ async def list_topics(db: AsyncSession = Depends(get_db), admin: User = Depends(
 @router.post("/topics")
 async def create_topic(req: WatchTopicCreate, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     topic = WatchTopic(
-        label=req.label, query=req.query, sources=req.sources,
+        label=req.label, query=req.query, sources=[lane_from_reader(source) for source in req.sources],
         is_active=False,
         browserless_targets=req.browserless_targets,
         crawl_interval_minutes=req.crawl_interval_minutes, created_by=None if isinstance(admin, PulseUser) else admin.id,
@@ -186,6 +191,8 @@ async def update_topic(topic_id: str, req: WatchTopicUpdate, db: AsyncSession = 
             else:
                 topic.seed = PulseProjectSeed(data=value)
             continue
+        if field == 'sources' and value is not None:
+            value = [lane_from_reader(source) for source in value]
         setattr(topic, field, value)
     await db.flush()
     return _topic_dict(topic)
@@ -199,8 +206,14 @@ async def delete_topic(topic_id: str, db: AsyncSession = Depends(get_db), admin:
         raise HTTPException(status_code=404, detail="Topic tidak ditemukan")
     # Rows that hang off the project without an ORM cascade.
     from sqlalchemy import delete as sql_delete
+    from ..models.pulse_report import PulseReport
     from ..models.pulse_settings import PulseProjectSettings
     from ..models.pulse_summary import PulseSummary
+    from ..services.pulse_retention import delete_posts
+    # The posts go first, through the one place that deletes posts: what was read from them (analysis rows, reviews)
+    # and the profiles of accounts left with no post go too. A filed report cannot be opened without its project.
+    await delete_posts(db, (await db.scalars(select(SourceItem.id).where(SourceItem.topic_id == topic_id))).all())
+    await db.execute(sql_delete(PulseReport).where(PulseReport.topic_id == topic_id))
     await db.execute(sql_delete(PulseSummary).where(PulseSummary.topic_id == topic_id))
     await db.execute(sql_delete(PulseProjectSettings).where(PulseProjectSettings.topic_id == topic_id))
     await db.delete(topic)
@@ -222,7 +235,8 @@ async def crawl_now(topic_id: str, db: AsyncSession = Depends(get_db), admin: Us
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic tidak ditemukan")
-    return await crawl_topic_run(db, topic, get_settings(), manual=True)
+    result = await crawl_topic_run(db, topic, get_settings(), manual=True)
+    return {**result, 'providers': lanes_for_reader(result.get('providers'))}
 
 
 @router.get("/analytics")
@@ -255,13 +269,27 @@ async def backfill_topic(topic_id: str, req: BackfillRequest, db: AsyncSession =
     if req.date_from > req.date_to or req.date_to > datetime.utcnow().date() + timedelta(days=1):
         raise HTTPException(422, 'Rentang tanggal tidak valid.')
     try:
-        return await backfill(db, topic, get_settings(), req.platform, req.date_from, req.date_to)
+        return await backfill(db, topic, get_settings(), req.platform, req.date_from, req.date_to, release=db.commit)
     except ValueError as exc:
         raise HTTPException(422, str(exc))
 
 
 class LookbackRequest(BaseModel):
     days: int
+
+
+@router.get('/profiles/photo/{platform}/{key}')
+async def profile_photo(platform: str, key: str, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    """A profile picture kept on this server, for sources whose own picture links stop working."""
+    from fastapi import Response
+    from ..models.pulse_profiles import PulseAccountProfile
+    row = (await db.execute(select(PulseAccountProfile.photo_type, PulseAccountProfile.photo_bytes).where(
+        PulseAccountProfile.platform == platform, PulseAccountProfile.key == key))).first()
+    if row is None or not row.photo_type or not row.photo_bytes:
+        raise HTTPException(404, 'Foto tidak tersedia')
+    # The type was checked against the bytes when the picture was stored; nosniff keeps the browser to it.
+    return Response(content=row.photo_bytes, media_type=row.photo_type,
+                    headers={'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff'})
 
 
 @router.get('/topics/{topic_id}/lookback')
@@ -287,6 +315,34 @@ async def set_lookback(topic_id: str, req: LookbackRequest, db: AsyncSession = D
     await db.commit()
     asyncio.get_running_loop().create_task(pulse_lookback.run(topic_id, req.days, async_session, get_settings()))
     return {**await pulse_lookback.read(db, topic_id), 'running': True}
+
+
+class StartRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    days: int = 7
+    platforms: list[Literal['news', 'x', 'youtube', 'instagram', 'tiktok', 'reddit']] | None = None
+
+
+@router.post('/topics/{topic_id}/start')
+async def start_project(topic_id: str, req: StartRequest, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    """A new project's first collection: switch on recurring collection for its sources, then pull the whole
+    lookback range from every source in the background. The app waits on the progress this returns."""
+    import asyncio
+    from ..database import async_session
+    from ..services import pulse_lookback
+    topic = await db.get(WatchTopic, topic_id)
+    if topic is None:
+        raise HTTPException(404, 'Topic not found')
+    try:
+        await pulse_lookback.save(db, topic_id, req.days)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    source_of = {platform: provider for provider, platform in pulse_lookback.SOURCE_PLATFORM.items()}
+    providers = [source_of[platform] for platform in req.platforms] if req.platforms else list(topic.sources or ['rss'])
+    scheduled = await pulse_lookback.enable_schedules(db, topic, providers, datetime.utcnow())
+    await db.commit()
+    asyncio.get_running_loop().create_task(pulse_lookback.run(topic_id, req.days, async_session, get_settings()))
+    return {**await pulse_lookback.read(db, topic_id), 'running': True, 'scheduled': [lane_for_reader(lane) for lane in scheduled]}
 
 
 @router.get('/topics/{topic_id}/comments/coverage')
@@ -342,7 +398,7 @@ async def crawl_runs(topic_id: str, limit: int = Query(20, ge=1, le=100),
     runs = (await db.execute(select(PulseCrawlRun).where(PulseCrawlRun.topic_id == topic_id)
                             .order_by(PulseCrawlRun.started_at.desc()).limit(limit))).scalars().all()
     return [{"id": r.id, "topic_id": r.topic_id, "manual": r.manual, "started_at": r.started_at,
-             "finished_at": r.finished_at, "ingested": r.ingested, "providers": r.providers} for r in runs]
+             "finished_at": r.finished_at, "ingested": r.ingested, "providers": lanes_for_reader(r.providers)} for r in runs]
 
 
 @router.get("/issues")
@@ -376,9 +432,9 @@ async def get_issue(issue_id: str, db: AsyncSession = Depends(get_db), admin: Us
     )).scalars().all()
     data = _issue_dict(issue, items)
     data["source_items"] = [
-        {"id": s.id, "source": s.source, "platform": s.platform, "url": s.url,
+        {"id": s.id, "source": lane_for_reader(s.source), "platform": s.platform, "url": s.url,
          "title": s.title, "author": s.author, "published_at": s.published_at,
-         "metrics": s.metrics}
+         "metrics": metrics_for_reader(s.metrics) if s.metrics is not None else None}
         for s in items
     ]
     return data

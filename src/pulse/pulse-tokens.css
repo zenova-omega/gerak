@@ -20,11 +20,20 @@
   --ps-success-ink: oklch(33% 0.055 160);
   --ps-warning-ink: oklch(35% 0.065 55);
   --ps-selected: oklch(96% 0.018 295);
-  --ps-control-line: oklch(67% 0.018 285);
+  --ps-control-line: oklch(62% 0.018 285);
   --ps-danger: oklch(93% 0.032 20);
   --ps-danger-ink: oklch(39% 0.12 20);
   --ps-info: oklch(93% 0.028 245);
   --ps-info-ink: oklch(36% 0.075 245);
+  /* Colour for text and icons that sit straight on a panel or the page, not on a pastel fill. The *-ink colours above are
+     for pastel fills only: pastels stay light in the dark theme, so their inks stay dark and vanish on a dark panel.
+     Accent text on a surface is --ps-accent. */
+  --ps-success-text: var(--ps-success-ink);
+  --ps-warning-text: var(--ps-warning-ink);
+  /* The strong mark: a small filled block with a number or a date. Ink fill in light, pastel fill in dark, so its
+     shape is seen on either panel. */
+  --ps-mark-bg: var(--ps-accent-ink);
+  --ps-mark-ink: var(--ps-lavender);
   /* Controls: one height scale for every button, dropdown, input and filter chip. */
   --ps-control-xs: 32px;   /* inline icon button only (info tip) */
   --ps-control-sm: 36px;   /* filter chips, segmented items, compact buttons */
@@ -120,6 +129,10 @@
   --ps-danger-ink: oklch(86% 0.06 20);
   --ps-info: oklch(32% 0.025 245);
   --ps-info-ink: oklch(85% 0.04 245);
+  --ps-success-text: oklch(86% 0.07 160);
+  --ps-warning-text: oklch(87% 0.075 65);
+  --ps-mark-bg: var(--ps-lavender);
+  --ps-mark-ink: var(--ps-accent-ink);
 }
 .pulse-standalone .ps-sidebar { background:var(--ps-panel); color:var(--ps-ink); border-right:1px solid var(--ps-line); }
 .pulse-standalone .ps-sidebar nav a:hover,.pulse-standalone .ps-sidebar-bottom>a:hover { background:var(--ps-soft); }

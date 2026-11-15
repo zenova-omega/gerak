@@ -9,7 +9,7 @@ import json
 import re
 from urllib.parse import urlsplit, urlunsplit
 from datetime import datetime, timezone
-from .common import observed_metrics, published
+from .common import mark_repost, observed_metrics, published
 from .xpoz_text import parse_tool_text
 
 URL = "https://api.xpoz.ai/api/data/twitter/posts/live"
@@ -67,10 +67,8 @@ def _social_username(platform, value):
 
 
 def _social_date(row):
-    for field in ('createdAtDate', 'createdAt'):
-        date = published(row.get(field))
-        if date is not None:
-            return date
+    """Publication time from the most precise field the provider sent: the timestamp, then `createdAt`, and only then
+    `createdAtDate`, which is a calendar date. Reading the date first stored every post at midnight and lost its hour."""
     value = row.get('createdAtTimestamp')
     # Explicit provider timestamps only; never infer publication from crawl time.
     if str(value).isdigit():
@@ -81,6 +79,10 @@ def _social_date(row):
             return datetime.fromtimestamp(seconds, timezone.utc).replace(tzinfo=None)
         except (ValueError, OverflowError, OSError):
             pass
+    for field in ('createdAtTimestamp', 'createdAt', 'createdAtDate'):
+        date = published(row.get(field))
+        if date is not None:
+            return date
     return None
 
 
@@ -227,9 +229,23 @@ async def fetch_xpoz_account(api_key):
     return account_snapshot(result, names)
 
 
-async def fetch_xpoz_social_items(query, api_key, platform, limit=5, *, start=None, end=None):
-    if platform not in SOCIAL_TOOLS or not query.strip() or len(query)>250 or not 1<=limit<=PAGE_ROWS:
+async def fetch_xpoz_social_items(query, api_key, platform, limit=5, *, start=None, end=None, complete=False):
+    """Instagram, TikTok or Reddit posts for a query: one direct answer of at most `limit` rows, or, with `complete`,
+    every post the search matched through the provider's paging mode."""
+    if platform not in SOCIAL_TOOLS or not query.strip() or len(query)>250 or (not complete and not 1<=limit<=PAGE_ROWS):
         raise ValueError('Invalid bounded social search')
+    if complete:
+        async with asyncio.timeout(COMPLETE_TIMEOUT):
+            async with httpx.AsyncClient(timeout=60, follow_redirects=False, headers={
+                'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+                await _initialize(client)
+                rows = await _complete_rows(client, SOCIAL_TOOLS[platform], {
+                    'query':query, 'forceLatest':True, 'fields':SOCIAL_FIELDS[platform].split(','),
+                    **({'sort':'new'} if platform == 'reddit' else {}), **_window(start, end)})
+        items = normalize_social_posts(platform, rows)
+        if rows and not items:
+            raise XpozToolError('unusable_results')
+        return items
     async with asyncio.timeout(45):
         async with httpx.AsyncClient(timeout=30, follow_redirects=False, headers={
             'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
@@ -282,8 +298,20 @@ async def fetch_xpoz_comments(platform, post_id, api_key, post_url, limit=PAGE_R
     return {'items': normalize_comments(platform, rows, post_url), 'has_more': len(rows) >= limit}
 
 
+def _one_line(value, limit):
+    """Free text from a profile as one plain line of at most `limit` characters, or None when there is none."""
+    if not isinstance(value, str):
+        return None
+    text = ' '.join(''.join(char if char.isprintable() else ' ' for char in value).split())
+    return text[:limit] or None
+
+
 def normalize_profiles(rows):
-    """Provider rows to {account id: {photo_url, followers}}. The small default picture is swapped for the 200px one."""
+    """Provider rows to {account id: {photo_url, followers, location, based_in}}.
+
+    The small default picture is swapped for the 200px one. `location` is what the owner wrote on the profile,
+    `based_in` the country or region the platform names for the account; both None when the row carries none.
+    """
     profiles = {}
     for row in rows[:100]:
         if not isinstance(row, dict) or not re.fullmatch(r'[0-9]{1,25}', str(row.get('id') or '')):
@@ -292,12 +320,14 @@ def normalize_profiles(rows):
         if photo and urlsplit(photo).hostname == 'pbs.twimg.com':
             photo = re.sub(r'_normal(\.[A-Za-z]{3,4})$', r'_200x200\1', photo)
         followers = row.get('followersCount')
-        profiles[str(row['id'])] = {'photo_url': photo, 'followers': int(followers) if str(followers).isdigit() else None}
+        profiles[str(row['id'])] = {'photo_url': photo, 'followers': int(followers) if str(followers).isdigit() else None,
+                                    'location': _one_line(row.get('location'), 200), 'based_in': _one_line(row.get('accountBasedIn'), 80)}
     return profiles
 
 
 async def fetch_xpoz_profiles(ids, api_key):
-    """One call: picture and follower count for up to 100 X accounts, by account id. No paging or retry."""
+    """One call: picture, follower count and profile location for up to 100 X accounts, by account id. No paging or retry.
+    The location fields ride on the same call; measured 15 Nov 2026 it stays at about 2 credits an account."""
     ids = [str(value) for value in ids]
     if not ids or len(ids) > 100 or not all(re.fullmatch(r'[0-9]{1,25}', value) for value in ids):
         raise ValueError('Invalid bounded profile request')
@@ -307,8 +337,62 @@ async def fetch_xpoz_profiles(ids, api_key):
             await _initialize(client)
             result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
                 'name':'getTwitterUsers', 'arguments':{'identifiers':ids, 'identifierType':'id',
-                'fields':['id','username','profileImageUrl','followersCount']}}})
+                'fields':['id','username','profileImageUrl','followersCount','location','accountBasedIn']}}})
     return normalize_profiles(_stored_rows(_payload(result)))
+
+
+def normalize_instagram_user(payload):
+    """The provider's answer for one Instagram account as {photo_url, followers}; {} when it names no account."""
+    data = payload.get('data') if isinstance(payload, dict) else None
+    if not isinstance(data, dict):
+        return {}
+    followers = data.get('followerCount')
+    return {'photo_url': _public_image_url(data.get('profilePicUrl')), 'followers': int(followers) if str(followers).isdigit() else None}
+
+
+async def fetch_xpoz_instagram_user(username, api_key):
+    """One call for one Instagram account, by username: its current picture link and follower count. No retry.
+    Measured 14 Nov 2026: 12 credits a call, against about 2 an account for X, so this lane has its own switch."""
+    if not isinstance(username, str) or not re.fullmatch(r'[A-Za-z0-9_.]{1,30}', username):
+        raise ValueError('Invalid Instagram username')
+    async with asyncio.timeout(60):
+        async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
+            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+            await _initialize(client)
+            result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
+                'name':'getInstagramUser', 'arguments':{'identifier':username, 'identifierType':'username',
+                'fields':['id','username','profilePicUrl','followerCount']}}})
+    payload = _payload(result, account=True)
+    if isinstance(payload, dict) and (payload.get('status') not in (None, 'success') or payload.get('error')):
+        _tool_error(payload)
+    return normalize_instagram_user(payload)
+
+
+def normalize_tiktok_user(payload):
+    """The provider's answer for one TikTok account as {photo_url, followers}; {} when it names no account."""
+    data = payload.get('data') if isinstance(payload, dict) else None
+    if not isinstance(data, dict):
+        return {}
+    followers = data.get('followerCount')
+    return {'photo_url': _public_image_url(data.get('avatar')), 'followers': int(followers) if str(followers).isdigit() else None}
+
+
+async def fetch_xpoz_tiktok_user(username, api_key):
+    """One call for one TikTok account, by username: its current picture link and follower count. No retry.
+    Measured 14 Nov 2026: 5 credits a call."""
+    if not isinstance(username, str) or not re.fullmatch(r'[A-Za-z0-9_.]{1,24}', username):
+        raise ValueError('Invalid TikTok username')
+    async with asyncio.timeout(60):
+        async with httpx.AsyncClient(timeout=45, follow_redirects=False, headers={
+            'Authorization':f'Bearer {api_key}', 'Accept':'application/json, text/event-stream'}) as client:
+            await _initialize(client)
+            result = await _rpc(client, {'jsonrpc':'2.0','id':2,'method':'tools/call','params':{
+                'name':'getTiktokUser', 'arguments':{'identifier':username, 'identifierType':'username',
+                'fields':['id','username','avatar','followerCount']}}})
+    payload = _payload(result, account=True)
+    if isinstance(payload, dict) and (payload.get('status') not in (None, 'success') or payload.get('error')):
+        _tool_error(payload)
+    return normalize_tiktok_user(payload)
 
 
 class XpozToolError(Exception):
@@ -328,14 +412,15 @@ async def fetch_xpoz_items(query: str, api_key: str) -> list[dict]:
     return normalize_posts(payload["results"])
 
 
-def normalize_posts(rows):
+def normalize_posts(rows, limit=PAGE_ROWS):
     items = []
-    for row in rows[:PAGE_ROWS]:
+    for row in rows[:limit]:
         post_id = str(row.get("id") or "")
         if not post_id.isdigit():
             continue
         metrics = observed_metrics(row, {"likeCount": "likes", "replyCount": "comments",
                                          "retweetCount": "shares", "impressionCount": "views"})
+        metrics = mark_repost(metrics)
         if row.get("authorId"):
             metrics["author_id"] = str(row["authorId"])
         items.append({"source": "xpoz", "platform": "x", "url": f"https://x.com/i/status/{post_id}",
@@ -412,10 +497,83 @@ def _stored_rows(payload):
     raise ValueError("Missing stored-search results")
 
 
-async def fetch_xpoz_stored_items(query: str, api_key: str, *, start=None, end=None) -> list[dict]:
-    """Trial-oriented stored search: one fast tool call; no forceLatest, polls or fallback."""
+POLL_SECONDS = 5          # the provider asks for a status check every five seconds
+MAX_POLLS = 120           # ten minutes for one operation
+COMPLETE_TIMEOUT = 1800   # a complete search reads one page after another
+CONNECT_TRIES, CONNECT_PAUSE = 4, 4   # the provider's front door drops a connection now and then
+
+
+async def _delivered(client, message):
+    """One request, asked again only when the connection never opened: nothing reached the provider then, so nothing
+    was charged. Any failure after the request was sent is not repeated."""
+    for attempt in range(CONNECT_TRIES):
+        try:
+            return await _rpc(client, message)
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            if attempt == CONNECT_TRIES - 1:
+                raise
+            await asyncio.sleep(CONNECT_PAUSE)
+
+
+def _answer_text(result):
+    if not isinstance(result, dict):
+        raise ValueError('Invalid MCP tool result')
+    if result.get('isError'):
+        _tool_error(result)
+    return ''.join(block.get('text', '') for block in result.get('content', []) if isinstance(block, dict) and block.get('type') == 'text')
+
+
+async def _finished(client, tool, arguments, ids):
+    """Start one provider operation and return its final answer text.
+    Paging mode answers with an operation id first; the result arrives when a status check says it is done."""
+    text = _answer_text(await _delivered(client, {'jsonrpc': '2.0', 'id': next(ids), 'method': 'tools/call', 'params': {'name': tool, 'arguments': arguments}}))
+    for _ in range(MAX_POLLS):
+        status = re.search(r'^status: *"?(\w+)', text, re.M)
+        operation = re.search(r'^operationId: *"?([A-Za-z0-9_\-]+)', text, re.M)
+        if not (operation and status and status.group(1) in ('running', 'pending', 'processing')):
+            return text
+        await asyncio.sleep(POLL_SECONDS)
+        text = _answer_text(await _delivered(client, {'jsonrpc': '2.0', 'id': next(ids), 'method': 'tools/call',
+                                                'params': {'name': 'checkOperationStatus', 'arguments': {'operationId': operation.group(1)}}}))
+    raise XpozToolError('pending')
+
+
+def _page_rows(text):
+    if re.search(r'^\s*totalRows: *0\s*$', text, re.M) or re.search(r'^\s*results\[0\]', text, re.M):
+        return []
+    return _stored_rows(parse_tool_text(text))
+
+
+async def _complete_rows(client, tool, arguments):
+    """Every row a search matched, not only the first direct answer (100 to 300 rows).
+    The search runs once in the provider's paging mode; the remaining pages are read from its result table, one
+    page a request (measured 14 Nov 2026: 2 credits a page of 100 rows). No row limit of ours is sent."""
+    ids = iter(range(10, 10 ** 6))
+    text = await _finished(client, tool, {**arguments, 'responseType': 'paging'}, ids)
+    rows = list(_page_rows(text))
+    pages = re.search(r'^\s*totalPages: *(\d+)', text, re.M)
+    table = re.search(r'^\s*tableName: *"?([A-Za-z0-9_\-]+)', text, re.M)
+    for number in range(2, (int(pages.group(1)) if pages and table else 1) + 1):
+        text = await _finished(client, tool, {'query': arguments['query'], 'responseType': 'paging', 'tableName': table.group(1),
+                                              'pageNumber': number, 'fields': arguments['fields']}, ids)
+        rows.extend(_page_rows(text))
+    return rows
+
+
+async def fetch_xpoz_stored_items(query: str, api_key: str, *, start=None, end=None, complete=False) -> list[dict]:
+    """X posts for a query. The default is one direct answer (the newest posts, at most 300).
+    `complete` reads every post the search matched through the provider's paging mode, at a cost per page."""
     if not query.strip() or len(query) > 250:
         raise ValueError("Stored query must be 1-250 characters")
+    if complete:
+        async with asyncio.timeout(COMPLETE_TIMEOUT):
+            async with httpx.AsyncClient(timeout=60.0, follow_redirects=False, headers={
+                "Authorization": f"Bearer {api_key}", "Accept": "application/json, text/event-stream"}) as client:
+                await _initialize(client)
+                rows = await _complete_rows(client, 'getTwitterPostsByKeywords', {
+                    # Fresh from the platform: measured 14 Nov 2026, 313 rows against 276 from the stored answer, same price.
+                    'query': query, 'forceLatest': True, 'sortBy': 'latest', **_window(start, end), 'fields': FIELDS.split(',')})
+        return normalize_posts(rows, limit=None)
     async with asyncio.timeout(45):
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=False, headers={
             "Authorization": f"Bearer {api_key}", "Accept": "application/json, text/event-stream",

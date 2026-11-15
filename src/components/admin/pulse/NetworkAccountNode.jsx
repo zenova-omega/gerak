@@ -1,23 +1,36 @@
 import React, { useId, useState } from 'react';
+import { PlatformIcon, platformLabel } from './PlatformIcon';
+import { formatCount } from '../../../lib/pulseData';
 
-/** `weight` (0 to 1) is the account's share of the busiest account's connections: hubs are drawn larger and
- * named, accounts without any connection are small, so the shape of the network reads at a glance. */
-export default function NetworkAccountNode({ node, position, photo, selected, color, weight = 0, onPreview, onLeave, onSelect }) {
+/** One account on the map. `radius` comes from its follower count (`nodeRadius`), so the circle never grows
+ * when it is selected. `color` is the platform colour; the platform mark at the lower right says the same
+ * without colour. `far` fades an account that is not linked to the one being pointed at. Names are drawn by
+ * the map in a layer above all circles. Styles live in pulse/ds/network-look.css. */
+export default function NetworkAccountNode({ node, position, photo, selected, color, radius, followers = null, far = false, onPreview, onLeave, onSelect }) {
   const clip = useId().replace(/:/g, '');
   const [failed, setFailed] = useState(null);
-  const linked = (node.connections || 0) > 0;
-  const radius = (linked ? 14 + Math.sqrt(weight) * 10 : 10) + (selected ? 4 : 0);
-  const named = selected || weight >= .45;
+  const pictured = photo && failed !== photo;
+  const inner = radius - 2;   // the picture sits inside the ring
   const initials = node.label.replace(/^@/, '').slice(0, 2).toUpperCase();
-  return <g className="nx-account-node" transform={`translate(${position.x},${position.y})`} tabIndex={0} role="button" aria-label={'Pilih akun '+node.label} aria-pressed={selected}
+  const badge = Math.max(5, Math.min(8.5, radius * 0.4)), glyph = badge * 1.25, corner = radius * 0.72;
+  const platform = platformLabel(node.platform);
+  const audience = followers === null ? 'jumlah pengikut tidak diketahui' : `${formatCount(followers)} pengikut`;
+  return <g className="nx-account-node" data-selected={selected ? '' : undefined} data-mentioned={node.observed ? undefined : ''} data-far={far ? '' : undefined}
+    style={{ '--nx-node': color }} transform={`translate(${position.x},${position.y})`} tabIndex={0} role="button"
+    aria-label={`Pilih akun ${node.label}, ${platform}, ${audience}`} aria-pressed={selected}
     onMouseEnter={onPreview} onMouseLeave={onLeave} onFocus={onPreview} onBlur={onLeave}
     onClick={onSelect} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } if (e.key === 'Escape') onLeave(); }}>
-    <title>{node.label} · {node.platform} · {node.observed ? 'Arahkan untuk preview, klik untuk memilih' : 'Hanya disebut, posting belum tersedia'}</title>
-    <defs><clipPath id={clip}><circle r={radius-2}/></clipPath></defs>
-    <circle r={radius} fill="var(--nx-panel)" stroke={color} strokeWidth={selected?3:linked?2:1.25} opacity={linked||selected?1:.7}/>
-    <text textAnchor="middle" dy=".35em" fill="var(--nx-text)" fontSize={Math.max(8, radius * .62)} opacity={linked||selected?1:.75} aria-hidden="true">{initials}</text>
-    {photo && failed !== photo && <image href={photo} x={-radius+2} y={-radius+2} width={(radius-2)*2} height={(radius-2)*2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clip})`} onError={()=>setFailed(photo)} />}
-    {selected && <circle r={radius+5} fill="none" stroke={color} strokeWidth="1"/>}
-    {named && <text className="nx-node-name" y={radius+14} textAnchor="middle" fill="var(--nx-text)" fontSize="11" fontWeight={selected?700:600}>{node.label.length>22?node.label.slice(0,20)+'…':node.label}</text>}
+    <title>{node.label} · {platform} · {audience}{node.observed ? '' : ' · hanya disebut, posting belum tersedia'}</title>
+    <circle className="nx-node-hit" r={Math.max(radius + 3, 13)} />
+    <circle className="nx-node-focus" r={radius + (selected ? 8 : 5)} />
+    {selected && <circle className="nx-node-picked" r={radius + 4} />}
+    <circle className="nx-node-ring" r={radius} />
+    {!pictured && radius >= 11 && <text className="nx-node-initials" textAnchor="middle" dy=".35em" fontSize={Math.max(8, radius * .62)} aria-hidden="true">{initials}</text>}
+    {pictured && <><defs><clipPath id={clip}><circle r={inner} /></clipPath></defs>
+      <image href={photo} x={-inner} y={-inner} width={inner * 2} height={inner * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clip})`} onError={() => setFailed(photo)} /></>}
+    <g className="nx-node-badge" transform={`translate(${corner},${corner})`} aria-hidden="true">
+      <circle r={badge} />
+      <g transform={`translate(${-glyph / 2},${-glyph / 2})`}><PlatformIcon platform={node.platform} size={glyph} /></g>
+    </g>
   </g>;
 }

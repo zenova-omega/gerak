@@ -27,9 +27,9 @@
 .pulse-standalone .pm-sentiment-picker input { width:16px;min-height:16px;height:16px;margin:0;accent-color:var(--ps-accent); }
 .pm-sentiment-picker small { margin-left:auto;color:var(--ps-muted);font-variant-numeric:tabular-nums; }
 .pm-sentiment-dot { width:7px;height:7px;border-radius:50%;background:var(--ps-muted); }
-.pm-sentiment-dot.positive { background:var(--ps-success-ink); }
-.pm-sentiment-dot.negative { background:var(--ps-warning-ink); }
-.pm-sentiment-dot.neutral { background:var(--ps-accent); }
+.pm-sentiment-dot.positive { background:var(--ps-sent-positive); }
+.pm-sentiment-dot.negative { background:var(--ps-sent-negative); }
+.pm-sentiment-dot.neutral { background:var(--ps-sent-neutral); }
 .pm-timeline-disclosure { border-block:1px solid var(--ps-line);margin:16px 0; }
 .pm-timeline-disclosure>summary { padding:14px 0;cursor:pointer;font-size:.875rem;font-weight:600; }
 .pm-timeline-disclosure>summary span { color:var(--ps-muted);font-weight:400;margin-left:12px;font-size:.75rem; }

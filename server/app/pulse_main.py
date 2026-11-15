@@ -1,4 +1,5 @@
 """Standalone on-prem entrypoint: exposes PULSE only, never GERAK routes."""
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,7 @@ from .routers import pulse_reviews
 from .routers import pulse_reports
 from .routers import pulse_evaluation
 from .routers import pulse_response_analysis
+from .routers import pulse_radar
 
 
 @asynccontextmanager
@@ -24,6 +26,15 @@ async def lifespan(app):
         from .models.pulse import SourceItem
         index = next(i for i in SourceItem.__table__.indexes if i.name == 'uq_pulse_topic_url')
         await conn.run_sync(lambda sync: index.create(sync, checkfirst=True))
+    # Stored rows from before a rule existed. Its own transaction: a failed repair must not undo the schema step or stop the start.
+    try:
+        async with engine.begin() as conn:
+            from .services.pulse_repair import repair_reposts
+            repaired = await conn.run_sync(repair_reposts)
+        if repaired:
+            logging.getLogger(__name__).info('PULSE: %s repost rows no longer claim the original post\'s shares', repaired)
+    except Exception:
+        logging.getLogger(__name__).exception('PULSE: repost repair skipped')
     if get_settings().PULSE_MONITOR_ENABLED:
         from .services.scheduler import start_scheduler
         start_scheduler()
@@ -43,6 +54,7 @@ app.include_router(pulse_reports.router, prefix='/api/admin/pulse/reports')
 app.include_router(pulse_evaluation.router, prefix='/api/admin/pulse')
 app.include_router(pulse_response_analysis.router, prefix='/api/admin/pulse/response-analysis')
 app.include_router(pulse_chat.router, prefix='/api/admin/pulse')
+app.include_router(pulse_radar.router, prefix='/api/admin/pulse')
 app.include_router(pulse.router, prefix='/api/admin/pulse')
 app.include_router(pulse_monitor.router, prefix='/api/admin/pulse/monitor')
 

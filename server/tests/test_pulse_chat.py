@@ -61,6 +61,10 @@ def test_only_cited_sources_are_returned_and_post_text_is_marked_as_data():
 
 @pytest.mark.asyncio
 async def test_chat_api_requires_access_and_a_configured_model(db, client, admin_token, monkeypatch):
+    # The route ends its transaction before the model answers; tests share one database file, so that commit is not made here.
+    async def keep():
+        return None
+    monkeypatch.setattr(db, 'commit', keep)
     await seeded(db)
     body = {'topic_id': 'chat-topic', 'question': 'Kapan posting ini pertama kali viral?'}
     assert (await client.post('/api/admin/pulse/chat', json=body)).status_code in (401, 403)
@@ -98,6 +102,10 @@ def test_keyword_suggestions_are_validated_deduplicated_and_counted():
 
 @pytest.mark.asyncio
 async def test_keyword_api_uses_project_posts_and_hides_engine(db, client, admin_token, monkeypatch):
+    # The route ends its transaction before the model answers; tests share one database file, so that commit is not made here.
+    async def keep():
+        return None
+    monkeypatch.setattr(db, 'commit', keep)
     await seeded(db)
     headers = {'Authorization': f'Bearer {admin_token}'}
     body = {'seed': 'contoh', 'existing': ['contoh'], 'topic_id': 'chat-topic'}
@@ -179,3 +187,145 @@ async def test_local_adapter_builds_a_valid_request(monkeypatch):
     plain, structured = seen
     assert plain['options'] == {'temperature': 0, 'num_predict': 5, 'num_ctx': 4096} and 'format' not in plain
     assert structured['options']['num_ctx'] == 8192 and structured['format'] == 'json' and structured['stream'] is False
+
+
+@pytest.mark.asyncio
+async def test_the_data_block_tells_which_provinces_the_posts_name_and_where_x_accounts_say_they_are(db):
+    """The same reading as the spread map (pulse_places.py), so an answer about places matches what the map shows.
+    Both lines say what they are not: a place that is talked about is not where the author is."""
+    from app.models.pulse_profiles import PulseAccountProfile
+    await seeded(db)
+    for index, (platform, author, account, title) in enumerate([
+            ('news', 'Media', None, 'Aksi di Jakarta meluas'), ('news', 'Media', None, 'Warga Jakarta dan Bandung turun ke jalan'),
+            ('x', 'akun_b', '501', 'tanpa tempat'), ('x', 'akun_c', '502', 'tanpa tempat'), ('x', 'akun_d', '503', 'tanpa tempat')]):
+        db.add(SourceItem(id=f'place-{index}', topic_id='chat-topic', source='t', platform=platform, url=f'https://example.com/place-{index}', title=title, text='',
+                          author=author, published_at=NOW - timedelta(days=1), metrics={'author_id': account} if account else {}))
+    db.add_all([PulseAccountProfile(platform='x', key='501', location='Surabaya, Jawa Timur', location_at=NOW, checked_at=NOW),
+                PulseAccountProfile(platform='x', key='502', location=None, location_at=NOW, checked_at=NOW),          # asked: the owner wrote none
+                PulseAccountProfile(platform='x', key='599', location='Medan', location_at=NOW, checked_at=NOW)])      # not an account of this project
+    await db.flush()
+    built = await chat.build_context(db, 'chat-topic', NOW)
+    places = built['context']['places']
+    assert (places['named']['posts'], places['named']['named']) == (7, 2)
+    assert [(row['name'], row['posts']) for row in places['named']['provinces']] == [('DKI Jakarta', 2), ('Jawa Barat', 1)]
+    assert places['profiles'] == {'accounts': 4, 'asked': 2, 'located': 1, 'named': 1,
+                                  'provinces': [{'code': 'ID-JI', 'name': 'Jawa Timur', 'accounts': 1, 'names': [('Surabaya', 1)]}]}     # akun_a of the seed has no account id: counted, not asked
+    block = chat.data_block(built['context'])
+    assert 'TEMPAT YANG DISEBUT DALAM POSTING (yang dibicarakan, BUKAN lokasi penulis): 2 dari 7 posting menyebut provinsi atau kota | DKI Jakarta 2 posting (Jakarta 2); Jawa Barat 1 posting (Bandung 1)' in block
+    assert 'LOKASI PROFIL AKUN X (keterangan pemilik akun, BUKAN posisi saat memposting): 1 dari 4 akun X bisa dipetakan, 2 belum diperiksa | Jawa Timur 1 akun (Surabaya 1)' in block
+    assert 'bukan lokasi penulis' in chat.SYSTEM.lower() or 'bukan lokasi' in chat.SYSTEM.lower()
+    # A scope without X posts says so in one short line, and the block stays the same between two questions.
+    news = await chat.build_context(db, 'chat-topic', NOW, platforms=['news'])
+    assert 'LOKASI PROFIL AKUN X: tidak ada akun X dalam cakupan' in chat.data_block(news['context'])
+    assert chat.data_block((await chat.build_context(db, 'chat-topic', NOW + timedelta(minutes=10)))['context']) == block
+
+
+@pytest.mark.asyncio
+async def test_the_summary_input_carries_the_place_lines_too(db):
+    from app.services import pulse_summary as summary
+    await seeded(db)
+    db.add(SourceItem(id='place-s', topic_id='chat-topic', source='t', platform='news', url='https://example.com/place-s', title='Aksi di Makassar', text='', author='Media', published_at=NOW - timedelta(days=1), metrics={}))
+    await db.flush()
+    built = await summary.build_summary_input(db, 'chat-topic', NOW)
+    assert 'TEMPAT YANG DISEBUT DALAM POSTING (yang dibicarakan, BUKAN lokasi penulis): 1 dari 3 posting menyebut provinsi atau kota | Sulawesi Selatan 1 posting (Makassar 1)' in built['data']
+    assert 'bukan lokasi' in summary.BASE.lower()
+    # A sentence about a place needs evidence like every other sentence: the strongest post naming it, under a code of its own.
+    assert '- T1 Sulawesi Selatan (1 posting) | Media | news |' in built['data'] and 'teks: Aksi di Makassar' in built['data']
+    assert built['sources']['T1']['id'] == 'place-s'
+    assert [source['code'] for source in summary.cited('Percakapan menyebut Makassar [T1]. Ramai di X [P1].', built['sources'])] == ['T1', 'P1']
+    assert 'P, A, N, K, I, T' in summary.BASE
+    assert 'tempat yang paling banyak disebut' in summary.FORMATS['insights'][1] and 'kode T' in summary.FORMATS['insights'][1]
+
+
+@pytest.mark.asyncio
+async def test_every_post_in_scope_is_read_however_many_there_are(db):
+    """Until 15 Nov 2026 the context read the 3,000 newest posts, so its counts fell short of the pages that count the
+    whole period. The numbers given to the AI are aggregates, so reading everything does not make the prompt longer."""
+    from app.services import pulse_summary as summary
+    await seeded(db)
+    old = NOW - timedelta(days=30)
+    db.add_all([SourceItem(id=f'bulk-{index}', topic_id='chat-topic', source='t', platform='news', url=f'https://example.com/bulk-{index}',
+                           title='Aksi di Makassar' if index < 40 else 'Kabar lain', text='', author='Media',
+                           published_at=old + timedelta(minutes=index), crawled_at=old + timedelta(minutes=index), metrics={'likes': 1})
+                for index in range(3100)])
+    await db.flush()
+    built = await chat.build_context(db, 'chat-topic', NOW)
+    scope = built['context']['scope']
+    assert scope['posts'] == 3102 and scope['truncated'] is False
+    assert built['context']['totals']['platforms'] == {'news': 3101, 'x': 1}
+    named = built['context']['places']['named']
+    assert (named['posts'], named['named'], named['provinces'][0]['name'], named['provinces'][0]['posts']) == (3102, 40, 'Sulawesi Selatan', 40), 'the oldest posts count too'
+    block = chat.data_block(built['context'])
+    assert 'CAKUPAN: 3102 posting' in block and 'dibatasi' not in block
+    made = await summary.build_summary_input(db, 'chat-topic', NOW)
+    assert made['posts'] == 3102 and made['truncated'] is False and made['facts']['totals']['posts'] == 3102
+    assert len(block) < 6000, 'the block stays short: it holds counts, not posts'
+
+
+# ── A shaped answer: light markup, charts drawn from the server's own numbers ────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_a_chart_the_answer_asks_for_is_built_from_the_data_block_never_from_the_answer_text(db):
+    await seeded(db)
+    db.add(SourceItem(id='place-c', topic_id='chat-topic', source='t', platform='news', url='https://example.com/place-c', title='Aksi di Jakarta', text='', author='Media',
+                      published_at=NOW - timedelta(days=1), metrics={'sentiment': {'label': 'negative'}}))
+    await db.flush()
+    context = (await chat.build_context(db, 'chat-topic', NOW))['context']
+    sentiment = chat.chart_data(context, 'sentimen')
+    assert sentiment == {'key': 'sentimen', 'kind': 'bars', 'title': 'Sentimen posting', 'unit': 'posting', 'note': None,
+                         'rows': [{'tone': 'positive', 'value': 0}, {'tone': 'neutral', 'value': 0}, {'tone': 'negative', 'value': 1}, {'tone': 'unknown', 'value': 2}]}
+    assert chat.chart_data(context, 'platform')['rows'] == [{'platform': 'news', 'value': 2}, {'platform': 'x', 'value': 1}]
+    week = chat.chart_data(context, 'platform7')
+    assert week['title'] == 'Posting per platform, 7 hari terakhir' and week['rows'] == [{'platform': 'news', 'value': 1}, {'platform': 'x', 'value': 1}]
+    days = chat.chart_data(context, 'harian')
+    assert days['kind'] == 'days' and len(days['rows']) == 14 and days['rows'][-1] == {'date': '2026-11-13', 'value': 1}
+    assert days['rows'][0]['date'] == '2026-10-31' and sum(row['value'] for row in days['rows']) == 2, 'fourteen calendar days up to the last post, quiet days as zero'
+    places = chat.chart_data(context, 'tempat')
+    assert places['rows'] == [{'label': 'DKI Jakarta', 'value': 1}] and 'bukan lokasi penulis' in places['note']
+    groups = chat.chart_data(context, 'kelompok')
+    assert groups['rows'] == [{'label': 'Kelompok utama', 'value': 1, 'code': 'I1'}]
+    assert chat.chart_data(context, 'lokasi') is None, 'nothing to draw: no chart'
+    assert chat.chart_data(context, 'entah') is None
+
+
+@pytest.mark.asyncio
+async def test_the_answer_is_shaped_once_on_the_server_tags_out_charts_and_cited_groups_in(db):
+    await seeded(db)
+    context = (await chat.build_context(db, 'chat-topic', NOW))['context']
+    raw = ('Isu utamanya **pengunduran diri** [P1].\n\n- Kelompok terbesar [I1] berisi **1 posting**.\n- Sentimen didominasi netral.\n'
+           '[GRAFIK:sentimen]\n[grafik: platform]\n[GRAFIK:harian]\n[GRAFIK:sentimen]\n[GRAFIK:rahasia]')
+    shaped = chat.shape_answer(raw, context)
+    assert shaped['answer'] == 'Isu utamanya **pengunduran diri** [P1].\n\n- Kelompok terbesar [I1] berisi **1 posting**.\n- Sentimen didominasi netral.'
+    assert [chart['key'] for chart in shaped['charts']] == ['sentimen', 'platform'], 'at most two, each once, unknown names dropped'
+    assert shaped['groups'] == [{'code': 'I1', 'title': 'Kelompok utama', 'posts': 1, 'accounts': 1, 'interactions': 1000, 'first_published_at': context['last_7_days']['conversation_groups'][0]['first_published_at']}]
+    plain = chat.shape_answer('  Jawaban tanpa tanda apa pun [I9].  ', context)
+    assert plain == {'answer': 'Jawaban tanpa tanda apa pun [I9].', 'charts': [], 'groups': []}, 'a code the data does not hold cites nothing'
+    for wanted in ('**', '"- "', '[GRAFIK:', 'sentimen7', '12 Nov'):
+        assert wanted in chat.SYSTEM, wanted
+    # The data block names sentiment in the reader's words, so an answer never says "unknown" or "negative".
+    block = chat.data_block(context)
+    assert 'sentimen: belum dianalisis 2' in block and 'unknown' not in block and 'negative' not in block
+
+
+@pytest.mark.asyncio
+async def test_the_chat_answer_carries_its_charts_and_groups_and_stores_them_with_the_turn(db, client, admin_token, monkeypatch):
+    from app.services import ai
+    await seeded(db)
+
+    class Model:
+        async def generate_text(self, prompt, **kwargs):
+            return 'Isu utamanya ramai [P1].\n\n- Kelompok [I1] terbesar.\n[GRAFIK:platform]'
+    monkeypatch.setattr(ai, 'get_ai_service', lambda settings=None: Model())
+
+    async def keep(*args, **kwargs):
+        return None
+    monkeypatch.setattr(db, 'commit', keep)
+    response = await client.post('/api/admin/pulse/chat', headers={'Authorization': f'Bearer {admin_token}'}, json={'topic_id': 'chat-topic', 'question': 'Apa isu utama?'})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body['answer'] == 'Isu utamanya ramai [P1].\n\n- Kelompok [I1] terbesar.'
+    assert [chart['key'] for chart in body['charts']] == ['platform'] and body['groups'][0]['code'] == 'I1'
+    assert [source['code'] for source in body['sources']] == ['P1']
+    stored = await client.get(f"/api/admin/pulse/chat/conversations/{body['conversation_id']}", headers={'Authorization': f'Bearer {admin_token}'})
+    turn = stored.json()['turns'][0]
+    assert turn['charts'] == body['charts'] and turn['groups'] == body['groups'] and turn['answer'] == body['answer']

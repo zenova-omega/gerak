@@ -15,6 +15,24 @@ def observed_engagement(metrics: dict | None) -> int | None:
     return sum(count(v) for v in observed) if observed else None
 
 
+def mark_repost(metrics: dict) -> dict:
+    """Tell a repost on X from a post of one's own, and stop it claiming the original's shares.
+
+    X returns a repost as a row of its own that carries the ORIGINAL post's repost count and nothing else: no likes,
+    no replies, and no more views than shares, which a post that really was shared that often cannot have. Adding that
+    figure up per reposter multiplies it (seven reposters of one post read as seven times its shares), so it moves to
+    `original_shares` and the row keeps none of its own. `repost` is always set, so a later refresh can clear the mark.
+    The provider sends no repost flag in the fields we ask for; this rule is what the stored numbers allow."""
+    shares = count(metrics.get('shares'))
+    repost = (shares > 0 and metrics.get('likes') == 0 and metrics.get('comments') == 0
+              and count(metrics.get('views')) <= shares)
+    marked = {**metrics, 'repost': repost}
+    if repost:
+        marked.update(shares=0, original_shares=shares)
+    marked['engagement'] = observed_engagement(marked)
+    return marked
+
+
 def observed_metrics(row: dict, fields: dict) -> dict:
     metrics = {target: count(row[source]) for source, target in fields.items()
                if row.get(source) is not None and str(row[source]).isdigit()}

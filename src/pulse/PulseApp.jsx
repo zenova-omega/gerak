@@ -1,11 +1,15 @@
-import { createElement, useEffect, useState } from 'react';
+import { createElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Radio, Network, Newspaper, MessageCircle, Settings, LogOut, Moon, Sun, Users, Database, Sparkles, Search, HeartPulse, FileText, ChartPie } from 'lucide-react';
 import api from '../lib/api';
 import PulseDashboard from '../components/admin/pulse/PulseDashboard';
+import { MonitorNavBadge } from '../components/admin/pulse/MonitorRoom';
 import SourcesCoverage from './SourcesCoverage.jsx';
 import ProjectBar from './ProjectBar.jsx';
 import ProjectChat from './ProjectChat.jsx';
+import AiInsights from './AiInsights.jsx';
+import InsightsTrend from './InsightsTrend.jsx';
+import Home from './Home.jsx';
 import { PulseLogo } from '../components/ui/PulseLogo';
 import './shadcn.css';
 import './pulse-app.css';
@@ -16,15 +20,16 @@ import { PulseButton } from '../components/ui/PulseUI';
 import DesignSystemGallery from './DesignSystemGallery';
 import QuickSearch from './TaggedSearch';
 import { pageMeta, pageOrder, pageGroups } from './pageMeta';
+import usePulseHead from './usePulseHead';
 import { PulseLoader } from '../components/ui/PulseLoader';
 import { quickSearchDestination } from './projectQuery';
 import WorkspaceNavigation from './WorkspaceNavigation';
+import CollectionNotice from './CollectionNotice';
 import './workspace-layout.css';
 import './ds/analytics-kit.css';
 
 function Brand() {
-  const { search } = useLocation();
-  return <Link className="ps-brand" to={`/pulse${search}`} aria-label="PULSE beranda"><PulseLogo height={30} title="PULSE" /></Link>;
+  return <Link className="ps-brand" to="/pulse" aria-label="PULSE beranda"><PulseLogo height={30} title="PULSE" /></Link>;
 }
 
 function errorMessage(error) {
@@ -105,6 +110,8 @@ function PasswordSettings({ user, onChanged }) {
 }
 
 const sections = pageOrder.map(id => [id, pageMeta[id].title, pageMeta[id].icon]);
+// How long the content area shows its loader after the page changes. The new page is already rendering underneath it.
+const PAGE_OPENING_MS = 400;
 
 export default function PulseApp() {
   const [session, setSession] = useState({ loading: true, user: null });
@@ -118,12 +125,29 @@ export default function PulseApp() {
   const location = useLocation();
   const navigate = useNavigate();
   const quickDestination = quickSearchDestination(location.pathname, location.search);
-  const navigationSearch = location.pathname === '/pulse/search' ? '' : location.search;
+  // Choosing another page starts it at the top: the scroll position belonged to the page that was left. The content area
+  // shows a loader for a moment so the change is seen; a filter or project change on the same page does neither.
+  const shell = useRef(null);
+  const [openedPath, setOpenedPath] = useState(location.pathname);
+  const opening = openedPath !== location.pathname;
+  useLayoutEffect(() => {
+    if (!opening) return undefined;
+    if (!location.hash) shell.current?.scrollTo(0, 0);   // a link to a section scrolls to that section instead
+    const timer = setTimeout(() => setOpenedPath(location.pathname), PAGE_OPENING_MS);
+    return () => clearTimeout(timer);
+  }, [opening, location.pathname, location.hash]);
+  // Beranda and Pencarian cepat are not scoped to a project: their own address parameters never follow into a project page.
+  // From Beranda the sidebar leads back into the project that was open, with the period and filters it had.
+  const [projectSearch, setProjectSearch] = useState('');
+  if (!['/pulse', '/pulse/search'].includes(location.pathname) && new URLSearchParams(location.search).has('topic') && projectSearch !== location.search) setProjectSearch(location.search);
+  const navigationSearch = location.pathname === '/pulse' ? projectSearch : location.pathname === '/pulse/search' ? '' : location.search;
   useEffect(() => {
-    document.title = 'PULSE — Pemantauan percakapan';
-    const icon = document.querySelector('link[rel~="icon"]'); if (icon) icon.href = '/pulse-icon.svg';
     try { localStorage.setItem('pulse-theme', theme); } catch { /* Preference storage may be disabled. */ }
   }, [theme]);
+  // The tab names the page in view: "Sentimen · PULSE", "Masuk · PULSE" on the sign-in screen.
+  const pageId = location.pathname === '/pulse' ? 'home' : location.pathname.replace(/^\/pulse\//, '').split('/')[0];
+  const pageTitle = pageId === 'settings' ? 'Pengaturan' : pageMeta[pageId]?.title || null;
+  usePulseHead({ theme, page: session.loading ? null : !session.user ? 'Masuk' : pageTitle });
   useEffect(() => {
     let active = true;
     let revalidation = 0;
@@ -180,13 +204,13 @@ export default function PulseApp() {
     finally { setLogoutBusy(false); }
   }
   const themeButton = <PulseButton className="ps-theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Gunakan tema terang' : 'Gunakan tema gelap'}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}<span>Tema {theme === 'dark' ? 'terang' : 'gelap'}</span></PulseButton>;
-  return <div className="pulse-standalone" data-theme={theme}>
+  return <div className="pulse-standalone" data-theme={theme} ref={shell}>
     {session.loading ? <main className="ps-loading"><Brand /><PulseLoader size="lg" label="Memeriksa sesi PULSE…" /></main> : session.error ? <main className="ps-loading"><Brand /><p role="alert">{session.error}</p><PulseButton onClick={() => { setSession({ loading: true, user: null }); setAttempt(value => value + 1); }}>Coba lagi</PulseButton></main> : !session.user ? <><div className="ps-login-theme">{themeButton}</div><Login message={message} onLogin={user => { setSession({ user, loading: false }); setMessage(''); if (location.pathname === '/pulse/login') navigate('/pulse', { replace: true }); }} /></> : <div className="ps-workspace" key={`${session.user.id}:${session.user.csrf_token}`}>
       <a className="ps-skip" href="#ps-content">Lewati ke konten</a>
-      <WorkspaceNavigation key={location.pathname} brand={<Brand />} label={sections.find(([id]) => location.pathname === `/pulse/${id}`)?.[1] || (location.pathname === '/pulse/settings' ? 'Pengaturan' : location.pathname === '/pulse/search' ? 'Pencarian cepat' : 'Ikhtisar')}>
-        <nav aria-label="Navigasi PULSE"><Link to="/pulse/search" aria-current={location.pathname === '/pulse/search' ? 'page' : undefined}>{createElement(pageMeta.search.icon, { size: 19 })}{pageMeta.search.title}</Link>{pageGroups.map(([group, ids]) => <div className="ps-nav-group" key={group} role="group" aria-label={group}><span className="ps-nav-group-label" aria-hidden="true">{group}</span>{ids.map(id => [id, pageMeta[id].title, pageMeta[id].icon]).map(([id, label, icon]) => <Link key={id} to={`/pulse/${id}${navigationSearch}`} aria-current={location.pathname === `/pulse/${id}` || (id === 'overview' && location.pathname === '/pulse') ? 'page' : undefined}>{createElement(icon, { size: 19 })}{label}</Link>)}</div>)}</nav><div className="ps-sidebar-bottom"><Link to={`/pulse/settings${location.search}`} aria-current={location.pathname === '/pulse/settings' ? 'page' : undefined}><Settings size={19} />Pengaturan</Link>{themeButton}<div className="ps-user"><strong>{session.user.name || session.user.email}</strong><span>{session.user.role}</span></div><PulseButton onClick={logout} disabled={logoutBusy}><LogOut size={18} />{logoutBusy ? 'Keluar…' : 'Keluar'}</PulseButton>{logoutError && <p role="alert" className="ps-error">{logoutError}</p>}</div>
+      <WorkspaceNavigation key={location.pathname} brand={<Brand />} label={sections.find(([id]) => location.pathname === `/pulse/${id}`)?.[1] || (location.pathname === '/pulse/settings' ? 'Pengaturan' : location.pathname === '/pulse/search' ? 'Pencarian cepat' : pageMeta.home.title)}>
+        <nav aria-label="Navigasi PULSE"><Link to="/pulse" aria-current={location.pathname === '/pulse' ? 'page' : undefined}>{createElement(pageMeta.home.icon, { size: 19 })}{pageMeta.home.title}</Link><Link to="/pulse/search" aria-current={location.pathname === '/pulse/search' ? 'page' : undefined}>{createElement(pageMeta.search.icon, { size: 19 })}{pageMeta.search.title}</Link>{pageGroups.map(([group, ids]) => <div className="ps-nav-group" key={group} role="group" aria-label={group}><span className="ps-nav-group-label" aria-hidden="true">{group}</span>{ids.map(id => [id, pageMeta[id].title, pageMeta[id].icon]).map(([id, label, icon]) => <Link key={id} to={`/pulse/${id}${navigationSearch}`} aria-current={location.pathname === `/pulse/${id}` ? 'page' : undefined}>{createElement(icon, { size: 19 })}{label}{id === 'monitor' && <MonitorNavBadge />}</Link>)}</div>)}</nav><div className="ps-sidebar-bottom"><Link to={`/pulse/settings${location.search}`} aria-current={location.pathname === '/pulse/settings' ? 'page' : undefined}><Settings size={19} />Pengaturan</Link>{themeButton}<div className="ps-user"><strong>{session.user.name || session.user.email}</strong><span>{session.user.role}</span></div><PulseButton onClick={logout} disabled={logoutBusy}><LogOut size={18} />{logoutBusy ? 'Keluar…' : 'Keluar'}</PulseButton>{logoutError && <p role="alert" className="ps-error">{logoutError}</p>}</div>
       </WorkspaceNavigation>
-      <div className="ps-content" id="ps-content" tabIndex={-1}><div className="ps-topline"><span>Pemantauan percakapan</span><span>Instalasi privat</span></div>{location.pathname !== '/pulse/search' && !quickDestination && <ProjectBar readOnly={!["owner", "admin"].includes(session.user.role)} />}<Routes><Route path="/pulse/search" element={<QuickSearch/>}/><Route path="/pulse" element={<PulseDashboard standalone view="overview" />} />{sections.map(([id]) => <Route key={id} path={`/pulse/${id}`} element={id === 'posts' && quickDestination ? <Navigate to={quickDestination} replace/> : id === 'chat' ? <ProjectChat /> : id === 'sources' ? <SourcesCoverage projectPicker={false} user={session.user} readOnly={!['owner', 'admin'].includes(session.user.role)} /> : <PulseDashboard standalone view={id} />} />)}<Route path="/pulse/infographics" element={<Navigate to={`/pulse/overview${location.search}#overview-words`} replace/>}/><Route path="/pulse/settings" element={<PasswordSettings user={session.user} onChanged={() => endSession('Kata sandi diperbarui. Semua sesi telah berakhir. Silakan masuk kembali.')} />} /><Route path="*" element={<Navigate to={`/pulse${location.search}`} replace />} /></Routes></div>
+      <div className="ps-content" id="ps-content" tabIndex={-1}><div className="ps-topline"><span>Pemantauan percakapan</span><span>Instalasi privat</span></div><CollectionNotice />{location.pathname !== '/pulse' && location.pathname !== '/pulse/search' && !quickDestination && <ProjectBar readOnly={!["owner", "admin"].includes(session.user.role)} />}<div className="ps-page" data-opening={opening ? '' : undefined} aria-busy={opening || undefined}>{opening && <div className="ps-page-opening"><PulseLoader size="lg" label={pageTitle ? `Membuka ${pageTitle}…` : 'Membuka halaman…'} /></div>}<Routes><Route path="/pulse/search" element={<QuickSearch/>}/><Route path="/pulse" element={new URLSearchParams(location.search).has('topic') ? <Navigate to={`/pulse/overview${location.search}`} replace /> : <Home canCreate={['owner', 'admin'].includes(session.user.role)} />} />{sections.map(([id]) => <Route key={id} path={`/pulse/${id}`} element={id === 'posts' && quickDestination ? <Navigate to={quickDestination} replace/> : id === 'chat' ? <ProjectChat /> : id === 'insights' ? <AiInsights chart={<InsightsTrend />} /> : id === 'sources' ? <SourcesCoverage projectPicker={false} user={session.user} readOnly={!['owner', 'admin'].includes(session.user.role)} /> : <PulseDashboard standalone view={id} />} />)}<Route path="/pulse/infographics" element={<Navigate to={`/pulse/overview${location.search}#overview-words`} replace/>}/><Route path="/pulse/settings" element={<PasswordSettings user={session.user} onChanged={() => endSession('Kata sandi diperbarui. Semua sesi telah berakhir. Silakan masuk kembali.')} />} /><Route path="*" element={<Navigate to={`/pulse${location.search}`} replace />} /></Routes></div></div>
     </div>}
   </div>;
 }

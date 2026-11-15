@@ -8,14 +8,14 @@ import { formatCount, pulseDate, safeSourceUrl } from '../lib/pulseData';
 import SummaryInfographic, { Timeline } from './SummaryInfographics';
 import { PulseLoader } from '../components/ui/PulseLoader';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
+import { cardFormats, openingFormat } from './summaryModel';
 
-const fallbackFormats = [{ key: 'brief', label: 'Ringkas' }, { key: 'timeline', label: 'Kronologi' }, { key: 'executive', label: 'Eksekutif' }];
 const formatHelp = { brief: 'Enam jawaban singkat: awal, viral, topik, isi, sentimen, alasan.', timeline: 'Urutan kejadian per tanggal, lalu titik viral dan suasananya.', executive: 'Satu paragraf untuk pimpinan dan tiga hal yang perlu dipantau.' };
 
 /** Text with evidence codes ([P1], [A2], [N1], [K3]) turned into links to the source list of this card. */
 function Cited({ text, codes, prefix }) {
-  return text.split(/(\[[PANKI]\d{1,2}\])/).map((part, index) => {
-    const code = part.match(/^\[([PANKI]\d{1,2})\]$/)?.[1];
+  return text.split(/(\[[PANKIT]\d{1,2}\])/).map((part, index) => {
+    const code = part.match(/^\[([PANKIT]\d{1,2})\]$/)?.[1];
     return code && codes.has(code) ? <a key={index} className="pc-cite" href={`#${prefix}-${code}`}>{code}</a> : code ? null : part;
   });
 }
@@ -31,7 +31,7 @@ export default function AiSummaryCard({ topicId, period = {}, platforms = null, 
     if (!topicId) return;
     let active = true;
     api.get('/admin/pulse/topics/' + encodeURIComponent(topicId) + '/summary')
-      .then(data => { if (active) { setState(data); const made = Object.keys(data.summaries || {}); if (made.length && !data.summaries.brief) setFormat(made[0]); } })
+      .then(data => { if (active) { setState(data); setFormat(openingFormat(data)); } })
       .catch(() => { if (active) setState({ available: false, error: true, summaries: {} }); });
     return () => { active = false; };
   }, [topicId]);
@@ -50,7 +50,7 @@ export default function AiSummaryCard({ topicId, period = {}, platforms = null, 
     } finally { setBusy(''); }
   }
   if (!topicId || !state) return null;
-  const formats = state.formats?.length ? state.formats : fallbackFormats;
+  const formats = state.formats?.length ? state.formats : cardFormats;
   const summary = state.summaries?.[format];
   const thin = posts < (state.min_posts || 30);
   const stale = summary && posts > summary.scope.posts;
@@ -63,6 +63,7 @@ export default function AiSummaryCard({ topicId, period = {}, platforms = null, 
       <div className="pu-tag-group ais-formats" role="group" aria-label="Bentuk summary">{formats.map(item => <PulseTag key={item.key} size="lg" tone="accent" pressed={format === item.key} onClick={() => setFormat(item.key)}>{item.label}{state.summaries?.[item.key] ? '' : ' ·  baru'}</PulseTag>)}</div>
     </header>
     {summary ? <>
+      {stale && <p className="ais-stale" role="status">{formatCount(posts - summary.scope.posts)} posting baru belum masuk ringkasan ini. Angka di kartu lain sudah mencakupnya.</p>}
       <div className="ais-body" data-format={format}>{summary.sections.map((section, index) => <section key={index} data-kind={section.kind || 'text'}><h3>{section.title}</h3>
         <SummaryInfographic kind={section.kind} facts={summary.facts} />
         {section.paragraphs.map((text, i) => <p key={i}><Cited text={text} codes={codes} prefix={prefix} /></p>)}

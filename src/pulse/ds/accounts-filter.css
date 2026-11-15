@@ -1,0 +1,44 @@
+/* Akun & sumber teratas: the filter bar above the ranking, the ranking columns and the paging row.
+   Layout only. Buttons, chips and the input keep their size, radius and type from the --ps-control-* tokens. */
+
+/* ---------- Filter bar: search and sort, platform chips, result line ---------- */
+.pa-filter { display: grid; gap: var(--ps-space-3, 12px); margin: 0 var(--ps-surface-pad, 20px) var(--ps-space-4, 16px); min-width: 0; }
+.pa-filter-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ps-space-3, 12px) var(--ps-space-6, 24px); min-width: 0; }
+.pa-filter-search { flex: 1 1 260px; max-width: 420px; }
+.pa-filter-search > input { width: 100%; padding-left: 40px; }
+.pa-filter-group { display: flex; align-items: flex-start; gap: var(--ps-space-2, 8px) var(--ps-space-3, 12px); min-width: 0; }
+.pa-filter-sort { align-items: center; }
+.pa-filter-label { display: inline-flex; align-items: center; flex: 0 0 auto; min-height: var(--ps-control-sm, 36px); font-size: var(--ps-text-small, .75rem); font-weight: var(--ps-weight-label, 600); color: var(--ps-muted); }
+.pa-filter-divider { align-self: stretch; flex: 0 0 1px; margin: 6px 4px; background: var(--ps-line); }
+/* A pressed chip is lavender in both themes; its platform glyph takes the chip's ink so it stays visible on it. */
+.pa-filter button.pu-tag[data-platform][aria-pressed=true] { --tag-mark: var(--ps-accent-ink); }
+.pa-filter-result { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ps-space-1, 4px) var(--ps-space-3, 12px); min-height: var(--ps-control-sm, 36px); font-size: var(--ps-control-font-sm, .8125rem); color: var(--ps-muted); }
+.pa-filter-result > p { margin: 0; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.pa-filter-result > p > strong { color: var(--ps-ink); font-weight: var(--ps-weight-strong, 650); }
+.pa-filter-result > p:focus-visible, .pa-more > p:focus-visible { outline: var(--ps-control-focus, 2px solid currentColor); outline-offset: 4px; border-radius: var(--ps-radius-mark, 3px); }
+
+/* ---------- Ranking table: figures read right-aligned, the ranked column stands out ---------- */
+.pa-table :is(th, td):nth-child(n+2):nth-child(-n+4) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pulse-standalone.pulse-standalone .pa-table th[aria-sort] { color: var(--ps-ink); }
+.pa-table th[aria-sort]::after { content: ""; display: inline-block; width: 0; height: 0; margin-left: 6px; border-inline: 4px solid transparent; border-top: 5px solid currentColor; vertical-align: middle; }
+.pa-table td.pa-sorted { font-weight: var(--ps-weight-strong, 650); }
+
+/* ---------- Paging and the empty result ---------- */
+.pa-more { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ps-space-2, 8px) var(--ps-space-4, 16px); padding: var(--ps-space-4, 16px) var(--ps-surface-pad, 20px); border-top: 1px solid var(--ps-line); }
+.pa-more > p { margin: 0; font-size: var(--ps-control-font-sm, .8125rem); line-height: 1.5; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pa-empty { margin: 0 var(--ps-surface-pad, 20px) var(--ps-space-4, 16px); }
+
+@media (max-width: 700px) {
+  .pa-filter, .pa-empty { margin-inline: var(--ps-surface-pad-sm, 16px); }
+  .pa-filter-search { flex-basis: 100%; max-width: none; }
+  .pa-filter-group { flex-direction: column; align-items: stretch; gap: var(--ps-space-1, 4px); }
+  .pa-filter-label { min-height: 0; }
+  .pa-filter-sort { flex: 1 1 100%; }
+  .pa-filter-sort > .pm-view-switch > .pu-button { flex: 1 1 0; }
+  .pa-filter-divider { display: none; }
+  .pa-more { padding-inline: var(--ps-surface-pad-sm, 16px); }
+  /* The three leaders stack, so a seven-digit follower count has the full width. */
+  .pa-ranking .pulse-leader-strip .pu-stat-grid { grid-template-columns: minmax(0, 1fr); }
+  .pa-ranking .pulse-leader-strip .pu-stat { min-height: 0; }
+}
+@media print { .pa-filter-row, .pa-filter-group, .pa-filter-result > .pu-button, .pa-more > .pu-button { display: none; } }

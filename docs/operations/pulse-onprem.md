@@ -35,6 +35,8 @@ Set `PULSE_ORIGIN` to the exact HTTPS origin without trailing slash, provide pro
 
 The package has not been started on this machine: Docker daemon was unavailable during verification. Image build, TLS and backup/restore must be verified on the deployment host. API has no published host port and trusts forwarded headers only from the proxy's reserved address (`PULSE_PROXY_IP`, default `172.30.82.2`). Nginx overwrites scheme and client IP. If the default `172.30.82.0/24` subnet conflicts with your LAN/Docker networks, set `PULSE_NETWORK_CIDR` and a matching `PULSE_PROXY_IP` together. Never expose the API container port or attach untrusted containers to the network.
 
+Response headers have not been checked on a running nginx either. On the deployment host, `curl -skI https://<origin>/pulse/sentiment` must show `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` and `Cache-Control: no-store`; `curl -skI https://<origin>/pulse/brand/icon.svg` must show the first three and no `Cache-Control`. Every `add_header` stays at server level in `deploy/pulse/nginx.conf`: a location with its own `add_header` stops inheriting the list (guarded by `src/pulse/deploy-nginx.test.mjs`).
+
 ### Controls
 
 - Passwords: salted PBKDF2-HMAC-SHA256, 600,000 iterations; 12–128 characters.
@@ -48,6 +50,14 @@ The package has not been started on this machine: Docker daemon was unavailable 
 
 Chronological cards use stored publication times; first observed is not proven origin. Relationships distinguish mention and similarity from proven reposts. Account profile fields must carry observed/unknown status, and demographics must not be guessed. No additional OSINT provider or model has been activated in this release.
 
+The paid collection lane is stored under its supplier's name (`pulse_worker_policies.provider`, `pulse_monitor_schedules.provider`, `watch_topics.sources`, `source_items.source`) and environment variables keep that name too. The API calls the same lane `social` in every answer and accepts `social` in `PUT /monitor/workers/{provider}` and `/monitor/topics/{id}/{provider}`; use the stored name in SQL and `social` in API calls.
+
+Which engine and prompt version produced a sentiment, emotion or stance label is kept with the stored result (`metrics.sentiment.model` and `.method` on a post, `result.model` on a response-analysis job) for audit and re-runs. The API never returns those fields and a report is filed without them, so look in the database, not in the browser, when you need them.
+
 The Infografik view counts document frequency (one occurrence per post) after stripping RSS HTML markup, common Indonesian words, URLs and handles. Word clicks show up to ten matching source posts. Publishing-hour bars use observed timestamps converted to WIB, not crawl times. Jakarta heat cells require valid coordinates, positive counts and provenance; the current issue has no mapped coordinates. The locally bundled 2017 outline is reference context only: see `deploy/pulse/MAP-ATTRIBUTION.md` for OpenStreetMap/geoBoundaries source and ODbL terms. No live map tiles or geocoding service is called.
 
 References: [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [OWASP sessions](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+
+### Report PDF
+
+The API container carries Chromium to turn the report into a PDF (`POST /api/admin/pulse/reports/pdf`). The browser sends the report pages as one HTML document; the server checks that the document points at nothing outside itself (no scripts, frames, remote or local addresses, only embedded pictures and ordinary links) and refuses it otherwise, then renders it with Chromium started without network. `PULSE_CHROMIUM` names the binary; `PULSE_CHROMIUM_NO_SANDBOX=true` is set in the image because a container usually cannot give Chromium its own sandbox. If no Chromium is found the endpoint answers 503 and the app offers the browser's print dialog instead. The image grows by roughly 300 MB. This image has not been built on this machine (the Docker daemon was unavailable): on the deployment host, build it and download one report to confirm fonts and page breaks. nginx accepts a 12 MB body for this one route.

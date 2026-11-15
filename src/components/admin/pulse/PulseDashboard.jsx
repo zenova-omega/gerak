@@ -1,10 +1,10 @@
 import { PulseArrow } from '../../ui/PulseArrow';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Activity, RefreshCw, Download, Database, ExternalLink, MapPin, ShieldCheck, AlertCircle, Radio, Users, Layers } from 'lucide-react';
+import { Activity, RefreshCw, Download, Database, ExternalLink, MapPin, ShieldCheck, AlertCircle, Radio, Users, Layers, Search, X } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useTopics, useIssues, usePulseAnalytics } from '../../../hooks/usePulse';
-import { allegationLabel, formatCount, observedAccounts, providerResults, pulseError } from '../../../lib/pulseData';
+import { allegationLabel, formatCount, providerResults, pulseError } from '../../../lib/pulseData';
 import { PlatformIcon, platformLabel } from './PlatformIcon';
 import PlatformCheckboxes from './PlatformCheckboxes';
 import TopicManager from './TopicManager';
@@ -30,13 +30,17 @@ import SentimentEvaluation from '../../../pulse/SentimentEvaluation';
 import AccountRankingRow from './AccountRankingRow';
 import OverviewAnalytics from '../../../pulse/ProjectOverview';
 import SentimentAnalytics from '../../../pulse/SentimentAnalytics';
+import TrendChart from '../../../pulse/TrendChart';
 import ProjectReport from '../../../pulse/ProjectReport';
 import useProjectPlatforms from '../../../pulse/useProjectPlatforms';
 import {scopeProjectData,projectPlatformOptions} from '../../../lib/pulseProjectFilters';
 import ResponseAnalysisPanel, { ResponseAnalysisSummary } from '../../../pulse/ResponseAnalysisPanel';
-import { PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
-import { PulseTag, SentimentTag } from '../../ui/PulseTag';
+import { PulsePanelEmpty, PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
+import { PlatformTag, PulseTag, SentimentTag } from '../../ui/PulseTag';
 import { ProjectPostsContext } from '../../../pulse/projectPosts';
+import AccountAvatar from './AccountAvatar';
+import { accountPageSize, accountPlatforms, accountRanking, isAccountFiltered, pageOf, platformFacets, readAccountFilters, socialPlatforms, togglePlatform, withFollowers, withoutAccountFilters, writeAccountFilters } from '../../../lib/pulseAccountFilters';
+import '../../../pulse/ds/accounts-filter.css';
 
 function Empty({ children }) {
   return <div className="pulse-empty"><Database size={25} strokeWidth={1.3} /><p>{children}</p></div>;
@@ -51,18 +55,83 @@ const sentimentScoped = ['comments', 'accounts', 'network', 'infographics'];
 function Panel({ title, note, children, className = '' }) {
   return <section className={'pulse-panel ' + className}><div className="pulse-panel-heading"><div><h2>{title}</h2>{note && <p>{note}</p>}</div></div>{children}</section>;
 }
+// Sort choices of the account ranking: key, button label, how the figure is named in a sentence, unit under a leader tile.
+const accountSortChoices = [['engagement', 'Interaksi', 'interaksi', 'interaksi, angka terakhir'], ['mentions', 'Posting', 'jumlah posting', 'posting'], ['followers', 'Pengikut', 'pengikut', 'pengikut']];
+/** "Akun & sumber teratas": one filter bar (search, sort, platform chips with counts), the three leaders, and the
+ * ranking table fifty rows at a time. Filters live in the URL query; the logic is in lib/pulseAccountFilters. */
+function AccountRanking({ accounts, posts }) {
+  const [params, setParams] = useSearchParams();
+  const rows = useMemo(() => withFollowers(accounts, posts), [accounts, posts]);
+  const available = useMemo(() => accountPlatforms(rows), [rows]);
+  // Read once per render into plain values, so the memoised lists below depend on strings only.
+  const stored = readAccountFilters(params, available);
+  const sort = stored.sort, storedQuery = stored.query, platformKey = stored.platforms ? stored.platforms.join(',') : '';
+  const platforms = useMemo(() => platformKey ? platformKey.split(',') : null, [platformKey]);
+  // The typed text filters at once; the URL follows when typing pauses. Every write starts from the address bar,
+  // not from the params of the last render: the router applies a change a moment later, and a second write made
+  // in that moment (a chip right after typing, another filter on the page) must not undo the first.
+  const [query, setQuery] = useState(storedQuery);
+  const write = useCallback(patch => {
+    const next = writeAccountFilters(window.location.search, patch);
+    if (next.toString() !== new URLSearchParams(window.location.search).toString()) setParams(next, { replace: true });
+  }, [setParams]);
+  useEffect(() => {
+    if (query.trim() === storedQuery) return;
+    const timer = setTimeout(() => write({ query }), 300);
+    return () => clearTimeout(timer);
+  }, [query, storedQuery, write]);
+  const ranking = useMemo(() => accountRanking(rows, { platforms, query, sort }), [rows, platforms, query, sort]);
+  const facets = useMemo(() => platformFacets(rows, query), [rows, query]);
+  // Paging starts over whenever the filter or the order changes.
+  const signature = [platformKey, sort, query.trim().toLowerCase()].join('|');
+  const [paging, setPaging] = useState({ signature, pages: 1 });
+  const pages = paging.signature === signature ? paging.pages : 1;
+  const page = pageOf(ranking.rows, pages);
+  const filtered = isAccountFiltered({ platforms, query });
+  const resultStatus = useRef(null), moreStatus = useRef(null);
+  const clear = () => { setQuery(''); write({ platforms: null, query: '' }); resultStatus.current?.focus(); };
+  const showMore = () => { if (page.remaining <= accountPageSize) moreStatus.current?.focus(); setPaging({ signature, pages: pages + 1 }); };
+  const social = available.filter(platform => socialPlatforms.includes(platform));
+  const socialOn = platforms !== null && platforms.length === social.length && social.every(platform => platforms.includes(platform));
+  const matchCount = list => facets.filter(facet => !list || list.includes(facet.platform)).reduce((sum, facet) => sum + facet.count, 0);
+  const [, , sortName, sortUnit] = accountSortChoices.find(([key]) => key === sort);
+  const leaders = query.trim() ? [] : ranking.rows.slice(0, 3).filter(row => row.rank !== null);
+  const followersKnown = ranking.rows.filter(row => row.followers !== null).length;
+  const sortColumn = key => sort === key ? 'descending' : undefined;
+  const drilldown = withoutAccountFilters(params).toString();
+  return <Panel className="pa-ranking" title="Akun & sumber teratas" note="Ranking dihitung ulang dari posting dalam periode project. Interaksi adalah angka terakhir yang tercatat, bukan pertambahan selama periode.">
+    {ranking.total > 0 && <div className="pa-filter" role="search" aria-label="Saring akun dan sumber">
+      <div className="pa-filter-row">
+        <label className="pu-search pa-filter-search"><Search aria-hidden="true" /><span className="pu-sr">Cari akun atau sumber</span><input type="search" value={query} maxLength={80} onChange={event => setQuery(event.target.value)} placeholder="Cari nama akun atau sumber" /></label>
+        <div className="pa-filter-group pa-filter-sort" role="group" aria-label="Urutkan menurut"><span className="pa-filter-label" aria-hidden="true">Urutkan</span><div className="pm-view-switch">{accountSortChoices.map(([key, label]) => <PulseButton key={key} aria-pressed={sort === key} onClick={() => write({ query, sort: key })}>{label}</PulseButton>)}</div></div>
+      </div>
+      {available.length > 1 && <div className="pa-filter-group" role="group" aria-label="Saring menurut platform"><span className="pa-filter-label" aria-hidden="true">Platform</span><div className="pu-tag-group">
+        <PulseTag size="lg" tone="accent" pressed={platforms === null} count={formatCount(matchCount())} onClick={() => write({ query, platforms: null })}>Semua</PulseTag>
+        {social.length > 1 && social.length < available.length && <><PulseTag size="lg" tone="accent" pressed={socialOn} count={formatCount(matchCount(social))} onClick={() => write({ query, platforms: socialOn ? null : social })}>Media sosial</PulseTag><span className="pa-filter-divider" aria-hidden="true" /></>}
+        {facets.map(({ platform, count }) => <PlatformTag key={platform} size="lg" platform={platform} count={formatCount(count)} pressed={platforms !== null && platforms.includes(platform)} onClick={() => write({ query, platforms: togglePlatform(platforms, platform, available) })}>{platform === 'unknown' ? 'Lainnya' : undefined}</PlatformTag>)}
+      </div></div>}
+      <div className="pa-filter-result"><p ref={resultStatus} tabIndex={-1} role="status"><strong>{formatCount(ranking.rows.length)}</strong> dari {formatCount(ranking.total)} akun{sort === 'followers' && ranking.rows.length > 0 && <span>{followersKnown ? ` · pengikut tercatat pada ${formatCount(followersKnown)} akun, sisanya di urutan akhir` : ' · belum ada data pengikut, urutan mengikuti interaksi'}</span>}</p>{filtered && <PulseButton variant="quiet" size="sm" onClick={clear}><X aria-hidden="true" />Hapus semua filter</PulseButton>}</div>
+    </div>}
+    {leaders.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + sortName}>{leaders.map(row => <PulseStat key={row.rank} media={<AccountAvatar author={row.author} platform={row.platform} />} label={`#${formatCount(row.rank)} · ${platformLabel(row.platform)}`} value={row[sort]} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {sortUnit}</>} />)}</PulseStatGrid></div>}
+    {ranking.rows.length ? <>
+      <div className="pulse-table-wrap"><table className="pulse-ranking pa-table"><thead><tr><th scope="col">Akun / sumber</th><th scope="col" aria-sort={sortColumn('mentions')}>Posting <PulseArrow/></th><th scope="col" aria-sort={sortColumn('engagement')}>Interaksi</th><th scope="col" aria-sort={sortColumn('followers')}>Pengikut</th><th scope="col"><span className="sr-only">Bukti</span></th></tr></thead><tbody>{page.visible.map((row, index) => <AccountRankingRow key={row.platform + ':' + row.author + ':' + index} row={row} sort={sort} search={drilldown} />)}</tbody></table></div>
+      {ranking.rows.length > accountPageSize && <div className="pa-more">{page.remaining > 0 && <PulseButton onClick={showMore}>Tampilkan {formatCount(page.next)} lagi</PulseButton>}<p ref={moreStatus} tabIndex={-1} role="status">{page.remaining > 0 ? `${formatCount(page.visible.length)} dari ${formatCount(ranking.rows.length)} akun ditampilkan, ${formatCount(page.remaining)} lagi belum.` : `Semua ${formatCount(ranking.rows.length)} akun sudah ditampilkan.`}</p></div>}
+    </> : ranking.total > 0 ? <div className="pa-empty"><PulsePanelEmpty title="Tidak ada akun yang cocok">Ubah kata pencarian, pilih platform lain, atau hapus semua filter.</PulsePanelEmpty></div> : <Empty>Belum ada akun untuk diperingkat. Metrik yang tidak tersedia bukan nol.</Empty>}
+    <p className="pulse-footnote">Nomor peringkat dihitung di antara platform yang dipilih dan tidak berubah saat nama dicari. Pengikut adalah angka terakhir yang tercatat pada posting akun. Angka di sini bukan jangkauan maupun skor pengaruh. “—” berarti angka tidak tersedia, bukan nol.</p>
+  </Panel>;
+}
 function Analytics({ data, view = 'all', period, onPeriodChange, topic, selectedPlatforms=null, onPlatformsChange, availablePlatforms=projectPlatformOptions }) {
   const [analysisParams]=useSearchParams();
   const analysisNavigate=useNavigate();
   const sentiment=analysisParams.get('sentiment');
   const postAuthor=analysisParams.get('author') || '';
   const postPlatform=analysisParams.get('platform') || '';
+  const postProvince=analysisParams.get('province') || '';   // from the spread map: posts that name one province
   const openSentiment=value=>{const next=new URLSearchParams(analysisParams);next.set('sentiment',value);analysisNavigate('/pulse/posts?'+next.toString());};
-  const [rankBy, setRankBy] = useState('engagement');
-  const [accountQuery, setAccountQuery] = useState('');
-  const [accountKind,setAccountKind]=useState('all');
-  const allAccounts = observedAccounts(data.influencers, rankBy).filter(row=>accountKind==='all'||(accountKind==='social'?['x','instagram','tiktok','youtube','facebook'].includes(row.platform):row.platform==='news'));
-  const accounts = allAccounts.filter(row => `${row.author || ''} ${row.platform || ''}`.toLowerCase().includes(accountQuery.trim().toLowerCase()));
+  // A day, week or month picked on the trend chart filters the list below it; the chart itself keeps the whole period.
+  const pickedDay=analysisParams.get('day')||'',pickedDayTo=analysisParams.get('day_to')||'';
+  const pickDates=(from,to)=>{const next=new URLSearchParams(analysisParams);next.delete('day');next.delete('day_to');if(from){next.set('day',from);if(to&&to!==from)next.set('day_to',to);}analysisNavigate('/pulse/posts?'+next.toString());};
+  const allAccounts = data.influencers || [];
   const totals = data.metric_totals || {};
   const coverage = key => `${formatCount(totals[key]?.coverage)} dari ${formatCount(data.total_mentions)} posting memiliki metrik`;
   const platforms = [...data.platforms].sort((a, b) => b.count - a.count);
@@ -115,22 +184,16 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
     </>}
     {view === 'accounts' && <PulseStatGrid label="Ringkasan akun dan sumber"><PulseStat label="Akun / sumber unik" icon={Users} value={allAccounts.length} note="Per platform, termasuk penerbit berita" /><PulseStat label="Posting terkumpul" icon={Radio} value={data.total_mentions} note={allAccounts.length ? `${(data.total_mentions / allAccounts.length).toLocaleString('id-ID', { maximumFractionDigits: 1 })} posting per akun · ${platforms.length} platform` : `${platforms.length} platform`} /><PulseStat label="Interaksi teramati" icon={Activity} value={totals.engagement?.value ?? null} share={data.total_mentions ? (totals.engagement?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting bermetrik" /><PulseStat label="Tayangan teramati" icon={Layers} value={totals.views?.value ?? null} share={data.total_mentions ? (totals.views?.coverage || 0) / data.total_mentions * 100 : null} shareLabel="posting punya tayangan" note="Bukan audiens unik" /></PulseStatGrid>}
     {['all', 'accounts'].includes(view) && <div className="pulse-detail-grid">
-      <Panel title="Akun & sumber teratas" note="Ranking dihitung ulang dari posting dalam periode project. Interaksi adalah angka terakhir yang tercatat, bukan pertambahan selama periode.">
-        <label className="pulse-narrative-select">Jenis sumber ranking<select value={accountKind} onChange={e=>setAccountKind(e.target.value)}><option value="all">Semua akun & sumber</option><option value="social">Akun media sosial</option><option value="news">Sumber berita</option></select></label>
-        <div className="pulse-filters ps-account-search"><label>Cari akun atau platform<input type="search" value={accountQuery} onChange={event => setAccountQuery(event.target.value)} placeholder="Nama akun, Instagram, YouTube…" /></label><span role="status">{accounts.length} dari {allAccounts.length} akun</span>{accountQuery && <PulseButton onClick={() => setAccountQuery('')}>Hapus pencarian</PulseButton>}</div>
-        <div className="pulse-ranking-controls pu-tag-group" role="group" aria-label="Urutan ranking"><PulseTag size="lg" tone="accent" pressed={rankBy === 'engagement'} onClick={() => setRankBy('engagement')}>Interaksi tertinggi</PulseTag><PulseTag size="lg" tone="accent" pressed={rankBy === 'mentions'} onClick={() => setRankBy('mentions')}>Posting terbanyak</PulseTag></div>
-        {!accountQuery.trim() && accounts.length > 0 && <div className="pulse-leader-strip"><PulseStatGrid label={'Tiga teratas menurut ' + (rankBy === 'mentions' ? 'jumlah posting' : 'interaksi')}>{accounts.slice(0, 3).map((row, i) => <PulseStat key={row.platform + row.author} label={`#${i + 1} · ${platformLabel(row.platform)}`} value={row[rankBy] ?? null} note={<><strong>{row.author || 'Penulis tidak diketahui'}</strong> · {rankBy === 'mentions' ? 'posting' : 'interaksi, angka terakhir'}</>} />)}</PulseStatGrid></div>}
-        {accounts.length ? <div className="pulse-table-wrap"><table className="pulse-ranking"><thead><tr><th scope="col">Akun / sumber</th><th scope="col">Posting <PulseArrow/></th><th scope="col">Interaksi</th><th scope="col">Porsi posting</th><th scope="col"><span className="sr-only">Bukti</span></th></tr></thead><tbody>{accounts.map((row, index) => <AccountRankingRow key={row.platform + ':' + row.author + ':' + index} row={row} rank={allAccounts.indexOf(row)+1} posts={data.posts||[]} total={data.total_mentions} search={analysisParams.toString()}/>)}</tbody></table></div> : <Empty>{accountQuery ? "Tidak ada akun yang cocok. Ubah atau hapus pencarian." : "Belum ada akun untuk diperingkat. Metrik yang tidak tersedia bukan nol."}</Empty>}
-        <p className="pulse-footnote">Porsi posting = jumlah posting akun ÷ seluruh posting project pada periode ini, termasuk posting tanpa nama akun. Penyebut tidak berubah saat pencarian atau jenis sumber disaring. Bukan jangkauan maupun skor pengaruh. “—” berarti metrik tidak tersedia, bukan nol.</p>
-      </Panel>
+      <AccountRanking accounts={data.influencers} posts={data.posts} />
       {view === 'all' && <Panel title="Cakupan geografis" note="Lokasi hanya ditampilkan jika tersedia dari sumber">
         <GeographicView locations={data.locations} unknownCount={data.unknown_location_count} />
       </Panel>}
     </div>}
     {['all', 'network'].includes(view) && <NetworkAnalysis key={'network-' + (data.posts?.[0]?.id || 'empty')} data={data.network} posts={data.posts || []} locations={data.locations||[]} unknownCount={data.unknown_location_count||0} />}
     {['all', 'comments'].includes(view) && <>{responsePanel}<CommentsPanel key={'comments-' + (data.posts?.[0]?.id || 'empty')} posts={data.posts || []} topicId={topic?.id||analysisParams.get('topic')} /></>}
-    {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postPlatform,analysisParams.get('day'),analysisParams.get('find')].join(':')} initialQuery={analysisParams.get('find') || ''} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={analysisParams.get('day')||''} initialSentiment={sentiment} initialAuthor={postAuthor} initialPlatform={postPlatform} />}
-    {['all', 'infographics'].includes(view) && <div id="pulse-infographics-view"><InfographicsPanel posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></div>}
+    {view === 'posts' && <TrendChart dense title="Tren posting" posts={data.posts || []} period={period} selected={pickedDay ? { from: pickedDay, to: pickedDayTo || pickedDay } : null} onPick={row => pickDates(row.from, row.to)} onClear={() => pickDates('', '')} />}
+    {['all', 'posts'].includes(view) && <PostFeed key={[analysisParams.get('topic'),sentiment,postAuthor,postPlatform,postProvince,pickedDay,pickedDayTo,analysisParams.get('find')].join(':')} initialProvince={postProvince} initialQuery={analysisParams.get('find') || ''} posts={data.posts || []} period={period} onPeriodChange={onPeriodChange} topicId={analysisParams.get('topic')||''} initialDay={pickedDay} initialDayTo={pickedDayTo} initialSentiment={sentiment} initialAuthor={postAuthor} initialPlatform={postPlatform} />}
+    {['all', 'infographics'].includes(view) && <div id="pulse-infographics-view"><InfographicsPanel ranged={false} posts={data.posts || []} locations={data.locations || []} unknownCount={data.unknown_location_count} /></div>}
   </>;
 }
 

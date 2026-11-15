@@ -20,3 +20,11 @@ export function responseEvidence(posts=[],data){
  });
  return {posts:enriched,comments:enriched.flatMap(p=>p.responseComments),stanceCounts,commentCounts,commentStanceCounts,target:data?.target||''};
 }
+
+/** Shares of a breakdown, read over what has been analysed. `unknown` is coverage, not a category: it has no share,
+ * so a small analysed sample never reads as "0,9% negatif" of everything stored.
+ * @returns {{total:number, analysed:number, percent:(key:string)=>number|null}} `percent` is null for `unknown` and when nothing is analysed. */
+export function analysedShares(counts){
+  const total=Object.values(counts).reduce((a,b)=>a+b,0),analysed=total-(counts.unknown||0);
+  return {total,analysed,percent:key=>key==='unknown'||!analysed?null:(counts[key]||0)/analysed*100};
+}

@@ -1,3 +1,4 @@
+import { PulseRepostNote } from '../../ui/PulseMetricRow';
 import { Link } from 'react-router-dom';
 import { PulseArrow } from '../../ui/PulseArrow';
 import React, { createElement, useEffect, useState } from 'react';
@@ -7,7 +8,7 @@ import { ExternalLink, List, LayoutGrid, Sparkles, ChevronDown } from 'lucide-re
 import { PulseLike, PulseComment, PulseShare, PulseView } from '../../ui/PulseMetricIcons';
 import { postInteractions } from '../../../lib/pulseEngagement';
 import { PulseEngagement } from '../../ui/PulseEngagement';
-import { formatCount } from '../../../lib/pulseData';
+import { formatCount, pulseDate } from '../../../lib/pulseData';
 import { postMedia } from '../../../lib/pulseMedia';
 import PostMediaPreview from './PostMediaPreview';
 import { platformLabel } from './PlatformIcon';
@@ -25,11 +26,10 @@ import PostQuickFilters from './PostQuickFilters';
 import '../../../pulse/mentions-workspace.css';
 import '../../../pulse/overview-analytics.css';
 import { defaultPostFilters, filterPosts, sentimentLabels, postSentiment } from '../../../lib/pulsePostFilters';
+import { namesProvince, provinceNames } from '../../../lib/pulsePlaces';
 
-function date(value) {
-  if (!value) return 'Waktu tidak tersedia';
-  return new Date(value.endsWith('Z') || /[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z').toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-}
+// One formatter for the whole product: WIB with its label, and a date alone when the source gave no clock.
+const date = pulseDate;
 
 const summaryParts=[['likes','Suka',PulseLike],['comments','Komentar',PulseComment],['shares','Bagikan',PulseShare],['views','Tayangan',PulseView]];
 /** One post. Collapsed it answers "who, what, how much, what tone" in a few lines so a list can be
@@ -45,7 +45,7 @@ function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
       <PostCaption post={post}/>
     </div>
     <div className="pm-post-summary">
-      <dl aria-label="Ringkasan interaksi"><div className="pm-post-total"><dt>Interaksi</dt><dd>{total == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(total)}</dd></div>{summaryParts.map(([key,label,icon])=><div key={key} data-part={key}><dt>{createElement(icon,{size:15})}<span className="pu-sr">{names[key]||label}</span></dt><dd title={names[key]||label}>{Number.isFinite(post.metrics?.[key]) ? formatCount(post.metrics[key]) : <span aria-label="Tidak tersedia">—</span>}</dd></div>)}</dl>
+      <dl aria-label="Ringkasan interaksi"><div className="pm-post-total"><dt>Interaksi</dt><dd>{total == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(total)}</dd></div>{summaryParts.map(([key,label,icon])=><div key={key} data-part={key}><dt>{createElement(icon,{size:15})}<span className="pu-sr">{names[key]||label}</span></dt><dd title={names[key]||label}>{Number.isFinite(post.metrics?.[key]) ? formatCount(post.metrics[key]) : <span aria-label="Tidak tersedia">—</span>}</dd></div>)}<PulseRepostNote metrics={post.metrics} /></dl>
       <PulseButton variant="quiet" aria-expanded={open} aria-controls={detailId} onClick={()=>setOpen(value=>!value)}>{open?'Tutup rincian':'Rincian & tinjauan'}<ChevronDown size={16} aria-hidden="true"/></PulseButton>
     </div>
     {open && <div className="pm-post-detail" id={detailId}>
@@ -60,9 +60,11 @@ function PostCard({ post, topicId, review, reviewsReady, onReviewSaved }) {
   </article>;
 }
 
-export default function PostFeed({ posts = [], period, onPeriodChange, initialSentiment, initialAuthor='', initialPlatform='', initialDay='', initialQuery='', topicId='' }) {
-  const day=/^\d{4}-\d{2}-\d{2}$/.test(initialDay)&&!Number.isNaN(Date.parse(initialDay))?initialDay:'';
-  const [filters, setFilters] = useState({...defaultPostFilters,query:initialQuery,from:day,to:day,exactAuthor:initialAuthor,platforms:initialPlatform?initialPlatform.split(',').filter(Boolean):null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
+export default function PostFeed({ posts = [], period, onPeriodChange, initialSentiment, initialAuthor='', initialPlatform='', initialProvince='', initialDay='', initialDayTo='', initialQuery='', topicId='' }) {
+  const isDay=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value));
+  // One day, or a first and last day when a week or month was picked on the trend chart.
+  const day=isDay(initialDay)?initialDay:'',dayTo=day&&isDay(initialDayTo)&&initialDayTo>=day?initialDayTo:day;
+  const [filters, setFilters] = useState({...defaultPostFilters,query:initialQuery,from:day,to:dayTo,exactAuthor:initialAuthor,province:provinceNames[initialProvince]?initialProvince:'',platforms:initialPlatform?initialPlatform.split(',').filter(Boolean):null,sentiments:sentimentLabels[initialSentiment]?[initialSentiment]:null});
   const [page, setPage] = useState(0);
   const [layout, setLayout] = useState('list');
   const [reviewState, setReviewState] = useState({topicId:'', loaded:false, rows:[], error:''});
@@ -81,7 +83,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
   const reviews = new Map((reviewsReady ? reviewState.rows : []).map(review=>[review.post_id,review]));
   const applyFilters = next => { setFilters(next); setPage(0); };
   const effectivePosts = posts;
-  const rows = filterPosts(effectivePosts,filters);
+  const rows = filterPosts(effectivePosts,filters).filter(post=>namesProvince(post,filters.province));
   const pages = Math.max(1, Math.ceil(rows.length / 12));
   const current = Math.min(page, pages - 1);
   return <section id="pulse-posts" className="pulse-post-feed pm-workspace" data-layout={layout} aria-label="Posting terkumpul">
@@ -92,7 +94,7 @@ export default function PostFeed({ posts = [], period, onPeriodChange, initialSe
     <details className="pm-timeline-disclosure"><summary>Timeline percakapan</summary><MentionTimeline posts={posts} filters={period?{...filters,...period}:filters} globalPeriod={!!period} onApply={next=>{if(onPeriodChange)onPeriodChange({from:next.from,to:next.to});else setFilters(next);setPage(0);}}/></details>
     <PostFilterDrawer posts={effectivePosts} filters={filters} topicId={topicId} globalPeriod={!!period} onApply={next=>{setFilters(next);setPage(0);}}/>
     </div>
-    <div className="ps-active-filters" aria-label="Filter aktif">{Object.entries(filters).filter(([k,v])=>k!=='sort' && v!==defaultPostFilters[k]).map(([key,value])=><PulseTag key={key} size="lg" variant="outline" onRemove={()=>{setFilters({...filters,[key]:defaultPostFilters[key]});setPage(0);}} removeLabel={'Hapus filter '+key}>{({query:'Teks',author:'Akun',exactAuthor:'Akun terpilih',sentiments:'Sentimen',platforms:'Platform',minEngagement:'Min. interaksi',media:'Media',from:'Mulai',to:'Selesai'})[key]}: {Array.isArray(value)?value.map(v=>sentimentLabels[v]||platformLabel(v)).join(', ')||'Tidak ada':value}</PulseTag>)}</div>
+    <div className="ps-active-filters" aria-label="Filter aktif">{Object.entries(filters).filter(([k,v])=>k!=='sort' && v!==defaultPostFilters[k]).map(([key,value])=><PulseTag key={key} size="lg" variant="outline" onRemove={()=>{setFilters({...filters,[key]:defaultPostFilters[key]});setPage(0);}} removeLabel={'Hapus filter '+key}>{({query:'Teks',author:'Akun',exactAuthor:'Akun terpilih',province:'Menyebut tempat di',sentiments:'Sentimen',platforms:'Platform',minEngagement:'Min. interaksi',media:'Media',from:'Mulai',to:'Selesai'})[key]}: {Array.isArray(value)?value.map(v=>sentimentLabels[v]||platformLabel(v)).join(', ')||'Tidak ada':key==='province'?provinceNames[value]:value}</PulseTag>)}</div>
     <div className="pm-results-toolbar"><p role="status"><strong>{formatCount(rows.length)}</strong> posting cocok <span>· {rows.length ? current * 12 + 1 : 0}–{Math.min((current+1)*12,rows.length)} ditampilkan</span></p><div className="pm-view-switch" role="group" aria-label="Tampilan posting"><PulseButton aria-pressed={layout==='list'} onClick={()=>setLayout('list')}><List size={16}/>Daftar</PulseButton><PulseButton aria-pressed={layout==='grid'} onClick={()=>setLayout('grid')}><LayoutGrid size={16}/>Grid media</PulseButton></div></div>
     <div className="pm-results-layout"><div className="pm-results-main">
     <div className="pulse-post-grid">{rows.slice(current * 12, (current + 1) * 12).map(post => <PostCard key={post.id} post={post} topicId={topicId} review={reviews.get(post.id)} reviewsReady={reviewsReady}

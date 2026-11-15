@@ -22,7 +22,7 @@ async def test_connection_checks_identity_permissions_and_posts():
         assert 'test-token' not in str(request.url)
         payloads = {
             '/v1.0/me': {'id': '123', 'username': 'zenova.tech.group'},
-            '/v1.0/me/permissions': {'data': [{'permission': 'threads_basic', 'status': 'granted'}]},
+            '/v1.0/debug_token': {'data': {'is_valid': True, 'scopes': ['threads_basic'], 'expires_at': 1799999999}},
             '/v1.0/me/threads': {'data': []},
         }
         return httpx.Response(200, json=payloads[request.url.path])

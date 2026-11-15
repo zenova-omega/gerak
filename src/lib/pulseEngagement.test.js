@@ -25,3 +25,14 @@ test('project summary counts coverage per metric and rates only posts with views
   assert.equal(percentLabel(0.256, 1), '25,6%');
   assert.equal(percentLabel(null), null);
 });
+
+test('content shared by reposters counts the original post once', async () => {
+  const { contentShares } = await import('./pulseEngagement.js');
+  const repost = shares => ({ metrics: { likes: 0, comments: 0, shares: 0, repost: true, original_shares: shares } });
+  const original = { metrics: { likes: 900, comments: 40, shares: 36254, repost: false } };
+  assert.equal(contentShares([repost(7046), repost(7060), repost(36254)]), 36254, 'the original was not collected: its largest observed count');
+  assert.equal(contentShares([original, repost(7046), repost(36254)]), 36254, 'the original was collected: nothing is added twice');
+  assert.equal(contentShares([original, { metrics: { shares: 10 } }]), 36264, 'two posts of their own add up');
+  assert.equal(contentShares([{ metrics: {} }, { metrics: { likes: 3 } }]), null, 'no share figure at all stays unknown');
+  assert.equal(contentShares([{ metrics: { shares: 0 } }]), 0);
+});

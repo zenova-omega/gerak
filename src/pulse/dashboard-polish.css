@@ -34,7 +34,11 @@
 @media(max-width:600px) { .ps-page-guide dl { grid-template-columns:1fr; gap:4px; } .ps-page-guide dd { margin-bottom:12px; } }
 .pulse-standalone .pulse-signals-list summary > b { background:var(--ps-soft); color:var(--ps-ink); border:1px solid var(--ps-line); }
 .pulse-standalone .pulse-signals-list summary > b.has-signal { background:var(--ps-peach); color:var(--ps-warning-ink); border-color:var(--ps-peach); }
-.pulse-standalone .pulse-signals-list summary > span { color:var(--ps-muted); }
+/* Every label inside the row, nested ones too: the older sheet paints them an olive grey that is dim on a dark panel
+   and overrides the ink of a tag. A tag keeps its own ink. */
+.pulse-standalone .pulse-signals-list summary span { color:var(--ps-muted); }
+.pulse-standalone .pulse-signals-list summary :is(.pu-tag, .pu-tag-label) { color:var(--tag-ink); }
+.pulse-standalone .pulse-evidence-list :is(time, small) { color:var(--ps-muted); }
 .pulse-standalone .pulse-signals-list summary .pulse-signal-mark { background:var(--ps-lavender); color:var(--ps-accent-ink); }
 .pulse-standalone .pulse-signals-list summary .pulse-signal-mark.automation { background:var(--ps-peach); color:var(--ps-warning-ink); }
 .pulse-standalone .pulse-signals-list summary .pulse-signal-mark span { color:inherit; }

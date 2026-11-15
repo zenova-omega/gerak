@@ -11,7 +11,8 @@ import { formatCount, safeSourceUrl } from '../lib/pulseData';
 
 const clean = post => (post.title || post.text || '').replace(/\s+/g, ' ').trim();
 // The categorical chart palette: readable in both themes and not tied to sentiment or platform.
-const tones = [1, 2, 3, 4, 5, 6].map(n => `var(--ps-chart-${n})`);
+// Words are text, so each series colour leans on the ink: darker on a light panel, lighter on a dark one (4.5:1 and more).
+const tones = [1, 2, 3, 4, 5, 6].map(n => `color-mix(in oklab, var(--ps-chart-${n}) 80%, var(--ps-ink))`);
 
 /** Hashtags as a packed word cloud: size follows use on a log scale, about one in four stands upright. */
 function HashtagCloud({ rows, search }) {

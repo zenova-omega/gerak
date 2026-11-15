@@ -1,0 +1,165 @@
+/* Spread map (RegionSpreadMap.jsx): provinces named in posts, or X accounts by the location on their profile, on a map
+   of Indonesia with a timeline. One hue (--ps-chart-1) for everything that is data. A province is shaded in five steps,
+   darker with more (lighter-to-stronger in the dark theme, where the hue itself is light); a province that is new on the
+   chosen day gets a dashed ink outline. Posts are bubbles, accounts are round pictures. The switches are `.pu-segmented`. */
+.pulse-standalone :is(.rm, .rm-mini, .rs) { --rm-hue: var(--ps-chart-1); }
+.pulse-standalone .rm { container: rm / inline-size; }
+
+/* Timeline: play, one day back, the slider over a strip of daily bars, one day on, the day in words. */
+.pulse-standalone .rm-time { display: flex; align-items: center; gap: 8px; }
+.pulse-standalone .rm-track { position: relative; flex: 1 1 auto; min-width: 0; padding-top: 28px; }
+.pulse-standalone .rm-days { position: absolute; inset: 0 8px auto; height: 24px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); align-items: end; gap: 1px; pointer-events: none; }
+.pulse-standalone .rm-days > i { min-height: 2px; border-radius: 2px 2px 0 0; background: var(--ps-line); }
+.pulse-standalone .rm-days > i[data-past] { background: color-mix(in oklch, var(--rm-hue) 45%, var(--ps-panel)); }
+.pulse-standalone .rm-days > i[data-now] { background: var(--rm-hue); }
+.pulse-standalone.pulse-standalone .rm-track > input[type=range] { display: block; width: 100%; min-width: 0; height: 20px; min-height: 20px; margin: 0; padding: 0; accent-color: var(--ps-accent); cursor: pointer; }
+.pulse-standalone .rm-track > input[type=range]:focus-visible { outline: var(--ps-control-focus); outline-offset: 4px; }
+.pulse-standalone .rm-day { flex: none; min-width: 11ch; color: var(--ps-ink); font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.pulse-standalone .rm-status { margin: 12px 0 0; max-width: 78ch; color: var(--ps-muted); font-size: .875rem; line-height: 1.5; text-wrap: pretty; }
+
+/* Map and list side by side; the list drops under the map in a narrow card. */
+.pulse-standalone .rm-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); gap: 20px 24px; align-items: start; margin-top: 16px; }
+.pulse-standalone .rm-map { position: relative; min-width: 0; }
+.pulse-standalone .rm-canvas { position: relative; overflow: hidden; border-radius: var(--ps-radius-control); user-select: none; }
+.pulse-standalone .rm-canvas[data-movable] { cursor: grab; }
+.pulse-standalone .rm-canvas[data-movable]:active { cursor: grabbing; }
+.pulse-standalone .rm-canvas[data-movable] :is(.rm-province, .rm-mark) { cursor: inherit; }
+/* Closer and farther: two buttons on the map itself, where the hand already is. */
+.pulse-standalone .rm-zoom { position: absolute; top: 8px; right: 8px; z-index: 3; display: grid; gap: 4px; }
+.pulse-standalone.pulse-standalone .rm-zoom > button { width: var(--ps-control-sm); min-width: var(--ps-control-sm); height: var(--ps-control-sm); min-height: var(--ps-control-sm); padding: 0; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); background: var(--ps-panel); color: var(--ps-ink); box-shadow: 0 1px 3px oklch(20% 0.02 285 / .12); }
+.pulse-standalone.pulse-standalone .rm-zoom > button:hover:not(:disabled) { background: var(--ps-soft); }
+.pulse-standalone.pulse-standalone .rm-zoom > button:disabled { opacity: .45; cursor: not-allowed; }
+.pulse-standalone.pulse-standalone .rm-zoom > button:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+
+/* Account pins: the round profile picture of the strongest account at a place, with the number of accounts there. */
+.pulse-standalone .rm-pins { position: absolute; inset: 0; pointer-events: none; }
+.pulse-standalone .rm-pin { position: absolute; width: 24px; height: 24px; transform: translate(-50%, -50%); pointer-events: auto; cursor: pointer; }
+.pulse-standalone .rm-face { display: block; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--ps-soft); box-shadow: 0 0 0 2px var(--ps-panel), 0 1px 4px oklch(20% 0.02 285 / .35); }
+.pulse-standalone .rm-face[data-empty] { display: grid; place-items: center; background: color-mix(in oklch, var(--rm-hue) 34%, var(--ps-panel)); color: var(--ps-ink); font-size: 11px; font-weight: 650; line-height: 1; }
+.pulse-standalone .rm-pin[data-selected] > .rm-face { box-shadow: 0 0 0 2px var(--ps-ink), 0 1px 4px oklch(20% 0.02 285 / .35); }
+.pulse-standalone .rm-pin-count { position: absolute; right: -9px; bottom: -7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--ps-ink); color: var(--ps-panel); box-shadow: 0 0 0 1.5px var(--ps-panel); font-size: 10px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 16px; text-align: center; }
+.pulse-standalone .rm-pin.rm-pin-key { position: relative; display: inline-block; flex: none; margin-right: 10px; transform: none; cursor: default; }
+.pulse-standalone .rm-svg { display: block; width: 100%; height: auto; border-radius: var(--ps-radius-control); background: color-mix(in oklch, var(--ps-soft) 45%, var(--ps-panel)); }
+.pulse-standalone .rm-province { fill: color-mix(in oklch, var(--ps-line) 62%, var(--ps-panel)); stroke: var(--ps-panel); stroke-width: .75px; vector-effect: non-scaling-stroke; stroke-linejoin: round; cursor: pointer; }
+.pulse-standalone :is(.rm-province, .rm-legend i)[data-shade="1"] { --rm-shade: 16%; }
+.pulse-standalone :is(.rm-province, .rm-legend i)[data-shade="2"] { --rm-shade: 32%; }
+.pulse-standalone :is(.rm-province, .rm-legend i)[data-shade="3"] { --rm-shade: 50%; }
+.pulse-standalone :is(.rm-province, .rm-legend i)[data-shade="4"] { --rm-shade: 70%; }
+.pulse-standalone :is(.rm-province, .rm-legend i)[data-shade="5"] { --rm-shade: 90%; }
+.pulse-standalone .rm-province:not([data-shade="0"]) { fill: color-mix(in oklch, var(--rm-hue) var(--rm-shade), var(--ps-panel)); }
+.pulse-standalone .rm-province[data-state=fresh] { stroke: var(--ps-ink); stroke-width: 1.25px; stroke-dasharray: 3 2; }
+.pulse-standalone .rm-province:hover { stroke: var(--ps-ink); stroke-width: 1px; }
+.pulse-standalone .rm-province[data-selected] { stroke: var(--ps-ink); stroke-width: 1.5px; }
+.pulse-standalone .rm-mark { cursor: pointer; }
+.pulse-standalone .rm-bubble { fill: var(--rm-hue); fill-opacity: .9; stroke: var(--ps-panel); stroke-width: 2px; vector-effect: non-scaling-stroke; transition: r .25s ease-out; }
+.pulse-standalone .rm-halo { fill: none; stroke: var(--rm-hue); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.pulse-standalone .rm-mark[data-selected] > .rm-bubble { stroke: var(--ps-ink); }
+.pulse-standalone .rm-count { fill: var(--ps-panel); stroke: var(--rm-hue); stroke-width: 2.5px; vector-effect: non-scaling-stroke; paint-order: stroke; font-weight: 650; font-variant-numeric: tabular-nums; text-anchor: middle; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .pulse-standalone .rm-bubble { transition: none; } }
+
+.pulse-standalone .rm-tip { position: absolute; z-index: 2; display: grid; gap: 2px; max-width: 220px; padding: 8px 10px; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); background: var(--ps-panel); box-shadow: 0 6px 18px oklch(20% 0.02 285 / .14); color: var(--ps-muted); font-size: .8125rem; line-height: 1.4; pointer-events: none; transform: translate(12px, 12px); white-space: nowrap; }
+.pulse-standalone .rm-tip[data-flip] { transform: translate(calc(-100% - 12px), 12px); }
+.pulse-standalone .rm-tip > strong { color: var(--ps-ink); font-weight: 600; }
+
+.pulse-standalone .rm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; margin: 10px 0 0; padding: 0; list-style: none; color: var(--ps-muted); font-size: .8125rem; }
+.pulse-standalone .rm-legend > li { display: inline-flex; align-items: center; gap: 8px; }
+.pulse-standalone .rm-legend > li > i { flex: none; width: 14px; height: 14px; border: 1px solid var(--ps-line); border-radius: 3px; background: color-mix(in oklch, var(--ps-line) 62%, var(--ps-panel)); }
+.pulse-standalone .rm-legend i[data-shade] { flex: none; width: 14px; height: 14px; border: 1px solid var(--ps-line); border-radius: 3px; background: color-mix(in oklch, var(--rm-hue) var(--rm-shade), var(--ps-panel)); }
+.pulse-standalone .rm-legend > li > i[data-state=fresh] { border: 1.5px dashed var(--ps-ink); background: transparent; }
+.pulse-standalone .rm-legend > .rm-ramp { flex-wrap: wrap; gap: 4px 10px; }
+.pulse-standalone .rm-legend > .rm-ramp > span { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pulse-standalone .rm-legend > li > i[data-state=bar] { width: 6px; border: 0; border-radius: 2px 2px 0 0; background: var(--rm-hue); }
+.pulse-standalone .rm-legend-dot { fill: var(--rm-hue); fill-opacity: .9; }
+
+/* The list: one row per province named so far. A row is a button; the bar under it repeats the count. */
+.pulse-standalone .rm-side { min-width: 0; }
+.pulse-standalone .rm-side-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; color: var(--ps-ink); font-size: .875rem; }
+.pulse-standalone .rm-rank { display: grid; gap: 2px; max-height: 420px; margin: 0; padding: 0 4px 0 0; overflow: auto; list-style: none; }
+.pulse-standalone.pulse-standalone .rm-rank > li > button { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; width: 100%; height: auto; min-height: var(--ps-control-md); padding: 8px 8px 12px; border: 0; border-radius: var(--ps-radius-control); background: transparent; box-shadow: none; color: var(--ps-ink); font: inherit; font-size: .875rem; text-align: left; cursor: pointer; }
+.pulse-standalone.pulse-standalone .rm-rank > li > button:hover { background: var(--ps-soft); }
+.pulse-standalone.pulse-standalone .rm-rank > li > button[aria-pressed=true] { background: var(--ps-soft); box-shadow: inset 0 0 0 1px var(--ps-line); }
+.pulse-standalone.pulse-standalone .rm-rank > li > button:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .rm-rank-name { min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .rm-rank-count { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pulse-standalone .rm-rank-since { grid-column: 1 / -1; color: var(--ps-muted); font-size: .75rem; }
+.pulse-standalone .rm-rank-since[data-fresh] { color: var(--ps-ink); font-weight: 600; }
+.pulse-standalone .rm-rank-bar { position: absolute; left: 8px; bottom: 5px; height: 3px; max-width: calc(100% - 16px); border-radius: 2px; background: var(--rm-hue); }
+
+/* The posts behind the chosen province. */
+.pulse-standalone .rm-detail { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .rm-detail > h3 { margin: 0; color: var(--ps-ink); font-size: 1rem; font-weight: 650; line-height: 1.3; }
+.pulse-standalone .rm-hint { margin: 0; max-width: 70ch; color: var(--ps-muted); font-size: .875rem; line-height: 1.5; }
+.pulse-standalone .rm-detail > h3 + .rm-hint { margin-top: 6px; }
+.pulse-standalone .rm-detail-lead { margin: 6px 0 10px; max-width: 78ch; color: var(--ps-muted); font-size: .875rem; line-height: 1.5; }
+.pulse-standalone .rm-names { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+.pulse-standalone .rm-names > li { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; border: 1px solid var(--ps-line); border-radius: 999px; color: var(--ps-ink); font-size: .8125rem; }
+.pulse-standalone .rm-names > li > b { color: var(--ps-muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rm-posts { display: grid; gap: 0; margin: 0 0 12px; padding: 0; list-style: none; }
+.pulse-standalone .rm-posts > li { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--ps-line); font-size: .875rem; line-height: 1.5; }
+.pulse-standalone .rm-posts > li:first-child { border-top: 0; padding-top: 0; }
+.pulse-standalone .rm-post-who { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; color: var(--ps-muted); font-size: .8125rem; }
+.pulse-standalone .rm-post-who > strong { color: var(--ps-ink); font-weight: 600; overflow-wrap: anywhere; }
+.pulse-standalone .rm-posts > li > :is(a, span) { max-width: 80ch; color: var(--ps-ink); overflow-wrap: anywhere; text-wrap: pretty; }
+.pulse-standalone .rm-posts > li > a { text-decoration: underline; text-decoration-color: var(--ps-line); text-underline-offset: 3px; }
+.pulse-standalone .rm-posts > li > a:hover { text-decoration-color: currentColor; }
+.pulse-standalone .rm-posts mark { padding: 0 3px; border-radius: 3px; background: color-mix(in oklch, var(--rm-hue) 26%, var(--ps-panel)); color: inherit; font-weight: 600; }
+.pulse-standalone .rm-posts > li > a:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+
+.pulse-standalone .rm-detail-more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.pulse-standalone .rm-detail-more > a { display: inline-flex; align-items: center; min-height: var(--ps-control-sm); color: var(--ps-ink); font-size: .8125rem; font-weight: 600; text-decoration: underline; text-decoration-color: var(--ps-line); text-underline-offset: 3px; }
+.pulse-standalone .rm-detail-more > a:hover { text-decoration-color: currentColor; }
+.pulse-standalone .rm-detail-more > a:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+
+/* The accounts behind the chosen province: picture, name and the location as the owner wrote it, then the numbers. */
+.pulse-standalone .rm-accounts { display: grid; margin: 0 0 12px; padding: 0; list-style: none; }
+.pulse-standalone .rm-accounts > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--ps-line); font-size: .875rem; }
+.pulse-standalone .rm-accounts > li:first-child { border-top: 0; padding-top: 0; }
+.pulse-standalone .rm-account-who { display: grid; min-width: 0; line-height: 1.4; }
+.pulse-standalone .rm-account-who > strong { color: var(--ps-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .rm-account-who > span { color: var(--ps-muted); font-size: .8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .rm-account-facts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 14px; color: var(--ps-muted); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rm-accounts > li > a { color: var(--ps-ink); font-size: .8125rem; font-weight: 600; text-decoration: underline; text-decoration-color: var(--ps-line); text-underline-offset: 3px; white-space: nowrap; }
+.pulse-standalone .rm-accounts > li > a:hover { text-decoration-color: currentColor; }
+.pulse-standalone .rm-accounts > li > a:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+
+/* The table view: names are a sentence, not a number. */
+.pulse-standalone .rm .tc-table :is(th, td):last-child { text-align: left; white-space: normal; min-width: 22ch; }
+
+@container rm (max-width: 760px) {
+  .pulse-standalone .rm-body { grid-template-columns: minmax(0, 1fr); }
+  .pulse-standalone .rm-rank { max-height: 300px; }
+}
+@container rm (max-width: 620px) {
+  .pulse-standalone .rm-accounts > li { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .pulse-standalone .rm-account-facts { grid-column: 2 / -1; justify-content: flex-start; }
+  .pulse-standalone .rm-accounts > li > a { grid-row: 1; grid-column: 3; }
+}
+@container rm (max-width: 520px) {
+  .pulse-standalone.pulse-standalone .rm-zoom > button { width: var(--ps-control-md); min-width: var(--ps-control-md); height: var(--ps-control-md); min-height: var(--ps-control-md); }
+  /* At this size a count inside a bubble is too small to read: the list under the map carries the numbers. */
+  .pulse-standalone .rm-count { display: none; }
+  .pulse-standalone.pulse-standalone .rm-track > input[type=range] { height: 44px; min-height: 44px; }
+  .pulse-standalone .rm-time { flex-wrap: wrap; }
+  .pulse-standalone .rm-track { order: 5; flex-basis: 100%; }
+  .pulse-standalone .rm-day { margin-left: auto; }
+}
+@media print {
+  .pulse-standalone .rm-time > button, .pulse-standalone .rm-track, .pulse-standalone .rm-tip, .pulse-standalone .rm-zoom { display: none; }
+  .pulse-standalone .rm-rank { max-height: none; overflow: visible; }
+}
+
+/* The spread card on Ikhtisar (RegionSpreadSummary.jsx): the small map beside the five most named provinces. */
+.pulse-standalone .rs-panel { container: rs / inline-size; }
+.pulse-standalone .rs { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr); gap: 20px 28px; align-items: center; }
+.pulse-standalone .rm-mini .rm-province { cursor: default; }
+.pulse-standalone .rm-mini .rm-province:hover { stroke: var(--ps-panel); stroke-width: .75px; }
+.pulse-standalone .rs-top { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.pulse-standalone .rs-top > li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 6px 0 12px; font-size: .875rem; }
+.pulse-standalone .rs-name { min-width: 0; color: var(--ps-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .rs-count { color: var(--ps-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pulse-standalone .rs-names { grid-column: 1 / -1; color: var(--ps-muted); font-size: .75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulse-standalone .rs-bar { position: absolute; left: 0; bottom: 5px; height: 3px; border-radius: 2px; background: var(--rm-hue); }
+.pulse-standalone .rs-line { margin: 12px 0 0; max-width: 78ch; color: var(--ps-muted); font-size: .8125rem; line-height: 1.5; }
+.pulse-standalone .rs-line + .rs-line { margin-top: 4px; }
+.pulse-standalone .rs-open { margin-top: 0; white-space: nowrap; }
+@container rs (max-width: 700px) { .pulse-standalone .rs { grid-template-columns: minmax(0, 1fr); } }

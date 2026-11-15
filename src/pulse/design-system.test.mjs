@@ -31,7 +31,7 @@ test('source disclosure keeps collection separate from expansion and distinguish
   const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
   try {
     const {default:SourceDisclosure}=await server.ssrLoadModule('/src/pulse/SourceDisclosure.jsx');
-    const source={platform:'instagram',provider:'xpoz',configured:true,tool_available:true,stored_posts:5,fields:{text:5,author:5,published_at:0,likes:5,comments:5,shares:0,views:4},last_attempt:{status:'succeeded',fetched:5,ingested:5},last_success_at:'2026-11-10T20:58:10Z'};
+    const source={platform:'instagram',provider:'social',configured:true,tool_available:true,stored_posts:5,fields:{text:5,author:5,published_at:0,likes:5,comments:5,shares:0,views:4},last_attempt:{status:'succeeded',fetched:5,ingested:5},last_success_at:'2026-11-10T20:58:10Z'};
     const html=renderToStaticMarkup(React.createElement(SourceDisclosure,{source,budget:{used:1,daily_limit:4},topicId:'topic',readOnly:false,busy:false,onCollect:()=>{throw Error('Render must never crawl');}}));
     assert.match(html,/<details[^>]*>/);
     assert.doesNotMatch(html,/<details[^>]* open/);
@@ -41,7 +41,9 @@ test('source disclosure keeps collection separate from expansion and distinguish
     assert.match(summary,/Berhasil/);
     assert.match(html,/4 \/ 5/);
     assert.match(html,/0 \/ 5/);
-    assert.match(html,/Kumpulkan maks\. 300/);
+    assert.match(html,/Kumpulkan semua posting Instagram/);
+    assert.match(html,/tanpa batas jumlah/);
+    assert.doesNotMatch(html,/maks\. \d/);
     const blocked=renderToStaticMarkup(React.createElement(SourceDisclosure,{source,budget:{used:4,daily_limit:4},topicId:'topic',onCollect:()=>{}}));
     assert.match(blocked,/<button[^>]*disabled/);
     const queued=renderToStaticMarkup(React.createElement(SourceDisclosure,{source:{...source,last_attempt:{status:'queued'}},budget:{used:1,daily_limit:4},topicId:'topic'}));

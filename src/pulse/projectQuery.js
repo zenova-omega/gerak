@@ -8,7 +8,7 @@ export function buildProjectQuery(main, required = '', excluded = '', variations
   if (!terms(main).length) throw new Error('Isi minimal satu keyword utama.');
   const alternatives = terms([main, variations].join(','));
   const query = (alternatives.length > 1 ? `(${alternatives.join(' OR ')})` : alternatives[0]) + terms(required).map(s => ` AND ${s}`).join('') + terms(excluded).map(s => ` NOT ${s}`).join('');
-  if (query.length > 250) throw new Error('Query maksimal 250 karakter untuk pengumpulan Xpoz.');
+  if (query.length > 250) throw new Error('Keyword terlalu panjang: gabungannya maksimal 250 karakter. Kurangi variasi atau kata wajib.');
   return query;
 }
 

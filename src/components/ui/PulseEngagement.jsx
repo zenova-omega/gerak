@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { formatCount } from '../../lib/pulseData';
 import { engagementSummary, percentLabel } from '../../lib/pulseEngagement';
+import { shares } from '../../lib/pulseVoice';
 import { PulseBeat, PulseComment, PulseLike, PulseShare, PulseView } from './PulseMetricIcons';
 import InfoTip from '../../pulse/InfoTip';
 
@@ -20,13 +21,19 @@ export function PulseEngagement({ metrics, posts, platform, compact = false, lab
   const parts = partsFor(posts ? null : platform);
   const many = Array.isArray(posts);
   const quality = percentLabel(s.activeShare), rate = percentLabel(s.rate, 2);
+  const shown = parts.filter(([key]) => s.totals[key] > 0);
+  const pct = shares(Object.fromEntries(shown.map(([key]) => [key, s.totals[key]])), shown.map(([key]) => key));
   return <section className="pu-eng" data-compact={compact ? '' : undefined} aria-label={label}>
     <div className="pu-eng-head">
       <span className="pu-eng-total"><PulseBeat size={18} /><strong>{s.interactions == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(s.interactions)}</strong> interaksi</span>
-      {s.interactions > 0 && <span className="pu-eng-bar" role="img" aria-label={parts.filter(([key]) => s.totals[key] != null).map(([key, name]) => `${name} ${percentLabel(s.totals[key] / s.interactions)}`).join(', ')}>{parts.map(([key]) => s.totals[key] > 0 && <i key={key} data-part={key} style={{ flexGrow: s.totals[key] }} />)}</span>}
+      {s.interactions > 0 && <div className="pu-eng-split">
+        <span className="pu-eng-bar" role="img" aria-label={'Pembagian interaksi: ' + shown.map(([key, name]) => `${name} ${pct[key]}%`).join(', ')}>{shown.map(([key]) => <i key={key} data-part={key} style={{ flexGrow: s.totals[key] }} />)}</span>
+        {/* The bar alone is three unnamed colours: each segment is named here with its share of all interactions. */}
+        <ul className="pu-eng-legend" aria-hidden="true">{shown.map(([key, name]) => <li key={key} data-part={key}><i />{name} <b>{pct[key]}%</b></li>)}</ul>
+      </div>}
     </div>
     <dl className="pu-eng-metrics">
-      {parts.map(([key, name, icon]) => <div key={key} className="pu-eng-metric" data-part={key}><dt>{createElement(icon, { size: 16 })}{name}</dt><dd>{s.totals[key] == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(s.totals[key])}</dd>{!compact && <small>{s.totals[key] == null ? 'Tidak tersedia dari sumber' : s.interactions > 0 ? `${percentLabel(s.totals[key] / s.interactions)} dari interaksi` : 'Belum ada interaksi'}{many && s.totals[key] != null ? ` · ${formatCount(s.coverage[key])} posting` : ''}</small>}</div>)}
+      {parts.map(([key, name, icon]) => <div key={key} className="pu-eng-metric" data-part={key}><dt>{createElement(icon, { size: 16 })}{name}</dt><dd>{s.totals[key] == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(s.totals[key])}</dd>{!compact && <small>{s.totals[key] == null ? 'Tidak tersedia dari sumber' : s.interactions > 0 ? `${pct[key] ?? 0}% dari interaksi` : 'Belum ada interaksi'}{many && s.totals[key] != null ? ` · ${formatCount(s.coverage[key])} posting` : ''}</small>}</div>)}
       <div className="pu-eng-metric" data-part="views"><dt><PulseView size={16} />Tayangan</dt><dd>{s.totals.views == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(s.totals.views)}</dd>{!compact && <small>{s.totals.views == null ? 'Tidak tersedia dari sumber' : 'Paparan, tidak masuk total interaksi'}{many && s.totals.views != null ? ` · ${formatCount(s.coverage.views)} posting` : ''}</small>}</div>
     </dl>
     <dl className="pu-eng-kpis">

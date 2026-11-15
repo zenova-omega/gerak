@@ -4,6 +4,7 @@ import api from '../lib/api';
 import './sentiment-progress.css';
 import InfoTip from './InfoTip';
 import {sentimentCounts} from '../lib/pulsePostFilters';
+import {aiStateNotice} from '../lib/pulseAiState';
 
 export default function SentimentProgress({ topicId, onChange, quiet = false, posts }) {
   const [state,setState] = useState(null);
@@ -33,6 +34,7 @@ export default function SentimentProgress({ topicId, onChange, quiet = false, po
     <div className="ps-ai-progress-heading"><strong><Sparkles size={16} aria-hidden="true"/>{!total?'Tidak ada posting pada pilihan ini':analyzed < total ? 'Analisis belum lengkap' : 'Analisis selesai'}</strong><span>{analyzed.toLocaleString('id-ID')} / {total.toLocaleString('id-ID')} posting dianalisis ({percent}%)</span></div>
     <progress value={analyzed} max={Math.max(1,total)} aria-label="Posting dengan hasil sentimen"/>
     <div className="ps-help-row">{posts?'Cakupan periode & platform terpilih':'Cakupan seluruh project'} <InfoTip label="Tentang progress analisis">Posting yang belum dianalisis tidak dihitung sebagai netral. Seluruh project: {state.analyzed}/{state.total} berlabel.</InfoTip></div>
+    {aiStateNotice(state.ai_state) && <p role={state.ai_state === 'access' ? 'alert' : 'status'}>{aiStateNotice(state.ai_state)}</p>}
     {error && <p role="status">Koneksi status terputus. Angka terakhir mungkin belum mutakhir.</p>}
   </section>;
 }

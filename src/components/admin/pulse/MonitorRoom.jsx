@@ -1,132 +1,391 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Bell, RefreshCw, Radio } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Activity, Bell, Check, CheckCheck, ChevronDown, MessagesSquare, Radio, RefreshCw, SlidersHorizontal, TrendingUp, TriangleAlert } from 'lucide-react';
 import api from '../../../lib/api';
 import { pulseDate, pulseError, formatCount } from '../../../lib/pulseData';
-import { canChangeAlertPage, latestManualProviderRun } from '../../../lib/pulseMonitor';
+import {
+  alertSummary, canChangeAlertPage, collectionRows, collectionSummary, createUnreadCache, defaultInterval, frequencyText,
+  intervalChoices, intervalText, monitorExtras, monitorSources, spanPlacement, unreadBadgeText,
+} from '../../../lib/pulseMonitor';
 import './monitor-room.css';
-import { PlatformLabel } from './PlatformIcon';
+import '../../../pulse/ds/monitor-overview.css';
+import { PlatformIcon, platformLabel } from './PlatformIcon';
 import InfoTip from '../../../pulse/InfoTip';
-import { PulseButton, PulseBadge } from '../../ui/PulseUI';
-import {PulsePanelHeading} from '../../ui/PulsePatterns';
+import { PulseButton, PulseNotice } from '../../ui/PulseUI';
+import { PulseSkeleton } from '../../ui/PulsePatterns';
 import { PulseTag } from '../../ui/PulseTag';
-import { PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
+import { PulsePanelEmpty } from '../../ui/PulseAnalytics';
 
-const alertKinds={collection_error:['danger','Gangguan pengumpulan'],volume_spike:['warning','Lonjakan volume teramati'],engagement_growth:['info','Interaksi meningkat']};
-const jobStates={queued:['info','Menunggu'],running:['accent','Berjalan'],retry:['warning','Dicoba ulang'],succeeded:['success','Berhasil'],success:['success','Berhasil'],done:['success','Selesai'],failed:['danger','Gagal'],error:['danger','Gagal']};
+const SHOWN_ALERTS = 10;
+const READ_EVERY_MS = 60000;
+const UNREAD_EVENT = 'pulse-monitor-unread';
+const unreadCache = createUnreadCache(READ_EVERY_MS);
 
-const workflowLabels={new:'Baru',reviewing:'Sedang ditinjau',done:'Selesai'};
-const initialWorkflow={status:'new',assignee:null,revision:0,history:[]};
+/** Marks a read of the count as started, so nothing else asks the server for it during the next minute. */
+function unreadReadStarted(topicId) {
+  unreadCache.put(topicId, unreadCache.peek(topicId));
+}
 
-function AlertWorkflow({ alert, disabled, onSaved }) {
-  const workflow=alert.workflow||initialWorkflow;
-  const [draft,setDraft]=useState(null),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
-  const current=draft||workflow;
-  const stale=!!draft&&draft.revision!==workflow.revision;
-  const change=(field,value)=>{setDraft({...current,[field]:value});setSaved(false)};
-  const submit=async event=>{
+/** Record a count and tell the navigation badge. `null` means the read failed: the badge then shows nothing. */
+function publishUnread(topicId, unread) {
+  if (!topicId) return;
+  unreadCache.put(topicId, Number.isInteger(unread) ? unread : null);
+  window.dispatchEvent(new CustomEvent(UNREAD_EVENT, { detail: { topicId } }));
+}
+
+/** Unread alerts of the project in view, on the "Monitor" item of the navigation. It reads the same `GET /monitor`
+ * as the page, at most once a minute, and takes the page's own figure whenever the page has just loaded one. */
+export function MonitorNavBadge() {
+  const topicId = new URLSearchParams(useLocation().search).get('topic');
+  const [, redraw] = useState(0);
+  useEffect(() => {
+    if (!topicId) return undefined;
+    let timer;
+    const read = () => {
+      const wait = unreadCache.wait(topicId);
+      if (wait > 0) { timer = setTimeout(read, wait); return; }
+      timer = setTimeout(read, READ_EVERY_MS);
+      if (document.hidden) return;
+      unreadReadStarted(topicId);   // a sidebar rebuilt by a page change waits for this read instead of starting its own
+      api.get('/admin/pulse/monitor', { topic_id: topicId }).then(data => publishUnread(topicId, data?.unread)).catch(() => publishUnread(topicId, null));
+    };
+    const changed = event => { if (event.detail?.topicId === topicId) redraw(value => value + 1); };
+    window.addEventListener(UNREAD_EVENT, changed);
+    timer = setTimeout(read, 0);   // after the page in view has had the chance to start the same read
+    return () => { clearTimeout(timer); window.removeEventListener(UNREAD_EVENT, changed); };
+  }, [topicId]);
+  const count = topicId ? unreadCache.peek(topicId) : null;
+  const text = unreadBadgeText(count);
+  if (!text) return null;
+  return <span className="mo-nav-badge"><span aria-hidden="true">{text}</span><span className="pu-sr">, {formatCount(count)} alert belum dibaca</span></span>;
+}
+
+const kindIcons = { collection_error: TriangleAlert, volume_spike: TrendingUp, recent_cluster: MessagesSquare, engagement_growth: Activity };
+const followUpLabels = { reviewing: 'Sedang ditinjau', done: 'Selesai ditindaklanjuti' };
+
+const followUpChoices = { new: 'Baru', reviewing: 'Sedang ditinjau', done: 'Selesai' };
+
+/** Who is handling an alert and how far along it is. Saved with the revision that was read, so two people editing the
+ * same alert do not silently overwrite each other. */
+function FollowUpForm({ alert, formId, disabled, onSaved, onClose }) {
+  const workflow = alert.workflow || { status: 'new', assignee: null, revision: 0, history: [] };
+  const [status, setStatus] = useState(workflow.status);
+  const [assignee, setAssignee] = useState(workflow.assignee || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const history = workflow.history || [];
+  const submit = async event => {
     event.preventDefault();
-    if(saving||disabled||stale)return;
-    setSaving(true);setError('');setSaved(false);
-    try{
-      const updated=await api.put('/admin/pulse/monitor/alerts/'+encodeURIComponent(alert.id)+'/workflow',{
-        status:current.status,assignee:current.assignee||null,expected_revision:current.revision,
-      });
-      onSaved(updated);setDraft(null);setSaved(true);
-    }catch(e){setError(pulseError(e))}finally{setSaving(false)}
+    if (saving || disabled) return;
+    setSaving(true); setError('');
+    try {
+      await api.put('/admin/pulse/monitor/alerts/' + encodeURIComponent(alert.id) + '/workflow', { status, assignee: assignee.trim() || null, expected_revision: workflow.revision || 0 });
+      await onSaved();
+      onClose();
+    } catch (e) {
+      setError(e.status === 409 ? 'Tindak lanjut ini baru saja diubah orang lain. Tekan Perbarui, lalu buka lagi.' : `Tindak lanjut belum tersimpan. ${pulseError(e)}`);
+    } finally { setSaving(false); }
   };
-  return <div className="pm-workflow">
-    <p className="pm-workflow-summary"><PulseBadge tone={workflow.status==='done'?'success':workflow.status==='reviewing'?'accent':'neutral'}>{workflowLabels[workflow.status]}</PulseBadge><span>Penanggung jawab: {workflow.assignee||'Belum ditetapkan'}</span></p>
-    <details><summary>Kelola tindak lanjut</summary>
-      <form onSubmit={submit} aria-label={'Tindak lanjut '+alert.title}>
-        <fieldset disabled={disabled||saving}>
-          <label>Status tindak lanjut<select value={current.status} onChange={e=>change('status',e.target.value)}>{Object.entries(workflowLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-          <label>Penanggung jawab (opsional)<input type="text" maxLength={120} value={current.assignee||''} onChange={e=>change('assignee',e.target.value)} placeholder="Nama atau tim"/></label>
-          <p>Maks. 120 karakter. Kosongkan untuk melepas penugasan. Penyimpanan memerlukan akses owner/admin, tidak mengirim notifikasi atau menjalankan pengambilan data.</p>
-          {stale&&<p role="alert">Alert telah berubah. Muat nilai terbaru sebelum menyimpan.</p>}
-          <div className="pm-workflow-actions"><PulseButton type="submit" variant="primary" busy={saving} busyLabel="Menyimpan…" disabled={!draft||stale}>Simpan tindak lanjut</PulseButton><PulseButton disabled={!draft} onClick={()=>{setDraft(null);setError('')}}>Muat nilai terbaru</PulseButton></div>
-        </fieldset>
-      </form>
-      {error&&<p role="alert" className="pm-workflow-error">{error} Gunakan Perbarui status untuk memuat perubahan server; draf Anda tetap tersedia.</p>}
-      {saved&&<p role="status">Tindak lanjut tersimpan.</p>}
-      <details className="pm-workflow-history"><summary>Riwayat tindak lanjut ({workflow.history.length})</summary>{workflow.history.length?<ol>{[...workflow.history].reverse().map((entry,index)=><li key={workflow.history.length-index}><strong>{workflowLabels[entry.to.status]} · {entry.to.assignee||'Tanpa penanggung jawab'}</strong><span>Dari {workflowLabels[entry.from.status]} · {entry.from.assignee||'Tanpa penanggung jawab'}</span><span>{pulseDate(entry.timestamp)} · ID aktor: {entry.actor}</span></li>)}</ol>:<p>Belum ada perubahan tindak lanjut. Penandaan dibaca dicatat terpisah.</p>}</details>
-    </details>
-  </div>;
+  return <form className="mo-follow" id={formId} onSubmit={submit}>
+    <label>Status tindak lanjut
+      <select value={status} onChange={event => setStatus(event.target.value)} disabled={saving || disabled}>
+        {Object.entries(followUpChoices).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+      </select>
+    </label>
+    <label>Penanggung jawab (opsional)
+      <input type="text" maxLength={120} value={assignee} onChange={event => setAssignee(event.target.value)} placeholder="Nama atau tim" disabled={saving || disabled} />
+    </label>
+    <div className="mo-follow-actions">
+      <PulseButton type="submit" variant="primary" size="sm" busy={saving} busyLabel="Menyimpan…" disabled={disabled}>Simpan</PulseButton>
+      <PulseButton size="sm" variant="quiet" disabled={saving} onClick={onClose}>Batal</PulseButton>
+    </div>
+    {error && <p className="mo-follow-error" role="alert">{error}</p>}
+    {history.length > 0 && <details className="mo-follow-history"><summary>Riwayat tindak lanjut ({formatCount(history.length)})</summary>
+      <ol>{[...history].reverse().map((entry, index) => <li key={history.length - index}>
+        <strong>{followUpChoices[entry.to?.status] || 'Baru'}{entry.to?.assignee ? `, ${entry.to.assignee}` : ''}</strong>
+        <span>{pulseDate(entry.timestamp)}</span>
+      </li>)}</ol>
+    </details>}
+  </form>;
 }
 
-function QueueChart({counts}){
- const rows=[['queued','Menunggu','Tertahan jadwal atau kuota'],['running','Berjalan','Request sedang diproses'],['retry','Dicoba ulang','Percobaan sebelumnya belum berhasil']];
- const total=rows.reduce((sum,[key])=>sum+(counts[key]||0),0);
- return <section className="pm-queue" aria-label="Aktivitas pengumpulan"><div className="pm-queue-heading"><h3>Aktivitas pengumpulan</h3><p>{total} pekerjaan aktif dalam cakupan project <InfoTip label="Tentang aktivitas pengumpulan">Status saat pembaruan terakhir, bukan tren historis. Pekerjaan menunggu dapat tertahan kuota atau jadwal. Dicoba ulang berarti percobaan sebelumnya belum berhasil.</InfoTip></p></div><PulseStatGrid label="Pekerjaan pengumpulan aktif">{rows.map(([key,label,note])=><PulseStat key={key} label={label} value={counts[key]||0} note={note}/>)}</PulseStatGrid>{!total&&<p className="pm-queue-empty">Tidak ada pekerjaan aktif saat ini.</p>}</section>;
+function AlertRow({ alert, project, busy, onOpen, onAck, onSaved }) {
+  const [following, setFollowing] = useState(false);
+  const row = alertSummary(alert);
+  const followUp = [followUpLabels[alert.workflow?.status], alert.workflow?.assignee].filter(Boolean).join(' oleh ');
+  const context = [project, followUp].filter(Boolean).join(' · ');
+  const formId = `mo-follow-${alert.id}`;
+  return <li className="mo-alert" data-unread={row.unread ? '' : undefined}>
+    <span className="mo-alert-mark" aria-hidden="true" />
+    <span className="mo-alert-kind"><PulseTag tone={row.tone} icon={kindIcons[alert.kind] || Bell}>{row.label}</PulseTag></span>
+    <div className="mo-alert-main">
+      <strong title={row.title}><span className="pu-sr">{row.unread ? 'Belum dibaca: ' : 'Sudah dibaca: '}</span>{row.title}</strong>
+      {(row.figure || context) && <span>{row.figure && <b>{row.figure}</b>}{row.figure && context ? ' · ' : ''}{context}</span>}
+    </div>
+    <time className="mo-alert-time" dateTime={alert.created_at}>{pulseDate(alert.created_at)}</time>
+    <div className="mo-alert-actions">
+      {row.opens && <PulseButton size="sm" arrow onClick={() => onOpen(alert)} aria-label={`Lihat posting: ${row.title}`}>Lihat posting</PulseButton>}
+      <PulseButton size="sm" variant="quiet" aria-expanded={following} aria-controls={following ? formId : undefined} onClick={() => setFollowing(value => !value)} aria-label={`Tindak lanjut: ${row.title}`}>Tindak lanjut</PulseButton>
+      {row.unread
+        ? <PulseButton size="sm" variant="quiet" disabled={busy} onClick={() => onAck(alert.id)} aria-label={`Tandai dibaca: ${row.title}`}>Tandai dibaca</PulseButton>
+        : <span className="mo-alert-read"><Check size={14} aria-hidden="true" />Dibaca</span>}
+    </div>
+    {following && <FollowUpForm alert={alert} formId={formId} disabled={busy} onSaved={onSaved} onClose={() => setFollowing(false)} />}
+  </li>;
 }
 
-const names={comments:'Komentar otomatis',profiles:'Foto kanal & logo media',profiles_x:'Foto profil akun X',rss:'Berita Indonesia',xpoz:'Xpoz / X',youtube:'YouTube',instagram:'Instagram',tiktok:'TikTok',reddit:'Reddit'};
-const sourcePlatform=source=>({rss:'news',xpoz:'x'}[source]||source);
-const gapText=seconds=>seconds>=60?`${Math.round(seconds/60)} menit`:`${seconds} detik`;
-const limitText=worker=>worker.daily_limit<0?'tanpa batas':worker.daily_limit;
-const capReached=worker=>worker.daily_limit>=0&&worker.used>=worker.daily_limit;
-function WorkerSettings({ worker, save }) {
-  const [unlimited,setUnlimited]=useState(worker.daily_limit<0);
-  const [limit,setLimit]=useState(worker.daily_limit<0?144:worker.daily_limit);
-  const next=unlimited?-1:Number(limit);
-  const pause=worker.min_gap_seconds?gapText(worker.min_gap_seconds):null;
-  return <article className="pm-worker"><h3>{names[worker.provider]}</h3><p><strong>{worker.daily_limit<0?worker.used:`${worker.used} / ${worker.daily_limit}`}</strong> {worker.provider==='comments'?'posting diambil komentarnya hari ini':worker.provider==='profiles'?'permintaan hari ini · tanpa biaya kredit':worker.provider==='profiles_x'?'permintaan hari ini · tiap permintaan 25 akun, sekitar 50 kredit':'percobaan hari ini'} · {worker.daily_limit<0?'tanpa batas harian · ':''}global, semua project</p><p>{worker.blocked_reason?'Diblokir: '+worker.blocked_reason:worker.lease_until?'Request sedang diproses':worker.daily_limit===0?'Kuota nol, tidak akan berjalan':worker.daily_limit<0?`Tanpa batas harian${pause?`, jeda ${pause} antar request`:''}`:capReached(worker)?'Batas harian habis, menunggu reset pukul 07.00 WIB':'Siap menerima pekerjaan'}</p>
-    <form onSubmit={e=>{e.preventDefault();save('/workers/'+worker.provider,{daily_limit:next},unlimited?`Jalankan worker ini tanpa batas harian? Aplikasi tidak lagi membatasi jumlah percobaan${pause?`; hanya ada jeda ${pause} antar request`:''}. Kuota dan tagihan provider tetap berlaku.`:'Simpan batas worker global? Ini membatasi jumlah percobaan, bukan nominal tagihan provider.');}}>
-      <label className="pm-unlimited"><input type="checkbox" role="switch" className="pu-switch-input" checked={unlimited} onChange={e=>setUnlimited(e.target.checked)}/> Tanpa batas harian{pause?` · jeda ${pause} antar request`:''}</label>
-      <label>Batas percobaan / hari UTC<input aria-label={'Batas harian '+worker.provider} type="number" required min="0" max="144" disabled={unlimited} value={limit} onChange={e=>setLimit(e.target.value)}/></label><PulseButton type="submit">Simpan batas</PulseButton></form>
-    {worker.blocked_reason&&<PulseButton onClick={()=>save('/workers/'+worker.provider,{daily_limit:next,clear_block:true},'Buka blokir provider setelah penyebab kuota/kredensial diperbaiki? Jadwal aktif dapat kembali memakai kuota.')}>Buka blokir</PulseButton>}
-  </article>;
+function AlertInbox({ data, alerts, topicId, topics, page, setPage, busy, disabled, marking, notice, onAck, onAckAll, onOpen, onRefresh, onSaved }) {
+  const [expanded, setExpanded] = useState(false);
+  const unread = data.unread || 0, total = data.alert_total || 0;
+  const visible = expanded ? alerts : alerts.slice(0, SHOWN_ALERTS);
+  const pages = Math.max(1, Math.ceil(total / 50));
+  const heading = unread ? `${formatCount(unread)} alert belum dibaca` : total ? 'Tidak ada alert baru' : 'Belum ada alert';
+  return <section className="pulse-panel mo-panel mo-inbox" aria-labelledby="mo-alert-title">
+    <header className="mo-head">
+      <div className="mo-head-title">
+        <span className="mo-count" data-unread={unread ? '' : undefined} aria-hidden="true">{unread ? formatCount(unread) : <Bell size={22} />}</span>
+        <div>
+          <div className="mo-head-line"><h2 id="mo-alert-title">{heading}</h2><InfoTip label="Kapan alert muncul">Alert muncul saat posting tentang satu isu melonjak (paling sedikit 10 posting dan 3 kali lipat dari 30 menit sebelumnya), saat satu isu dibahas 5 posting dari 3 akun dalam 30 menit, saat interaksi satu posting naik paling sedikit 100 dengan laju 50 per jam, atau saat pengumpulan dari satu sumber gagal. Ini ambang aktivitas yang teramati, bukan kepastian viral.</InfoTip></div>
+          <p>{total ? `${formatCount(total)} alert tercatat, terbaru di atas. ` : ''}Diperiksa otomatis tiap 30 detik, terakhir {pulseDate(data.server_time)}.</p>
+        </div>
+      </div>
+      <div className="mo-head-actions">
+        {unread > 0 && <PulseButton variant="primary" size="sm" busy={!!marking} busyLabel={marking ? `Menandai ${formatCount(marking.done)} dari ${formatCount(marking.total)}…` : undefined} disabled={busy || disabled} onClick={onAckAll}><CheckCheck size={16} aria-hidden="true" />Tandai semua dibaca</PulseButton>}
+        <PulseButton size="sm" disabled={busy || disabled} onClick={onRefresh}><RefreshCw size={16} aria-hidden="true" />Perbarui</PulseButton>
+      </div>
+    </header>
+    <div aria-live="polite">{notice && <div className="mo-feedback"><PulseNotice tone={notice.tone} role={notice.tone === 'warning' ? 'alert' : 'status'}>{notice.text}</PulseNotice></div>}</div>
+    {!alerts.length
+      ? <div className="mo-empty"><PulsePanelEmpty title="Belum ada alert untuk project ini">Alert muncul di sini saat posting tentang satu isu melonjak, interaksi satu posting naik cepat, atau pengumpulan dari satu sumber gagal.</PulsePanelEmpty></div>
+      : <ul className="mo-alerts" aria-label="Daftar alert, terbaru di atas" aria-busy={(data.alert_offset ?? page * 50) !== page * 50 || undefined}>
+        {visible.map(alert => <AlertRow key={alert.id} alert={alert} project={topicId ? null : topics.find(topic => topic.id === alert.topic_id)?.label || null} busy={busy || disabled} onOpen={onOpen} onAck={onAck} onSaved={onSaved} />)}
+      </ul>}
+    {(alerts.length > SHOWN_ALERTS || pages > 1) && <footer className="mo-inbox-foot">
+      {alerts.length > SHOWN_ALERTS && <PulseButton size="sm" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? 'Ringkas daftar' : `Tampilkan ${formatCount(alerts.length - SHOWN_ALERTS)} alert lainnya`}</PulseButton>}
+      {pages > 1 && <nav className="mo-pages" aria-label="Halaman alert">
+        <PulseButton size="sm" disabled={!canChangeAlertPage(page, total, busy, -1)} onClick={() => setPage(page - 1)}>Lebih baru</PulseButton>
+        <span>Halaman {formatCount(page + 1)} dari {formatCount(pages)}</span>
+        <PulseButton size="sm" disabled={!canChangeAlertPage(page, total, busy, 1)} onClick={() => setPage(page + 1)}>Lebih lama</PulseButton>
+      </nav>}
+    </footer>}
+  </section>;
 }
 
-const archivePlatforms=[['x','X'],['instagram','Instagram'],['tiktok','TikTok'],['reddit','Reddit'],['youtube','YouTube'],['news','Berita']];
-const archiveErrors={rate_limited:'dibatasi penyedia',access_or_quota_restricted:'kuota penyedia habis',plan_restricted:'tidak tersedia di paket',authentication_failed:'kredensial ditolak',not_configured:'belum dikonfigurasi',pending:'penyedia belum selesai memproses'};
-/** Pulls older posts for one platform and a date range. Explicit and bounded: at most eight requests per run. */
-function ArchivePull({ topicId, disabled, onDone }) {
-  const [state,setState]=useState({busy:false,result:null,error:''});
-  async function submit(event){
+function SourceName({ row, size = 18 }) {
+  return <span className="mo-source-name"><PlatformIcon platform={row.platform} size={size} /><strong>{row.label || platformLabel(row.platform)}</strong></span>;
+}
+
+/** One source as three answers: how much of the scheduled collection succeeded, which dates its posts span, how often it collects. */
+function SourceRow({ row, axis, serverTime }) {
+  const name = row.label || platformLabel(row.platform);
+  const week = row.week, day = row.day, span = row.span, place = spanPlacement(span, axis);
+  const frequency = frequencyText(row, serverTime);
+  const density = span && span.days > 1 && row.daysWithPosts ? `, terbit pada ${formatCount(Math.min(row.daysWithPosts, span.days))} dari ${formatCount(span.days)} hari` : '';
+  return <li className="mo-source">
+    <div className="mo-cell mo-cell-source">
+      <SourceName row={row} />
+      {row.status.label && <PulseTag tone={row.status.tone} dot>{row.status.label}</PulseTag>}
+      {row.status.reason && <span className="mo-note">{row.status.reason}</span>}
+    </div>
+    <div className="mo-cell">
+      <span className="mo-cell-label">Terlaksana</span>
+      {week ? <>
+        <strong className="mo-figure">{formatCount(week.percent)}%</strong>
+        <span className="mo-bar" role="img" aria-label={`${name}: ${formatCount(week.succeeded)} berhasil, ${formatCount(week.failed)} gagal, ${formatCount(week.waiting)} belum selesai dari ${formatCount(week.planned)} pengumpulan terjadwal dalam 7 hari terakhir`}>
+          {week.succeeded > 0 && <i data-part="done" style={{ flexGrow: week.succeeded }} />}
+          {week.failed > 0 && <i data-part="failed" style={{ flexGrow: week.failed }} />}
+          {week.waiting > 0 && <i data-part="waiting" style={{ flexGrow: week.waiting }} />}
+        </span>
+        <span className="mo-note"><b>{formatCount(week.succeeded)} dari {formatCount(week.planned)}</b> pengumpulan terjadwal berhasil dalam 7 hari terakhir{week.failed ? `, ${formatCount(week.failed)} gagal` : ''}{week.waiting ? `, ${formatCount(week.waiting)} belum selesai` : ''}</span>
+        <span className="mo-note">{day ? `24 jam terakhir: ${formatCount(day.succeeded)} dari ${formatCount(day.planned)} (${formatCount(day.percent)}%)` : '24 jam terakhir: tidak ada yang dijadwalkan'}</span>
+      </> : <>
+        <strong className="mo-figure" data-empty="">Belum ada angka</strong>
+        <span className="mo-note">{row.hasFigures ? 'Tidak ada pengumpulan terjadwal dalam 7 hari terakhir.' : 'Angka belum tersedia dari server.'}</span>
+      </>}
+    </div>
+    <div className="mo-cell">
+      <span className="mo-cell-label">Rentang posting</span>
+      {span ? <>
+        <strong className="mo-figure">{formatCount(span.days)} hari</strong>
+        {place && <span className="mo-range" role="img" aria-label={`Posting ${name} terbit ${span.text}. Garis menunjukkan letaknya di antara posting paling awal dan paling akhir project, ${axis.text}.`}><i style={{ left: `${place.start}%`, width: `${place.width}%` }} /></span>}
+        <span className="mo-note"><b>{span.text}</b></span>
+        <span className="mo-note">{formatCount(row.posts)} posting{density}</span>
+      </> : <>
+        <strong className="mo-figure" data-empty="">{row.posts ? 'Tanpa tanggal terbit' : row.hasFigures ? 'Belum ada posting' : 'Belum ada angka'}</strong>
+        <span className="mo-note">{row.posts ? `${formatCount(row.posts)} posting tersimpan, sumbernya tidak memberi tanggal terbit.` : row.hasFigures ? 'Belum ada posting tersimpan dari sumber ini.' : 'Angka belum tersedia dari server.'}</span>
+      </>}
+    </div>
+    <div className="mo-cell">
+      <span className="mo-cell-label">Frekuensi</span>
+      {frequency.headline && <strong className="mo-figure" data-empty={row.scheduleRow?.enabled ? undefined : ''}>{frequency.headline}</strong>}
+      <span className="mo-note">{frequency.last}</span>
+      <span className="mo-note">{frequency.next}</span>
+    </div>
+  </li>;
+}
+
+function CollectionOverview({ data, rows, scopeLabel, scoped }) {
+  const shown = rows.filter(row => row.shown), summary = collectionSummary(rows);
+  const hasBars = shown.some(row => row.week), hasRanges = !!summary.span && shown.some(row => row.span);
+  const often = minutes => (intervalText(minutes) || '').toLowerCase();
+  return <section className="pulse-panel mo-panel mo-collect" aria-labelledby="mo-collect-title">
+    <header className="mo-head">
+      <div className="mo-head-title">
+        <div>
+          <h2 id="mo-collect-title"><Radio size={20} aria-hidden="true" />Pengumpulan data</h2>
+          <p>{scopeLabel}. Seberapa banyak yang terlaksana, rentang tanggalnya, dan seberapa sering.</p>
+        </div>
+      </div>
+    </header>
+    {summary.sources > 0 && !!data.overview && <p className="mo-lead">
+      <strong>{formatCount(summary.posts)} posting</strong> terkumpul dari <strong>{formatCount(summary.sources)} sumber</strong>{summary.span ? <>, terbit <strong>{summary.span.text}</strong></> : null}.{' '}
+      {summary.week
+        ? <>Dalam 7 hari terakhir <strong>{formatCount(summary.week.percent)}%</strong> pengumpulan terjadwal berhasil ({formatCount(summary.week.succeeded)} dari {formatCount(summary.week.planned)}).</>
+        : 'Belum ada pengumpulan terjadwal dalam 7 hari terakhir.'}{' '}
+      {!scoped ? null : !summary.scheduled ? 'Saat ini tidak ada sumber yang dikumpulkan otomatis.'
+        : <><strong>{formatCount(summary.scheduled)} sumber</strong> dikumpulkan otomatis, {summary.fastest === summary.slowest ? often(summary.fastest) : `dari ${often(summary.fastest)} sampai ${often(summary.slowest)}`}.</>}
+    </p>}
+    {data.scheduler_running === false && <div className="mo-feedback"><PulseNotice tone="warning" role="status"><strong>Pengumpulan otomatis sedang tidak berjalan.</strong> Jadwal di bawah tidak dijalankan sampai administrator menyalakan kembali layanan PULSE.</PulseNotice></div>}
+    {!shown.length
+      ? <div className="mo-empty"><PulsePanelEmpty title="Belum ada sumber yang dikumpulkan">Nyalakan jadwal satu sumber di Pengaturan pengumpulan di bawah. Angka muncul setelah pengumpulan pertama selesai.</PulsePanelEmpty></div>
+      : <>
+        <div className="mo-sources-head" aria-hidden="true"><span>Sumber</span><span>Terlaksana</span><span>Rentang posting</span><span>Frekuensi</span></div>
+        <ul className="mo-sources" aria-label="Pengumpulan per sumber">{shown.map(row => <SourceRow key={row.platform} row={row} axis={summary.span} serverTime={data.server_time} />)}</ul>
+        {(hasBars || hasRanges) && <ul className="mo-legend" aria-label="Cara membaca batang dan garis">
+          {hasBars && <li>Batang Terlaksana, bagian dari pengumpulan terjadwal 7 hari terakhir:
+            <span><i className="mo-key" data-part="done" aria-hidden="true" />berhasil</span>
+            <span><i className="mo-key" data-part="failed" aria-hidden="true" />gagal</span>
+            <span><i className="mo-key" data-part="waiting" aria-hidden="true" />belum selesai</span></li>}
+          {hasRanges && <li>Garis Rentang, letak tanggal terbit tiap sumber di antara posting paling awal dan paling akhir project ({summary.span.text}):
+            <span><i className="mo-key" data-part="range" aria-hidden="true" />ada posting</span></li>}
+        </ul>}
+      </>}
+  </section>;
+}
+
+const stopNotes = {
+  authentication_failed: 'Akses ke sumber data ditolak.', not_configured: 'Sumber data belum dihubungkan.',
+  access_or_quota_restricted: 'Saldo sumber data habis.', plan_restricted: 'Saldo sumber data habis.',
+};
+
+/** What stands in the way of collecting through one channel, with the one action that lifts it. Nothing while it is fine. */
+function ChannelNote({ channel, name, save, showOff = true }) {
+  if (!channel) return null;
+  const shared = monitorSources.filter(source => source.channel === channel.provider && source.label !== name).map(source => source.label);
+  const put = (body, question, done) => save('/workers/' + channel.provider, body, question + (shared.length ? ` Berlaku juga untuk ${shared.join(', ')}.` : ''), done);
+  if (channel.daily_limit === 0) return showOff ? <p className="mo-channel-note"><span>{name} dimatikan untuk semua project, jadi jadwalnya tidak bisa berjalan.</span><PulseButton size="sm" onClick={() => put({ daily_limit: -1 }, `Nyalakan lagi ${name} untuk semua project?`, `${name} dinyalakan lagi.`)}>Nyalakan lagi</PulseButton></p> : null;
+  if (channel.blocked_reason && channel.blocked_until) return <p className="mo-channel-note"><span>Sumber meminta jeda. Pengumpulan lanjut sendiri sekitar {pulseDate(channel.blocked_until)}.</span></p>;
+  if (channel.blocked_reason) return <p className="mo-channel-note"><span>{stopNotes[channel.blocked_reason] || 'Sumber data menolak permintaan.'} Pengumpulan {name} terhenti.</span><PulseButton size="sm" onClick={() => put({ daily_limit: channel.daily_limit, clear_block: true }, `Coba lagi mengumpulkan ${name}? Jika penyebabnya belum diperbaiki, pengumpulan akan terhenti lagi.`, `${name} dicoba lagi pada jadwal berikutnya.`)}>Coba lagi</PulseButton></p>;
+  if (channel.daily_limit > 0) return <p className="mo-channel-note"><span>{name} masih dibatasi {formatCount(channel.daily_limit)} pengumpulan per hari untuk semua project.</span><PulseButton size="sm" onClick={() => put({ daily_limit: -1 }, `Hapus batas harian ${name} untuk semua project?`, `Batas harian ${name} dihapus.`)}>Hapus batas</PulseButton></p>;
+  return null;
+}
+
+function ScheduleRow({ row, topicId, save }) {
+  const schedule = row.scheduleRow;
+  const [enabled, setEnabled] = useState(!!schedule?.enabled);
+  const [interval, setIntervalValue] = useState(schedule?.interval_minutes || defaultInterval(row.platform));
+  const choices = [...new Set([...intervalChoices, interval])].sort((a, b) => a - b);
+  const changed = enabled !== !!schedule?.enabled || (!!schedule && interval !== schedule.interval_minutes);
+  const often = (intervalText(interval) || '').toLowerCase();
+  const submit = event => {
     event.preventDefault();
-    const form=new FormData(event.currentTarget),from=form.get('from'),to=form.get('to');
-    if(!from||!to||from>to){setState({busy:false,result:null,error:'Isi tanggal mulai dan akhir; tanggal akhir tidak boleh sebelum tanggal mulai.'});return;}
-    setState({busy:true,result:null,error:''});
-    try{
-      const result=await api.post('/admin/pulse/topics/'+encodeURIComponent(topicId)+'/backfill',{platform:form.get('platform'),from,to});
-      setState({busy:false,result,error:''});window.dispatchEvent(new Event('pulse-data-changed'));onDone?.();
-    }catch(error){setState({busy:false,result:null,error:error.status===409?'Pengambilan lain sedang berjalan untuk project ini. Coba lagi sebentar.':error.status===422?(error.message||'Rentang tanggal tidak valid (maksimal 92 hari).'):'Arsip belum berhasil ditarik. Coba lagi.'});}
+    const question = !enabled ? `Jeda pengumpulan otomatis ${row.label} untuk project ini?`
+      : schedule?.enabled ? `Ubah pengumpulan ${row.label} menjadi ${often}? Pengumpulan berikutnya langsung dijadwalkan.`
+        : `Kumpulkan ${row.label} otomatis ${often} untuk project ini? Pengumpulan pertama langsung dijadwalkan.`;
+    save('/topics/' + encodeURIComponent(topicId) + '/' + row.schedule, { enabled, interval_minutes: interval }, question, `Jadwal ${row.label} tersimpan.`);
+  };
+  return <li className="mo-schedule">
+    <form onSubmit={submit} aria-label={`Jadwal ${row.label}`}>
+      <SourceName row={row} size={16} />
+      <label className="mo-switch"><input type="checkbox" role="switch" className="pu-switch-input" checked={enabled} onChange={event => setEnabled(event.target.checked)} />Kumpulkan otomatis</label>
+      <label className="mo-field"><span>Seberapa sering</span><select value={interval} onChange={event => setIntervalValue(Number(event.target.value))}>{choices.map(minutes => <option key={minutes} value={minutes}>{intervalText(minutes)}</option>)}</select></label>
+      <PulseButton type="submit" size="sm" variant={changed ? 'primary' : 'secondary'} disabled={!changed}>Simpan</PulseButton>
+    </form>
+    <ChannelNote channel={row.channelRow} name={row.label} save={save} />
+  </li>;
+}
+
+function ExtraRow({ extra, channel, save }) {
+  const on = channel.daily_limit !== 0;
+  const toggle = () => save('/workers/' + channel.provider, { daily_limit: on ? 0 : -1 },
+    on ? `Matikan ${extra.label} untuk semua project?` : `Nyalakan ${extra.label} untuk semua project?${extra.paid ? ' Pengambilan ini memakai saldo sumber data.' : ''}`,
+    `${extra.label} ${on ? 'dimatikan' : 'dinyalakan'}.`);
+  return <li className="mo-schedule">
+    <div className="mo-extra">
+      <strong>{extra.label}</strong>
+      <label className="mo-switch"><input type="checkbox" role="switch" className="pu-switch-input" checked={on} onChange={toggle} />{on ? 'Menyala' : 'Mati'}</label>
+    </div>
+    {on && <ChannelNote channel={channel} name={extra.label} save={save} showOff={false} />}
+  </li>;
+}
+
+const archiveSources = monitorSources.map(source => [source.platform, source.label]);
+const archiveStops = { rate_limited: 'sumber meminta jeda', access_or_quota_restricted: 'saldo sumber data habis', plan_restricted: 'saldo sumber data habis', authentication_failed: 'akses ke sumber data ditolak', not_configured: 'sumber data belum dihubungkan', pending: 'sumber belum selesai menyiapkan data' };
+/** Pulls older posts for one source and a date range. Explicit and bounded by the server. */
+function ArchivePull({ topicId, disabled, onDone }) {
+  const [state, setState] = useState({ busy: false, result: null, error: '' });
+  async function submit(event) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget), from = form.get('from'), to = form.get('to');
+    if (!from || !to || from > to) { setState({ busy: false, result: null, error: 'Isi kedua tanggal. Tanggal akhir tidak boleh sebelum tanggal mulai.' }); return; }
+    setState({ busy: true, result: null, error: '' });
+    try {
+      const result = await api.post('/admin/pulse/topics/' + encodeURIComponent(topicId) + '/backfill', { platform: form.get('platform'), from, to });
+      setState({ busy: false, result, error: '' }); window.dispatchEvent(new Event('pulse-data-changed')); onDone?.();
+    } catch (error) {
+      setState({ busy: false, result: null, error: error.status === 409 ? 'Pengumpulan lain sedang berjalan untuk project ini. Coba lagi sebentar.' : error.status === 422 ? 'Rentang tanggal tidak bisa dipakai. Pilih 1 sampai 92 hari.' : 'Posting lama belum berhasil ditarik. Coba lagi.' });
+    }
   }
-  const r=state.result;
-  return <div className="pm-archive">
-    <p>Jadwal biasa mengambil posting terbaru. Tarik arsip mengisi posting lama: rentang dibagi menjadi paling banyak 8 jendela, satu permintaan per jendela, sampai 300 posting tiap permintaan.</p>
-    <form onSubmit={submit}><fieldset disabled={disabled||state.busy}>
-      <label>Platform<select name="platform" defaultValue="x">{archivePlatforms.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-      <label>Tanggal mulai<input name="from" type="date" required/></label>
-      <label>Tanggal akhir<input name="to" type="date" required/></label>
-      <PulseButton type="submit" busy={state.busy} busyLabel="Menarik arsip…">Tarik arsip</PulseButton>
+  const result = state.result;
+  return <div className="mo-archive">
+    <p>Jadwal otomatis hanya mengambil posting terbaru. Di sini posting dari tanggal yang lebih lama bisa ditarik, paling panjang 92 hari sekali tarik.</p>
+    <form onSubmit={submit}><fieldset disabled={disabled || state.busy}>
+      <label className="mo-field"><span>Sumber</span><select name="platform" defaultValue="x">{archiveSources.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <label className="mo-field"><span>Dari tanggal</span><input name="from" type="date" required /></label>
+      <label className="mo-field"><span>Sampai tanggal</span><input name="to" type="date" required /></label>
+      <PulseButton type="submit" busy={state.busy} busyLabel="Menarik posting lama…">Tarik posting lama</PulseButton>
     </fieldset></form>
     <div aria-live="polite">
-      {state.error&&<p className="pm-error" role="alert">{state.error}</p>}
-      {r&&<><p className="pm-status" role="status"><strong>{formatCount(r.ingested)} posting baru</strong> dari {formatCount(r.fetched)} yang diterima.{r.stopped?` Berhenti lebih awal: ${archiveErrors[r.stopped]||'penyedia menolak permintaan'}.`:''}</p>
-        <ul className="pm-archive-windows">{r.windows.map(w=><li key={w.from}><span>{w.from===w.to?w.from:`${w.from} s.d. ${w.to}`}</span><span>{w.status==='success'?`${formatCount(w.fetched)} diterima · ${formatCount(w.ingested)} baru`:(archiveErrors[w.status]||'gagal diambil')}</span></li>)}</ul></>}
+      {state.error && <PulseNotice tone="warning" role="alert">{state.error}</PulseNotice>}
+      {result && <>
+        <PulseNotice role="status"><strong>{formatCount(result.ingested)} posting baru</strong> dari {formatCount(result.fetched)} yang ditemukan.{result.stopped ? ` Berhenti lebih awal: ${archiveStops[result.stopped] || 'sumber menolak permintaan'}.` : ''}</PulseNotice>
+        <ul className="mo-archive-parts">{(result.windows || []).map(part => <li key={part.from}><span>{part.from === part.to ? pulseDate(part.from) : `${pulseDate(part.from)} sampai ${pulseDate(part.to)}`}</span><span>{part.status === 'success' ? `${formatCount(part.fetched)} ditemukan, ${formatCount(part.ingested)} baru` : (archiveStops[part.status] || 'belum berhasil ditarik')}</span></li>)}</ul>
+      </>}
     </div>
   </div>;
 }
 
-function ProjectSchedule({ worker, schedule, topicId, save, runs, runsError }) {
-  const social=['instagram','tiktok','reddit'].includes(worker.provider);
-  const [interval,setIntervalValue]=useState(schedule?.interval_minutes||(social?1440:60));
-  const manual = latestManualProviderRun(runs,worker.provider);
-  const result = manual?.providers?.[worker.provider];
-  return <article className="pm-worker"><h3><PlatformLabel platform={sourcePlatform(worker.provider)} /></h3>
-    {['xpoz','instagram','tiktok','reddit'].includes(worker.provider)&&<p>Berbagi kuota Xpoz global: {worker.used} / {limitText(worker)} terpakai.{social?' Maks. 300 posting per percobaan.':''}</p>}
-    <p><PulseBadge tone={schedule?.enabled?'success':'neutral'}>Otomatis · {schedule?.enabled?'Jadwal aktif':'Jadwal dijeda'}</PulseBadge></p>
-    <p>Otomatis terakhir berhasil: {schedule?.last_success_at ? pulseDate(schedule.last_success_at) : 'Belum ada keberhasilan worker otomatis'}</p>
-    {schedule?.enabled && <p>{worker.blocked_reason ? 'Worker diblokir: '+worker.blocked_reason : capReached(worker) ? 'Menunggu kuota global, reset pukul 07.00 WIB' : `Jadwal berikutnya: ${pulseDate(schedule.next_run_at)} (tergantung antrean & kuota)`}</p>}
-    <p><strong>Pengambilan manual terakhir</strong><br/>{social ? 'Lihat riwayat pengambilan di Sumber & Cakupan.' : runsError ? 'Riwayat manual gagal dimuat. Coba Perbarui status.' : manual ? <>{pulseDate(manual.finished_at || manual.started_at)} · {result.status === 'success' ? 'Berhasil' : `Status: ${result.status || 'tidak tersedia'}`}{result.fetched != null ? ` · ${result.fetched} diambil` : ''}{result.ingested != null ? ` · ${result.ingested} baru` : ''}</> : 'Tidak ditemukan dalam 100 riwayat crawl terakhir'}</p>
-    <form onSubmit={e=>{e.preventDefault();save('/topics/'+encodeURIComponent(topicId)+'/'+worker.provider,{enabled:!schedule?.enabled,interval_minutes:Number(interval)},schedule?.enabled?'Jeda jadwal project ini? Request yang sudah dimulai dapat selesai.':'Aktifkan pengambilan berulang untuk project ini? Akan memakai kuota provider sesuai batas global.');}}>
-      <label>Interval project (menit)<input aria-label={'Interval '+worker.provider} type="number" required min="5" max="1440" value={interval} onChange={e=>setIntervalValue(e.target.value)}/></label>
-      <PulseButton type="submit" disabled={!schedule?.enabled&&(worker.daily_limit===0||!!worker.blocked_reason)}>{schedule?.enabled?'Jeda jadwal':'Aktifkan jadwal'}</PulseButton>
-      {!schedule?.enabled&&(worker.daily_limit===0||!!worker.blocked_reason)&&<small>Aktivasi memerlukan kuota global positif atau tanpa batas, dan pengumpul yang tidak terblokir. Lihat batas pengumpulan.</small>}
-    </form>
-  </article>;
+function CollectionSettings({ data, rows, topicId, scopeLabel, busy, disabled, notice, save, onDone }) {
+  const channels = new Map((data.workers || []).map(row => [row.provider, row]));
+  const extras = monitorExtras.filter(extra => channels.has(extra.channel));
+  return <details className="pulse-panel mo-panel mo-settings">
+    <summary><SlidersHorizontal size={18} aria-hidden="true" /><span><strong>Pengaturan pengumpulan</strong><span>Jadwal per sumber, pelengkap data, dan tarik posting lama</span></span><ChevronDown className="mo-chevron" size={18} aria-hidden="true" /></summary>
+    <div className="mo-settings-body">
+      <div aria-live="polite">{notice && <PulseNotice tone={notice.tone} role={notice.tone === 'warning' ? 'alert' : 'status'}>{notice.text}</PulseNotice>}</div>
+      <section aria-labelledby="mo-set-schedule">
+        <h3 id="mo-set-schedule">Jadwal per sumber</h3>
+        {topicId
+          ? <><p>Berlaku untuk project {scopeLabel}. Menyimpan jadwal yang menyala langsung menjadwalkan satu pengumpulan.</p>
+            <fieldset disabled={busy || disabled}><ul className="mo-schedules">{rows.filter(row => row.schedule).map(row => <ScheduleRow key={[row.platform, row.scheduleRow?.enabled, row.scheduleRow?.interval_minutes].join(':')} row={row} topicId={topicId} save={save} />)}</ul></fieldset></>
+          : <p>Pilih satu project untuk mengatur jadwalnya.</p>}
+      </section>
+      {extras.length > 0 && <section aria-labelledby="mo-set-extras">
+        <h3 id="mo-set-extras">Pelengkap data</h3>
+        <p>Berjalan sendiri di samping pengumpulan posting dan berlaku untuk semua project.</p>
+        <fieldset disabled={busy || disabled}><ul className="mo-schedules">{extras.map(extra => <ExtraRow key={extra.channel} extra={extra} channel={channels.get(extra.channel)} save={save} />)}</ul></fieldset>
+      </section>}
+      {topicId && <section aria-labelledby="mo-set-archive">
+        <h3 id="mo-set-archive">Tarik posting lama</h3>
+        <ArchivePull topicId={topicId} disabled={busy || disabled} onDone={onDone} />
+      </section>}
+    </div>
+  </details>;
 }
+
+const saveError = error => error?.status === 409 ? 'Sumber ini sedang tidak bisa dijadwalkan. Lihat keterangan di bawah nama sumbernya, lalu simpan lagi.'
+  : error?.status === 404 ? 'Project atau sumber tidak ditemukan. Muat ulang halaman lalu coba lagi.'
+    : error?.status === 422 ? 'Pengaturan tidak bisa disimpan. Periksa lagi pilihannya.'
+      : [401, 403].includes(error?.status) ? pulseError(error) : 'Pengaturan belum tersimpan. Periksa koneksi lalu coba lagi.';
 
 export default function MonitorRoom(props) {
   // A project change resets pagination, drafts and in-flight response ownership.
@@ -134,70 +393,76 @@ export default function MonitorRoom(props) {
 }
 
 function MonitorProject({ topicId, topics = [], onOpenAlert, disabled }) {
-  const [data,setData]=useState(null),[error,setError]=useState(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
-  const [page,setPage]=useState(0);
-  const [runs,setRuns]=useState([]),[runsError,setRunsError]=useState(false);
-  const live=useRef(false),fetching=useRef(false),generation=useRef(0);
-  const invalidate=useCallback(()=>{generation.current+=1;fetching.current=false},[]);
-  const load=useCallback(async()=>{
-    if(!live.current||fetching.current||disabled)return;
-    fetching.current=true;
-    const request=++generation.current;
-    try{
-      const [monitorResult,manualResult]=await Promise.allSettled([
-        api.get('/admin/pulse/monitor',{topic_id:topicId,alert_offset:page*50}),
-        topicId ? api.get('/admin/pulse/topics/'+encodeURIComponent(topicId)+'/runs',{limit:100}) : Promise.resolve([]),
-      ]);
-      if(live.current&&request===generation.current){
-        if(monitorResult.status==='fulfilled'){setData(monitorResult.value);setError(null)}else setError(monitorResult.reason);
-        setRuns(manualResult.status==='fulfilled'?manualResult.value:[]);
-        setRunsError(manualResult.status==='rejected');
+  const [data, setData] = useState(null), [error, setError] = useState(null), [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState(null);   // {zone: 'alerts'|'settings', tone, text}
+  const [marking, setMarking] = useState(null);
+  const [page, setPage] = useState(0);
+  const live = useRef(false), fetching = useRef(false), generation = useRef(0);
+  const invalidate = useCallback(() => { generation.current += 1; fetching.current = false; }, []);
+  const load = useCallback(async () => {
+    if (!live.current || fetching.current || disabled) return;
+    fetching.current = true;
+    const request = ++generation.current;
+    if (topicId) unreadReadStarted(topicId);
+    try {
+      const value = await api.get('/admin/pulse/monitor', { topic_id: topicId, alert_offset: page * 50 });
+      if (live.current && request === generation.current) { setData(value); setError(null); publishUnread(topicId, value.unread); }
+    } catch (e) { if (live.current && request === generation.current) { setError(e); publishUnread(topicId, null); } } finally { if (request === generation.current) fetching.current = false; }
+  }, [disabled, topicId, page]);
+  useEffect(() => { live.current = true; load(); const timer = setInterval(load, 30000); return () => { live.current = false; invalidate(); clearInterval(timer); }; }, [load, invalidate]);
+  const reload = async () => { invalidate(); await load(); };   // discards any poll started before a write
+  const save = async (path, body, question, done = 'Pengaturan tersimpan.') => {
+    if (busy || !window.confirm(question)) return;
+    setBusy(true); setNotice(null);
+    try { await api.put('/admin/pulse/monitor' + path, body); setNotice({ zone: 'settings', tone: 'neutral', text: done }); await reload(); }
+    catch (e) { if (live.current) setNotice({ zone: 'settings', tone: 'warning', text: saveError(e) }); }
+    finally { setBusy(false); }
+  };
+  const acknowledge = id => api.post('/admin/pulse/monitor/alerts/' + encodeURIComponent(id) + '/ack');
+  const ack = async id => {
+    if (busy) return;
+    setBusy(true); setNotice(null);
+    try { await acknowledge(id); await reload(); }
+    catch (e) { if (live.current) setNotice({ zone: 'alerts', tone: 'warning', text: `Alert belum bisa ditandai dibaca. ${pulseError(e)}` }); }
+    finally { setBusy(false); }
+  };
+  // The server acknowledges one alert per request. Collect the unread alerts of every page of this scope, then acknowledge them one after another.
+  const ackAll = async () => {
+    if (busy || !data?.unread) return;
+    if (!window.confirm(`Tandai ${formatCount(data.unread)} alert sebagai dibaca? Alert tetap ada di daftar.`)) return;
+    setBusy(true); setNotice(null);
+    let done = 0, ids = [];
+    try {
+      for (let offset = 0; ; offset += 50) {
+        const part = await api.get('/admin/pulse/monitor', { topic_id: topicId, alert_offset: offset });
+        ids.push(...part.alerts.filter(alert => !alert.acknowledged_at).map(alert => alert.id));
+        if (!part.alerts.length || offset + 50 >= part.alert_total || ids.length >= part.unread) break;
       }
-    }catch(e){if(live.current&&request===generation.current)setError(e)}finally{if(request===generation.current)fetching.current=false}
-  },[disabled,topicId,page]);
-  useEffect(()=>{live.current=true;load();const timer=setInterval(load,30000);return()=>{live.current=false;invalidate();clearInterval(timer)}},[load,invalidate]);
-  const save=async(path,body,question)=>{
-    if(busy||!window.confirm(question))return;
-    setBusy(true);setMessage('');
-    try{await api.put('/admin/pulse/monitor'+path,body);setMessage('Pengaturan tersimpan.');await load()}catch(e){setError(e)}finally{setBusy(false)}
+      ids = [...new Set(ids)];
+      for (const id of ids) {
+        if (!live.current) return;
+        setMarking({ done, total: ids.length });
+        await acknowledge(id); done += 1;
+      }
+      if (live.current) setNotice({ zone: 'alerts', tone: 'neutral', text: `${formatCount(done)} alert ditandai dibaca.` });
+    } catch (e) {
+      if (live.current) setNotice({ zone: 'alerts', tone: 'warning', text: `${formatCount(done)} dari ${formatCount(ids.length || data.unread)} alert ditandai dibaca, sisanya belum. ${pulseError(e)}` });
+    } finally {
+      if (live.current) { setMarking(null); setPage(0); await reload(); setBusy(false); }
+    }
   };
-  const ack=async id=>{if(busy)return;setBusy(true);try{await api.post('/admin/pulse/monitor/alerts/'+encodeURIComponent(id)+'/ack');await load()}catch(e){setError(e)}finally{setBusy(false)}};
-  const workflowSaved=updated=>{
-    if(!live.current)return;
-    invalidate(); // Discard any poll started before this explicit save.
-    setData(previous=>previous?{...previous,alerts:previous.alerts.map(alert=>alert.id===updated.id?updated:alert)}:previous);
-  };
-  const alerts=(data?.alerts||[]).filter(a=>!topicId||a.topic_id===topicId);
-  const scheduleWorkers=(data?.workers||[]).flatMap(w=>w.provider==='xpoz'?[w,{...w,provider:'instagram'},{...w,provider:'tiktok'},{...w,provider:'reddit'}]:[w]);
-  const scopeLabel=topicId?(topics.find(t=>t.id===topicId)?.label||topicId):'Semua project (semua topik)';
-  return <section className="pulse-panel pm-room" id="pulse-monitor" aria-label="Monitor Project">
-    <PulsePanelHeading title="Pengumpulan &amp; alert" description={scopeLabel+' · aktivitas pengumpulan dan alert'} icon={Radio}><PulseButton onClick={load} disabled={disabled||busy}><RefreshCw size={14}/> Perbarui status</PulseButton></PulsePanelHeading>
-    {error&&<p className="pm-error" role="alert">{pulseError(error)} {data&&'Status di bawah mungkin sudah kedaluwarsa.'}</p>}
-    {message&&<p className="pm-status" role="status">{message}</p>}
-    {!data?<p className="pm-status">{disabled?'Login admin diperlukan.':'Memuat status monitoring…'}</p>:<>
-      <div className="pm-columns">
-      <div className="pm-col-alerts">
-      <div className="pm-inbox-heading"><h3><Bell size={18}/> Alert masuk <span>{data.unread} belum ditandai · {scopeLabel}</span></h3><small>Status diperiksa setiap 30 detik selama dashboard terbuka · {pulseDate(data.server_time)}</small></div>
-      <div className="ps-help-row">Kriteria alert <InfoTip label="Tentang kriteria alert">Alert awal: ≥5 posting dan ≥3 penulis pada isu serupa dalam 30 menit, setelah ada data pembanding pertama. Ini ambang aktivitas, bukan klaim viral terverifikasi. Data lama yang baru masuk tidak dianggap breaking news.</InfoTip></div>
-      {!alerts.length?<div className="pm-empty"><Bell size={24}/><strong>Belum ada alert pada cakupan ini</strong><p>Alert akan muncul setelah pengumpulan aktif dan kondisi terpenuhi. Data historis tidak dibuat menjadi notifikasi palsu.</p></div>:<div className="pm-alerts">{alerts.map(a=><article key={a.id} className={a.acknowledged_at?'is-read':''}><div><p className="pm-alert-meta"><PulseTag tone={(alertKinds[a.kind]||['accent'])[0]} dot>{(alertKinds[a.kind]||[0,'Ambang aktivitas tercapai'])[1]}</PulseTag><span>{topics.find(t=>t.id===a.topic_id)?.label||a.topic_id}</span></p><h4>{a.title}</h4><small>{pulseDate(a.created_at)}{a.detail.posts?` · ${a.detail.posts} posting / ${a.detail.authors} penulis`:''}</small>{a.kind==='engagement_growth' && <p>+{formatCount(a.detail.delta_engagement)} interaksi · {Number(a.detail.rate_per_hour).toLocaleString('id-ID',{maximumFractionDigits:1})}/jam antara dua pengamatan. Buka analisis untuk melihat posting sumber.</p>}{a.kind==='volume_spike' && <p>{a.detail.posts} posting / 30 menit dibanding {a.detail.previous_posts} pada 30 menit sebelumnya ({a.detail.ratio}×). Minimal 10 posting, 3 akun, dan 3× baseline. Cakupan crawl dapat memengaruhi hasil.</p>}</div><div><AlertWorkflow alert={a} disabled={busy||disabled} onSaved={workflowSaved}/><PulseButton arrow onClick={()=>onOpenAlert(a)}>{a.issue_id?'Analisis penyebaran':'Lihat topik'}</PulseButton><PulseButton variant="quiet" disabled={busy||disabled||!!a.acknowledged_at} onClick={()=>ack(a.id)}>{a.acknowledged_at?'Sudah dibaca':'Tandai dibaca'}</PulseButton></div></article>)}</div>}
-      <div className="pulse-pagination"><PulseButton disabled={!canChangeAlertPage(page,data.alert_total,busy,-1)} onClick={()=>{setData(null);setPage(page-1)}}>Alert sebelumnya</PulseButton><span>Halaman alert {page+1} / {Math.max(1,Math.ceil(data.alert_total/50))}</span><PulseButton disabled={!canChangeAlertPage(page,data.alert_total,busy,1)} onClick={()=>{setData(null);setPage(page+1)}}>Alert berikutnya</PulseButton></div>
-      </div>
-      <div className="pm-col-collect">
-      <QueueChart counts={data.job_counts}/>
-      {topicId&&<details className="pm-settings"><summary>Tarik arsip · posting lama per rentang tanggal</summary><ArchivePull topicId={topicId} disabled={busy||disabled} onDone={load}/></details>}
-      <details className="pm-settings"><summary>Jadwal project · {scopeLabel}</summary>
-        <div className="ps-help-row">Jadwal & pengambilan manual <InfoTip label="Tentang jadwal dan pengambilan manual">Jadwal otomatis dan pengambilan manual dicatat terpisah. Jeda tidak membatalkan permintaan yang sudah berjalan. Riwayat manual di sini berasal dari tombol Crawl manual. Detail Instagram/TikTok dan komentar tersedia di Sumber & Cakupan dan Komentar.</InfoTip></div>
-        {topicId?<fieldset disabled={busy||disabled}><div className="pm-workers">{scheduleWorkers.map(w=>{const s=data.schedules.find(s=>s.topic_id===topicId&&s.provider===w.provider);return <ProjectSchedule key={[w.provider,topicId,s?.enabled,s?.interval_minutes].join(':')} worker={w} schedule={s} topicId={topicId} save={save} runs={runs} runsError={runsError}/>})}</div></fieldset>:<p>Pilih project melalui pemilih project untuk mengatur jadwalnya.</p>}
-      </details>
-      <details className="pm-settings pm-global-settings"><summary>Batas pengumpulan · semua project</summary>
-        <p><PulseBadge tone={data.scheduler_running?'success':'warning'}>{data.scheduler_running?'Penjadwal berjalan':'Penjadwal tidak berjalan'}</PulseBadge> Kuota hari UTC: {data.quota_day_utc}</p>
-        <p>Batas dan pemakaian di sini berlaku global untuk semua project. Xpoz berbagi batas antara jadwal X, Instagram, TikTok dan pengambilan manual Instagram/TikTok. Crawl manual umum dan komentar memakai jalur terpisah, tidak termasuk hitungan ini. YouTube: satu pencarian + maksimal satu batch video; berita: satu feed. Bukan batas kredit/tagihan vendor. Percobaan gagal dan retry tetap terhitung. Tidak ada upgrade otomatis.</p>
-        <fieldset disabled={busy||disabled}><div className="pm-workers">{data.workers.map(w=><WorkerSettings key={[w.provider,w.daily_limit,w.blocked_reason].join(':')} worker={w} save={save}/>)}</div></fieldset>
-        <p>Kuota Xpoz/YouTube awal = 0; tetapkan batas sebelum aktivasi. Menyimpan batas tidak mengaktifkan jadwal yang dijeda.</p>
-      </details>
-      <details className="pm-jobs"><summary>Riwayat crawl otomatis · 50 pekerjaan terakhir · {scopeLabel}</summary><div className="pm-table"><table><thead><tr><th>Sumber / project</th><th>Status</th><th>Percobaan</th><th>Waktu berikutnya / selesai</th><th>Hasil</th></tr></thead><tbody>{data.jobs.filter(j=>!topicId||j.topic_id===topicId).map(j=><tr key={j.id}><td>{names[j.provider]}<small>{topics.find(t=>t.id===j.topic_id)?.label||j.topic_id}</small></td><td><PulseTag tone={(jobStates[j.status]||['neutral'])[0]} dot>{(jobStates[j.status]||[0,j.status])[1]}</PulseTag></td><td>{j.attempts} / 3</td><td>{pulseDate(j.finished_at||j.available_at)}</td><td>{j.result?.error|| (j.result?`${j.result.ingested} baru / ${j.result.snapshots} snapshot`:'Menunggu jadwal & kuota')}</td></tr>)}</tbody></table></div></details>
-      </div>
-      </div>
+  const topic = topicId ? topics.find(row => row.id === topicId) || { id: topicId, sources: [] } : null;
+  const scopeLabel = topicId ? (topic.label || topicId) : 'Semua project';
+  const alerts = (data?.alerts || []).filter(alert => !topicId || alert.topic_id === topicId);
+  const rows = data ? collectionRows(data, topic) : [];
+  return <div className="mo-room" id="pulse-monitor">
+    {error && <PulseNotice tone="warning" role="alert">{pulseError(error)}{data ? ' Angka di bawah mungkin belum yang terbaru.' : ''}</PulseNotice>}
+    {!data ? (disabled ? <PulseNotice>Masuk sebagai admin untuk melihat alert dan pengumpulan.</PulseNotice> : !error && <PulseSkeleton label="Memuat alert dan pengumpulan…" stats={0} panels={0} rows={5} />) : <>
+      <AlertInbox data={data} alerts={alerts} topicId={topicId} topics={topics} page={page} setPage={setPage} busy={busy} disabled={disabled} marking={marking}
+        notice={notice?.zone === 'alerts' ? notice : null} onAck={ack} onAckAll={ackAll} onOpen={onOpenAlert} onRefresh={reload} onSaved={reload} />
+      <CollectionOverview data={data} rows={rows} scopeLabel={scopeLabel} scoped={!!topicId} />
+      <CollectionSettings data={data} rows={rows} topicId={topicId} scopeLabel={scopeLabel} busy={busy} disabled={disabled}
+        notice={notice?.zone === 'settings' ? notice : null} save={save} onDone={reload} />
     </>}
-  </section>;
+  </div>;
 }

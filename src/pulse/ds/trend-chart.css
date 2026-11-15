@@ -1,0 +1,45 @@
+/* Trend chart (TrendChart.jsx): posts over time as lines, on Ikhtisar, Posting and AI Insights.
+   Its switches are the shared segmented switch (`.pu-segmented` in range-filter.css, loaded with PulseRange). */
+/* The title keeps a readable width: in a narrow column the switches drop to their own row instead of squeezing it. */
+.pulse-standalone .tc > .pu-panel-heading > :first-child { flex-basis: 300px; }
+
+.pulse-standalone .tc-hint { margin: 0 0 12px; color: var(--ps-muted); font-size: .8125rem; text-align: center; }
+.pulse-standalone .tc-selected { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; font-size: .875rem; }
+.pulse-standalone .tc-empty { margin: 0; color: var(--ps-muted); max-width: 60ch; }
+
+.pulse-standalone .tc-chart { margin: 0; min-width: 0; }
+.pulse-standalone .tc-chart + .tc-chart { margin-top: 20px; }
+.pulse-standalone .tc-chart figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 6px; color: var(--ps-muted); font-size: .8125rem; }
+.pulse-standalone .tc-chart figcaption strong { color: var(--ps-ink); font-weight: 600; }
+.pulse-standalone .tc-chart figcaption i { flex: none; width: 14px; height: 3px; border-radius: 2px; }
+.pulse-standalone .tc-plot { width: 100%; height: 150px; }
+.pulse-standalone .tc-plot-tall { height: 280px; }
+.pulse-standalone .tc-compact .tc-plot { height: 128px; }
+.pulse-standalone .tc-dense .tc-plot { height: 116px; }
+.pulse-standalone .tc-dense .tc-plot-tall { height: 240px; }
+.pulse-standalone .tc-dense .tc-chart + .tc-chart { margin-top: 12px; }
+.pulse-standalone .tc [data-pick] .recharts-wrapper { cursor: pointer; }
+.pulse-standalone .tc .tc-end { fill: var(--ps-ink); font-size: 12px; font-weight: 550; }
+
+.pulse-standalone .tc-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; padding: 0; list-style: none; color: var(--ps-ink); font-size: .8125rem; }
+.pulse-standalone .tc-key { display: inline-flex; align-items: center; gap: 8px; }
+.pulse-standalone .tc-key svg { flex: none; }
+.pulse-standalone .tc-note { margin: 10px 0 0; color: var(--ps-muted); font-size: .8125rem; }
+
+.pulse-standalone .tc-data { margin-top: 14px; font-size: .8125rem; }
+.pulse-standalone .tc-data > summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--ps-muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.pulse-standalone .tc-data > summary:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .tc-table { max-height: 320px; margin-top: 8px; overflow: auto; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); }
+.pulse-standalone .tc-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.pulse-standalone .tc-table :is(th, td) { padding: 8px 12px; border-bottom: 1px solid var(--ps-line); text-align: right; white-space: nowrap; }
+.pulse-standalone .tc-table :is(th, td):first-child { text-align: left; }
+.pulse-standalone .tc-table thead th { position: sticky; top: 0; background: var(--ps-panel); color: var(--ps-muted); font-weight: 600; }
+.pulse-standalone .tc-table tbody tr:last-child :is(th, td) { border-bottom: 0; }
+.pulse-standalone .tc-table tbody th { font-weight: 500; }
+.pulse-standalone .tc-table td > button { height: 28px; min-height: 28px; padding: 0 8px; }
+
+@media (max-width: 640px) {
+  .pulse-standalone .tc .pu-panel-actions { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .pulse-standalone .tc-plot-tall { height: 240px; }
+}
+@media print { .pulse-standalone .tc-hint, .pulse-standalone .tc-data { display: none; } }

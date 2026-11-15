@@ -3,13 +3,24 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
-test('conversation cards contain only selected evidence and explain missing grouping',async()=>{
+test('conversation groups show only evidence inside the chosen scope and say what is not grouped',async()=>{
  const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},appType:'custom'});
  try{
   const {default:Groups}=await server.ssrLoadModule('/src/pulse/ConversationGroups.jsx');
-  const posts=[{id:'a',issue_id:'g',platform:'x',author:'Dalam cakupan',text:'Bukti terpilih',url:'https://example.com/selected',metrics:{}},{id:'b',issue_id:'g',platform:'instagram',author:'Di luar cakupan',text:'Jangan tampil',url:'https://example.com/excluded',metrics:{}},{id:'c',platform:'x',text:'Tanpa kelompok',metrics:{}}];
+  const posts=[
+   {id:'a',issue_id:'g',platform:'x',author:'Dalam cakupan',text:'Bukti terpilih',url:'https://example.com/selected',metrics:{}},
+   {id:'a2',issue_id:'g',platform:'x',author:'Akun kedua',text:'Bukti terpilih',url:'https://example.com/selected-2',metrics:{}},
+   {id:'b',issue_id:'g',platform:'instagram',author:'Di luar cakupan',text:'Jangan tampil',url:'https://example.com/excluded',metrics:{}},
+   {id:'s',issue_id:'sendiri',platform:'x',author:'Satu saja',text:'Posting tunggal',metrics:{}},
+   {id:'c',platform:'x',text:'Tanpa kelompok',metrics:{}}];
   const html=renderToStaticMarkup(React.createElement(Groups,{posts,platforms:['x'],period:{}}));
-  assert.match(html,/Bukti terpilih/);assert.match(html,/Dalam cakupan/);assert.match(html,/example.com\/selected/);assert.doesNotMatch(html,/Di luar cakupan|Jangan tampil|example.com\/excluded/);assert.match(html,/belum memiliki kelompok/);
-  assert.match(html,/1 kelompok · 2 posting/);
+  const text=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+  assert.match(html,/Bukti terpilih/);
+  assert.doesNotMatch(html,/Di luar cakupan|Jangan tampil|example.com\/excluded/);   // outside the platform scope
+  assert.match(text,/1 kelompok dari 4 posting/);                  // four posts are in scope: the Instagram one is not counted
+  assert.match(text,/2 posting di X/);
+  assert.match(text,/1 posting berdiri sendiri/);                  // a text seen once is counted, never listed
+  assert.doesNotMatch(html,/Posting tunggal/);
+  assert.match(text,/1 posting belum dikelompokkan/);
  }finally{await server.close();}
 });

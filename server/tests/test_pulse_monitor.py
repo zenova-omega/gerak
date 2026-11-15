@@ -55,7 +55,7 @@ async def test_attribution_counts_retries_and_manual_social_in_same_cap(db,clien
     state=(await client.get('/api/admin/pulse/monitor?topic_id=another-topic',headers=h)).json()
     assert sum(r['used'] for r in state['quota_breakdown'])==3
     assert {(r['platform'],r['mode'],r['used']) for r in state['quota_breakdown']}=={('instagram','automatic',2),('tiktok','manual',1)}
-    assert state['quota_unattributed']['xpoz']==0
+    assert state['quota_unattributed']['social']==0   # the paid lane under its public name
     # Coverage must show the automatic Instagram attempt separately from manual TikTok.
     from app.services.pulse_sources import coverage
     from app.config import get_settings
@@ -178,7 +178,7 @@ async def test_monitor_api_admin_validation_and_empty_state(client,admin_token,u
     assert (await client.get('/api/admin/pulse/monitor',headers={'Authorization':f'Bearer {user_token}'})).status_code==403
     h={'Authorization':f'Bearer {admin_token}'}
     state=await client.get('/api/admin/pulse/monitor',headers=h)
-    assert state.status_code==200 and len(state.json()['workers'])==6   # three sources, automatic comments, and the two profile lanes
+    assert state.status_code==200 and len(state.json()['workers'])==9   # three sources, automatic comments, the four profile lanes and the issue radar
     # -1 is the "no daily cap" mode; anything below it is invalid.
     bad=await client.put('/api/admin/pulse/monitor/workers/xpoz',json={'daily_limit':-2},headers=h)
     assert bad.status_code==422
@@ -381,7 +381,7 @@ async def test_unlimited_lane_still_stops_when_provider_blocks(db):
 async def test_worker_api_accepts_unlimited_and_reports_pause(client,admin_token):
     headers={'Authorization':f'Bearer {admin_token}'}
     assert (await client.put('/api/admin/pulse/monitor/workers/xpoz',json={'daily_limit':-2},headers=headers)).status_code==422
-    response=await client.put('/api/admin/pulse/monitor/workers/xpoz',json={'daily_limit':-1},headers=headers)
+    response=await client.put('/api/admin/pulse/monitor/workers/social',json={'daily_limit':-1},headers=headers)
     assert response.status_code==200
-    worker=next(w for w in (await client.get('/api/admin/pulse/monitor',headers=headers)).json()['workers'] if w['provider']=='xpoz')
+    worker=next(w for w in (await client.get('/api/admin/pulse/monitor',headers=headers)).json()['workers'] if w['provider']=='social')
     assert worker['unlimited'] is True and worker['min_gap_seconds']==monitor.MIN_GAP_SECONDS['xpoz']

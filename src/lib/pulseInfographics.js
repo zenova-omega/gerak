@@ -1,4 +1,4 @@
-import { validLocations } from './pulseData.js';
+import { hasClock, validLocations } from './pulseData.js';
 
 const STOPWORDS = new Set(('ada adalah adanya adapun agar akan akhirnya aku anda antara apa apabila apakah atas atau awal bagi bahwa bahkan baik banyak baru beberapa begitu belum benar berupa bisa bukan cara cukup dalam dan dapat dari daripada datang dengan demi demikian dia dilakukan diri dirinya dua dulu hanya harus hingga ia ialah ini itu jadi jangan juga justru kalau kami kamu karena kata ke kembali kemudian kepada ketika kita lagi lain lalu lebih maka makin maupun masih masing melalui memang mengenai menjadi mengatakan merupakan mereka meski mungkin namun nanti oleh pada paling para perlu pernah pula pun punya saat saja saling sama sampai sangat satu saya sebab sebagai sebagaimana sebagainya sebagian sebelum sebuah secara sedang sehingga sejak sejumlah sekitar selalu seluruh semua semakin sementara sendiri seperti serta setiap siapa sudah supaya telah tentang tentu terhadap tersebut tetapi tiap tidak tiga telah untuk yaitu yakni yang anda akan ini itu nya dong kok si sang rt via http https www com id the and for with from this that are was were not you your').split(/\s+/));
 
@@ -95,7 +95,7 @@ export function publicationHours(posts = []) {
     // which otherwise silently normalizes impossible dates such as February 30.
     const value = post.published_at;
     const parts = typeof value === 'string' && value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/i);
-    if (!parts) { unknown++; continue; }
+    if (!parts || !hasClock(value)) { unknown++; continue; }
     const [, year, month, day, hour, minute, second = '0', zone] = parts;
     const days = new Date(Date.UTC(Number(year), Number(month), 0)).getUTCDate();
     const time = Date.parse(value.replace(' ', 'T') + (zone ? '' : 'Z'));

@@ -4,6 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.pulse import WatchTopic, Issue, SourceItem, PulseCrawlRun
 from .ingest.common import observed_engagement, credential, count
+from .pulse_public import metrics_for_reader
 import httpx
 from .dedup import simhash, is_near_duplicate
 from .ai import get_ai_service
@@ -113,16 +114,16 @@ def _provider_error(exc: Exception, provider: str) -> dict:
     if isinstance(exc, XpozToolError):
         code = exc.code
         if code == "plan_restricted":
-            status, message = "plan_restricted", "Xpoz denied this query for the current plan or credit allowance. No upgrade or fallback was attempted."
+            status, message = "plan_restricted", "The source denied this query for the current plan or credit allowance. No upgrade or fallback was attempted."
         elif code == "pending":
-            status, message = "pending", "Xpoz started a background operation. Automatic polling is disabled; no second query was issued."
+            status, message = "pending", "The source started a background operation. Automatic polling is disabled; no second query was issued."
     elif isinstance(exc, httpx.HTTPStatusError):
         http_status = exc.response.status_code
         if http_status == 401:
             code, message = "authentication_failed", "Provider credentials were rejected."
         elif http_status in (402, 403):
             status, code = "plan_restricted", "access_or_quota_restricted"
-            message = ("Xpoz access or credits are restricted. REST live search excludes trial keys; stored MCP search is the default. No upgrade or fallback was attempted."
+            message = ("Access or credits at the source are restricted. No upgrade or fallback was attempted."
                        if provider == "xpoz" else "Provider access or quota is restricted. No retry was attempted.")
         elif http_status == 429:
             code, message = "rate_limited", "Provider rate or quota limit reached. No retry was attempted."
@@ -240,7 +241,7 @@ async def pulse_analytics(db: AsyncSession, topic_id: str | None = None, *, issu
               "title": item.title, "text": item.text, "author": item.author,
               "published_at": item.published_at, "crawled_at": item.crawled_at,
               "first_observed_at": first_seen.get(item.id),
-              "metrics": {**(item.metrics or {}), "engagement": observed_engagement(item.metrics)}} for item in items]
+              "metrics": {**metrics_for_reader(item.metrics), "engagement": observed_engagement(item.metrics)}} for item in items]
     for post in posts:
         snapshot = comment_snapshots.get((post['platform'], post['url']))
         if snapshot is not None:

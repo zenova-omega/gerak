@@ -43,3 +43,26 @@ test('timestamps without a zone are interpreted as UTC and rendered in Jakarta',
   assert.equal(pulseDate(null), 'Waktu tidak tersedia');
   assert.equal(pulseDate('not-a-date'), 'Waktu tidak tersedia');
 });
+
+test('a publish time of exactly midnight UTC is a date without a clock, never "07.00 WIB"', async () => {
+  const { hasClock, pulseDate } = await import('./pulseData.js');
+  assert.equal(hasClock('2026-11-12T00:00:00'), false);
+  assert.equal(hasClock('2026-11-12T00:00:00.000000Z'), false);
+  assert.equal(hasClock('2026-11-12 00:00:00'), false);
+  assert.equal(hasClock('2026-11-12'), false);
+  assert.equal(hasClock('2026-11-12T00:00:01'), true);
+  assert.equal(hasClock('2026-11-12T03:15:00Z'), true);
+  assert.equal(hasClock('2026-11-12T07:00:00+07:00'), true, 'a stated zone and time is a real time');
+  assert.equal(hasClock(null), false);
+  assert.equal(pulseDate('2026-11-12T00:00:00'), '12 Nov 2026');
+  assert.match(pulseDate('2026-11-12T03:15:00'), /^12 Nov 2026.+10\.15 WIB$/);
+  assert.equal(pulseDate(''), 'Waktu tidak tersedia');
+});
+
+test('a calendar day is written the way the rest of the product writes dates', async () => {
+  const { pulseDay } = await import('./pulseData.js');
+  assert.equal(pulseDay('2026-11-08'), '8 Nov 2026');
+  assert.equal(pulseDay('2026-11-14T03:00:00'), '14 Nov 2026');
+  assert.equal(pulseDay(''), '');
+  assert.equal(pulseDay('bukan tanggal'), 'bukan tanggal');
+});

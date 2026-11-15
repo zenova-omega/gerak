@@ -1,4 +1,5 @@
 """Deterministic sample analysis. No inferred identity, location or bot probability."""
+import math
 import re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -24,6 +25,33 @@ def account_key(post):
     # X handles are case insensitive. Other platforms use provider IDs when present.
     identity = (post.get('author') or '').lstrip('@').lower() if platform == 'x' else str((post.get('metrics') or {}).get('author_id') or post.get('author') or '')
     return f'{platform}:{identity}'
+
+
+def observed_total(rows, key):
+    """Sum of one metric over the posts that carry it; None when none does.
+
+    Shares are the exception. A repost has none of its own and brings the original post's count instead
+    (`original_shares`, see `mark_repost`). That count belongs to one post, so it is taken once, the largest
+    observation, and only where it exceeds what the collected posts add up to themselves."""
+    number = lambda value: isinstance(value, (int, float)) and not isinstance(value, bool)
+    metrics = [p.get('metrics') or {} for p in rows]
+    values = [m[key] for m in metrics if number(m.get(key))]
+    total = sum(values) if values else None
+    if key == 'shares':
+        carried = max((m['original_shares'] for m in metrics if m.get('repost') and number(m.get('original_shares'))), default=0)
+        if carried:
+            total = max(total or 0, carried)
+    return total
+
+
+def known_followers(rows):
+    """Largest follower count seen on an account's posts; None when no post carries one.
+
+    Followers are reported per post at collection time, so the same account can show several figures. The
+    largest is the closest to its present audience. A missing count stays None: it is unknown, not zero."""
+    counts = [value for value in ((p.get('metrics') or {}).get('author_followers') for p in rows)
+              if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value >= 0]
+    return max(counts, default=None)
 
 
 def evidence(post):
@@ -93,7 +121,9 @@ def analyze_network(posts):
                            'first_observed': evidence(first) if first else None,
                            'tied_first_count': sum(timestamp(p.get('published_at')) == timestamp(first.get('published_at')) for p in dated) if first else 0,
                            'timeline': [evidence(p) for p in rows],
-                           'engagement': sum((p.get('metrics') or {}).get('engagement') or 0 for p in rows)})
+                           'engagement': sum((p.get('metrics') or {}).get('engagement') or 0 for p in rows),
+                           # Last recorded numbers of every post in the group, added up. None when no post reports that number.
+                           'metrics': {key: observed_total(rows, key) for key in ('likes', 'comments', 'shares', 'views')}})
     accounts = []
     for key, rows in by_account.items():
         dates = sorted(timestamp(p.get('published_at')) for p in rows if timestamp(p.get('published_at')))
@@ -117,6 +147,7 @@ def analyze_network(posts):
                          'assessment': 'review_signals' if signals else 'insufficient_data' if len(rows) < 5 else 'no_signals_observed',
                          'first_seen': dates[0].isoformat() if dates else None,
                          'engagement': sum((p.get('metrics') or {}).get('engagement') or 0 for p in rows),
+                         'followers': known_followers(rows),
                          'evidence': [evidence(p) for p in rows]})
     degree = Counter()
     for edge in edges.values():
@@ -125,6 +156,8 @@ def analyze_network(posts):
     for node in nodes.values():
         node['connections'] = degree[node['id']]
         node['posts'] = len(by_account[node['id']])
+        # The map sizes a circle by this. Accounts that were only mentioned have no post, so no count.
+        node['followers'] = known_followers(by_account[node['id']])
     ordered = sorted((p for p in sample if timestamp(p.get('published_at'))), key=lambda p: (timestamp(p['published_at']), str(p['id'])))
     return {'nodes': list(nodes.values()), 'edges': list(edges.values()),
             'narratives': sorted(narratives, key=lambda n: (-n['account_count'], -n['post_count'])),

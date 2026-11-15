@@ -1,0 +1,52 @@
+/* Beranda's province map (RadarMap.jsx). Same family as the project map on Jaringan (region-map.css): one data hue
+   (--ps-chart-1) mixed into the panel, here in three steps because a province holds at most ten issues. */
+.pulse-standalone .rdm { --rdm-hue: var(--ps-chart-1, var(--ps-accent)); min-width: 0; }
+.pulse-standalone .rdm-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: var(--ps-control-sm); margin: 0 0 8px; }
+.pulse-standalone .rdm-caption { margin: 0; color: var(--ps-muted); font-size: .875rem; }
+.pulse-standalone .rdm-caption > strong { color: var(--ps-ink); font-weight: 600; }
+
+.pulse-standalone .rdm-frame { position: relative; }
+.pulse-standalone .rdm-svg { display: block; width: 100%; height: auto; border-radius: var(--ps-radius-control); background: color-mix(in oklch, var(--ps-soft) 45%, var(--ps-panel)); }
+.pulse-standalone .rdm-province { fill: color-mix(in oklch, var(--ps-line) 62%, var(--ps-panel)); stroke: var(--ps-panel); stroke-width: .75px; vector-effect: non-scaling-stroke; stroke-linejoin: round; cursor: pointer; outline: none; transition: fill 150ms ease-out; }
+.pulse-standalone :is(.rdm-province, .rdm-legend i)[data-shade="1"] { --rdm-shade: 30%; }
+.pulse-standalone :is(.rdm-province, .rdm-legend i)[data-shade="2"] { --rdm-shade: 58%; }
+.pulse-standalone :is(.rdm-province, .rdm-legend i)[data-shade="3"] { --rdm-shade: 88%; }
+.pulse-standalone .rdm-province:is([data-shade="1"], [data-shade="2"], [data-shade="3"]) { fill: color-mix(in oklch, var(--rdm-hue) var(--rdm-shade), var(--ps-panel)); }
+.pulse-standalone .rdm-province[data-shade="unread"] { fill: url(#rdm-hatch); }
+/* Dark theme: the panel and the line colour sit close together, so a province without an issue would vanish into the
+   map's ground, and the lightest step would not stand apart from it. The ground-to-darkest ladder is re-spaced. */
+.pulse-standalone[data-theme=dark] .rdm-province[data-shade="0"] { fill: color-mix(in oklch, var(--ps-muted) 18%, var(--ps-panel)); }
+.pulse-standalone[data-theme=dark] :is(.rdm-province, .rdm-legend i)[data-shade="1"] { --rdm-shade: 40%; }
+.pulse-standalone[data-theme=dark] :is(.rdm-province, .rdm-legend i)[data-shade="2"] { --rdm-shade: 65%; }
+.pulse-standalone[data-theme=dark] :is(.rdm-province, .rdm-legend i)[data-shade="3"] { --rdm-shade: 92%; }
+.pulse-standalone .rdm-hatch-ground { fill: var(--ps-panel); }
+.pulse-standalone .rdm-hatch-line { stroke: var(--ps-muted); stroke-width: 1.2; }
+.pulse-standalone .rdm-province:hover, .pulse-standalone .rdm-province:focus-visible { stroke: var(--ps-ink); stroke-width: 1.5px; }
+.pulse-standalone .rdm-province[aria-pressed="true"] { stroke: var(--ps-ink); stroke-width: 2.25px; }
+.pulse-standalone .rdm-pin { fill: var(--ps-ink); stroke: var(--ps-panel); stroke-width: 1.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.pulse-standalone .rdm-tip { position: absolute; z-index: 2; margin: 0; max-width: 240px; padding: 6px 10px; transform: translate(12px, 12px); border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); background: var(--ps-panel); color: var(--ps-ink); box-shadow: 0 6px 18px oklch(20% 0.02 285 / .16); font-size: .8125rem; pointer-events: none; white-space: nowrap; }
+.pulse-standalone .rdm-tip[data-flip] { transform: translate(calc(-100% - 12px), 12px); }
+
+.pulse-standalone .rdm-empty, .pulse-standalone .rdm-places { margin: 10px 0 0; color: var(--ps-muted); font-size: .8125rem; }
+.pulse-standalone .rdm-places { color: var(--ps-ink); }
+.pulse-standalone .rdm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; margin: 10px 0 0; padding: 0; list-style: none; color: var(--ps-muted); font-size: .8125rem; }
+.pulse-standalone .rdm-legend > li { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.pulse-standalone .rdm-ramp > span { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pulse-standalone .rdm-legend i { flex: none; width: 14px; height: 14px; border: 1px solid var(--ps-line); border-radius: 3px; background: color-mix(in oklch, var(--rdm-hue) var(--rdm-shade, 0%), var(--ps-panel)); }
+.pulse-standalone .rdm-legend i[data-shade="unread"] { background: repeating-linear-gradient(45deg, var(--ps-muted) 0 1.2px, var(--ps-panel) 1.2px 5px); }
+.pulse-standalone .rdm-legend i.rdm-pin-key { width: 10px; height: 10px; border: 1.5px solid var(--ps-panel); border-radius: 50%; background: var(--ps-ink); box-shadow: 0 0 0 1px var(--ps-line); }
+.pulse-standalone .rdm-source { margin: 8px 0 0; max-width: 72ch; color: var(--ps-muted); font-size: .8125rem; }
+
+.pulse-standalone .rdm-data { margin-top: 10px; font-size: .8125rem; }
+.pulse-standalone .rdm-data > summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--ps-muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.pulse-standalone .rdm-data > summary:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+.pulse-standalone .rdm-table { max-height: 320px; margin-top: 8px; overflow: auto; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-control); }
+.pulse-standalone .rdm-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.pulse-standalone .rdm-table :is(th, td) { padding: 8px 12px; border-bottom: 1px solid var(--ps-line); text-align: left; }
+.pulse-standalone .rdm-table td:nth-child(2) { text-align: right; white-space: nowrap; }
+.pulse-standalone .rdm-table thead th { position: sticky; top: 0; background: var(--ps-panel); color: var(--ps-muted); font-weight: 600; }
+.pulse-standalone .rdm-table tbody th { font-weight: 500; white-space: nowrap; }
+.pulse-standalone .rdm-table tbody tr:last-child :is(th, td) { border-bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) { .pulse-standalone .rdm-province { transition: none; } }
+@media print { .pulse-standalone .rdm-data, .pulse-standalone .rdm-tip { display: none; } }

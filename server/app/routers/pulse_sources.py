@@ -8,9 +8,10 @@ from ..config import get_settings
 from ..services.pulse_identity import require_pulse_access
 from ..services import pulse_sources as service
 from ..services.ingest.common import credential
-from ..models.pulse import WatchTopic
+from ..models.pulse import PulseCrawlRun, WatchTopic
 from ..models.pulse_sources import SourceAccount
 from ..services.ingest.xpoz import SOCIAL_TOOLS
+from ..services.ingest.threads import fetch_threads_items
 
 router=APIRouter(dependencies=[Depends(require_pulse_access)])
 
@@ -27,6 +28,13 @@ async def sources(topic_id:str|None=None,db:AsyncSession=Depends(get_db)):
     if topic_id and await db.get(WatchTopic,topic_id) is None:
         raise HTTPException(404,'Topic not found')
     return await service.coverage(db,get_settings(),topic_id)
+
+
+@router.get('/balance')
+async def balance(db:AsyncSession=Depends(get_db)):
+    """Whether collection has stopped for balance or access. Reads stored state only; never calls the provider."""
+    from ..services.pulse_provider_block import balance_status
+    return await balance_status(db)
 
 
 @router.post('/check')
@@ -46,6 +54,40 @@ async def check_threads(db:AsyncSession=Depends(get_db)):
     account.checked_at=datetime.utcnow()
     await db.flush()
     return {'checked_at':account.checked_at,**detail}
+
+
+class ThreadsCollection(BaseModel):
+    topic_id: str = Field(min_length=1,max_length=36)
+
+
+@router.post('/threads/collect')
+async def collect_threads(req:ThreadsCollection,db:AsyncSession=Depends(get_db)):
+    """One collection of a project's Threads posts through the official API, over the project's day range.
+
+    Nothing is held open while the platform is asked. The attempt is recorded either way, so the sources page shows
+    a refusal and its reason (no search permission, an expired token, a spent allowance) instead of an empty row."""
+    from datetime import timedelta
+    from ..services import pulse_lookback
+    from ..services.pulse import ingest_items
+    topic=await db.get(WatchTopic,req.topic_id)
+    if topic is None:
+        raise HTTPException(404,'Topic not found')
+    token=credential(get_settings(),'THREADS_ACCESS_TOKEN')
+    started=datetime.utcnow()
+    query,days=topic.query,(await pulse_lookback.read(db,topic.id))['days']
+    await db.commit()
+    if token:
+        items,stats=await fetch_threads_items(query,token,since=started-timedelta(days=days))
+    else:
+        items,stats=[],{'searches':0,'calls':0,'read':0,'matched':0,'stopped':'not_configured'}
+    topic=await db.get(WatchTopic,req.topic_id)
+    ingested=await ingest_items(db,topic,items) if items else 0
+    outcome={'status':'failed' if stats['stopped'] else 'success','fetched':len(items),'ingested':ingested,
+             'error':stats['stopped'],'searches':stats['searches'],'read':stats['read']}
+    db.add(PulseCrawlRun(topic_id=topic.id,manual=True,started_at=started,finished_at=datetime.utcnow(),ingested=ingested,providers={'threads':outcome}))
+    await db.commit()
+    return {'status':'failed' if stats['stopped'] else 'succeeded' if items else 'empty','fetched':len(items),'ingested':ingested,
+            'error':stats['stopped'],'searches':stats['searches'],'read':stats['read']}
 
 
 @router.post('/collect')

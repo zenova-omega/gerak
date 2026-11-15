@@ -9,15 +9,23 @@ import {PlatformLabel} from '../components/admin/pulse/PlatformIcon';
 import PostAvatar from '../components/admin/pulse/PostAvatar';
 import AnalyticsPanel from './AnalyticsPanel';
 import InfoTip from './InfoTip';
+import {PulseRange} from '../components/ui/PulseRange';
+import {allRange,rangeBounds,resolveRange,withinRange} from '../lib/pulseRange';
 import './emotion-analytics.css';
 
 const faces=emotionFaces;
 const emotionalKeys=Object.keys(emotionLabels).filter(key=>key!=='none');
 export default function EmotionAnalytics({posts=[]}){
- const data=emotionEvidence(posts),[selected,setSelected]=useState(null),[day,setDay]=useState(null),[limit,setLimit]=useState(10);
+ // The range filter narrows the whole card, so the tiles, the daily bars and the sources always count the same posts.
+ // Its days are the days that have an emotion result; "Semua" keeps every post, dated or not.
+ const whole=emotionEvidence(posts),bounds=rangeBounds(whole.days.map(row=>row.date));
+ const [range,setRange]=useState(allRange),shown=resolveRange(bounds,range);
+ const data=shown&&shown.key!=='all'?emotionEvidence(withinRange(posts,shown,sentimentDate)):whole;
+ const [selected,setSelected]=useState(null),[day,setDay]=useState(null),[limit,setLimit]=useState(10);
  const choose=(key,date=null)=>{setSelected(key);setDay(date);setLimit(10);};
  const rows=selected?(data.rows[selected]||[]).filter(post=>!day||sentimentDate(post)===day):[];
- return <AnalyticsPanel title={<span>Emosi percakapan <InfoTip label="Tentang analisis emosi">Emosi yang dinyatakan dalam teks, bukan kondisi psikologis penulis atau opini seluruh publik. Satu emosi dominan per posting. Sentimen negatif tidak otomatis marah. Persentase dihitung dari posting yang sudah memiliki hasil emosi, termasuk Tidak jelas. Ilustrasi hanya penanda kategori.</InfoTip></span>} label="Emosi percakapan" description="Apa nada emosional di balik percakapan?" className="pea-panel">
+ return <AnalyticsPanel title={<span>Emosi percakapan <InfoTip label="Tentang analisis emosi">Emosi yang dinyatakan dalam teks, bukan kondisi psikologis penulis atau opini seluruh publik. Satu emosi dominan per posting. Sentimen negatif tidak otomatis marah. Persentase dihitung dari posting yang sudah memiliki hasil emosi, termasuk Tidak jelas. Ilustrasi hanya penanda kategori.</InfoTip></span>} label="Emosi percakapan" description="Apa nada emosional di balik percakapan?" className="pea-panel"
+  actions={bounds&&<PulseRange chart="Emosi percakapan" bounds={bounds} value={range} onChange={next=>{setRange(next);setDay(null);setLimit(10);}}/>}>
   {data.analyzed?<>
   <div className="pea-emotions">{emotionalKeys.map(key=>{const count=data.counts[key],percent=data.analyzed?count/data.analyzed*100:0;return <button type="button" key={key} className={'pea-emotion '+key} aria-pressed={selected===key&&!day} aria-label={`${emotionLabels[key]}: ${count} posting. Lihat sumber`} onClick={()=>choose(key)}><span className="pea-face" aria-hidden="true">{faces[key]}</span><span className="pea-label">{emotionLabels[key]}</span><strong>{data.analyzed?count.toLocaleString('id-ID'):'—'}</strong><small>{data.analyzed?`${percent.toLocaleString('id-ID',{maximumFractionDigits:1})}%`:'Belum tersedia'}</small><span className="pea-bar" aria-hidden="true"><i style={{width:`${percent}%`}}/></span></button>;})}</div>
   <div className="pea-other"><button type="button" onClick={()=>choose('none')} aria-pressed={selected==='none'}><span aria-hidden="true">{faces.none}</span> Tidak jelas / tanpa emosi <strong>{data.counts.none}</strong></button><span>{data.unknown} belum dianalisis</span>{data.review>0&&<span>{data.review} perlu ditinjau</span>}</div>

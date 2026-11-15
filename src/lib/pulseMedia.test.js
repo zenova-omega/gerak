@@ -49,3 +49,27 @@ test('legacy records have no invented media and profile photos are not post prev
   assert.equal(media.postMedia({ platform: 'tiktok', metrics: {} }).imageUrl, null);
   assert.equal(media.postMedia({ platform: 'tiktok', metrics: { media_url: 'https://cdn.example.com/video', media_type: 'video' } }).isPhoto, false);
 });
+
+test('a picture kept on our own server is read from the API, and nothing else slips through as one', async () => {
+  const { avatarUrl } = await import('./pulseMedia.js');
+  const base = 'https://pulse.example.org/api';
+  assert.equal(avatarUrl('/admin/pulse/profiles/photo/instagram/cnn.indonesia?v=1794650000', base),
+    'https://pulse.example.org/api/admin/pulse/profiles/photo/instagram/cnn.indonesia?v=1794650000');
+  assert.equal(avatarUrl('/admin/pulse/profiles/photo/instagram/a_b.c?v=0', 'http://127.0.0.1:8000/api'),
+    'http://127.0.0.1:8000/api/admin/pulse/profiles/photo/instagram/a_b.c?v=0');
+  for (const refused of ['/admin/pulse/profiles/photo/instagram/../../topics?v=1', '/admin/pulse/topics', '/admin/pulse/profiles/photo/lain/akun?v=1',
+    '/admin/pulse/profiles/photo/instagram/akun?v=1&x=2', '//evil.example.com/admin/pulse/profiles/photo/instagram/a?v=1', 'http://example.com/a.jpg', 'javascript:alert(1)']) {
+    assert.equal(avatarUrl(refused, base), null, refused);
+  }
+  assert.equal(avatarUrl('https://pbs.twimg.com/profile_images/1/a_200x200.jpg', base), 'https://pbs.twimg.com/profile_images/1/a_200x200.jpg');
+  assert.equal(avatarUrl(null, base), null);
+});
+
+test('a stored picture address survives being resolved once and read again', async () => {
+  const { avatarUrl } = await import('./pulseMedia.js');
+  const base = 'http://127.0.0.1:8000/api';
+  const once = avatarUrl('/admin/pulse/profiles/photo/instagram/akun?v=5', base);
+  assert.equal(avatarUrl(once, base), once);                                   // an avatar looked up by account passes the address on
+  assert.equal(avatarUrl(base + '/admin/pulse/topics', base), null);
+  assert.equal(avatarUrl('http://127.0.0.1:9999/api/admin/pulse/profiles/photo/instagram/akun?v=5', base), null);
+});

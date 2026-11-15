@@ -1,0 +1,91 @@
+/* AI Insights (/pulse/insights).
+   One headline and three to five cited insights, and beside them the period they cover and a slot for the trend chart.
+   Row shape 8 + 4 (DESIGN.md, "Card division rules"). In the source the period card comes first, so on a narrow
+   screen it sits above the text it describes; from 1181px it is placed in the side column. */
+.ain-page { min-width: 0; }
+.ain-notices { display: grid; gap: 8px; margin: 0 0 var(--ps-surface-gap); }
+.ain-notices:empty { display: none; }
+.ain-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: var(--ps-surface-gap); align-items: start; }
+.ain-main { grid-column: 1; grid-row: 1 / span 2; }
+.ain-period { grid-column: 2; grid-row: 1; }
+/* The trend chart is passed in by the route (`chart` prop of AiInsights). The slot is layout only: the chart brings its own surface. */
+.ain-chart { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.ain-chart:empty { display: none; }
+@media (max-width: 1180px) {
+  .ain-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .ain-main, .ain-period, .ain-chart { grid-column: 1; grid-row: auto; }
+}
+
+/* Surface: the shadcn Card, drawn with PULSE surface tokens. One level, nothing framed inside it. */
+.pulse-standalone .ain-card { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; border: 1px solid var(--ps-surface-line); border-radius: var(--ps-surface-radius); background: var(--ps-surface-bg); color: var(--ps-ink); box-shadow: none; }
+.pulse-standalone .ain-card > * { min-width: 0; padding: var(--ps-surface-pad); }
+.pulse-standalone .ain-card > * + * { padding-top: 0; }
+
+/* Period card */
+.pulse-standalone .ain-period > :first-child { gap: 4px; }
+.ain-eyebrow { font-size: .75rem; font-weight: var(--ps-weight-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ps-muted); }
+/* Every h2 in the content area is a panel title (--ps-title-panel, set once in analytics-kit.css); only layout is added here. */
+.pulse-standalone .ain-project { margin: 0; letter-spacing: normal; color: var(--ps-ink); overflow-wrap: anywhere; text-wrap: balance; }
+.ain-period > :last-child { display: grid; gap: 8px; justify-items: start; }
+.ain-when { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ain-range { font-size: .875rem; font-weight: var(--ps-weight-label); line-height: 1.4; font-variant-numeric: tabular-nums; color: var(--ps-ink); }
+.pulse-standalone .ain-badge, .pulse-standalone .ain-badge:hover { min-height: 24px; padding: 0 8px; border: 0; border-radius: var(--ps-tag-radius); background: var(--ps-soft); color: var(--ps-ink); font-size: .75rem; font-weight: var(--ps-weight-label); white-space: nowrap; }
+.ain-platforms { font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); overflow-wrap: anywhere; }
+
+/* Insight card: headline, when it was written and the one action, then the numbered insights. */
+.pulse-standalone .ain-main > .ain-head { gap: 12px; padding-bottom: var(--ps-surface-pad-sm); border-bottom: 1px solid var(--ps-line); }
+.pulse-standalone .ain-main > .ain-head + * { padding-top: var(--ps-surface-pad); }
+.pulse-standalone .ain-headline { margin: 0; max-width: 48ch; letter-spacing: normal; color: var(--ps-ink); overflow-wrap: anywhere; text-wrap: balance; }
+.ain-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.pulse-standalone .ain-meta > p { flex: 1 1 280px; margin: 0; max-width: 70ch; font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+/* Said above the text it qualifies: written for another scope, or older than the posts collected since. A tinted block, not a card. */
+.pulse-standalone .ain-caution { padding: 8px 12px; border-radius: var(--ps-radius-control); background: var(--ps-peach); color: var(--ps-warning-ink); }
+.pulse-standalone .ain-caution > p { margin: 0; max-width: 70ch; font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1.5; }
+
+.pulse-standalone .ain-list { display: grid; gap: 20px; margin: 0; padding: 0 0 0 1.75rem; list-style: decimal; }
+.pulse-standalone .ain-insight { padding-left: 4px; }
+.pulse-standalone .ain-insight::marker { font-weight: var(--ps-weight-strong); font-variant-numeric: tabular-nums; color: var(--ps-muted); }
+.pulse-standalone .ain-insight > p { margin: 0; max-width: 70ch; font-size: 1rem; line-height: 1.65; color: var(--ps-ink); overflow-wrap: anywhere; text-wrap: pretty; }
+.pulse-standalone .ain-insight strong { font-weight: var(--ps-weight-strong); }
+/* The numbered mark reuses the cite chip of the summary card (.pc-cite); here it follows a full stop, so it needs a word space.
+   It is laid out as text, not as a box, so the word joiner in front of it holds: a mark never starts a line on its own.
+   .pc-cite is declared in a stylesheet that loads later, hence the doubled class. */
+.pulse-standalone .pc-cite.ain-ref { display: inline; margin: 0 0 0 4px; padding: 2px 6px; color: var(--ps-accent); white-space: nowrap; }
+
+/* Evidence: one surface with divided rows, under the insights that cite it. */
+.ain-evidence { display: grid; gap: 8px; margin-top: 28px; }
+.pulse-standalone.pulse-standalone .ain-evidence > h3 { margin: 0; font-size: var(--ps-title-block); font-weight: var(--ps-title-weight); line-height: 1.4; color: var(--ps-ink); }
+.pulse-standalone .ain-evidence > ol { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--ps-line); }
+.pulse-standalone .ain-evidence > ol > li { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--ps-line); scroll-margin-top: 24px; }
+.pulse-standalone .ain-evidence > ol > li:target { background: var(--ps-selected); }
+.ain-source { display: grid; gap: 4px; min-width: 0; font-size: .8125rem; }
+.ain-source .pu-account-line > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--ps-weight-label); }
+.pulse-standalone .ain-source > p { margin: 0; max-width: 70ch; font-size: .8125rem; line-height: 1.55; color: var(--ps-muted); overflow-wrap: anywhere; }
+.ain-source-meta { font-size: .75rem; line-height: 1.5; color: var(--ps-muted); font-variant-numeric: tabular-nums; }
+.pulse-standalone .ain-evidence > ol > li > a { display: grid; place-items: center; min-width: 32px; min-height: 32px; border-radius: var(--ps-radius-control); color: var(--ps-ink); }
+.pulse-standalone .ain-evidence > ol > li > a:hover { background: var(--ps-soft); }
+.pulse-standalone .ain-note { margin: 0; max-width: 70ch; font-size: .75rem; line-height: 1.5; color: var(--ps-muted); }
+
+/* Nothing written yet */
+.pulse-standalone .ain-empty-title { margin: 0; letter-spacing: normal; color: var(--ps-ink); text-wrap: balance; }
+.pulse-standalone .ain-empty-text { max-width: 70ch; font-size: .875rem; line-height: 1.6; color: var(--ps-muted); }
+.ain-empty-action { display: grid; gap: 12px; justify-items: start; }
+.pulse-standalone .ain-reason { margin: 0; max-width: 70ch; font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+
+/* States above the cards */
+.ain-writing { padding: 4px 0; }
+.pulse-standalone .ain-error { margin: 0; padding: 8px 12px; border-radius: var(--ps-radius-control); background: var(--ps-danger); color: var(--ps-danger-ink); font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1.5; }
+
+@media (max-width: 700px) {
+  .pulse-standalone .ain-card > * { padding: var(--ps-surface-pad-sm); }
+  .pulse-standalone .ain-card > * + * { padding-top: 0; }
+  .pulse-standalone .ain-main > .ain-head + * { padding-top: var(--ps-surface-pad-sm); }
+  .pulse-standalone .ain-list { padding-left: 1.5rem; }
+  .pulse-standalone .ain-evidence > ol > li { grid-template-columns: 1.25rem minmax(0, 1fr) auto; gap: 8px; }
+  .pulse-standalone .ain-evidence > ol > li > a { min-width: 44px; min-height: 44px; }
+}
+@media print {
+  .ain-meta > .pu-button, .ain-empty-action, .ain-writing { display: none; }
+  .ain-layout { grid-template-columns: minmax(0, 1fr); }
+  .ain-main, .ain-period, .ain-chart { grid-column: 1; grid-row: auto; }
+}

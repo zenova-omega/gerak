@@ -16,6 +16,7 @@ from .pulse import _provider_error, ingest_items
 from .pulse_monitor import budget_provider, insert_once, source_platform
 
 MAX_WINDOWS = 8
+STORE_BATCH = 150
 MAX_DAYS = 92
 PLATFORMS = {'x': 'xpoz', 'instagram': 'instagram', 'tiktok': 'tiktok', 'reddit': 'reddit', 'news': 'rss', 'youtube': 'youtube'}
 STOP = ('authentication_failed', 'access_or_quota_restricted', 'plan_restricted', 'rate_limited', 'not_configured', 'pending')
@@ -44,15 +45,25 @@ async def fetch_window(provider, query, key, first: date, last: date):
         # The feed's "before" is exclusive, so ask one day past the window's last day.
         return await fetch_rss_items(query, after=a, before=(last + timedelta(days=1)).isoformat())
     if provider == 'youtube':
-        return await fetch_youtube_items(query, key, pages=1,
+        return await fetch_youtube_items(query, key, pages=None,
                                          published_after=datetime.combine(first, time.min).isoformat() + 'Z',
                                          published_before=datetime.combine(last + timedelta(days=1), time.min).isoformat() + 'Z')
+    # The archive pull is the complete one: every post the source has for the window, through its paging mode.
     if provider == 'xpoz':
-        return await fetch_xpoz_stored_items(query, key, start=a, end=b)
-    return await fetch_xpoz_social_items(query, key, provider, limit=PAGE_ROWS, start=a, end=b)
+        return await fetch_xpoz_stored_items(query, key, start=a, end=b, complete=True)
+    return await fetch_xpoz_social_items(query, key, provider, start=a, end=b, complete=True)
 
 
-async def backfill(db, topic, settings, platform, start: date, end: date, *, pause=1.0):
+async def backfill(db, topic, settings, platform, start: date, end: date, *, pause=1.0, release=None, newest_first=False, progress=None):
+    """Pull one platform's posts for a date range, one window at a time.
+
+    `release` ends the open transaction (callers pass `db.commit`). It runs before each provider call and after each
+    window is stored: SQLite has one writer, and holding it while the provider answers locked every other worker and
+    request out for the length of the pull. `newest_first` starts with the latest day, so a new project shows recent
+    posts first; `progress(fetched, stored)` is called after each window with the totals so far."""
+    async def free():
+        if release is not None:
+            await release()
     if platform not in PLATFORMS:
         raise ValueError('Platform tidak didukung untuk tarik arsip.')
     provider = PLATFORMS[platform]
@@ -61,7 +72,8 @@ async def backfill(db, topic, settings, platform, start: date, end: date, *, pau
     if lane != 'rss' and not key:
         return {'platform': platform, 'windows': [], 'fetched': 0, 'ingested': 0, 'stopped': 'not_configured'}
     results, stopped = [], None
-    for index, (first, last) in enumerate(windows(start, end)):
+    days = windows(start, end)
+    for index, (first, last) in enumerate(reversed(days) if newest_first else days):
         if index:
             await asyncio.sleep(pause)
         now = datetime.utcnow(); day = now.date().isoformat()
@@ -69,17 +81,26 @@ async def backfill(db, topic, settings, platform, start: date, end: date, *, pau
         await insert_once(db, WorkerUsage, {'id': lane + ':' + day, 'provider': lane, 'day': day, 'used': 0})
         await db.execute(update(WorkerUsage).where(WorkerUsage.id == lane + ':' + day).values(used=WorkerUsage.used + 1))
         db.add(QuotaReservation(provider=lane, topic_id=topic.id, platform=source_platform(provider), mode='backfill', day=day, reserved_at=now))
+        await free()   # the request is counted; nothing stays open while the provider is asked
         try:
             items = await fetch_window(provider, topic.query, key, first, last)
-            async with db.begin_nested():
-                created = await ingest_items(db, topic, items[:PAGE_ROWS])
-            results.append({'from': first.isoformat(), 'to': last.isoformat(), 'status': 'success', 'fetched': len(items[:PAGE_ROWS]), 'ingested': created})
+            created = 0
+            for offset in range(0, len(items), STORE_BATCH):
+                # Stored in batches, letting go of the database between them: a busy day can be thousands of posts.
+                async with db.begin_nested():
+                    created += await ingest_items(db, topic, items[offset:offset + STORE_BATCH])
+                await free()
+            results.append({'from': first.isoformat(), 'to': last.isoformat(), 'status': 'success', 'fetched': len(items), 'ingested': created})
         except Exception as exc:
             code = exc.code if isinstance(exc, XpozToolError) else _provider_error(exc, provider).get('error', 'provider_error')
             results.append({'from': first.isoformat(), 'to': last.isoformat(), 'status': code, 'fetched': 0, 'ingested': 0})
             if code in STOP:
                 stopped = code
+                await free()
                 break
+        await free()   # this window is stored; the pause before the next one holds nothing
+        if progress is not None:
+            progress(sum(r['fetched'] for r in results), sum(r['ingested'] for r in results))
     await db.flush()
     return {'platform': platform, 'windows': results, 'fetched': sum(r['fetched'] for r in results),
             'ingested': sum(r['ingested'] for r in results), 'stopped': stopped}

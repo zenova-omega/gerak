@@ -83,7 +83,7 @@ async def test_hash_invalidation_and_wib_filter(store):
     await s.run_one(store, LocalAI())
     async with store() as db:
         stance = (await s.results(db,'t'))['posts'][0]['comments'][0]['stance']
-        assert stance['label'] == 'unclear' and stance['review_needed']
+        assert stance['label'] == 'unclear' and stance['review_needed'] is False   # no side to take is an answer, not a doubt
 
 
 async def test_shared_lane_and_fencing(store):
@@ -114,7 +114,9 @@ async def test_invalid_output_bounded_retries_never_neutral(store):
     for _ in range(6):
         assert await s.run_one(store, Bad()) == 'failed'
         async with store() as db:
-            await db.execute(update(model).values(available_at=datetime(2000,1,1)))
+            # Skip the back-off of jobs still waiting. A job that has given up keeps its time: only a real rest
+            # (pulse_analysis_retry) returns it to the queue, so within one rest period the attempts stay bounded.
+            await db.execute(update(model).where(model.status=='pending').values(available_at=datetime(2000,1,1)))
             await db.commit()
     assert await s.run_one(store, Bad()) == 'idle'
     async with store() as db:

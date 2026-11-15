@@ -96,8 +96,9 @@ async def test_real_sentiment_pipeline_caches_and_preserves_metrics(client, admi
     response = await client.post('/api/admin/pulse/items/sentiment-post/sentiment', headers=headers)
     assert response.status_code == 200
     assert response.json()['label'] == 'negative'
-    assert response.json()['method'] == 'claude_post_v1'
+    assert 'method' not in response.json() and 'model' not in response.json()   # the engine is not product surface
     assert (await client.post('/api/admin/pulse/items/sentiment-post/sentiment', headers=headers)).status_code == 200
     assert len(calls) == 1
     await db.refresh(item)
     assert item.metrics['likes'] == 9
+    assert item.metrics['sentiment']['method'] == 'claude_post_v1'   # the record keeps it: that is what makes the second call free

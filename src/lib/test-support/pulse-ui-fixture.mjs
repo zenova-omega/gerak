@@ -11,8 +11,8 @@ const post = {
   metrics: { likes: null, comments: null, shares: null, views: null, engagement: null },
 };
 
-function analytics(updated) {
-  const posts = updated ? [post, { ...post, id: 'post-b', author: 'New stored account', title: 'New stored evidence', url: 'https://example.test/new' }] : [post];
+function analytics(updated, extra = []) {
+  const posts = [...(updated ? [post, { ...post, id: 'post-b', author: 'New stored account', title: 'New stored evidence', url: 'https://example.test/new' }] : [post]), ...extra.map(row => ({ ...post, ...row }))];
   return {
     total_mentions: posts.length, posts,
     metric_totals: Object.fromEntries(['likes', 'comments', 'shares', 'views', 'engagement'].map(key => [key, { value: null, coverage: 0 }])),
@@ -23,9 +23,72 @@ function analytics(updated) {
   };
 }
 
+/** Tanya AI as the server answers it, kept in memory: no model is ever asked. Put the result on `state.chat` to switch the chat
+ * routes on; without it they stay blocked like any other unmocked request. `conversations` are whole stored conversations
+ * (`{ id, topic_id, title, updated_at, turns }`). The knobs: `listStatus`, `openStatus`, `deleteStatus`, `answerStatus` force a
+ * failure, `keep = false` answers without storing, `total` overrides the count of the list, and `holdList` / `holdAnswer`
+ * are promises the matching answer waits for. */
+export function chatStore(conversations = []) {
+  return { conversations, asked: [], deleted: [], listStatus: 200, openStatus: 200, deleteStatus: 200, answerStatus: 200, keep: true, total: null, holdList: null, holdAnswer: null, made: 0, configured: true };
+}
+export const chatTurn = (question, answer, minute = 0) => ({
+  question, answer,
+  sources: [{ code: 'P1', id: 'post-a', author: 'Test account', platform: 'news', url: 'https://example.test/evidence', published_at: '2026-11-11T09:00:00', interactions: 665, text: 'Stored GERAK evidence' }],
+  scope: { posts: 12, from: null, to: null, platforms: null, truncated: false },
+  answered_at: `2026-11-14T05:${String(minute).padStart(2, '0')}:00Z`,
+});
+const chatRow = conversation => ({ id: conversation.id, title: conversation.title, updated_at: conversation.updated_at, questions: conversation.turns.length, full: conversation.turns.length >= 40 });
+const chatMissing = { status: 404, body: { detail: 'Percakapan ini tidak ditemukan atau sudah dihapus. Mulai percakapan baru untuk bertanya lagi.' } };
+
+async function chatApi(chat, method, path, url, request) {
+  const base = '/api/admin/pulse/chat';
+  if (method === 'GET' && path === base + '/status') return { status: 200, body: { configured: chat.configured } };
+  if (method === 'POST' && path === base + '/prepare') return { status: 202, body: { preparing: false } };
+  if (method === 'GET' && path === base + '/conversations') {
+    await chat.holdList;
+    if (chat.listStatus !== 200) return { status: chat.listStatus, body: { detail: 'Riwayat tidak tersedia.' } };
+    const mine = chat.conversations.filter(row => row.topic_id === url.searchParams.get('topic_id')).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+    return { status: 200, body: { conversations: mine.slice(0, 50).map(chatRow), total: chat.total ?? mine.length } };
+  }
+  const id = path.startsWith(base + '/conversations/') ? decodeURIComponent(path.slice((base + '/conversations/').length)) : null;
+  if (id && method === 'GET') {
+    if (chat.openStatus !== 200) return { status: chat.openStatus, body: { detail: 'Percakapan tidak tersedia.' } };
+    const found = chat.conversations.find(row => row.id === id && (!url.searchParams.get('topic_id') || row.topic_id === url.searchParams.get('topic_id')));
+    return found ? { status: 200, body: { ...found, created_at: found.turns[0]?.answered_at || found.updated_at, full: found.turns.length >= 40 } } : chatMissing;
+  }
+  if (id && method === 'DELETE') {
+    if (chat.deleteStatus !== 200) return { status: chat.deleteStatus, body: { detail: 'Tidak berhasil.' } };
+    if (!chat.conversations.some(row => row.id === id)) return chatMissing;
+    chat.conversations = chat.conversations.filter(row => row.id !== id);
+    chat.deleted.push({ id, csrf: request.headers()['x-pulse-csrf'] });
+    return { status: 200, body: { deleted: id } };
+  }
+  if (method === 'POST' && path === base) {
+    const asked = request.postDataJSON();
+    chat.asked.push(asked);
+    await chat.holdAnswer;
+    if (chat.answerStatus !== 200) return { status: chat.answerStatus, body: { detail: 'Model AI tidak menjawab. Coba lagi; tidak ada data yang berubah.' } };
+    let conversation = asked.conversation_id ? chat.conversations.find(row => row.id === asked.conversation_id && row.topic_id === asked.topic_id) : null;
+    if (asked.conversation_id && !conversation) return chatMissing;
+    if (conversation && conversation.turns.length >= 40) return { status: 409, body: { detail: 'Percakapan ini sudah berisi 40 pertanyaan. Mulai percakapan baru untuk bertanya lagi.' } };
+    chat.made += 1;
+    const turn = { ...chatTurn(asked.question, `Jawaban uji ${chat.made} dari data tersimpan [P1].`), answered_at: `2026-11-15T03:${String(chat.made).padStart(2, '0')}:00Z` };
+    const { question: _question, ...shown } = turn;
+    if (!chat.keep) return { status: 200, body: { ...shown, conversation_id: null, conversation: null } };
+    if (!conversation) {
+      conversation = { id: 'made-' + chat.made, topic_id: asked.topic_id, title: asked.question.slice(0, 80), updated_at: turn.answered_at, turns: [] };
+      chat.conversations.push(conversation);
+    }
+    conversation.turns = [...conversation.turns, turn];
+    conversation.updated_at = turn.answered_at;
+    return { status: 200, body: { ...shown, conversation_id: conversation.id, conversation: chatRow(conversation) } };
+  }
+  return null;
+}
+
 export async function pulseUI(t, { authenticated = true } = {}) {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
-  const state = { authenticated, loginAllowed: false, analyticsStatus: 200, updated: false, requests: [], unexpected: [], errors: [] };
+  const state = { authenticated, loginAllowed: false, analyticsStatus: 200, updated: false, requests: [], unexpected: [], errors: [], balance: { state: 'ok', credits_remaining: 5832, checked_at: '2026-11-14T09:00:00', until: null }, monitor: { unread: 0 }, chat: null };
   t.after(async () => {
     await browser.close();
     assert.deepEqual(state.unexpected, [], 'Unmocked API or non-local request was blocked');
@@ -65,11 +128,18 @@ export async function pulseUI(t, { authenticated = true } = {}) {
     } else if (method === 'GET' && path === '/api/admin/pulse/topics') body = [topic];
     else if (method === 'GET' && path === '/api/admin/pulse/analytics') {
       status = state.analyticsStatus;
-      body = status === 200 ? analytics(state.updated) : { detail: status === 401 ? 'Session expired' : 'Analytics offline' };
+      body = status === 200 ? analytics(state.updated, state.extraPosts) : { detail: status === 401 ? 'Session expired' : 'Analytics offline' };
     } else if (method === 'GET' && path === '/api/admin/pulse/sentiment/progress') {
       body = { total: state.updated ? 2 : 1, analyzed: 0, pending: state.updated ? 2 : 1, failed: 0, last_finished_at: null, scope: 'project_all_dates' };
     } else if (method === 'GET' && path === '/api/admin/pulse/reviews') body = { reviews: [] };
     else if (method === 'GET' && path === '/api/admin/pulse/issues') body = [];
+    else if (method === 'GET' && path === '/api/admin/pulse/sources/balance') body = state.balance;
+    else if (method === 'GET' && path === '/api/admin/pulse/monitor') body = state.monitor;   // the unread-alert badge on the Monitor nav item
+    else if (state.chat && path.startsWith('/api/admin/pulse/chat')) {
+      const answer = await chatApi(state.chat, method, path, url, request);
+      if (!answer) { state.unexpected.push(`${method} ${path}`); return route.abort(); }
+      ({ status, body } = answer);
+    }
     else {
       state.unexpected.push(`${method} ${path}`);
       return route.abort();

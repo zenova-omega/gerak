@@ -18,10 +18,13 @@ def budget_provider(provider):
 
 def source_platform(provider):
     return {'rss':'news','xpoz':'x'}.get(provider,provider)
-DEFAULT_LIMITS = {'rss': 48, 'xpoz': 0, 'youtube': 0}
 # daily_limit == UNLIMITED removes the local daily cap for that lane. The provider's own quota
 # still applies, so an unlimited lane is paced instead: one request, then a pause.
 UNLIMITED = -1
+# A new installation collects without a local allowance. Collection stops only when the provider refuses
+# (see pulse_provider_block): an empty balance is announced in the app and lifts once it has been topped up.
+# Monitor can still set a daily cap per lane, or 0 to switch one off.
+DEFAULT_LIMITS = {'rss': UNLIMITED, 'xpoz': UNLIMITED, 'youtube': UNLIMITED}
 # Pause between two requests of an unlimited lane, automatic or manual.
 # xpoz: 2 min (up to 720/day across X, Instagram and TikTok). youtube: 15 min, because one search
 # costs 100 of the default 10,000 daily API units (96 searches/day). rss: 1 min, no provider quota.
@@ -61,6 +64,8 @@ async def recover_expired(db, now):
 
 async def enqueue_due(db, now):
     await ensure_policies(db)
+    from .pulse_provider_block import lift_expired
+    await lift_expired(db, now)
     await recover_expired(db, now)
     schedules=(await db.execute(select(MonitorSchedule).where(MonitorSchedule.enabled==True, MonitorSchedule.next_run_at<=now))).scalars().all()
     for schedule in schedules:
@@ -177,6 +182,8 @@ async def finish_job(db, job, result, now):
         schedule.last_success_at=now
         job.status='succeeded'; job.finished_at=now
         job.result={'fetched':len(result['items'][:PAGE_ROWS]),'ingested':created,'snapshots':len(result['items'][:PAGE_ROWS])}
+        if result.get('channels'):   # YouTube: what the channel sweep read, and whether the keyword search was refused
+            job.result={**job.result,'search':result.get('search'),'channels':result['channels']}
     else:
         code=result.get('error','provider_error')
         retryable=code in ('timeout','transient_http')
@@ -184,8 +191,10 @@ async def finish_job(db, job, result, now):
         job.available_at=now+timedelta(seconds=60*2**(job.attempts-1))
         job.finished_at=None if job.status=='retry' else now
         job.result={'error':code,'message':'Provider attempt failed. Inspect state; no plan upgrades or fallback.'}
-        if code in ('authentication_failed','access_or_quota_restricted','plan_restricted','rate_limited','not_configured','pending'):
-            await db.execute(update(WorkerPolicy).where(WorkerPolicy.provider==budget_provider(job.provider)).values(blocked_reason=code))
+        from .pulse_provider_block import block_values
+        blocked=block_values(code,now,budget_provider(job.provider))
+        if blocked:
+            await db.execute(update(WorkerPolicy).where(WorkerPolicy.provider==budget_provider(job.provider)).values(**blocked))
         if job.status=='failed':
             await insert_once(db,PulseAlert,{'id':str(uuid.uuid4()),'dedup_key':f'failure:{job.id}',
                 'topic_id':job.topic_id,'kind':'collection_error','title':f'{job.provider}: {code}',
@@ -196,7 +205,49 @@ async def finish_job(db, job, result, now):
     return True
 
 
-async def fetch_provider(provider, query, settings):
+CHANNELS_PER_RUN = 150      # YouTube channels read in one scheduled run: 150 units of the shared 10,000 a day
+WATCH_DAYS = 7              # how far back a channel's uploads are taken; stored videos are skipped, so a repeat costs little
+
+
+async def youtube_watch(db, topic_id, now, limit=CHANNELS_PER_RUN):
+    """What a scheduled YouTube run reads besides the search: the channels that posted most about this project (then
+    most recently), the links already stored, and the day the window starts."""
+    from sqlalchemy import func
+    channel = func.json_extract(SourceItem.metrics, '$.author_id')
+    rows = (await db.execute(select(channel, func.count(), func.max(SourceItem.published_at))
+        .where(SourceItem.topic_id == topic_id, SourceItem.platform == 'youtube', channel.is_not(None)).group_by(channel))).all()
+    ranked = sorted(rows, key=lambda row: (-row[1], -(row[2].timestamp() if row[2] else 0), row[0]))
+    known = (await db.scalars(select(SourceItem.url).where(SourceItem.topic_id == topic_id, SourceItem.platform == 'youtube'))).all()
+    return {'channels': [row[0] for row in ranked[:limit]], 'known_urls': set(known), 'since': now - timedelta(days=WATCH_DAYS)}
+
+
+async def fetch_youtube_with_channels(query, key, watch):
+    """The keyword search, then the uploads of the known channels. The two draw on separate daily allowances, so a
+    refused search does not fail the run as long as the channels could be read."""
+    from .ingest.youtube import fetch_youtube_channel_uploads, fetch_youtube_items
+    rows, refused = [], None
+    try:
+        rows = await fetch_youtube_items(query, key)
+    except Exception as exc:
+        refused = exc
+    channels = (watch or {}).get('channels') or []
+    if not channels:
+        if refused:
+            raise refused
+        return {'items': rows}
+    try:
+        more, stats = await fetch_youtube_channel_uploads(channels, query, key, since=watch['since'],
+                                                          known_urls=set(watch.get('known_urls') or ()) | {row['url'] for row in rows})
+    except Exception:
+        if refused:
+            raise refused
+        more, stats = [], {'channels': len(channels), 'read': 0, 'matched': 0, 'calls': 0, 'stopped': 'error'}
+    if refused and not stats['read']:
+        raise refused                      # neither way brought anything: report the search's refusal
+    return {'items': more + rows, 'search': 'refused' if refused else 'ok', 'channels': stats}
+
+
+async def fetch_provider(provider, query, settings, watch=None):
     from .ingest.rss import fetch_rss_items
     from .ingest.xpoz import fetch_xpoz_items, fetch_xpoz_stored_items, fetch_xpoz_social_items
     from .ingest.youtube import fetch_youtube_items
@@ -208,7 +259,8 @@ async def fetch_provider(provider, query, settings):
             if provider=='rss':
                 rows=await fetch_rss_items(query)
             elif provider=='youtube':
-                rows=await fetch_youtube_items(query,key)
+                found=await fetch_youtube_with_channels(query,key,watch)
+                return {**found,'items':found['items'][:PAGE_ROWS]}
             elif provider=='xpoz':
                 fn=fetch_xpoz_items if settings.XPOZ_MODE=='rest_live' else fetch_xpoz_stored_items
                 rows=await fn(query,key)
@@ -229,8 +281,9 @@ async def run_lane(provider, session_factory, settings):
             await db.commit(); return
         topic=await db.get(WatchTopic,job.topic_id)
         job_id,token,query,source=job.id,job.lease_token,topic.query,job.provider
+        watch=await youtube_watch(db,topic.id,datetime.utcnow()) if source=='youtube' else None
         await db.commit()  # durable budget reservation BEFORE external request
-    result=await fetch_provider(source,query,settings)
+    result=await fetch_provider(source,query,settings,watch=watch)
     async with session_factory() as db:
         job=await db.get(CrawlJob,job_id)
         if job and job.lease_token==token:

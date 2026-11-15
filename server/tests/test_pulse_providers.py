@@ -19,7 +19,7 @@ async def test_bootstrap_is_idempotent_and_manual(client, admin_token):
     assert first.json() == second.json()
     topics = second.json()["topics"]
     assert [t["label"] for t in topics] == ["GERAK", "Isu Penyadapan Presiden"]
-    assert all(t["sources"] == ["rss", "xpoz", "youtube"] and not t["is_active"] for t in topics)
+    assert all(t["sources"] == ["rss", "social", "youtube"] and not t["is_active"] for t in topics)
 
 
 @pytest.mark.asyncio

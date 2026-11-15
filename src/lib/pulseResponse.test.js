@@ -18,3 +18,16 @@ test('invalid labels and unavailable result stay unknown; no author stance aggre
  assert.equal(r.stanceCounts.unknown,1);assert.equal(r.commentCounts.unknown,1);
  assert.equal(r.posts[0].stance,null);assert.equal('accounts' in r,false);
 });
+
+test('shares of a breakdown are read over what has been analysed, never over the waiting rows', async () => {
+  const { analysedShares } = await import('./pulseResponse.js');
+  const shares = analysedShares({ positive: 105, neutral: 150, negative: 177, unknown: 20143 });
+  assert.equal(shares.total, 20575);
+  assert.equal(shares.analysed, 432);
+  assert.equal(Math.round(shares.percent('negative')), 41);      // not 0.9% of everything stored
+  assert.equal(shares.percent('unknown'), null);                 // waiting rows are coverage, not a category
+  assert.equal(shares.percent('missing'), 0);
+  const waiting = analysedShares({ positive: 0, neutral: 0, negative: 0, unknown: 12 });
+  assert.equal(waiting.analysed, 0);
+  assert.equal(waiting.percent('negative'), null);               // nothing analysed: no figure at all
+});

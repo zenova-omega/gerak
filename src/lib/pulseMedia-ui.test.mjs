@@ -33,6 +33,10 @@ test('feed exposes inline media, original caption, safe links and truthful legac
     const dated=renderToStaticMarkup(React.createElement(PostFeed,{posts:[{...posts[0],published_at:'2026-11-10T23:30:00Z'},{...posts[1],published_at:'2026-11-09T10:00:00Z'}],initialDay:'2026-11-11'}));
     assert.match(dated,/Original caption in full/);
     assert.doesNotMatch(dated,/<strong>Older record<\/strong>/);
+    // A week or month picked on the trend chart arrives as a first and a last day.
+    const week=renderToStaticMarkup(React.createElement(PostFeed,{posts:[{...posts[0],published_at:'2026-11-10T23:30:00Z'},{...posts[1],published_at:'2026-11-09T10:00:00Z'}],initialDay:'2026-11-09',initialDayTo:'2026-11-15'}));
+    assert.match(week,/Original caption in full/);
+    assert.match(week,/<strong>Older record<\/strong>/);
     assert.match(html, /aria-label="Tampilan posting"/);
     assert.match(html, /Caption asli/);
     assert.doesNotMatch(html, /<h3>Original caption headline<\/h3>/);

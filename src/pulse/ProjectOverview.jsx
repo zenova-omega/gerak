@@ -3,14 +3,15 @@ import useHideUnknown from './useHideUnknown';
 import { UnanalysedToggle } from './UnanalysedToggle';
 import InfographicsPanel from '../components/admin/pulse/InfographicsPanel';
 import AiSummaryCard from './AiSummaryCard';
-import { postInteractions } from '../lib/pulseEngagement';
+import { contentShares, postInteractions } from '../lib/pulseEngagement';
 import { PulseArrow } from '../components/ui/PulseArrow';
 import EvidenceDrawer from './EvidenceDrawer';
 import {PulseSourceHeading} from '../components/ui/PulsePatterns';
-import {createElement,useState} from 'react';
+import {createElement,lazy,Suspense,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
-import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid} from 'recharts';
 import AnalyticsPanel from './AnalyticsPanel';
+import TrendChart from './TrendChart';
+import {bucketLabel,bucketPosts} from '../lib/pulseTrendSeries';
 import {overviewEvidence,previousPeriod,reviewEvidence,sourceText} from '../lib/pulseOverview';
 import {sentimentDate} from '../lib/pulseSentiment';
 import {sentimentLabels,postSentiment} from '../lib/pulsePostFilters';
@@ -23,17 +24,17 @@ import useOverviewEvidence from './useOverviewEvidence';
 import InfoTip from './InfoTip';
 import GrowthEvidence from './GrowthEvidence';
 import './overview-analytics.css';
+// The spread card brings the province outlines with it, so both are fetched after the page.
+const RegionSpreadSummary = lazy(() => import('./RegionSpreadSummary'));
 import './project-overview.css';
 import {Activity,Copy,MessagesSquare,Users} from 'lucide-react';
-import {PulseStat,PulseStatGrid,PulseLegend,PulseChartTooltip,PulseDistribution,PulseBreakdown,PulsePanelEmpty} from '../components/ui/PulseAnalytics';
+import {PulseStat,PulseStatGrid,PulseDistribution,PulseBreakdown,PulsePanelEmpty} from '../components/ui/PulseAnalytics';
 import {SentimentTag} from '../components/ui/PulseTag';
 import {PulseEngagement} from '../components/ui/PulseEngagement';
 import {PulseShare,PulseView,PulseBeat} from '../components/ui/PulseMetricIcons';
 import {PulseMetricRow} from '../components/ui/PulseMetricRow';
 import {recentChange,deltaIntent} from '../lib/pulseTrend';
 import {sentimentColor,sentimentOrder,platformColor,sharePercent} from '../lib/pulseChartTheme';
-
-const sentimentFill=key=>key==='unknown'?'url(#po-hatch-unknown)':sentimentColor[key];
 
 const sumOf=(posts,key)=>{const values=posts.map(p=>key==='interactions'?postInteractions(p.metrics):p.metrics?.[key]).filter(Number.isFinite);return values.length?values.reduce((a,b)=>a+b,0):null;};
 /** What a set of posts amounts to, before reading them one by one. */
@@ -120,7 +121,6 @@ export default function ProjectOverview({data,topic={},period={},platforms=null,
  const shownOrder=sentimentOrder.filter(key=>!(hideUnknown&&key==='unknown'));
  const unknownToggle=<UnanalysedToggle hidden={hideUnknown} onChange={setHideUnknown} count={r.counts.unknown}/>;
  const segments=shownOrder.map(key=>({key,label:sentimentLabels[key],value:r.counts[key],color:sentimentColor[key],hatch:key==='unknown',onClick:()=>open(sentimentLabels[key],r.posts.filter(p=>postSentiment(p)===key))}));
- const topOfDay=(posts,date)=>posts.filter(p=>sentimentDate(p)===date).map(p=>({id:p.id,author:p.author,text:(p.title||p.text||'').replace(/\s+/g,' ').trim().slice(0,70),value:postInteractions(p.metrics)})).sort((a,b)=>(b.value??-1)-(a.value??-1)).slice(0,3);
  const dayLabel=v=>{const d=new Date(v+'T00:00:00Z');return Number.isNaN(d.getTime())?v:d.toLocaleDateString('id-ID',{day:'numeric',month:'short',timeZone:'UTC'});};
  const topNarrative=r.narratives[0],topPlatform=r.platforms[0];
  const signals=[
@@ -137,12 +137,12 @@ export default function ProjectOverview({data,topic={},period={},platforms=null,
     <div className="po-context"><Link className="po-report-link" to={page('reports')}>Buat laporan <PulseArrow/></Link><span>Diperbarui {r.updatedAt?pulseDate(r.updatedAt):'belum tersedia'}</span></div>
    </header>
    <PulseStatGrid label="Ringkasan periode project">
-    <PulseStat label="Penyebutan" icon={MessagesSquare} value={total} delta={percentChange??recent('total')?.percent??null} deltaNote={percentChange!==null?`vs ${comparison.from} s.d. ${comparison.to}`:recent('total')?`vs ${recent('total').days} hari sebelumnya`:undefined} trend={trend('total')} note={percentChange===null&&!recent('total')?changeText:undefined}/>
+    <PulseStat label="Penyebutan" icon={MessagesSquare} value={total} delta={percentChange??recent('total')?.percent??null} deltaNote={percentChange!==null?`vs ${comparison.from} s.d. ${comparison.to}`:recent('total')?`${recent('total').days} hari terakhir vs ${recent('total').days} hari sebelumnya`:undefined} trend={trend('total')} note={percentChange===null&&!recent('total')?changeText:undefined}/>
     <PulseStat label="Konten unik" icon={Copy} value={r.uniqueContent} share={total?r.uniqueContent/total*100:null} shareLabel="teks berbeda" note={`${formatCount(r.duplicates)} salinan teks identik`}/>
     <PulseStat label="Akun unik" icon={Users} value={r.accounts.length} note={total&&r.accounts.length?`${(total/r.accounts.length).toLocaleString('id-ID',{maximumFractionDigits:1})} posting per akun`:'Dihitung per platform'}/>
     <PulseStat label="Interaksi" icon={Activity} value={r.engagement} share={total?r.engagementCoverage/total*100:null} shareLabel="posting bermetrik"/>
-    <PulseStat label="Positif" tone="positive" value={r.counts.positive} share={(hideUnknown?r.analyzed:total)?r.counts.positive/(hideUnknown?r.analyzed:total)*100:null} shareLabel={hideUnknown?"dari yang dianalisis":"dari seluruh posting"} delta={recent('positive')?.delta??null} deltaUnit="" deltaIntent={deltaIntent('positive',recent('positive')?.delta)} deltaNote={recent('positive')?`vs ${recent('positive').days} hari sebelumnya`:undefined} trend={trend('positive')} onClick={segments[0].onClick}/>
-    <PulseStat label="Negatif" tone="negative" value={r.counts.negative} share={(hideUnknown?r.analyzed:total)?r.counts.negative/(hideUnknown?r.analyzed:total)*100:null} shareLabel={hideUnknown?"dari yang dianalisis":"dari seluruh posting"} delta={recent('negative')?.delta??null} deltaUnit="" deltaIntent={deltaIntent('negative',recent('negative')?.delta)} deltaNote={recent('negative')?`vs ${recent('negative').days} hari sebelumnya`:undefined} trend={trend('negative')} onClick={segments.find(segment=>segment.key==='negative')?.onClick}/>
+    <PulseStat label="Positif" tone="positive" value={r.counts.positive} share={(hideUnknown?r.analyzed:total)?r.counts.positive/(hideUnknown?r.analyzed:total)*100:null} shareLabel={hideUnknown?"dari yang dianalisis":"dari seluruh posting"} delta={recent('positive')?.delta??null} deltaUnit="" deltaIntent={deltaIntent('positive',recent('positive')?.delta)} deltaNote={recent('positive')?`${recent('positive').days} hari terakhir vs ${recent('positive').days} hari sebelumnya`:undefined} trend={trend('positive')} onClick={segments[0].onClick}/>
+    <PulseStat label="Negatif" tone="negative" value={r.counts.negative} share={(hideUnknown?r.analyzed:total)?r.counts.negative/(hideUnknown?r.analyzed:total)*100:null} shareLabel={hideUnknown?"dari yang dianalisis":"dari seluruh posting"} delta={recent('negative')?.delta??null} deltaUnit="" deltaIntent={deltaIntent('negative',recent('negative')?.delta)} deltaNote={recent('negative')?`${recent('negative').days} hari terakhir vs ${recent('negative').days} hari sebelumnya`:undefined} trend={trend('negative')} onClick={segments.find(segment=>segment.key==='negative')?.onClick}/>
    </PulseStatGrid>
    {signals.length>0&&<ul className="po-signals" aria-label="Sorotan untuk diperiksa">{signals.map(s=><li key={s.key}><button type="button" onClick={s.onClick}><span className="po-signal-label">{s.label}</span><strong>{s.value}</strong><small>{s.note}</small><span className="po-signal-action">{s.action} <PulseArrow/></span></button></li>)}</ul>}
    <footer className="po-brief-foot">
@@ -156,26 +156,18 @@ export default function ProjectOverview({data,topic={},period={},platforms=null,
   {/* Layout: what happened and how it feels first, then what is said, who drives it, then detail. */}
   <section id="overview-development" className="lay-grid">
    <div className="lay-8">
-   <AnalyticsPanel title="Perkembangan isu" description="Volume posting per hari, dipilah menurut sentimen. Klik tanggal untuk melihat postingnya." actions={unknownToggle} footer="Tanggal publikasi WIB. Puncak volume bukan bukti peristiwa baru atau sebab perubahan.">{r.days.length?<>
-    <PulseLegend items={shownOrder.map(key=>({key,label:sentimentLabels[key],color:sentimentColor[key],hatch:key==='unknown'}))}/>
-    <div className="po-chart po-chart-lead" role="img" aria-label="Tren posting harian menurut sentimen; daftar tanggal tersedia di bawah"><ResponsiveContainer width="100%" height="100%"><BarChart data={r.days} barCategoryGap="22%" onClick={s=>{if(s?.activeLabel)open('Posting '+s.activeLabel,r.posts.filter(p=>sentimentDate(p)===s.activeLabel));}}>
-     <defs><pattern id="po-hatch-unknown" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="6" fill="var(--ps-sent-unknown)"/></pattern></defs>
-     <CartesianGrid vertical={false}/><XAxis dataKey="date" tickFormatter={dayLabel} minTickGap={24} tickLine={false} axisLine={false}/><YAxis allowDecimals={false} width={40} tickLine={false} axisLine={false}/>
-     <Tooltip cursor={{fill:'var(--ps-soft)'}} content={<PulseChartTooltip labelFormatter={dayLabel} total percent top={date=>topOfDay(r.posts,date)}/>}/>
-     {shownOrder.map(key=><Bar key={key} dataKey={key} name={sentimentLabels[key]} stackId="sentiment" fill={sentimentFill(key)} isAnimationActive={false} cursor="pointer" maxBarSize={44}/>)}
-    </BarChart></ResponsiveContainer></div>
-    <details className="po-data"><summary>Lihat semua tanggal</summary><div>{r.days.map(d=><PulseButton key={d.date} onClick={()=>open(d.date,r.posts.filter(p=>sentimentDate(p)===d.date))}>{d.date} · {d.total} posting</PulseButton>)}</div></details>
-   </>:<PulsePanelEmpty title="Belum ada waktu publikasi" action={<Link className="po-more" to={page('sources')}>Periksa Sumber &amp; Cakupan <PulseArrow/></Link>}>Posting tanpa tanggal terbit tidak dapat ditempatkan pada grafik.</PulsePanelEmpty>}</AnalyticsPanel>
+   <TrendChart title="Perkembangan isu" description="Posting dan interaksi dari waktu ke waktu, atau dipilah menurut sentimen." posts={r.posts} period={period}
+    footer="Tanggal publikasi WIB. Puncak volume bukan bukti peristiwa baru atau sebab perubahan." onPick={(row,unit)=>open('Posting '+bucketLabel(row,unit),bucketPosts(r.posts,row))}/>
    </div>
    <div className="lay-4">
-    <AnalyticsPanel title="Sentimen" description={`${formatCount(r.analyzed)} dari ${formatCount(total)} posting berlabel.`} footer="Sikap terhadap isu dibahas terpisah. Sentimen negatif tidak otomatis berarti membantah klaim.">
+    <AnalyticsPanel title="Sentimen" description={`${formatCount(r.analyzed)} dari ${formatCount(total)} posting berlabel.`} actions={unknownToggle} footer="Sikap terhadap isu dibahas terpisah. Sentimen negatif tidak otomatis berarti membantah klaim.">
      <PulseDistribution segments={segments} total={hideUnknown?r.analyzed:total}/>
      <Link className="po-more" to={page('sentiment')}>Analisis sentimen lengkap <PulseArrow/></Link>
     </AnalyticsPanel>
    </div>
   </section>
   <section id="overview-narratives" className="lay-grid">
-   <div className="lay-8"><AnalyticsPanel title="Narasi utama" description="Kelompok percakapan serupa dan seberapa jauh masing-masing menyebar." footer="Dibagikan dan tayangan hanya dihitung dari posting yang membawa angkanya. Jangkauan akun unik tidak tersedia dari platform.">{r.narratives.length?<ol className="po-narrative-list">{r.narratives.slice(0,6).map((g,i)=>{const accounts=new Set(g.posts.map(p=>p.platform+'|'+p.author)).size,kpis=[['Interaksi',sumOf(g.posts,'interactions'),PulseBeat],['Dibagikan',sumOf(g.posts,'shares'),PulseShare],['Tayangan',sumOf(g.posts,'views'),PulseView]],tone=g.posts.reduce((t,p)=>{t[postSentiment(p)]=(t[postSentiment(p)]||0)+1;return t;},{}),lead=['negative','neutral','positive'].sort((a,b)=>(tone[b]||0)-(tone[a]||0))[0];
+   <div className="lay-8"><AnalyticsPanel title="Narasi utama" description="Kelompok percakapan serupa dan seberapa jauh masing-masing menyebar." footer="Dibagikan dan tayangan hanya dihitung dari posting yang membawa angkanya. Pada repost, angka dibagikan milik posting aslinya: dihitung sekali per narasi dan tidak masuk interaksi. Jangkauan akun unik tidak tersedia dari platform.">{r.narratives.length?<ol className="po-narrative-list">{r.narratives.slice(0,6).map((g,i)=>{const accounts=new Set(g.posts.map(p=>p.platform+'|'+p.author)).size,kpis=[['Interaksi',sumOf(g.posts,'interactions'),PulseBeat],['Dibagikan',contentShares(g.posts),PulseShare],['Tayangan',sumOf(g.posts,'views'),PulseView]],tone=g.posts.reduce((t,p)=>{t[postSentiment(p)]=(t[postSentiment(p)]||0)+1;return t;},{}),lead=['negative','neutral','positive'].sort((a,b)=>(tone[b]||0)-(tone[a]||0))[0];
      return <li key={g.id}><button type="button" onClick={()=>open('Kelompok percakapan',g.posts)} aria-label={`Narasi ${i+1}: ${g.title.slice(0,140)}. ${g.posts.length} posting dari ${accounts} akun. Periksa posting.`}><span className="po-narrative-rank" aria-hidden="true">{i+1}</span><span className="po-narrative-body"><strong>{g.title.slice(0,140)}{g.title.length>140?'…':''}</strong><small>{dateRange(g.posts)&&<time>{dateRange(g.posts)}</time>}{dateRange(g.posts)?' · ':''}{formatCount(g.posts.length)} posting · {formatCount(accounts)} akun{change&&g.posts.length-g.previous>0?` · +${g.posts.length-g.previous} dari periode sebelumnya`:''}</small><span className="po-narrative-kpis">{kpis.map(([label,value,icon])=><span key={label} title={label}>{createElement(icon,{size:14})}<b>{value==null?'—':formatCount(value)}</b>{label.toLowerCase()}</span>)}{tone[lead]>0&&<SentimentTag size="sm" value={lead}/>}</span></span><PulseArrow/></button></li>;})}</ol>:<PulsePanelEmpty title="Belum ada narasi berulang" action={<Link className="po-more" to={page('posts')}>Buka semua posting <PulseArrow/></Link>}>Belum ada kelompok berisi lebih dari satu posting pada pilihan ini.</PulsePanelEmpty>}</AnalyticsPanel></div>
    <div className="lay-4">
     <AnalyticsPanel title="Sumber percakapan" description="Jumlah posting per platform, bukan estimasi audiens.">
@@ -195,8 +187,9 @@ export default function ProjectOverview({data,topic={},period={},platforms=null,
   </section>
   <div className="lay-grid"><div className="lay-12"><GrowthEvidence data={extra.growth} posts={r.posts} onOpen={open} loaded={extra.loaded}/></div></div>
   <section id="overview-spread" className="lay-grid">
+   <div className="lay-12"><Suspense fallback={<AnalyticsPanel title="Sebaran tempat" description="Memuat peta…"><p className="po-empty" role="status">Memuat peta…</p></AnalyticsPanel>}><RegionSpreadSummary posts={r.posts} to={page('network') + '&focus=map'}/></Suspense></div>
    <div className="lay-6"><AnalyticsPanel title="Penyebaran percakapan" description="Urutan publikasi paling awal yang tersedia pada setiap platform."><ol className="po-spread">{r.platformTimeline.map(p=><li key={p.platform}><PlatformIcon platform={p.platform}/><strong>{platformLabel(p.platform)}</strong><span>Publikasi awal: {pulseDate(p.firstPublished)}</span><small>Pertama ditemukan: {pulseDate(p.firstObserved)}</small><PulseButton onClick={()=>open(platformLabel(p.platform),r.posts.filter(post=>post.platform===p.platform))}>{p.count} posting <PulseArrow/></PulseButton></li>)}</ol><p className="po-panel-note">Urutan waktu tidak membuktikan platform asal. Hubungan repost harus didukung tautan atau bukti langsung.</p><Link to={page('network')}>Buka timeline & network akun <PulseArrow/></Link></AnalyticsPanel></div>
-   <div id="overview-response" className="lay-6"><AnalyticsPanel title="Suara di komentar" description={`${comments.length} komentar tersedia pada posting pilihan ini.`}>{comments.slice(0,3).map(c=><blockquote key={c.post.id+c.id}><p>{c.text}</p><footer>{c.author||'Penulis'} · {formatCount(c.likes)} likes</footer></blockquote>)}{!comments.length&&<p className="po-empty">Komentar belum tersedia untuk pilihan ini. Sentimen caption tidak digunakan sebagai pengganti sentimen komentar.</p>}<Link to={page('comments')}>Lihat komentar <PulseArrow/></Link></AnalyticsPanel></div>
+   <div id="overview-response" className="lay-6"><AnalyticsPanel title="Suara di komentar" description={`${formatCount(comments.length)} komentar tersedia pada posting pilihan ini.`}>{comments.slice(0,3).map(c=><blockquote key={c.post.id+c.id}><p>{c.text}</p><footer>{c.author||'Penulis'} · {formatCount(c.likes)} suka</footer></blockquote>)}{!comments.length&&<p className="po-empty">Komentar belum tersedia untuk pilihan ini. Sentimen caption tidak digunakan sebagai pengganti sentimen komentar.</p>}<Link to={page('comments')}>Lihat komentar <PulseArrow/></Link></AnalyticsPanel></div>
   </section>
  <section id="overview-words"><InfographicsPanel posts={r.posts}/></section>
  </div>;

@@ -9,8 +9,9 @@ from .pulse_monitor import ensure_policies, insert_once, gap_remaining
 from .pulse import ingest_items, _provider_error
 from .ingest.common import credential
 from .ingest.xpoz import SOCIAL_TOOLS, fetch_xpoz_account, fetch_xpoz_social_items
+from .pulse_public import lane_for_reader
 
-BLOCKING_ERRORS = ('authentication_failed','access_or_quota_restricted','plan_restricted','rate_limited','pending')
+from .pulse_provider_block import BLOCKING as BLOCKING_ERRORS, block_values, lift_after_top_up
 
 class CollectionBlocked(Exception):
     pass
@@ -26,15 +27,59 @@ async def check_account(db, settings):
         detail = await fetch_xpoz_account(key) if key else {'status':'error','error':'not_configured'}
     except Exception as exc:
         detail = {'status':'error','error':_provider_error(exc,'xpoz')['error']}
-    if detail.get('error') in BLOCKING_ERRORS:
+    blocked = block_values(detail.get('error'), datetime.utcnow())
+    if blocked:
         await ensure_policies(db)
-        await db.execute(update(WorkerPolicy).where(WorkerPolicy.provider=='xpoz').values(blocked_reason=detail['error']))
+        await db.execute(update(WorkerPolicy).where(WorkerPolicy.provider=='xpoz').values(**blocked))
+    return await store_account(db, detail)
+
+
+async def store_account(db, detail):
     account = await db.get(SourceAccount, 'xpoz')
     if account is None:
         account = SourceAccount(provider='xpoz'); db.add(account)
     account.checked_at = datetime.utcnow(); account.detail = detail
     await db.flush()
     return account
+
+
+ACCOUNT_SECONDS = 1800
+
+
+async def read_account(settings):
+    """The provider's current plan and balance, or None when it could not be read as verified.
+    Reading the account costs no credits (measured 14 Nov 2026: three reads, the balance did not move)."""
+    key = credential(settings, 'XPOZ_API_KEY')
+    if not key:
+        return None
+    try:
+        detail = await fetch_xpoz_account(key)
+    except Exception:
+        return None
+    return detail if detail.get('status') == 'verified' else None
+
+
+async def account_tick():
+    """Keep the balance on Sources current without anyone pressing a button.
+    The read runs with no database session open. A failed read stores nothing: the last good snapshot stays, and
+    blocking the provider remains the job of an explicit check or a failed collection."""
+    import logging
+    from ..config import get_settings
+    from ..database import async_session
+    try:
+        detail = await read_account(get_settings())
+        if detail is None:
+            return
+        async with async_session() as db:
+            earlier = await db.get(SourceAccount, 'xpoz')
+            before = dict(earlier.detail) if earlier and isinstance(earlier.detail, dict) else None
+            await store_account(db, detail)
+            # Topped up since the last reading: collection that stopped for balance resumes by itself.
+            if await lift_after_top_up(db, before, detail):
+                logging.getLogger(__name__).info('Pulse: balance topped up, collection reopened')
+            await db.commit()
+    except Exception:
+        logging.getLogger(__name__).exception('Pulse account refresh failed')
 
 
 async def reserve_collection(db, topic_id, platform, now, *, unlimited=False):
@@ -105,9 +150,10 @@ async def finish_collection(db, run, result, now):
     else:
         run.error=result.get('error','provider_error')
         run.status='pending' if run.error=='pending' else 'failed'
-        if run.error in BLOCKING_ERRORS:
+        blocked = block_values(run.error, now)
+        if blocked:
             await db.execute(update(WorkerPolicy).where(WorkerPolicy.provider=='xpoz',WorkerPolicy.lease_token==run.lease_token)
-                             .values(blocked_reason=run.error))
+                             .values(**blocked))
     run.finished_at=now
     await db.execute(update(WorkerPolicy).where(WorkerPolicy.provider=='xpoz',WorkerPolicy.lease_token==run.lease_token)
                      .values(lease_until=None,lease_token=None))
@@ -166,7 +212,7 @@ async def coverage(db, settings, topic_id=None):
                     evidence.append({'status':'succeeded' if status in ('ok','success') else status,'error':r.get('error'), 'fetched':r.get('fetched',0),'ingested':r.get('ingested',0),'started_at':c.started_at,'finished_at':c.finished_at})
         evidence.sort(key=lambda a:a['started_at'],reverse=True)
         tool=SOCIAL_TOOLS.get(platform,'getTwitterPostsByKeywords')
-        sources.append({'platform':platform,'provider':provider,
+        sources.append({'platform':platform,'provider':lane_for_reader(provider),
             'configured':provider=='rss' or bool(credential(settings,provider.upper()+'_API_KEY')),
             'tool_available':(tool in detail.get('tools',[])) if provider=='xpoz' and detail.get('status')=='verified' else None,
             'stored_posts':len(posts),'fields':field_counts,'last_attempt':evidence[0] if evidence else None,
@@ -174,11 +220,24 @@ async def coverage(db, settings, topic_id=None):
             'recurring_enabled':any(s.enabled and s.provider==schedule_provider for s in schedule_rows)})
     threads_account=await db.get(SourceAccount,'threads')
     threads_posts={p.url:p for p in rows if p.platform=='threads'}
+    threads_token=bool(credential(settings,'THREADS_ACCESS_TOKEN'))
+    connection=threads_account.detail if threads_account else None
+    # One attempt per manual collection, read from the same run log as the other lanes. A run that found nothing new
+    # and was not refused counts as a success.
+    attempts=[]
+    for c in crawl_rows:
+        r=(c.providers or {}).get('threads')
+        if r:
+            attempts.append({'status':'failed' if r.get('error') else 'succeeded' if r.get('fetched') else 'empty','error':r.get('error'),
+                             'fetched':r.get('fetched',0),'ingested':r.get('ingested',0),'started_at':c.started_at,'finished_at':c.finished_at})
     sources.append({'platform':'threads','provider':'threads',
-        'configured':bool(credential(settings,'THREADS_ACCESS_TOKEN')),
-        'stored_posts':len(threads_posts),'fields':{},'last_attempt':None,'last_success_at':None,
-        'recurring_enabled':False,'keyword_collection_available':False,
-        'connection':threads_account.detail if threads_account else None,
+        'configured':threads_token,
+        'stored_posts':len(threads_posts),'fields':{},'last_attempt':attempts[0] if attempts else None,
+        'last_success_at':next((a['finished_at'] for a in attempts if a['status'] in ('succeeded','empty')),None),
+        'recurring_enabled':False,
+        # Searching needs a token that carries the search permission. Known only after a connection check.
+        'keyword_collection_available':threads_token and bool((connection or {}).get('search_permission')),
+        'connection':connection,
         'connection_checked_at':threads_account.checked_at if threads_account else None})
     return {'checked_at':account.checked_at if account else None,
         'account':{k:detail.get(k) for k in ('status','plan','credits_remaining','extra_credits_remaining','credit_reset_frequency','error')},

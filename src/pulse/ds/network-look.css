@@ -1,0 +1,60 @@
+/* Network map look: platform rings, follower sizes, relation lines and the key that explains them.
+   Colour says platform and nothing else. Size says followers. Line shape says the kind of relation,
+   line weight how many posts carry it.
+   --nx-* are the explorer's own aliases of the --ps-* tokens (bg = --ps-panel, panel = --ps-soft,
+   text = --ps-ink, muted = --ps-muted, line = --ps-line, lavender = --ps-accent; see dashboard-polish.css).
+   --nx-node is the platform colour from pulseChartTheme.js, set on each account. */
+
+/* Outside the PULSE shell (the older admin mount) the platform palette still needs an ink and a surface to lean on. */
+.nx:not(.pulse-standalone .nx) { --ps-ink: var(--nx-text); --ps-bg: var(--nx-bg); }
+
+/* ---------- Relation lines ---------- */
+/* Lines and names are read, not clicked: they never take the pointer from an account. */
+.nx .nx-graph :is(.nx-edges, .nx-names) { pointer-events: none; }
+/* --nx-rest: how far the other lines step back; the map sets it lower when there are many lines. */
+.nx .nx-graph .nx-edge { color: var(--nx-muted); opacity: var(--nx-rest, .45); transition: opacity var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
+.nx .nx-graph .nx-edge > path { fill: none; stroke: currentColor; stroke-linecap: round; }
+.nx .nx-graph .nx-edge[data-kind=similarity] > path { stroke-linecap: butt; }
+.nx .nx-graph .nx-edge > polygon { fill: currentColor; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
+/* The lines of the account in focus are drawn in ink; the rest step back, further while an account is pointed at. */
+.nx .nx-graph .nx-edge[data-active] { color: var(--nx-text); opacity: 1; }
+.nx .nx-graph .nx-edges[data-pointed] .nx-edge:not([data-active]) { opacity: .14; }
+
+/* ---------- Accounts ---------- */
+/* Every part states its own stroke: the older focus rule in network-explorer.css repaints all circles of a focused account. */
+.nx .nx-graph .nx-account-node { cursor: pointer; outline: none; transition: opacity var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
+.nx .nx-graph .nx-account-node[data-far] { opacity: .38; }
+.nx .nx-graph .nx-account-node .nx-node-hit { fill: transparent; stroke: none; }
+.nx .nx-graph .nx-account-node .nx-node-ring { fill: color-mix(in oklab, var(--nx-node) 14%, var(--nx-bg)); stroke: var(--nx-node); stroke-width: 2.5; }
+.nx .nx-graph .nx-account-node[data-selected] .nx-node-ring { stroke-width: 3.5; }
+/* Only mentioned by others, no post of its own collected: an open, dashed circle. */
+.nx .nx-graph .nx-account-node[data-mentioned] .nx-node-ring { fill: var(--nx-bg); stroke-width: 2; stroke-dasharray: 3 2.5; }
+.nx .nx-graph .nx-account-node .nx-node-picked { fill: none; stroke: var(--nx-text); stroke-width: 1.5; }
+.nx .nx-graph .nx-account-node .nx-node-focus { fill: none; stroke: none; }
+.nx .nx-graph .nx-account-node:focus-visible .nx-node-focus { stroke: var(--nx-lavender); stroke-width: 3; }
+.nx .nx-graph .nx-account-node .nx-node-initials { fill: var(--nx-text); font-weight: 600; pointer-events: none; }
+.nx .nx-graph .nx-account-node image { pointer-events: none; }
+/* Platform mark: the same information as the ring colour, without colour. */
+.nx .nx-graph .nx-account-node .nx-node-badge { color: var(--nx-text); pointer-events: none; }
+.nx .nx-graph .nx-account-node .nx-node-badge > circle { fill: var(--nx-bg); stroke: var(--nx-line); stroke-width: 1; }
+.nx .nx-graph .nx-account-node .nx-node-badge svg { color: inherit; overflow: visible; }
+
+/* Names sit in their own layer above every circle and line, on a halo of the map colour. */
+.nx .nx-graph .nx-names .nx-node-name { fill: var(--nx-text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--nx-bg); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; transition: opacity var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
+.nx .nx-graph .nx-names .nx-node-name[data-picked] { font-weight: 700; }
+.nx .nx-graph .nx-names .nx-node-name[data-far] { opacity: .38; }
+
+/* ---------- Key under the map ---------- */
+.nx .nx-visual .nx-legend.nxl { display: grid; gap: 4px; padding: 10px 20px 14px; border-top: 1px solid var(--nx-line); background: var(--nx-bg); color: var(--nx-muted); font-size: .75rem; line-height: 1.4; }
+.nx .nxl .nxl-row { display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: start; gap: 0 8px; margin: 0; }
+.nx .nxl .nxl-row > strong { min-height: 24px; display: inline-flex; align-items: center; color: var(--nx-text); font-weight: 650; }
+.nx .nxl .nxl-items { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; min-width: 0; }
+.nx .nxl .nxl-item { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; }
+.nx .nxl .nxl-item > svg { flex: 0 0 auto; overflow: visible; }
+.nx .nxl .nxl-ring { --nxl-colour: var(--nx-node, var(--nx-muted)); fill: color-mix(in oklab, var(--nxl-colour) 14%, var(--nx-bg)); stroke: var(--nxl-colour); stroke-width: 2; }
+.nx .nxl .nxl-ring[data-mentioned] { fill: var(--nx-bg); stroke-width: 1.6; stroke-dasharray: 2.6 2.2; }
+.nx .nxl .nxl-line { fill: none; stroke: var(--nx-text); stroke-linecap: butt; }
+.nx .nxl .nxl-head { fill: var(--nx-text); }
+@container network (max-width: 540px) { .nx .nxl .nxl-row { grid-template-columns: minmax(0, 1fr); } }
+
+@media (prefers-reduced-motion: reduce) { .nx .nx-graph :is(.nx-edge, .nx-account-node, .nx-node-name) { transition: none; } }

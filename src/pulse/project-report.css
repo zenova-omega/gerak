@@ -1,21 +1,53 @@
-.pr-workspace{color:var(--ps-ink)}.pr-tools{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}.pr-tools>div{flex:1;min-width:220px}.pr-tools p,.pr-help{font-size:13px;color:var(--ps-muted);line-height:1.6}.pr-document{background:var(--ps-panel);border:1px solid var(--ps-line);padding:36px;border-radius:12px;max-width:1100px}.pr-cover{padding-bottom:28px;border-bottom:1px solid var(--ps-line)}.pr-cover>span{font-size:12px;letter-spacing:.12em;color:var(--ps-muted)}.pr-cover h2{font-size:28px;margin:16px 0}.pr-document section{margin-top:32px}.pr-document h2{font-size:20px;font-weight:650;margin-bottom:16px}.pr-document h3{font-size:16px;font-weight:650}.pr-document p{line-height:1.65;max-width:75ch;margin:10px 0;overflow-wrap:anywhere}.pr-document .pr-lead{font-size:19px}.pr-note{font-size:13px;color:var(--ps-muted)}.pr-sentiment{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 0;border-block:1px solid var(--ps-line)}.pr-sentiment a{display:grid;gap:8px}.pr-sentiment strong{font-size:26px}.pr-sentiment small{font-size:12px;color:var(--ps-muted)}.pr-trend-row{display:grid;grid-template-columns:90px minmax(0,1fr) 30px 180px;gap:12px;align-items:center;padding:8px 0;font-size:12px;break-inside:avoid}.pr-trend-row small{font-variant-numeric:tabular-nums}.pr-trend-bar{display:flex;height:14px;min-width:2px}.pr-trend-bar .positive{background:var(--ps-mint)}.pr-trend-bar .neutral{background:var(--ps-lavender)}.pr-trend-bar .negative{background:var(--ps-peach)}.pr-trend-bar .unknown{background:var(--ps-muted)}.pr-legend{display:flex;gap:16px;font-size:12px;margin:12px 0}.pr-posts{padding-left:22px}.pr-posts li{padding:16px 0;border-bottom:1px solid var(--ps-line);break-inside:avoid}.pr-source{font-size:12px;overflow-wrap:anywhere;color:var(--ps-accent)}.pr-table-wrap{overflow:auto}.pr-document table{width:100%;border-collapse:collapse;font-size:13px}.pr-document td,.pr-document th{text-align:left;padding:10px 8px;border-bottom:1px solid var(--ps-line);overflow-wrap:anywhere}.pr-document svg{display:inline;vertical-align:middle}.pr-document footer{margin-top:28px;padding-top:16px;border-top:1px solid var(--ps-line);font-size:11px;color:var(--ps-muted)}
-.pr-tools{gap:8px 16px;padding-block:8px;border-bottom:1px solid var(--ps-line)}
-.pr-tools>.pr-state{display:grid;gap:2px;flex:1 1 240px;min-width:0}
-.pr-state span{font-size:12px;color:var(--ps-muted);line-height:1.5}
-.pr-tools>.pr-actions{display:flex;flex:0 1 auto;min-width:0;gap:8px;flex-wrap:wrap}
-.pr-help{margin:8px 0 16px;max-width:70ch}.pr-help summary{cursor:pointer;padding-block:8px;width:fit-content}
-.pr-workspace :is(a,summary):focus-visible{outline:2px solid var(--ps-accent);outline-offset:3px;border-radius:3px}
-.pr-document .pr-caption-label{font-size:12px;color:var(--ps-muted);margin-bottom:2px}
-.pr-document .pr-caption{font-size:16px;font-weight:400;line-height:1.65;max-width:70ch;margin-top:0;white-space:pre-wrap}
-@media(max-width:650px){.pr-document{padding:20px}.pr-tools>.pr-actions{flex-basis:100%}.pr-actions button{flex:1 1 auto}.pr-sentiment{grid-template-columns:repeat(2,1fr)}.pr-trend-row{grid-template-columns:80px minmax(0,1fr) 26px}.pr-trend-row small{grid-column:1/-1}.pr-legend{flex-wrap:wrap}}
-@media print{
- @page{size:A4;margin:16mm}
- html,body,#root,.pulse-standalone,.ps-workspace,.ps-content,.pulse-dashboard,.pulse-layout{height:auto!important;min-height:0!important;overflow:visible!important;display:block!important;background:#fafafa!important;color:#24232a!important}
- .ps-workspace,.pulse-layout>main,.pr-workspace{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
- .pulse-standalone{--ps-panel:#fafafa;--ps-ink:#24232a;--ps-muted:#5b5965;--ps-line:#c7c5cc;--ps-accent:#493663;--ps-mint:#b9dcca;--ps-lavender:#c8bce8;--ps-peach:#efd0b7;-webkit-print-color-adjust:exact;print-color-adjust:exact}
- .ps-sidebar,.ps-topline,.ps-project-bar,.ps-project-context,.ps-ai-progress,.pulse-header,.ps-page-guide,.pr-tools,.pr-help,.pulse-standalone a[href='#ps-content']{display:none!important}
- .ps-content{margin:0!important;padding:0!important;width:100%!important;max-width:none!important}
- .ps-content>section,.ps-content>[aria-label='Project aktif']{display:none!important}
- .pulse-layout>aside,.pulse-layout>main>details,.pulse-layout>main>.pulse-footnote{display:none!important}
- .pr-document{border:0;padding:0;border-radius:0;max-width:none;font-size:10pt}.pr-document section{margin-top:22px}.pr-document h2{break-after:avoid;font-size:15pt}.pr-document h3{break-after:avoid;font-size:11pt}.pr-document p{orphans:3;widows:3}.pr-document tr{break-inside:avoid}.pr-document thead{display:table-header-group}.pr-table-wrap{overflow:visible}.pr-document a{color:inherit;text-decoration:none}.pr-trend-row{grid-template-columns:76px minmax(0,1fr) 26px 150px;gap:8px;font-size:9pt}.pr-document footer{break-inside:avoid}
+/* Laporan: the workspace around the paged report (actions, archive, preview frame) and what the browser prints.
+   The sheets themselves are styled in ds/report-pages.css, the builder panel in report-brand.css. */
+.pr-workspace { min-width: 0; color: var(--ps-ink); }
+.pr-table-wrap { overflow: auto; }   /* shared with the growth table on Ikhtisar */
+
+.pr-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-bottom: 16px; border-bottom: 1px solid var(--ps-line); }
+.pulse-standalone .pr-bar-text { flex: 1 1 280px; min-width: 0; max-width: 72ch; font-size: .875rem; line-height: 1.5; color: var(--ps-muted); overflow-wrap: anywhere; }
+.pulse-standalone .pr-bar-text[data-state=done] { color: var(--ps-ink); }
+.pulse-standalone .pr-bar-text:is([data-state=error], [data-state=print]) { color: var(--ps-danger-ink); }
+.pr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.pr-more { border-bottom: 1px solid var(--ps-line); }
+.pulse-standalone .pr-more > summary { width: fit-content; padding-block: 12px; font-size: .875rem; font-weight: var(--ps-weight-label); color: var(--ps-ink); }
+.pr-more-body { display: grid; gap: 16px; max-width: 880px; padding: 4px 0 20px; }
+.pr-raw { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.pulse-standalone .pr-raw > p { flex: 1 1 240px; max-width: 60ch; font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+.pulse-standalone .pr-error { font-size: .8125rem; color: var(--ps-danger-ink); }
+.pr-more .pr-archive { margin: 0; padding-bottom: 0; border-bottom: 0; }
+.pulse-standalone .pr-archived-context { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: 16px 0 0; line-height: 1.5; }
+.pr-archived-context > span { flex: 1 1 280px; min-width: 0; max-width: 72ch; }
+
+.pr-layout { display: grid; gap: 20px; min-width: 0; margin-top: 20px; }
+.pr-layout > * { min-width: 0; }
+/* The desk the sheets lie on. Each sheet is painted smaller to fit: --rp-scale is measured from this box. */
+.pr-preview { padding: 12px; border-radius: var(--ps-surface-radius); background: var(--ps-soft); overflow: hidden; }
+.pulse-standalone .pr-none { max-width: 60ch; padding: 24px 12px; font-size: .875rem; line-height: 1.6; color: var(--ps-muted); }
+@media (min-width: 1180px) {
+  .pr-layout { grid-template-columns: minmax(0, 1fr) 320px; align-items: start; gap: 24px; }
+  .pr-layout > .pr-preview { grid-column: 1; grid-row: 1; padding: 20px; }
+  .pr-layout > .rb { grid-column: 2; grid-row: 1; position: sticky; top: 16px; max-height: calc(100dvh - 32px); overflow: auto; }
+}
+.pr-workspace :is(a, summary):focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 3px; border-radius: 3px; }
+@media (max-width: 700px) { .pr-actions { flex: 1 1 100%; } .pr-actions > button { flex: 1 1 auto; } }
+
+@media print {
+  /* Any PULSE page printed from the browser: paper margins, no app shell. */
+  @page { size: A4; margin: 16mm; }
+  html, body, #root, .pulse-standalone, .ps-workspace, .ps-content, .pulse-dashboard, .pulse-layout { height: auto !important; min-height: 0 !important; overflow: visible !important; display: block !important; background: #fafafa !important; color: #24232a !important; }
+  .ps-workspace, .pulse-layout > main, .pr-workspace { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  .pulse-standalone { --ps-panel: #fafafa; --ps-ink: #24232a; --ps-muted: #5b5965; --ps-line: #c7c5cc; --ps-accent: #493663; --ps-mint: #b9dcca; --ps-lavender: #c8bce8; --ps-peach: #efd0b7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ps-sidebar, .ps-topline, .ps-project-bar, .ps-project-context, .ps-ai-progress, .pulse-header, .ps-page-guide, .pulse-standalone a[href='#ps-content'] { display: none !important; }
+  .ps-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+  .ps-content > section, .ps-content > [aria-label='Project aktif'] { display: none !important; }
+  .pulse-layout > aside, .pulse-layout > main > details, .pulse-layout > main > .pulse-footnote { display: none !important; }
+
+  /* The report prints as its sheets and nothing else, whatever the app shell around it looks like: everything
+     that is not a sheet or one of its ancestors is taken out, and the ancestors lose every box of their own.
+     The sheet size itself comes from the @page rule the report page adds while it is open (no paper margin). */
+  [data-screen-only] { display: none !important; }
+  html:has(.rp-doc) :not(:has(.rp-doc), .rp-doc, .rp-doc *) { display: none !important; }
+  :is(#root, *):has(.rp-doc) { display: block !important; position: static !important; inset: auto !important; width: auto !important; max-width: none !important; height: auto !important; min-height: 0 !important; max-height: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; transform: none !important; background: #fff !important; box-shadow: none !important; }
+  .rp-doc.rp-doc { display: block !important; width: 210mm !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
 }

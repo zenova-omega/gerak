@@ -9,7 +9,7 @@ test('quota breakdown preserves shared cap and distinguishes manual use from que
   const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
   try {
     const { default: Breakdown } = await server.ssrLoadModule('/src/components/admin/pulse/QuotaBreakdown.jsx');
-    const data={quota_day_utc:'2026-11-11',workers:[{provider:'xpoz',used:3,daily_limit:4}],quota_breakdown:[{provider:'xpoz',project:'Gibran',topic_id:'a',platform:'instagram',mode:'automatic',used:1},{provider:'xpoz',project:'Penyadapan',topic_id:'b',platform:'tiktok',mode:'manual',used:1}],quota_unattributed:{xpoz:1},quota_queue:[{project:'Gibran',topic_id:'a',source:'tiktok',status:'queued',count:1}]};
+    const data={quota_day_utc:'2026-11-11',workers:[{provider:'social',used:3,daily_limit:4}],quota_breakdown:[{provider:'social',project:'Gibran',topic_id:'a',platform:'instagram',mode:'automatic',used:1},{provider:'social',project:'Penyadapan',topic_id:'b',platform:'tiktok',mode:'manual',used:1}],quota_unattributed:{social:1},quota_queue:[{project:'Gibran',topic_id:'a',source:'tiktok',status:'queued',count:1}]};
     const html=renderToStaticMarkup(React.createElement(Breakdown,{data}));
     assert.match(html,/3 \/ 4 percobaan/);
     assert.match(html,/sisa 1/);

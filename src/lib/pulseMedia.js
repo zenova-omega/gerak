@@ -57,3 +57,22 @@ export function postMedia(post) {
     isPhoto: post.platform === 'instagram' && ['image', 'photo'].includes(metrics.media_type),
   };
 }
+
+// A profile picture kept on this server: `/admin/pulse/profiles/photo/<platform>/<account>?v=<number>`, relative to the API base.
+const STORED_PHOTO = /^\/admin\/pulse\/profiles\/photo\/(?:instagram|tiktok|x|youtube|news)\/(?!\.{1,2}(?:\?|$))[A-Za-z0-9._~%-]{1,220}\?v=\d{1,12}$/;
+
+/** Address of the API as the browser reaches it. Mirrors `api.js`, and stays importable where there is no browser. */
+function apiBase() {
+  const env = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+  if (env.VITE_API_URL) return env.VITE_API_URL.replace(/\/$/, '');
+  return typeof window === 'undefined' ? '/api' : `${window.location.protocol}//${window.location.hostname}:8000/api`;
+}
+
+/** The address an account picture is loaded from, or null. Either a picture kept on our own server (the stored path,
+ * with or without the API base in front) or a public https picture as `safeMediaUrl` allows. */
+export function avatarUrl(value, base = apiBase()) {
+  if (typeof value !== 'string') return null;
+  if (STORED_PHOTO.test(value)) return base + value;
+  if (base && value.startsWith(base + '/') && STORED_PHOTO.test(value.slice(base.length))) return value;
+  return safeMediaUrl(value);
+}

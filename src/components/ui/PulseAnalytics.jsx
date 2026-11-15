@@ -36,18 +36,19 @@ export function PulseStatGrid({ label, children, className = '' }) {
  *   deltaIntent?: 'neutral'|'good'|'bad', deltaNote?: string, share?: number|null, shareLabel?: string,
  *   trend?: number[], href?: string, onClick?: Function}} props
  */
-export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareLabel, trend, href, onClick, as: Link, to }) {
+export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareLabel, trend, media, href, onClick, as: Link, to }) {
   const text = typeof value === 'string';
   const hasShare = Number.isFinite(share);
   const percent = hasShare ? Math.max(0, Math.min(100, share)) : 0;
   const body = <>
+    {media && <span className="pu-stat-media">{media}</span>}
     <span className="pu-stat-label">{tone ? <i aria-hidden="true" /> : Icon && <Icon size={14} aria-hidden="true" />}{label}</span>
     <span className="pu-stat-value"><strong data-kind={text ? 'text' : undefined}>{text ? value : value == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(value)}</strong><PulseDelta value={delta} unit={deltaUnit} intent={deltaIntent} />{deltaNote && Number.isFinite(delta) && <small className="pu-stat-delta-note">{deltaNote}</small>}</span>
     {hasShare && <span className="pu-stat-meter" role="img" aria-label={`${Math.round(percent)}%${shareLabel ? ' ' + shareLabel : ''}`}><span className="pu-stat-meter-track"><i style={{ width: `${percent}%` }} /></span><b>{percent < 1 && percent > 0 ? '<1' : Math.round(percent)}%</b>{shareLabel && <small>{shareLabel}</small>}</span>}
     {note && <span className="pu-stat-note">{note}</span>}
     {trend && <span className="pu-stat-spark"><Sparkline values={trend} /></span>}
   </>;
-  const shared = { className: 'pu-stat', 'data-tone': tone, 'data-has-meter': hasShare ? '' : undefined };
+  const shared = { className: 'pu-stat', 'data-tone': tone, 'data-has-meter': hasShare ? '' : undefined, 'data-has-media': media ? '' : undefined };
   if (Link && to) return <Link {...shared} to={to}>{body}</Link>;
   if (href) return <a {...shared} href={href}>{body}</a>;
   if (onClick) return <button type="button" {...shared} onClick={onClick}>{body}</button>;

@@ -9,6 +9,7 @@ from ..models.pulse import WatchTopic, SourceItem
 from ..models.pulse_report import PulseReport
 from ..services.pulse_identity import require_pulse_access, session_identity, optional_bearer
 from ..models.pulse_identity import PulseAudit
+from ..services.pulse_public import without_engine
 
 async def archive_access(request:Request,credentials=Depends(optional_bearer),db=Depends(get_db)):
     if credentials and not getattr(request.app.state,'pulse_only',False):
@@ -108,7 +109,8 @@ class ArchiveCreate(BaseModel):
                 for key in ('running','pending','failed'):
                     if progress.get(key) is not None and type(progress[key]) is not int: raise ValueError('Angka progress tidak valid')
         # Keep only the versioned source inputs. Derived totals are rebuilt on read by UI.
-        self.snapshot={k:s[k] for k in ('topic','period','generatedAt','posts','responseAnalysis')}
+        # A report is handed around, so it is filed without the engine behind its labels.
+        self.snapshot=without_engine({k:s[k] for k in ('topic','period','generatedAt','posts','responseAnalysis')})
         self.snapshot['selectedPlatforms']=platforms
         return self
 
@@ -117,6 +119,51 @@ def metadata(row):
     return {'id':row.id,'topic_id':row.topic_id,'title':row.title,'version':row.version,
             'created_at':row.created_at.isoformat()+'Z','created_by':row.created_by,
             'period':s['period'],'platforms':s['selectedPlatforms'],'post_count':len(s['posts'])}
+
+class PdfRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    html:str=Field(min_length=20,max_length=8_000_000)
+    filename:str=Field(default='laporan-pulse.pdf',max_length=160)
+
+
+@router.post('/pdf')
+async def make_pdf(body:PdfRequest):
+    """The report pages the browser shows, as a PDF file. The document is checked before it is rendered: see
+    services/pulse_report_pdf.py. 503 means this installation has no renderer; the app then offers the print dialog."""
+    import base64
+    from ..services import pulse_report_pdf as renderer
+    try:
+        renderer.check_document(body.html)
+    except ValueError as exc:
+        raise HTTPException(400,f'Dokumen laporan ditolak: {exc}.')
+    try:
+        made=await renderer.render_pdf(body.html)
+    except renderer.PdfUnavailable:
+        raise HTTPException(503,'Pembuat PDF belum tersedia di instalasi ini.')
+    except renderer.PdfFailed:
+        raise HTTPException(502,'PDF belum berhasil dibuat. Coba lagi.')
+    return {'filename':renderer.safe_file_name(body.filename),'pdf':base64.b64encode(made).decode('ascii'),
+            'pages':renderer.pdf_pages(made),'bytes':len(made)}
+
+
+@router.get('/settings')
+async def report_settings(topic_id:str=Query(...,min_length=1,max_length=36),db=Depends(get_db)):
+    from ..services import pulse_report_settings
+    if await db.get(WatchTopic,topic_id) is None:
+        raise HTTPException(404,'Project tidak ditemukan.')
+    return await pulse_report_settings.read(db,topic_id)
+
+
+@router.put('/settings')
+async def save_report_settings(body:dict,topic_id:str=Query(...,min_length=1,max_length=36),db=Depends(get_db)):
+    from ..services import pulse_report_settings
+    if await db.get(WatchTopic,topic_id) is None:
+        raise HTTPException(404,'Project tidak ditemukan.')
+    try:
+        return await pulse_report_settings.save(db,topic_id,body)
+    except ValueError as exc:
+        raise HTTPException(422,str(exc))
+
 
 @router.post('',status_code=201)
 async def create(body:ArchiveCreate,db=Depends(get_db),actor=Depends(archive_access)):
@@ -143,4 +190,4 @@ async def listing(topic_id:str=Query(...,min_length=1,max_length=36),offset:int=
 async def read(report_id:str,topic_id:str=Query(...,min_length=1,max_length=36),db=Depends(get_db)):
     row=await db.get(PulseReport,report_id)
     if row is None or row.topic_id!=topic_id: raise HTTPException(404,'Arsip tidak ditemukan pada project ini')
-    return {**metadata(row),'snapshot':row.snapshot}
+    return {**metadata(row),'snapshot':without_engine(row.snapshot)}   # reports filed before the rule still carry it

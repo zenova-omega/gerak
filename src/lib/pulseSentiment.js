@@ -43,10 +43,3 @@ export function sentimentRangeEvidence(posts,from,to,label='negative') {
     posts:posts.filter(post=>{const date=sentimentDate(post);return date&&date>=from&&date<=to&&postSentiment(post)===label;})
       .sort((a,b)=>(postInteractions(b.metrics)??-1)-(postInteractions(a.metrics)??-1))};
 }
-/** The preset ranges for the evidence picker, anchored on the last day that has data. */
-export function sentimentRanges(days) {
-  const last=days.at(-1)?.date,first=days[0]?.date;
-  if(!last)return [];
-  const back=count=>{const start=addDays(last,-(count-1));return start<first?first:start;};
-  return [{key:'1',label:'Hari terakhir',from:last,to:last},{key:'7',label:'7 hari',from:back(7),to:last},{key:'30',label:'30 hari',from:back(30),to:last},{key:'all',label:'Semua',from:first,to:last}];
-}

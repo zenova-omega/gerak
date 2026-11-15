@@ -11,6 +11,6 @@
 .po-top-posts .ptp-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ps-muted)}
 .po-top-posts .ptp-total{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-size:12px}
 .ptp-total strong{color:var(--ps-ink);font-weight:600}
-.po-top-posts .ptp-action{font-size:12px;color:var(--ps-accent-ink);font-weight:600}
+.po-top-posts .ptp-action{font-size:12px;color:var(--ps-accent);font-weight:600}
 .pulse-standalone .po-top-posts>.ptp-row:hover{background:var(--ps-soft);border-color:var(--ps-control-line)}
 .pulse-standalone .po-top-posts>.ptp-row:focus-visible{outline:2px solid var(--ps-accent);outline-offset:3px}

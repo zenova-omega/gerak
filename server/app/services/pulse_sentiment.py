@@ -61,10 +61,10 @@ async def progress(db, topic_id=None):
     return {**counts,'last_finished_at':last,'scope':'project_all_dates' if topic_id else 'all_projects'}
 
 
-async def claim(db, now):
-    await insert_once(db,SentimentLane,{'id':'local'})
+async def claim(db, now, lane='local'):
+    await insert_once(db,SentimentLane,{'id':lane})
     token = str(uuid.uuid4())
-    won = await db.execute(update(SentimentLane).where(SentimentLane.id=='local',or_(
+    won = await db.execute(update(SentimentLane).where(SentimentLane.id==lane,or_(
         SentimentLane.lease_until.is_(None),SentimentLane.lease_until<now)).values(
         lease_token=token,lease_until=now+timedelta(seconds=150)))
     if not won.rowcount:
@@ -74,11 +74,13 @@ async def claim(db, now):
         .values(status='pending',error='interrupted'))
     await db.execute(update(SentimentJob).where(SentimentJob.status=='pending',SentimentJob.attempts>=3)
         .values(status='failed',error='attempts_exhausted'))
+    from .pulse_analysis_retry import revive_failed
+    await revive_failed(db,SentimentJob,SentimentJob.item_id,now)   # a rested failure gets a fresh set of attempts
     job = (await db.execute(select(SentimentJob).join(SourceItem,SourceItem.id==SentimentJob.item_id)
         .where(SentimentJob.status=='pending',SentimentJob.available_at<=now)
         .order_by(SourceItem.crawled_at.desc(),SourceItem.id).limit(1))).scalar_one_or_none()
     if job is None:
-        await db.execute(update(SentimentLane).where(SentimentLane.id=='local',SentimentLane.lease_token==token)
+        await db.execute(update(SentimentLane).where(SentimentLane.id==lane,SentimentLane.lease_token==token)
                          .values(lease_until=None,lease_token=None))
         return None
     job.status='running'; job.attempts+=1; job.lease_token=token; job.lease_until=now+timedelta(seconds=150)
@@ -86,10 +88,13 @@ async def claim(db, now):
     return job.item_id, token
 
 
-async def run_one(session_factory, ai):
+async def run_one(session_factory, ai, lane='local'):
+    """Label one post. `lane` is the single-flight lease this call holds: the local model has one ('local'); a hosted
+    model gets one per call in flight, so several run at once and each claims its own post."""
+    from .ai.hosted import AIUnavailable
     async with session_factory() as db:
         await enqueue_missing(db)
-        picked = await claim(db,datetime.utcnow())
+        picked = await claim(db,datetime.utcnow(),lane)
         if not picked:
             await db.commit()
             return 'idle'
@@ -100,7 +105,8 @@ async def run_one(session_factory, ai):
         await db.commit()  # Never hold SQLite writer lock during inference.
     result = None
     emotion = None
-    failed = False
+    failed = unavailable = False
+    engine = getattr(ai,'name','ollama')   # kept in the record with the model; neither leaves the server
     if not existing:
         try:
             raw = await asyncio.wait_for(ai.generate_text(content,system=PROMPT,max_tokens=450),115)
@@ -110,17 +116,19 @@ async def run_one(session_factory, ai):
                 result['kind'] = kind
             emotion = parse_emotion(raw)
             if emotion:
-                emotion.update(method='ollama_emotion_v1', model=ai.model,
+                emotion.update(method=f'{engine}_emotion_v1', model=ai.model,
                                analyzed_at=datetime.utcnow().isoformat()+'Z', characters=len(content),
                                review_needed=emotion['review_needed'] or len(item.text or item.title or '')>6000)
-            result.update(method='ollama_post_v1',model=ai.model,
+            result.update(method=f'{engine}_post_v1',model=ai.model,
                           analyzed_at=datetime.utcnow().isoformat()+'Z',characters=len(content))
+        except AIUnavailable:
+            unavailable = True   # the service refused the call: not this post's fault, so it keeps its attempts
         except Exception:
             failed = True  # Never persist remote bodies or unvalidated labels.
     async with session_factory() as db:
         now = datetime.utcnow()
         # Fencing also serializes against concurrent metric writes before re-reading.
-        fence = await db.execute(update(SentimentLane).where(SentimentLane.id=='local',
+        fence = await db.execute(update(SentimentLane).where(SentimentLane.id==lane,
             SentimentLane.lease_token==token,SentimentLane.lease_until>=now).values(lease_until=None,lease_token=None))
         if not fence.rowcount:
             await db.rollback()
@@ -134,19 +142,21 @@ async def run_one(session_factory, ai):
                     item.metrics = {**item.metrics, 'emotion':emotion}
             if has_sentiment(item):
                 job.status='done'; job.error=None; job.finished_at=now
+            elif unavailable:
+                job.status='pending'; job.attempts=max(0,job.attempts-1); job.error='ai_unavailable'; job.available_at=now
             elif failed:
                 job.status='failed' if job.attempts>=3 else 'pending'
                 job.error='inference_failed'; job.available_at=now+timedelta(minutes=job.attempts*2)
             job.lease_until=None; job.lease_token=None
         await db.commit()
-    return 'failed' if failed else 'done'
+    return 'unavailable' if unavailable else 'failed' if failed else 'done'
 
 
-async def sentiment_tick():
+async def sentiment_tick(lane='local'):
     from ..config import get_settings
     from ..database import async_session
-    from .ai import get_ai_service
+    from .ai import background_mode, get_bulk_ai_service
     settings = get_settings()
-    if not settings.PULSE_SENTIMENT_ENABLED or settings.AI_PROVIDER!='ollama':
+    if background_mode(settings) is None:
         return 'disabled'
-    return await run_one(async_session,get_ai_service(settings))
+    return await run_one(async_session,get_bulk_ai_service(settings),lane)

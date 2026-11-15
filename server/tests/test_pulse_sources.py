@@ -206,3 +206,36 @@ async def test_undated_social_posts_never_get_fake_publication_timeline(db):
     await ingest_items(db,topic,[{'source':'xpoz','platform':'instagram','url':'https://www.instagram.com/p/undated/','text':'issue'}])
     result=await pulse_analytics(db,topic.id)
     assert result['total_mentions']==1 and result['timeline']==[]
+
+
+def test_social_dates_prefer_the_field_that_carries_the_time_of_day():
+    row = {'id': '12', 'username': 'editor', 'description': 'issue', 'createdAtDate': '2026-11-12', 'createdAtTimestamp': '2026-11-12T03:15:00.000Z'}
+    assert xpoz.normalize_social_posts('tiktok', [row])[0]['published_at'] == datetime(2026, 11, 12, 3, 15)
+    row = {'id': '12', 'username': 'editor', 'description': 'issue', 'createdAtDate': '2026-11-12', 'createdAt': '2026-11-12T03:15:00Z'}
+    assert xpoz.normalize_social_posts('tiktok', [row])[0]['published_at'] == datetime(2026, 11, 12, 3, 15)
+    row = {'id': '12', 'username': 'editor', 'description': 'issue', 'createdAtDate': '2026-11-12', 'createdAt': '2026-11-12', 'createdAtTimestamp': 1794453300}
+    assert xpoz.normalize_social_posts('tiktok', [row])[0]['published_at'] == datetime.utcfromtimestamp(1794453300)
+    row = {'id': '12', 'username': 'editor', 'description': 'issue', 'createdAtDate': '2026-11-12'}
+    assert xpoz.normalize_social_posts('tiktok', [row])[0]['published_at'] == datetime(2026, 11, 12)      # a date is all the source gave
+
+
+@pytest.mark.asyncio
+async def test_the_balance_is_read_without_a_button_and_a_failed_read_keeps_the_last_good_one(db, monkeypatch):
+    from app.services import pulse_sources as svc
+    good = {'status': 'verified', 'plan': 'Pro', 'credits_remaining': 5832, 'extra_credits_remaining': 0, 'tools': [], 'error': None}
+    async def ok(key):
+        return good
+    async def down(key):
+        raise RuntimeError('provider down')
+    async def unverified(key):
+        return {'status': 'error', 'error': 'auth'}
+    settings = SimpleNamespace(XPOZ_API_KEY='private')
+    monkeypatch.setattr(svc, 'fetch_xpoz_account', ok)
+    assert await svc.read_account(settings) == good
+    for broken in (down, unverified):
+        monkeypatch.setattr(svc, 'fetch_xpoz_account', broken)
+        assert await svc.read_account(settings) is None          # nothing to store: the earlier snapshot stays
+    monkeypatch.setattr(svc, 'fetch_xpoz_account', ok)
+    assert await svc.read_account(SimpleNamespace(XPOZ_API_KEY='')) is None
+    row = await svc.store_account(db, good)
+    assert row.provider == 'xpoz' and row.detail['credits_remaining'] == 5832 and row.checked_at is not None

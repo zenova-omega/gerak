@@ -64,13 +64,15 @@ async def candidates(db):
     return 'comment', comments
 
 
-async def run_one(session_factory, ai):
+async def run_one(session_factory, ai, lane='local'):
     global _idle_until
     if datetime.utcnow().timestamp() < _idle_until:
         return 'idle'
     async with session_factory() as db:
+        from .pulse_monitor import insert_once
+        await insert_once(db, SentimentLane, {'id': lane})
         token, now = str(uuid.uuid4()), datetime.utcnow()
-        won = await db.execute(update(SentimentLane).where(SentimentLane.id == 'local', or_(
+        won = await db.execute(update(SentimentLane).where(SentimentLane.id == lane, or_(
             SentimentLane.lease_until.is_(None), SentimentLane.lease_until < now)).values(
             lease_token=token, lease_until=now + timedelta(seconds=150)))
         if not won.rowcount:
@@ -78,7 +80,7 @@ async def run_one(session_factory, ai):
             return 'busy'
         subject, rows = await candidates(db)
         if not rows:
-            await db.execute(update(SentimentLane).where(SentimentLane.id == 'local', SentimentLane.lease_token == token)
+            await db.execute(update(SentimentLane).where(SentimentLane.id == lane, SentimentLane.lease_token == token)
                              .values(lease_until=None, lease_token=None))
             await db.commit()
             _idle_until = datetime.utcnow().timestamp() + 900   # nothing left: each look reads every post, so look again in fifteen minutes
@@ -94,7 +96,7 @@ async def run_one(session_factory, ai):
         pass
     async with session_factory() as db:
         now = datetime.utcnow()
-        fence = await db.execute(update(SentimentLane).where(SentimentLane.id == 'local', SentimentLane.lease_token == token,
+        fence = await db.execute(update(SentimentLane).where(SentimentLane.id == lane, SentimentLane.lease_token == token,
             SentimentLane.lease_until >= now).values(lease_until=None, lease_token=None))
         if not fence.rowcount:
             await db.rollback()
@@ -123,11 +125,11 @@ async def run_one(session_factory, ai):
     return 'done' if stored else 'failed'
 
 
-async def text_kind_tick():
+async def text_kind_tick(lane='local'):
     from ..config import get_settings
     from ..database import async_session
-    from .ai import get_ai_service
+    from .ai import background_mode, get_bulk_ai_service
     settings = get_settings()
-    if not settings.PULSE_SENTIMENT_ENABLED or settings.AI_PROVIDER != 'ollama':
+    if background_mode(settings) is None:
         return 'disabled'
-    return await run_one(async_session, get_ai_service(settings))
+    return await run_one(async_session, get_bulk_ai_service(settings), lane)

@@ -96,3 +96,25 @@ async def fetch_site_icon(site_url):
                 return fallback[0] if fallback and fallback[1].startswith('image/') else None
     except (httpx.HTTPError, TimeoutError, ValueError, OSError):
         return None
+
+
+PHOTO_BYTES = 300_000
+IMAGE_SIGNATURES = {'image/jpeg': (b'\xff\xd8\xff',), 'image/png': (b'\x89PNG\r\n\x1a\n',), 'image/gif': (b'GIF87a', b'GIF89a'), 'image/webp': (b'RIFF',)}
+
+
+async def fetch_image(url):
+    """(content type, bytes) of a small public picture, or None.
+    Kept only when the declared type is an image type we serve and the bytes begin like one, so nothing else can be
+    stored and handed back to a browser as a picture. Same address checks as every other fetch in this module."""
+    try:
+        async with asyncio.timeout(20):
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=False, headers={'User-Agent': 'Mozilla/5.0 (compatible; account-picture)', 'Accept': 'image/*'}) as client:
+                got = await _get(client, url, PHOTO_BYTES)
+    except (httpx.HTTPError, TimeoutError, ValueError, OSError):
+        return None
+    if not got:
+        return None
+    kind, body = (got[1] or '').split(';')[0].strip().lower(), got[2]
+    if kind not in IMAGE_SIGNATURES or not body or len(body) >= PHOTO_BYTES or not body.startswith(IMAGE_SIGNATURES[kind]):
+        return None
+    return kind, body

@@ -5,6 +5,9 @@
 .pi-panel h3{font-size:18px;font-weight:600;margin:0 0 10px}
 .pi-panel h4{font-size:14px;margin:0 0 6px}
 .pi-panel p{font-size:13px;line-height:1.65;max-width:76ch;margin:8px 0 14px;color:var(--pi-muted)}
+.pi-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:4px 16px}
+.pi-head>div:first-child{flex:1 1 240px;min-width:0}
+.pi-head>.pu-range{margin-bottom:14px}
 .pi-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px}
 .pi-layout>section{min-width:0;padding:24px;background:var(--pi-panel);border:1px solid var(--pi-line);border-radius:12px}
 .pi-wordcloud{display:flex;align-items:center;align-content:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;min-height:190px;padding:18px 0;border-block:1px solid var(--pi-line);margin-block:18px}

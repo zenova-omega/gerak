@@ -2,15 +2,21 @@
 import httpx
 from ..base import AIService
 
+# Longer than the longest wait any caller allows (the summary route waits 170 s), so each caller's own deadline decides.
+# The reply arrives in one piece: nothing is read until the model has finished, also while it waits behind another request.
+REQUEST_TIMEOUT = httpx.Timeout(180, connect=5)
+
 
 class OllamaAIService(AIService):
+    name = 'ollama'
+
     def __init__(self, model):
         if not model or 'cloud' in model.lower():
             raise ValueError('PULSE requires an installed local model')
         self.model = model
 
     async def generate_text(self, prompt, system=None, max_tokens=1024, context_tokens=None):
-        async with httpx.AsyncClient(timeout=110, trust_env=False) as client:
+        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT, trust_env=False) as client:
             response = await client.post('http://127.0.0.1:11434/api/chat', json={
                 'model': self.model, 'stream': False, 'keep_alive': '30m',
                 'messages': [{'role':'system','content':system or ''}, {'role':'user','content':prompt}],

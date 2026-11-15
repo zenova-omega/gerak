@@ -1,0 +1,32 @@
+/* Segmented switch and the range filter built on it (src/components/ui/PulseRange.jsx).
+   One definition of the switch for every chart: a soft track holding 36px items, 44px on a phone. The pressed item
+   sits on the panel colour with a line around it. The trend chart's own switches use the same class.
+   The shell class is doubled so page rules for plain buttons (Ikhtisar, the infographics panel) cannot restyle an item. */
+.pulse-standalone .pu-segmented { display: inline-flex; flex-wrap: wrap; gap: 4px; max-width: 100%; padding: 4px; border-radius: var(--ps-radius-control); background: var(--ps-soft); }
+.pulse-standalone.pulse-standalone .pu-segmented > button { height: auto; min-height: var(--ps-control-sm); padding: 6px var(--ps-control-pad-sm); border: 1px solid transparent; border-radius: calc(var(--ps-radius-control) - 2px); background: transparent; box-shadow: none; color: var(--ps-muted); font-size: var(--ps-control-font-sm); font-weight: var(--ps-control-weight); text-align: center; cursor: pointer; }
+.pulse-standalone.pulse-standalone .pu-segmented > button:hover:not(:disabled, [aria-pressed=true]) { background: transparent; color: var(--ps-ink); }
+.pulse-standalone.pulse-standalone .pu-segmented > button[aria-pressed=true], .pulse-standalone.pulse-standalone .pu-segmented > button[aria-pressed=true]:hover { background: var(--ps-panel); border-color: var(--ps-line); color: var(--ps-accent); }
+.pulse-standalone.pulse-standalone .pu-segmented > button:disabled { opacity: .45; cursor: not-allowed; }
+.pulse-standalone.pulse-standalone .pu-segmented > button:focus-visible { outline: var(--ps-control-focus); outline-offset: 2px; }
+@media (max-width: 700px) { .pulse-standalone.pulse-standalone .pu-segmented > button { min-height: var(--ps-control-md); } }
+
+/* Range filter: the switch, the two dates of "Rentang" in the same row, then the days that are drawn, in words. */
+.pulse-standalone .pu-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; max-width: 100%; }
+.pulse-standalone .pu-range > .pu-range-dates { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.pulse-standalone .pu-range > .pu-range-dates > label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: var(--ps-muted); font-size: var(--ps-control-font-sm); font-weight: var(--ps-control-weight); }
+.pulse-standalone.pulse-standalone.pulse-standalone .pu-range-dates input[type=date] { width: 160px; min-width: 0; max-width: 100%; padding: 0 var(--ps-control-pad-sm); }
+.pulse-standalone.pulse-standalone .pu-range-caption { flex: none; margin: 0; max-width: none; color: var(--ps-muted); font-size: var(--ps-control-font-sm); font-variant-numeric: tabular-nums; line-height: 1.4; white-space: nowrap; }
+.pulse-standalone.pulse-standalone .pu-range-error { flex: 1 1 100%; margin: 0; max-width: none; color: var(--ps-danger-ink); font-size: var(--ps-control-font-sm); line-height: 1.4; }
+/* In a panel heading the title keeps a readable width: where the row is too short for both, the filter drops under it. */
+.pulse-standalone .pu-panel-heading:has(.pu-range) > :first-child { flex-basis: 300px; }
+
+/* On a phone the switch spans its card and the five items share the width; the dates sit side by side under it. */
+@media (max-width: 700px) {
+  .pulse-standalone .pu-range { width: 100%; }
+  .pulse-standalone .pu-range > .pu-segmented { display: flex; flex: 1 1 100%; }
+  .pulse-standalone.pulse-standalone .pu-range > .pu-segmented > button { flex: 1 1 auto; padding-inline: 4px; }
+  .pulse-standalone .pu-range > .pu-range-dates { flex: 1 1 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pulse-standalone .pu-range > .pu-range-dates > label { display: grid; gap: 4px; }
+  .pulse-standalone.pulse-standalone.pulse-standalone .pu-range-dates input[type=date] { width: 100%; }
+}
+@media print { .pulse-standalone .pu-segmented, .pulse-standalone .pu-range > .pu-range-dates, .pulse-standalone.pulse-standalone .pu-range-error { display: none; } }

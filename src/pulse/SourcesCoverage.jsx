@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, ShieldCheck } from 'lucide-react';
 import api from '../lib/api';
 import { useTopics } from '../hooks/usePulse';
-import { canManageSources, collectionBlock, collectionResult, formatSourceCount as count, formatSourceTime as time, safeSourceError } from './sourcesCoverage.js';
+import { balanceAgeHours, canManageSources, collectionBlock, collectionResult, formatSourceCount as count, formatSourceTime as time, lookbackRange, safeSourceError, threadsStatus } from './sourcesCoverage.js';
 import './sources-coverage.css';
 import { PulseBadge, PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import SourceDisclosure from './SourceDisclosure';
@@ -46,17 +46,27 @@ export default function SourcesCoverage({ user, readOnly = false, projectPicker 
   const data = visible.data;
   const busy = Boolean(action) || visible.loading;
 
-  async function runAction(source) {
+  // Everything the source has for the project's own range of days, through the complete pull. No row cap of ours.
+  async function collectEverything(id, platform) {
+    const lookback = await api.get('/admin/pulse/topics/' + encodeURIComponent(id) + '/lookback').catch(() => ({ days: 7 }));
+    const range = lookbackRange(lookback.days || 7);
+    const pulled = await api.post('/admin/pulse/topics/' + encodeURIComponent(id) + '/backfill', { platform, ...range });
+    return { status: pulled.stopped ? 'failed' : pulled.fetched ? 'succeeded' : 'empty', fetched: pulled.fetched, ingested: pulled.ingested, error: pulled.stopped };
+  }
+  async function runAction(source, mode) {
     if (actionLock.current || isReadOnly || busy) return;
-    if (source && source.platform!=='threads' && collectionBlock({ source, budget: data?.budget, topicId: selectedTopic?.id, readOnly: isReadOnly, busy })) return;
+    const threads = source?.platform === 'threads';
+    const searching = threads && mode === 'collect';
+    if (source && !threads && collectionBlock({ source, budget: data?.budget, topicId: selectedTopic?.id, readOnly: isReadOnly, busy })) return;
+    if (searching && !threadsStatus(source, { topicId: selectedTopic?.id, readOnly: isReadOnly, busy }).canCollect) return;
     actionLock.current = true;
     setAction(source ? source.platform : 'check');
     setNotice(null);
     try {
-      const result = source?.platform==='threads' ? await api.post('/admin/pulse/sources/threads/check') : source
-        ? await api.post('/admin/pulse/sources/collect', { topic_id: topicId, platform: source.platform, limit: 300 })
+      const result = searching ? await api.post('/admin/pulse/sources/threads/collect', { topic_id: topicId }) : threads ? await api.post('/admin/pulse/sources/threads/check') : source
+        ? await collectEverything(topicId, source.platform)
         : await api.post('/admin/pulse/sources/check');
-      if (mounted.current && currentTopic.current === topicId) setNotice({ topicId, error: source ? result.status === 'failed' : false, text: source?.platform==='threads'?'Pemeriksaan Threads selesai. Lihat status koneksi dan batas cakupannya.':source ? `${names[source.platform]}: ${collectionResult(result)}` : 'Verifikasi metadata selesai. Status tersimpan dimuat ulang.' });
+      if (mounted.current && currentTopic.current === topicId) setNotice({ topicId, error: source ? result.status === 'failed' : false, text: searching ? (result.status === 'failed' ? 'Threads: pengumpulan ditolak. Alasannya ada di rincian Threads.' : `Threads: ${collectionResult(result)}`) : threads ? 'Pemeriksaan Threads selesai. Lihat status koneksi dan batas cakupannya.' : source ? `${names[source.platform]}: ${collectionResult(result)}` : 'Verifikasi metadata selesai. Status tersimpan dimuat ulang.' });
     } catch (error) {
       if (mounted.current && currentTopic.current === topicId) setNotice({ topicId, error: true, text: safeSourceError(error) });
     } finally {
@@ -75,11 +85,12 @@ export default function SourcesCoverage({ user, readOnly = false, projectPicker 
     {!topics.loading && !topics.error && !topics.topics.length && <PulseNotice>Belum ada topik. Minta administrator menyiapkan topik sebelum pengumpulan.</PulseNotice>}
     {isReadOnly && <PulseNotice>Mode baca saja. Pengumpulan hanya tersedia untuk pemilik atau admin.</PulseNotice>}
     {notice?.topicId === topicId && <PulseNotice tone={notice.error ? 'warning' : 'neutral'} role={notice.error ? 'alert' : 'status'}>{notice.text}</PulseNotice>}
-    {action && <p role="status">{action === 'check' ? 'Memeriksa metadata Xpoz…' : `Mengumpulkan ${names[action]}…`} Tidak ada pengulangan otomatis.</p>}
+    {action && <p role="status">{action === 'check' ? 'Membaca saldo sumber data…' : `Mengumpulkan semua posting ${names[action]} pada rentang hari project. Ini bisa makan beberapa menit.`}</p>}
     {visible.loading ? <div className="sc-loading" role="status"><span>Memuat cakupan tersimpan…</span><div className="sc-skeleton" aria-hidden="true" /><div className="sc-skeleton" aria-hidden="true" /><div className="sc-skeleton" aria-hidden="true" /></div> : visible.error ? <PulseNotice tone="warning" role="alert"><p>{visible.error}</p><PulseButton onClick={reload}>Coba muat ulang</PulseButton></PulseNotice> : data && <>
       <section className="sc-account" aria-label="Akun dan batas penggunaan">
-        <div className="sc-account-overview"><div><h2>Akun Xpoz</h2><PulseBadge tone={data.account?.status === 'verified' ? 'success' : data.account?.status === 'error' ? 'warning' : 'neutral'}>{data.account?.status === 'verified' ? 'Terverifikasi' : 'Belum terverifikasi'}</PulseBadge></div><dl><div><dt>Paket</dt><dd>{data.account?.plan || 'Tidak diketahui'}</dd></div><div><dt>Sisa kredit</dt><dd>{count(data.account?.credits_remaining)}</dd></div><div><dt>Percobaan lokal</dt><dd>{count(data.budget?.used)} / {data.budget?.daily_limit<0?'tanpa batas':count(data.budget?.daily_limit)}<small>hari UTC {data.budget?.day_utc}</small></dd></div></dl></div>
-        <details className="sc-account-detail"><summary>Kuota &amp; pengaturan koneksi</summary><div><p className="sc-small">Diperiksa: {time(data.checked_at)}. Saldo kredit provider berbeda dari batas percobaan lokal. Kredit tambahan: {count(data.account?.extra_credits_remaining)}. Reset kredit: {data.account?.credit_reset_frequency === 'never' ? 'tidak berkala' : data.account?.credit_reset_frequency || 'tidak diketahui'}.</p><p className="sc-small">Instagram dan TikTok: manual saja, maksimal 5 posting per permintaan. Pemeriksaan metadata menghubungi Xpoz, tetapi tidak mengumpulkan posting.</p><PulseButton disabled={busy || isReadOnly} onClick={() => runAction()}>Periksa metadata Xpoz</PulseButton></div></details>
+        <div className="sc-account-overview"><div><h2>Saldo sumber data</h2><PulseBadge tone={data.account?.status === 'verified' ? 'success' : data.account?.status === 'error' ? 'warning' : 'neutral'}>{data.account?.status === 'verified' ? 'Terverifikasi' : 'Belum terverifikasi'}</PulseBadge></div><dl><div><dt>Paket</dt><dd>{data.account?.plan || 'Tidak diketahui'}</dd></div><div><dt>Sisa kredit</dt><dd>{count(data.account?.credits_remaining)}<small>dibaca {time(data.checked_at)}</small></dd></div><div><dt>Permintaan hari ini</dt><dd>{count(data.budget?.used)}<small>{data.budget?.daily_limit<0?'tanpa batas harian':`dari ${count(data.budget?.daily_limit)} per hari`}</small></dd></div></dl></div>
+        <details className="sc-account-detail"><summary>Rincian saldo</summary><div><p className="sc-small">Saldo dibaca otomatis tiap 30 menit; terakhir {time(data.checked_at)}. Kredit tambahan: {count(data.account?.extra_credits_remaining)}. Reset kredit: {data.account?.credit_reset_frequency === 'never' ? 'tidak berkala' : data.account?.credit_reset_frequency || 'tidak diketahui'}.</p><p className="sc-small">Pengumpulan berhenti hanya bila saldo habis; pemberitahuannya muncul di semua halaman.</p><PulseButton disabled={busy || isReadOnly} onClick={() => runAction()}>Baca saldo sekarang</PulseButton></div></details>
+        {balanceAgeHours(data.checked_at) >= 24 && <PulseNotice tone="warning">Saldo terakhir dibaca {Math.floor(balanceAgeHours(data.checked_at) / 24)} hari lalu, jadi angka di atas mungkin sudah berubah. Pembacaan otomatis tampaknya terhenti; baca ulang lewat Rincian saldo.</PulseNotice>}
         {data.account?.error && <PulseNotice tone="warning">Metadata akun belum dapat diverifikasi. Hubungi administrator.</PulseNotice>}
         {data.budget?.blocked_reason && <PulseNotice tone="warning" role="status">Pengumpulan diblokir. Minta administrator memeriksa status pengumpulan di Monitor.</PulseNotice>}
       </section>

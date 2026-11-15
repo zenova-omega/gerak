@@ -1,0 +1,69 @@
+/* Tanya AI with its history (/pulse/chat). Prefix: pch-.
+   The conversation keeps its reading column; from 940px of page width (a 1280px window with the sidebar open) the stored conversations of this project sit
+   beside it as one card, and below that width the same card follows the conversation. The page is the container, so the
+   switch follows the room the page really has, whatever the sidebar does.
+   This file loads before the shared kit, so a rule that overrides a shared one carries one class more. */
+.pulse-standalone .pc-chat.pch-page { grid-template-columns: minmax(0, 1fr); max-width: 1252px; container: pch / inline-size; }
+/* One column keeps the reading width the conversation always had (880px); the history under it is as wide. */
+.pch-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ps-section-gap); align-items: start; max-width: 880px; }
+.pch-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
+/* A notice in the conversation column carries one action next to its sentence. */
+.pch-main .pu-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.pch-main .pu-notice > span { flex: 1 1 240px; min-width: 0; line-height: 1.5; }
+.pulse-standalone .pch-main .pch-unsaved { margin-top: 4px; font-weight: var(--ps-weight-label); color: var(--ps-warning-text); }
+
+/* The card: the shadcn Card drawn with PULSE surface tokens. One level; rows are divided, not framed. */
+.pulse-standalone .pch-panel { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--ps-surface-line); border-radius: var(--ps-surface-radius); background: var(--ps-surface-bg); color: var(--ps-ink); box-shadow: none; }
+.pulse-standalone .pch-panel > .pch-head { flex: 0 0 auto; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: var(--ps-surface-pad); }
+.pch-heading { display: grid; gap: 4px; flex: 1 1 200px; min-width: 0; }
+.pulse-standalone .pch-panel .pch-title { margin: 0; letter-spacing: normal; color: var(--ps-ink); text-wrap: balance; }
+.pulse-standalone .pch-panel .pch-about { font-size: .8125rem; line-height: 1.5; color: var(--ps-muted); }
+.pulse-standalone .pch-panel > .pch-body { flex: 1 1 auto; min-height: 0; padding: 0; border-top: 1px solid var(--ps-line); }
+
+.pulse-standalone .pch-list { margin: 0; padding: 0; list-style: none; }
+.pch-list > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; min-width: 0; }
+.pch-list > li + li { border-top: 1px solid var(--ps-line); }
+/* The row shows hover and "open", behind its link and its delete control; the link itself is never painted. */
+.pch-list > li:has(.pch-item:hover) { background: var(--ps-soft); }
+.pch-list > li:has(.pch-item[aria-current]) { background: var(--ps-selected); }
+.pulse-standalone .pch-panel .pch-item { display: grid; gap: 4px; min-width: 0; min-height: var(--ps-control-md); padding: 12px 8px 12px var(--ps-surface-pad); border-radius: var(--ps-radius-control); background: transparent; color: var(--ps-ink); text-decoration: none; }
+.pulse-standalone .pch-panel .pch-item:focus-visible { outline: var(--ps-control-focus); outline-offset: -2px; }
+.pch-item-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: .875rem; font-weight: var(--ps-weight-label); line-height: 1.45; overflow-wrap: anywhere; }
+.pch-item[aria-current] > .pch-item-title { font-weight: var(--ps-weight-strong); }
+.pch-item-meta { font-size: .75rem; line-height: 1.5; color: var(--ps-muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pulse-standalone .pch-panel .pch-list .pch-remove { margin-right: 8px; color: var(--ps-muted); }
+.pulse-standalone .pch-panel .pch-list .pch-remove:not(:disabled):hover { color: var(--ps-danger-ink); }
+
+/* Loading, empty, unavailable, and the line under a list the server cut. */
+.pch-state { display: grid; gap: 12px; justify-items: start; padding: var(--ps-surface-pad); }
+.pulse-standalone .pch-panel .pch-state > p, .pulse-standalone .pch-panel .pch-cut { margin: 0; max-width: 70ch; font-size: .8125rem; line-height: 1.6; color: var(--ps-muted); }
+.pulse-standalone .pch-panel .pch-cut { padding: 12px var(--ps-surface-pad); border-top: 1px solid var(--ps-line); font-size: .75rem; }
+.pch-skeleton { display: grid; gap: 20px; padding: var(--ps-surface-pad); }
+.pch-skeleton > div { display: grid; gap: 8px; }
+.pch-skeleton i { display: block; height: 10px; border-radius: var(--ps-radius-mark); background: var(--ps-soft); animation: pu-skeleton 1.4s var(--ps-ease) infinite alternate; }
+
+/* Confirmation before a conversation is deleted: the shared dialog with PULSE surface tokens. Its corner close button
+   is left out because "Batal" is one of the two answers. */
+.pulse-standalone .pch-dialog { transform: translate(-50%, -50%); width: calc(100vw - 32px); max-width: 440px; max-height: calc(100dvh - 32px); overflow: auto; gap: 16px; padding: 24px; border: 1px solid var(--ps-line); border-radius: var(--ps-radius-panel); background: var(--ps-panel); color: var(--ps-ink); box-shadow: var(--ps-shadow-overlay); text-align: left; }
+.pulse-standalone .pch-dialog > button:last-child { display: none; }
+.pulse-standalone .pch-dialog .pch-dialog-head { text-align: left; }
+.pulse-standalone .pch-dialog h2 { margin: 0; font-size: var(--ps-title-panel); font-weight: var(--ps-title-weight); line-height: 1.3; letter-spacing: normal; text-wrap: balance; }
+.pulse-standalone .pch-dialog .pch-dialog-text { margin: 0; max-width: 70ch; font-size: .875rem; line-height: 1.6; color: var(--ps-muted); overflow-wrap: anywhere; }
+.pulse-standalone .pch-dialog .pch-dialog-text > strong { color: var(--ps-ink); font-weight: var(--ps-weight-label); }
+.pulse-standalone .pch-dialog .pch-dialog-error { margin: 0; padding: 8px 12px; border-radius: var(--ps-radius-control); background: var(--ps-danger); color: var(--ps-danger-ink); font-size: .8125rem; font-weight: var(--ps-weight-label); line-height: 1.5; }
+
+@container pch (min-width: 940px) {
+  .pch-layout { grid-template-columns: minmax(0, 1fr) clamp(280px, 28%, 340px); max-width: none; }
+  /* Beside a long conversation the history stays in view and scrolls inside itself. */
+  .pulse-standalone .pch-panel { position: sticky; top: var(--ps-surface-gap); max-height: calc(100dvh - 2 * var(--ps-surface-gap)); }
+  .pulse-standalone .pch-panel > .pch-body { overflow-y: auto; }
+}
+@media (max-width: 700px) {
+  .pulse-standalone .pch-panel > .pch-head, .pch-state, .pch-skeleton { padding: var(--ps-surface-pad-sm); }
+  .pulse-standalone .pch-panel .pch-item { padding-left: var(--ps-surface-pad-sm); }
+  .pulse-standalone .pch-panel .pch-cut { padding-inline: var(--ps-surface-pad-sm); }
+  /* Touch: the delete control is a full 44px target. */
+  .pulse-standalone.pulse-standalone.pulse-standalone .pch-panel .pch-list .pch-remove { min-width: var(--ps-control-md); min-height: var(--ps-control-md); }
+}
+@media (prefers-reduced-motion: reduce) { .pch-skeleton i { animation: none; } }
+@media print { .pch-panel, .pch-main .pu-notice { display: none; } }

@@ -36,7 +36,7 @@ export default function PostFilterDrawer({ posts, filters, onApply, globalPeriod
           <SavedPostViews key={topicId} topicId={topicId} draft={draft} onLoad={setDraft}/>
           {error && <p role="alert" className="pf-error">{error}</p>}
         </div>
-        <footer><span role="status">{filterPosts(posts,draft).length} dari {posts.length} posting cocok</span><div><PulseButton onClick={()=>{setDraft({...defaultPostFilters});setError('');}}>Reset pilihan</PulseButton><PulseButton type="submit" variant="primary">Terapkan filter</PulseButton></div><small>Filter hanya membaca data tersimpan, tanpa memakai kuota.</small></footer>
+        <footer><span role="status">{formatCount(filterPosts(posts,draft).length)} dari {formatCount(posts.length)} posting cocok</span><div><PulseButton onClick={()=>{setDraft({...defaultPostFilters});setError('');}}>Reset pilihan</PulseButton><PulseButton type="submit" variant="primary">Terapkan filter</PulseButton></div><small>Filter hanya membaca data tersimpan, tanpa memakai kuota.</small></footer>
       </form>
     </dialog>
   </>;

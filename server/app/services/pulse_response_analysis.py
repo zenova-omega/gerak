@@ -131,10 +131,10 @@ async def current_subject(db, job):
     return None
 
 
-async def claim(db, now):
-    await insert_once(db, SentimentLane, {'id':'local'})
+async def claim(db, now, lane='local'):
+    await insert_once(db, SentimentLane, {'id':lane})
     token = str(uuid.uuid4())
-    won = await db.execute(update(SentimentLane).where(SentimentLane.id=='local', or_(
+    won = await db.execute(update(SentimentLane).where(SentimentLane.id==lane, or_(
         SentimentLane.lease_until.is_(None), SentimentLane.lease_until<now)).values(
         lease_token=token, lease_until=now+timedelta(seconds=150)))
     if not won.rowcount:
@@ -145,6 +145,8 @@ async def claim(db, now):
                      .values(status='pending',error='interrupted'))
     await db.execute(update(Job).where(Job.status=='pending',Job.attempts>=3)
                      .values(status='failed',error='attempts_exhausted'))
+    from .pulse_analysis_retry import revive_failed
+    await revive_failed(db,Job,Job.id,now)   # a rested failure gets a fresh set of attempts
     cursor = await db.get(Cursor,'local')
     # A bounded candidate batch handles removed/changed snapshots without a spin loop.
     for kind in (cursor.next_kind, 'post' if cursor.next_kind=='comment' else 'comment'):
@@ -179,7 +181,7 @@ async def claim(db, now):
             await db.flush()
             # One post, so one target. A comment batch travels as the first job plus the rest.
             return picked[0][0], token, kind, picked[0][1], target, picked[0][2], picked[1:]
-    await db.execute(update(SentimentLane).where(SentimentLane.id=='local',SentimentLane.lease_token==token)
+    await db.execute(update(SentimentLane).where(SentimentLane.id==lane,SentimentLane.lease_token==token)
                      .values(lease_token=None,lease_until=None))
     return None
 
@@ -238,11 +240,12 @@ def parse_batch(raw, truncated, target):
                      'review_needed':sentiment_confidence<0.7 or cut}
         if row.get('kind') in KINDS:
             sentiment['kind'] = row['kind']
+        # Taking no side is an answer, not a doubt: only a side read with little confidence, or from a cut text, is marked.
         stance = {'label':row['stance'],'confidence':stance_confidence,'reason':reason[:1000],
-                  'review_needed':stance_confidence<0.7 or cut or row['stance']=='unclear'}
+                  'review_needed':row['stance']!='unclear' and (stance_confidence<0.7 or cut)}
         if vague:
             stance = {'label':'unclear','confidence':0.0,
-                'reason':'Target terlalu umum; tidak ada tindakan atau usulan yang jelas untuk dinilai.', 'review_needed':True}
+                'reason':'Target terlalu umum; tidak ada tindakan atau usulan yang jelas untuk dinilai.', 'review_needed':False}
         parsed[n] = {'stance':stance,'sentiment':sentiment}
     return parsed
 
@@ -266,18 +269,20 @@ def parse_result(raw, kind, target, truncated=False):
         if not isinstance(reason,str) or not reason.strip():
             raise ValueError('missing reason')
         result[field] = {'label':value['label'],'confidence':confidence,'reason':reason[:1000],
-                         'review_needed':value.get('review_needed') is True or confidence<0.7 or truncated or value['label']=='unclear'}
+                         'review_needed':value['label']!='unclear' and (value.get('review_needed') is True or confidence<0.7 or bool(truncated))}
     if len(target.split())<2 or data.get('target_is_issue') is False:
         result['stance'] = {'label':'unclear','confidence':0.0,
-            'reason':'Target terlalu umum; tidak ada tindakan atau usulan yang jelas untuk dinilai.', 'review_needed':True}
+            'reason':'Target terlalu umum; tidak ada tindakan atau usulan yang jelas untuk dinilai.', 'review_needed':False}
     if kind=='comment' and data.get('kind') in KINDS:
         result['sentiment']['kind'] = data['kind']
     return result
 
 
-async def run_one(session_factory, ai):
+async def run_one(session_factory, ai, lane='local'):
+    from .ai.hosted import AIUnavailable
+    unavailable = False
     async with session_factory() as db:
-        picked = await claim(db,datetime.utcnow())
+        picked = await claim(db,datetime.utcnow(),lane)
         await db.commit()
     if not picked:
         return 'idle'
@@ -297,11 +302,13 @@ async def run_one(session_factory, ai):
             for n, result in parse_batch(raw,[len(row[1])>BATCH_TEXT for row in batch],target).items():
                 result.update(model=ai.model,method=BATCH_VERSION,target=target)
                 results[batch[n-1][0]] = result
+    except AIUnavailable:
+        unavailable = True   # the service refused the call: the jobs keep their attempts
     except Exception:
         pass  # Persist only a bounded error code, never model bodies or credentials.
     async with session_factory() as db:
         now = datetime.utcnow()
-        fence = await db.execute(update(SentimentLane).where(SentimentLane.id=='local',
+        fence = await db.execute(update(SentimentLane).where(SentimentLane.id==lane,
             SentimentLane.lease_token==token,SentimentLane.lease_until>=now)
             .values(lease_token=None,lease_until=None))
         if not fence.rowcount:
@@ -320,6 +327,9 @@ async def run_one(session_factory, ai):
             elif results.get(one_id):
                 job.result=results[one_id]; job.status='done'; job.error=None; job.finished_at=now
                 outcomes.append('done')
+            elif unavailable:
+                job.status='pending'; job.attempts=max(0,job.attempts-1); job.error='ai_unavailable'; job.available_at=now
+                outcomes.append('unavailable')
             else:
                 job.status='failed' if job.attempts>=3 else 'pending'
                 job.error='inference_failed'; job.available_at=now+timedelta(minutes=2*job.attempts)
@@ -338,6 +348,14 @@ def date_bound(value, end=False):
     except ValueError:
         raise HTTPException(422,'Use YYYY-MM-DD WIB dates')
     return datetime.combine(day,time.min)-timedelta(hours=7)+timedelta(days=int(end))
+
+
+def stance_for_reader(stance):
+    """A stored stance under today's rule: taking no side is never marked for review. Results written before the rule
+    changed (15 Nov 2026) carry the mark; they are read back without it and left as they were stored."""
+    if isinstance(stance,dict) and stance.get('label')=='unclear' and stance.get('review_needed'):
+        return {**stance,'review_needed':False}
+    return stance
 
 
 async def results(db, topic_id, from_date=None, to_date=None, platform=None):
@@ -368,9 +386,9 @@ async def results(db, topic_id, from_date=None, to_date=None, platform=None):
             fresh=bool(job and job.content_target_hash==content_hash)
             status='skipped' if not text.strip() else job.status if fresh else 'pending'
             value=job.result if fresh and status=='done' and job.result else {}
+            # The job keeps which engine answered; a reader gets the result, not the engine.
             payload={'status':status,'fresh':fresh,'content_target_hash':content_hash,
-                     'stance':value.get('stance'),'analyzed_at':job.finished_at if value else None,
-                     'model':value.get('model'),'method':value.get('method')}
+                     'stance':stance_for_reader(value.get('stance')),'analyzed_at':job.finished_at if value else None}
             counts=progress['posts' if kind=='post' else 'comments']
             counts['total']+=1; counts['analyzed' if status=='done' else status]+=1
             if kind=='post': post.update(payload)
@@ -385,14 +403,14 @@ async def results(db, topic_id, from_date=None, to_date=None, platform=None):
             'semantics':'expressed_text_only_not_author_beliefs_or_fact_verification'}
 
 
-async def response_analysis_tick():
+async def response_analysis_tick(lane='local'):
     from ..config import get_settings
     from ..database import async_session
-    from .ai import get_ai_service
+    from .ai import background_mode, get_bulk_ai_service
     settings=get_settings()
-    if not settings.PULSE_SENTIMENT_ENABLED or settings.AI_PROVIDER!='ollama':
+    if background_mode(settings) is None:
         return 'disabled'
-    return await run_one(async_session,get_ai_service(settings))
+    return await run_one(async_session,get_bulk_ai_service(settings),lane)
 
 
 response_tick = response_analysis_tick

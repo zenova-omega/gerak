@@ -12,6 +12,8 @@ class WorkerPolicy(Base):
     provider: Mapped[str] = mapped_column(String(20), primary_key=True)
     daily_limit: Mapped[int] = mapped_column(Integer, default=0)
     blocked_reason: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # Set for a wait the provider asked for; the block lifts by itself once this time has passed.
+    blocked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     lease_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     lease_token: Mapped[str | None] = mapped_column(String(36), nullable=True)
 

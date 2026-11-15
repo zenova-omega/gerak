@@ -1,3 +1,4 @@
+import { commentNeedsReview } from '../../../lib/pulseCommentReview';
 import React, { useEffect, useId, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { postInteractions } from '../../../lib/pulseEngagement';
@@ -6,14 +7,18 @@ import { platformLabel } from './PlatformIcon';
 import { PulseArrow } from '../../ui/PulseArrow';
 import { MessageCircle, Heart, ExternalLink } from 'lucide-react';
 import { formatCount, safeSourceUrl, pulseDate } from '../../../lib/pulseData';
-import {responseEvidence,stanceLabels,stanceShort} from '../../../lib/pulseResponse';
+import {analysedShares,responseEvidence,stanceLabels,stanceShort} from '../../../lib/pulseResponse';
+import { commentPostRows, postCaption } from '../../../lib/pulseCommentPosts';
 import { topEmoji } from '../../../lib/pulseEmoji';
 import useResponseAnalysis from '../../../pulse/useResponseAnalysis';
 import { PulseTag, SentimentTag } from '../../ui/PulseTag';
 import { kindHints, kindLabels } from '../../../lib/pulseVoice';
 import AccountAvatar from './AccountAvatar';
-import { PulseStat, PulseStatGrid } from '../../ui/PulseAnalytics';
+import useHideUnknown from '../../../pulse/useHideUnknown';
+import { UnanalysedToggle } from '../../../pulse/UnanalysedToggle';
+import CommentPostPicker from './CommentPostPicker';
 import { PulseButton } from '../../ui/PulseUI';
+import '../../../pulse/ds/comments-browse.css';
 
 
 /** One comment as a card: who and when, the words, then the reading of it. Reasons stay folded so the text is never crowded. */
@@ -33,14 +38,32 @@ function SourcePreview({ post }) {
   </aside>;
 }
 
-export function Comment({ comment, video, post, showAnalysis = true }) {
-  const review = [comment.sentiment, comment.stance].some(r => r && (r.review_needed || r.confidence < 0.65));
+/** A comment as one compact row, for the list under a post: picture, then who and when on one line with the words
+ * under it, and the likes and the way to the comment at the side. It is built from plain blocks on purpose: a post
+ * card styles its own header and footer, and those rules must find nothing to grab inside a comment. */
+function CompactComment({ comment, platform }) {
+  const url = safeSourceUrl(comment.url), name = comment.author || 'Penulis tidak tersedia';
+  return <article className="pcm-card pcm-compact">
+    <AccountAvatar size="xs" author={comment.author} platform={platform} photo={null} />
+    <div className="pcm-body">
+      <div className="pcm-line"><strong>{name}</strong><small>{pulseDate(comment.published_at)}{comment.replies > 0 && <> · {formatCount(comment.replies)} balasan</>}</small></div>
+      <p className="pcm-text">{comment.text}</p>
+    </div>
+    <div className="pcm-side">
+      <span className="pcm-likes" title="Suka"><Heart size={14} aria-hidden="true" /><span className="pu-sr">Suka: </span>{formatCount(comment.likes)}</span>
+      {url && <a className="pcm-open" href={url} target="_blank" rel="noopener noreferrer" aria-label={`Buka komentar ${name}`} title="Buka komentar"><ExternalLink size={14} aria-hidden="true" /></a>}
+    </div>
+  </article>;
+}
+
+export function Comment({ comment, video, post, platform, showAnalysis = true }) {
+  const review = commentNeedsReview(comment);
   const reasons = [['Sentimen', comment.sentiment?.reason], ['Sikap', comment.stance?.reason]].filter(([, reason]) => reason);
   const sourceId = useId();
   return <article className="pcm-card" data-has-source={post && video ? '' : undefined}>
     {post && video && <div className="pcm-source-pop" id={sourceId} role="tooltip"><SourcePreview post={post} /></div>}
     <header className="pcm-head">
-      <AccountAvatar size="sm" author={comment.author} platform={post?.platform} photo={null} />
+      <AccountAvatar size="sm" author={comment.author} platform={post?.platform || platform} photo={null} />
       <div className="pcm-who"><strong>{comment.author || 'Penulis tidak tersedia'}</strong><small>{pulseDate(comment.published_at)}{comment.replies > 0 && <> · {formatCount(comment.replies)} balasan</>}</small></div>
       <span className="pcm-likes" title="Suka"><Heart size={14} aria-hidden="true" /><span className="pu-sr">Suka: </span>{formatCount(comment.likes)}</span>
     </header>
@@ -58,18 +81,43 @@ export function PostComments({ post }) {
   const snapshot = post.metrics?.comment_snapshot;
   if (!snapshot && !['youtube','x','instagram','tiktok'].includes(post.platform)) return null;
   return <details className="pulse-post-comments"><summary><MessageCircle size={15} />Komentar {snapshot?.status === 'success' ? `(${snapshot.items.length} tersedia)` : 'belum tersedia'}</summary>
-    {!snapshot ? <p>Isi komentar belum diambil untuk posting ini. Ambil dari halaman Komentar; angka komentar di kartu adalah statistik posting.</p> : snapshot.status !== 'success' ? <p role="status">Komentar belum tersedia untuk posting ini.</p> : <><p>Teratas berdasarkan likes dalam sampel. Diambil {pulseDate(snapshot.fetched_at)}.</p>{snapshot.items.slice(0, limit).map(c => <Comment key={c.id} comment={c} showAnalysis={false} />)}{!snapshot.items.length && <p>Belum ada komentar yang tersedia.</p>}{snapshot.items.length > limit && <PulseButton onClick={() => setLimit(limit + 10)}>Tampilkan lebih banyak komentar</PulseButton>}</>}
+    {!snapshot ? <p>Isi komentar belum diambil untuk posting ini. Ambil dari halaman Komentar; angka komentar di kartu adalah statistik posting.</p> : snapshot.status !== 'success' ? <p role="status">Komentar belum tersedia untuk posting ini.</p> : <><p className="pcm-note">Teratas menurut jumlah suka dalam sampel. Diambil {pulseDate(snapshot.fetched_at)}.</p><div className="pcm-rows">{snapshot.items.slice(0, limit).map(c => <CompactComment key={c.id} comment={c} platform={post.platform} />)}</div>{!snapshot.items.length && <p>Belum ada komentar yang tersedia.</p>}{snapshot.items.length > limit && <PulseButton size="sm" onClick={() => setLimit(limit + 10)}>Tampilkan {formatCount(Math.min(10, snapshot.items.length - limit))} komentar berikutnya</PulseButton>}</>}
   </details>;
 }
 
-const postTitle = post => ((post.title || post.text || '').replace(/\s+/g, ' ').trim().slice(0, 70) || 'Tanpa teks');
+const postTitle = post => (postCaption(post).slice(0, 70) || 'Tanpa teks');
+/** First page of cards and each further step: both fill whole rows at one, two and three columns. */
+const PAGE = 12, MORE = 24;
+const tones = [['positive', 'Positif'], ['neutral', 'Netral'], ['negative', 'Negatif']];
+const percentText = value => formatCount(Math.round(value * 10) / 10) + '%';
+
+/** The figures of the comments in view, on one strip. `reading` is 'loading' or 'failed' while the results of the
+ * analysis have not arrived: that is said as it is, never as "nothing analysed yet". Shares are read over the analysed comments and the coverage
+ * is said once; comments still waiting are a count without a share. Top emoticons follow on a second line. */
+function CommentSummary({ counts, emoji, reading }) {
+  const emojiLabel = useId();
+  const shares = analysedShares(counts), { total, analysed } = shares, waiting = total - analysed;
+  return <div className="pcb-summary" role="group" aria-label="Ringkasan komentar dalam pilihan ini">
+    <div className="pcb-figures">
+      <div className="pcb-coverage">
+        <p>{reading ? <><strong>{formatCount(total)}</strong> komentar</> : !analysed ? <><strong>{formatCount(total)}</strong> komentar, belum ada yang dianalisis</> : waiting ? <><strong>{formatCount(analysed)}</strong> dari <strong>{formatCount(total)}</strong> komentar sudah dianalisis</> : <><strong>{formatCount(total)}</strong> komentar, semuanya sudah dianalisis</>}</p>
+        <small>{reading === 'loading' ? 'Memuat hasil analisis…' : reading === 'failed' ? 'Hasil analisis belum bisa dimuat. Dicoba lagi otomatis.' : !analysed ? 'Nada komentar tampil setelah analisis berjalan.' : waiting ? `Persentase dihitung dari yang sudah dianalisis. ${formatCount(waiting)} komentar menunggu giliran.` : 'Persentase dihitung dari seluruh komentar ini.'}</small>
+      </div>
+      {analysed > 0 && <div className="pcb-tone">
+        <ul className="pcb-shares" aria-label="Nada komentar yang sudah dianalisis">{tones.map(([key, label]) => <li key={key} data-tone={key} title={`${formatCount(counts[key])} dari ${formatCount(analysed)} komentar yang sudah dianalisis`}><span><i aria-hidden="true" />{label}</span> <span><strong>{percentText(shares.percent(key))}</strong> <small>{formatCount(counts[key])}<span className="pu-sr"> komentar</span></small></span></li>)}</ul>
+        <div className="pcb-bar" aria-hidden="true">{tones.filter(([key]) => counts[key] > 0).map(([key]) => <i key={key} data-tone={key} style={{ flexGrow: counts[key] }} />)}</div>
+      </div>}
+    </div>
+    {emoji.length > 0 && <div className="pcb-emoji"><span id={emojiLabel}>Emotikon teratas</span><ul aria-labelledby={emojiLabel}>{emoji.map(row => <li key={row.emoji}><span aria-hidden="true">{row.emoji + '\uFE0F'}</span><span className="pu-sr">{row.emoji} </span><strong>{formatCount(row.count)}</strong></li>)}</ul><small>Jumlah komentar yang memakainya, dari {formatCount(total)} komentar.</small></div>}
+  </div>;
+}
 
 export default function CommentsPanel({ posts = [], topicId }) {
   const analysis=useResponseAnalysis(topicId);
   const [params] = useSearchParams();
   const [selected, setSelected] = useState(params.get('post') || 'all');
   const [sort, setSort] = useState('likes');
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(PAGE);
   const [coverage, setCoverage] = useState(null);
   const [collect, setCollect] = useState({ busy: false, note: '', error: '' });
   useEffect(() => {
@@ -98,34 +146,44 @@ export default function CommentsPanel({ posts = [], topicId }) {
     }
   }
   const withComments = posts.filter(p => p.metrics?.comment_snapshot?.items?.length);
+  const pickerRows = commentPostRows(withComments);   // the same posts, busiest first, for the picker
   const chosen = withComments.some(p => p.id === selected) ? selected : 'all';   // a linked post without comments falls back to all
   const scope = withComments.filter(p => chosen === 'all' || chosen === p.id);
   const comments = responseEvidence(scope,analysis.response).comments.map(c=>({...c,video:postTitle(c.post),post_id:c.post.id}))
     .sort((a, b) => sort === 'likes' ? (b.likes ?? -1) - (a.likes ?? -1) : new Date(b.published_at || 0) - new Date(a.published_at || 0));
-  const tally=comments.reduce((t,c)=>{if(c.sentiment?.label in t)t[c.sentiment.label]++;return t;},{positive:0,neutral:0,negative:0});
-  const labelled=tally.positive+tally.neutral+tally.negative, total=comments.length;
+  const counts=comments.reduce((t,c)=>{t[c.sentiment?.label||'unknown']++;return t;},{positive:0,neutral:0,negative:0,unknown:0});
+  const total=comments.length, waiting=counts.unknown, labelled=total-waiting;
+  // The switch narrows the cards to comments that already have a reading. It is offered only while some are still waiting.
+  const [hideUnknown,setHideUnknown]=useHideUnknown();
+  const canHide=waiting>0&&labelled>0, listed=hideUnknown&&canHide?comments.filter(c=>c.sentiment):comments;
   const emoji = topEmoji(comments.map(c => c.text), 8);
   const one = chosen !== 'all' ? withComments.find(p => p.id === chosen) : null;
+  const pick = id => { setSelected(id); setLimit(PAGE); };
+  // The way back lives in a bar that disappears once used, so focus goes to the picker instead of being dropped.
+  const pickerButton = useId(), backToAll = () => { pick('all'); document.getElementById(pickerButton)?.focus(); };
   return <section id="pulse-comments" className="pulse-panel pulse-comments-panel" aria-label="Komentar pada posting project"><div className="pulse-panel-heading"><div><h2>Suara di kolom komentar</h2><p>{one ? `${formatCount(total)} komentar pada satu posting pilihan` : `${formatCount(total)} komentar dari ${formatCount(withComments.length)} posting`}</p></div><MessageCircle size={24} /></div>
-    <div className="pcm-layout">
-      <div className="pcm-main">
-    {one && <p className="pc-one-post"><AccountAvatar size="sm" author={one.author} platform={one.platform} /><strong>{one.author || 'Tanpa nama'}</strong><span>{postTitle(one)}</span>{safeSourceUrl(one.url) && <a href={safeSourceUrl(one.url)} target="_blank" rel="noopener noreferrer">Buka posting asli <PulseArrow/></a>}</p>}
-    <div className="pulse-comment-list">{comments.slice(0, limit).map(c => <Comment key={c.post_id + c.id} comment={c} video={one ? null : c.video} post={one ? null : c.post} />)}</div>
-    {!total && <p className="pulse-empty">{withComments.length ? 'Belum ada komentar untuk pilihan ini. Pilih posting lain.' : 'Belum ada komentar tersimpan. Ambil komentar posting untuk mulai menganalisis.'}</p>}
-    {total > limit && <div className="pulse-pagination"><PulseButton onClick={() => setLimit(limit + 20)}>Tampilkan 20 komentar berikutnya</PulseButton></div>}
+    <div className="pcb">
+      {withComments.length > 0 && <div className="pcb-toolbar" role="group" aria-label="Pilih posting dan urutkan komentar">
+        <CommentPostPicker rows={pickerRows} value={chosen} onChange={pick} buttonId={pickerButton} />
+        <label className="pcb-field">Urutkan komentar<select aria-label="Urutkan komentar" value={sort} onChange={e => { setSort(e.target.value); setLimit(PAGE); }}><option value="likes">Suka terbanyak</option><option value="recent">Terbaru</option></select></label>
+        {canHide && <UnanalysedToggle noun="komentar" hidden={hideUnknown} onChange={setHideUnknown} count={waiting} />}
+      </div>}
+      <p className="pu-sr" role="status">{one ? `Menampilkan ${formatCount(listed.length)} komentar pada posting ${one.author || 'tanpa nama'}.` : withComments.length ? `Menampilkan ${formatCount(listed.length)} komentar dari semua posting.` : ''}</p>
+      {one && <div className="pcb-scope">
+        <div className="pcb-scope-post"><AccountAvatar size="sm" author={one.author} platform={one.platform} /><div className="pcb-scope-text"><span><strong>{one.author || 'Tanpa nama'}</strong><small>{platformLabel(one.platform)} · {pulseDate(one.published_at)}</small></span><p>{postCaption(one).slice(0, 280) || 'Teks posting tidak tersedia.'}</p></div></div>
+        <div className="pcb-scope-actions">{safeSourceUrl(one.url) && <a href={safeSourceUrl(one.url)} target="_blank" rel="noopener noreferrer">Buka posting asli <PulseArrow/></a>}<PulseButton size="sm" onClick={backToAll}>Kembali ke semua posting</PulseButton></div>
+      </div>}
+      {total > 0 && <CommentSummary counts={counts} emoji={emoji} reading={!analysis.loaded ? 'loading' : analysis.error ? 'failed' : null} />}
+      {listed.length > 0 && <div className="pcb-list">{listed.slice(0, limit).map(c => <Comment key={c.post_id + c.id} comment={c} video={one ? null : c.video} post={one ? null : c.post} platform={c.post.platform} />)}</div>}
+      {!total && <p className="pulse-empty">{withComments.length ? 'Belum ada komentar untuk pilihan ini. Pilih posting lain.' : 'Belum ada komentar tersimpan. Ambil komentar posting untuk mulai menganalisis.'}</p>}
+      {listed.length > limit && <div className="pcb-more"><PulseButton onClick={() => setLimit(limit + MORE)}>Tampilkan {formatCount(Math.min(MORE, listed.length - limit))} komentar berikutnya</PulseButton><span>{formatCount(limit)} dari {formatCount(listed.length)} komentar{listed.length < total ? ' yang sudah dianalisis' : ''} ditampilkan</span></div>}
+      <div className="pc-coverage" aria-live="polite">
+        <h3>Komentar otomatis</h3><p>{coverage ? (coverage.auto_target ? <><strong>{formatCount(coverage.auto_done)} dari {formatCount(coverage.auto_target)}</strong> posting teratas sudah punya komentar. {coverage.auto_done < coverage.auto_target ? 'Sisanya sedang diambil otomatis.' : 'Posting baru yang masuk 100 besar diambil otomatis.'}</> : 'Belum ada posting yang kolom komentarnya bisa diambil.') : 'Memeriksa cakupan komentar…'}</p>
+        {coverage?.auto_target > 0 && <div className="pcm-progress" role="progressbar" aria-label="Kemajuan komentar otomatis" aria-valuemin={0} aria-valuemax={coverage.auto_target} aria-valuenow={coverage.auto_done}><i style={{ width: `${coverage.auto_done / coverage.auto_target * 100}%` }} /></div>}
+        {coverage && coverage.waiting > 0 && <details className="pcm-more"><summary>Ambil di luar 100 besar</summary><p>{formatCount(coverage.waiting)} posting lain belum punya komentar.{coverage.not_requestable > 0 ? ` ${formatCount(coverage.not_requestable)} posting (misalnya berita) tidak punya kolom komentar.` : ''}</p><PulseButton size="sm" onClick={collectNext} busy={collect.busy} busyLabel="Mengambil komentar…">Ambil 10 posting berikutnya</PulseButton></details>}
+        {collect.note && <p className="pc-coverage-note" role="status">{collect.note}</p>}
+        {collect.error && <p className="pc-coverage-note pc-coverage-error" role="alert">{collect.error}</p>}
       </div>
-      <aside className="pcm-rail" aria-label="Filter dan ringkasan komentar">
-    <div className="pulse-filters"><label>Posting<select aria-label="Pilih posting" value={chosen} onChange={e => { setSelected(e.target.value); setLimit(10); }}><option value="all">Semua posting ({formatCount(withComments.length)})</option>{withComments.map(p => <option key={p.id} value={p.id}>{platformLabel(p.platform)} · {p.author || 'Tanpa nama'} · {postTitle(p)} ({formatCount(p.metrics.comment_snapshot.items.length)})</option>)}</select></label><label>Urutkan komentar<select aria-label="Urutkan komentar" value={sort} onChange={e => { setSort(e.target.value); setLimit(10); }}><option value="likes">Suka terbanyak</option><option value="recent">Terbaru</option></select></label></div>
-    <div className="pulse-comment-stats"><PulseStatGrid label="Ringkasan komentar dalam filter"><PulseStat label="Komentar" icon={MessageCircle} value={total} note={one ? 'Satu posting pilihan' : `${formatCount(withComments.length)} posting`}/><PulseStat label="Positif" tone="positive" value={tally.positive} share={labelled?tally.positive/labelled*100:null}/><PulseStat label="Negatif" tone="negative" value={tally.negative} share={labelled?tally.negative/labelled*100:null}/><PulseStat label="Belum dianalisis" tone="unknown" value={total-labelled} share={total?(total-labelled)/total*100:null}/></PulseStatGrid></div>
-    <div className="pc-coverage" aria-live="polite">
-      <h3>Komentar otomatis</h3><p>{coverage ? (coverage.auto_target ? <><strong>{formatCount(coverage.auto_done)} dari {formatCount(coverage.auto_target)}</strong> posting teratas sudah punya komentar. {coverage.auto_done < coverage.auto_target ? 'Sisanya sedang diambil otomatis.' : 'Posting baru yang masuk 100 besar diambil otomatis.'}</> : 'Belum ada posting yang kolom komentarnya bisa diambil.') : 'Memeriksa cakupan komentar…'}</p>
-      {coverage?.auto_target > 0 && <div className="pcm-progress" role="progressbar" aria-label="Kemajuan komentar otomatis" aria-valuemin={0} aria-valuemax={coverage.auto_target} aria-valuenow={coverage.auto_done}><i style={{ width: `${coverage.auto_done / coverage.auto_target * 100}%` }} /></div>}
-      {coverage && coverage.waiting > 0 && <details className="pcm-more"><summary>Ambil di luar 100 besar</summary><p>{formatCount(coverage.waiting)} posting lain belum punya komentar.{coverage.not_requestable > 0 ? ` ${formatCount(coverage.not_requestable)} posting (misalnya berita) tidak punya kolom komentar.` : ''}</p><PulseButton size="sm" onClick={collectNext} busy={collect.busy} busyLabel="Mengambil komentar…">Ambil 10 posting berikutnya</PulseButton></details>}
-      {collect.note && <p className="pc-coverage-note" role="status">{collect.note}</p>}
-      {collect.error && <p className="pc-coverage-note pc-coverage-error" role="alert">{collect.error}</p>}
-    </div>
-        {emoji.length > 0 && <section className="pcm-emoji" aria-label="Emotikon teratas di komentar"><h3>Emotikon teratas</h3><ul>{emoji.map(row => <li key={row.emoji}><span aria-hidden="true">{row.emoji + '\uFE0F'}</span><span className="pu-sr">{row.emoji} </span><strong>{formatCount(row.count)}</strong></li>)}</ul><small>Jumlah komentar yang memakainya, dari {formatCount(total)} komentar dalam filter.</small></section>}
-      </aside>
     </div>
   </section>;
 }

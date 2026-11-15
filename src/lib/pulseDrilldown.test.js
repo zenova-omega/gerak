@@ -27,3 +27,21 @@ test('account drilldown preserves project and period but clears unrelated post f
   assert.equal(url.searchParams.has('sentiment'), false);
   assert.equal(url.searchParams.get('alert'), 'a');
 });
+
+test('a link to one day of posts drops a week or month picked earlier on the trend chart', () => {
+  const link = postsEvidenceLink('topic=t1&day=2026-11-03&day_to=2026-11-09', { day: '2026-11-12' });
+  assert.equal(new URL(link, 'http://x').searchParams.get('day'), '2026-11-12');
+  assert.equal(new URL(link, 'http://x').searchParams.has('day_to'), false);
+});
+
+test('a link to a week or month of posts carries its first and last day', () => {
+  const link = postsEvidenceLink('topic=t1&day=2026-11-01', { day: '2026-11-09', day_to: '2026-11-15' });
+  const params = new URL(link, 'http://x').searchParams;
+  assert.deepEqual([params.get('topic'), params.get('day'), params.get('day_to')], ['t1', '2026-11-09', '2026-11-15']);
+});
+
+test('a link to Posting can carry a province, and drops the one it came with', async () => {
+  const { postsEvidenceLink } = await import('./pulseDrilldown.js');
+  assert.equal(postsEvidenceLink('topic=p1&province=ID-JB&author=lama', { province: 'ID-JI' }), '/pulse/posts?topic=p1&province=ID-JI');
+  assert.equal(postsEvidenceLink('topic=p1&province=ID-JB', { author: '@a', platform: 'x' }), '/pulse/posts?topic=p1&author=%40a&platform=x');
+});

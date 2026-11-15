@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     PULSE_SENTIMENT_ENABLED: bool = False
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
+    # Hosted AI paid by the token (AI_PROVIDER=grok). The first model answers people, the second labels in bulk.
+    XAI_API_KEY: str = ""
+    XAI_MODEL: str = "grok-4.7"
+    XAI_BULK_MODEL: str = "grok-4.20-0309-non-reasoning"
+    XAI_REASONING_EFFORT: str = "low"
+    PULSE_AI_HOSTED_BACKGROUND: bool = False   # paid labelling of the whole queue: off until switched on
+    PULSE_AI_PARALLEL: int = 8                 # labelling calls in flight at once on the hosted model
 
     # Pulse / listening
     BROWSERLESS_API_KEY: str = ""
@@ -50,10 +57,12 @@ class Settings(BaseSettings):
     XPOZ_MODE: Literal["mcp_stored", "rest_live"] = "mcp_stored"
     YOUTUBE_API_KEY: SecretStr = SecretStr("")
     THREADS_ACCESS_TOKEN: SecretStr = SecretStr("")
+    THREADS_APP_SECRET: SecretStr = SecretStr("")   # only for swapping a short-lived token for a 60-day one (app.pulse_threads_token)
     BROWSERLESS_BASE: str = "https://chrome.browserless.io"
     PULSE_WEBHOOK_SECRET: str = ""
     ENABLE_SCHEDULER: bool = True
     PULSE_MONITOR_ENABLED: bool = True
+    PULSE_RETENTION_DAYS: int = 0   # stored posts older than this many days are deleted once a day; 0 deletes nothing (services/pulse_retention.py)
     BROWSERLESS_ALLOWLIST: list[str] = []
 
     class Config:

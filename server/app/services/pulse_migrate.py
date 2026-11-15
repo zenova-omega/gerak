@@ -3,6 +3,12 @@ from sqlalchemy import inspect, text
 
 ADDED_COLUMNS = (
     ('pulse_response_analysis_jobs', 'comment_rank', 'INTEGER'),
+    ('pulse_worker_policies', 'blocked_until', 'DATETIME'),
+    ('pulse_account_profiles', 'photo_type', 'VARCHAR(40)'),
+    ('pulse_account_profiles', 'photo_bytes', 'BLOB'),
+    ('pulse_account_profiles', 'location', 'VARCHAR(200)'),
+    ('pulse_account_profiles', 'based_in', 'VARCHAR(80)'),
+    ('pulse_account_profiles', 'location_at', 'DATETIME'),
 )
 
 

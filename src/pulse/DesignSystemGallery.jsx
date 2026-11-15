@@ -14,16 +14,23 @@ import { PulseStat, PulseStatGrid, PulseLegend, PulseDistribution, PulseBreakdow
 import { PlatformIcon, platformLabel } from '../components/admin/pulse/PlatformIcon';
 import { sentimentColor, sentimentOrder, platformColor, chartSeries } from '../lib/pulseChartTheme';
 import { sentimentLabels } from '../lib/pulsePostFilters';
+import { PulseRange } from '../components/ui/PulseRange';
+import { allRange, rangeBounds, resolveRange, withinRange } from '../lib/pulseRange';
 
 const sampleSentiment = { positive: 128, neutral: 302, negative: 64, unknown: 41 };
 const samplePlatforms = [['instagram', 212], ['tiktok', 148], ['x', 96], ['news', 54], ['youtube', 25]];
 const sampleTrend = [12, 18, 15, 31, 44, 38, 52, 47, 61, 58];
+// Fourteen sample days for the range filter: 1 to 14 Nov 2026, each with a made-up count.
+const sampleDays = [9, 14, 11, 22, 31, 27, 18, 24, 36, 29, 41, 33, 46, 38].map((count, index) => ({ date: `2026-11-${String(index + 1).padStart(2, '0')}`, count }));
+const sampleBounds = rangeBounds(sampleDays.map(row => row.date));
 
 /** Live component reference. Examples never query providers or mutate project data. */
 export default function DesignSystemGallery(){
   const [platforms,setPlatforms]=useState(null);
   const [filters,setFilters]=useState(['Instagram','Negatif','7 hari terakhir']);
   const [pressed,setPressed]=useState(true);
+  const [range,setRange]=useState(allRange);
+  const drawn=withinRange(sampleDays,resolveRange(sampleBounds,range));
   const sentimentTotal=Object.values(sampleSentiment).reduce((a,b)=>a+b,0);
   return <section id="pulse-design-system" className="pu-gallery" aria-label="PULSE design system">
     <header><span className="pu-eyebrow">PULSE / UI foundations</span><h2>Tenang. Tepercaya. Tajam.</h2><p>Referensi komponen yang dipakai aplikasi. Semua angka di bagian ini adalah contoh, bukan data monitoring.</p></header>
@@ -38,6 +45,13 @@ export default function DesignSystemGallery(){
         <div className="pu-example-row"><label>Dropdown<select defaultValue="a"><option value="a">Interaksi tertinggi</option><option value="b">Terbaru dahulu</option></select></label><label>Input<input type="search" placeholder="Cari dalam posting"/></label><PulseButton><SlidersHorizontal/>Filter lanjutan</PulseButton></div>
         <div className="pu-example-row"><div className="pu-tag-group" role="group" aria-label="Contoh chip filter"><PulseTag size="lg" tone="accent" pressed onClick={()=>{}}>Terpilih</PulseTag><PulseTag size="lg" pressed={false} onClick={()=>{}}>Tidak terpilih</PulseTag><PulseTag size="lg" dot tone="positive" pressed count="35" onClick={()=>{}}>Positif</PulseTag></div><code>chip · 36px</code></div>
       </div>
+    </section>
+    <section aria-label="Filter rentang grafik"><h3>Filter rentang grafik</h3><p>Setiap grafik memakai sakelar yang sama: 3 hari, 7 hari, 1 bulan, Semua, Rentang. Pilihan cepat berakhir pada hari terakhir yang punya data, bukan hari ini, dan tanggal yang digambar selalu tertulis di sampingnya. Pilihan hanya berlaku untuk grafik itu dan tidak disimpan. Periode di bilah project tetap berlaku lebih dahulu.</p>
+      <AnalyticsPanel title="Contoh grafik" description="Empat belas hari contoh, 1 sampai 14 Nov 2026." actions={<PulseRange chart="Contoh grafik" bounds={sampleBounds} value={range} onChange={setRange}/>} footer="Rentang yang terbalik, belum lengkap, atau di luar hari yang punya data tidak diterapkan; alasannya tertulis di bawah kolom tanggal.">
+        <div className="pu-range-specimen" role="img" aria-label={`${drawn.length} dari ${sampleDays.length} hari contoh digambar`}>{sampleDays.map(row=><i key={row.date} data-drawn={drawn.includes(row)?'':undefined} style={{height:`${row.count/46*100}%`}}/>)}</div>
+        <p>{drawn.length} dari {sampleDays.length} hari contoh digambar.</p>
+      </AnalyticsPanel>
+      <div className="pu-example-row"><PulseRange chart="Contoh grafik kecil" bounds={sampleBounds} value={allRange} onChange={()=>{}} captionOnly/>Bentuk kecil, atau data kurang dari dua hari: hanya keterangan tanggal.</div>
     </section>
     <section aria-label="Permukaan dan pencarian"><h3>Permukaan, judul, dan pencarian</h3><p>Kartu dan panel memakai token <code>--ps-surface-*</code>; judul memakai <code>--ps-title-*</code>; sidebar memakai <code>--ps-sidebar-*</code> dan <code>--ps-nav-*</code>.</p>
       <div className="pu-surface-specimen"><div><strong>Kartu</strong><code>radius 12px · padding 20px</code></div><div><strong>Blok dalam panel</strong><code>padding 16px</code></div><div><strong>Judul panel 20px</strong><code>judul blok 16px</code></div></div>
@@ -57,7 +71,7 @@ export default function DesignSystemGallery(){
     <section aria-label="Warna data"><h3>Warna data</h3><p>Terpisah dari warna status. Sentimen dan platform memiliki token sendiri; "Belum dianalisis" memakai arsiran agar tidak terbaca sebagai netral.</p>
       <div className="pu-swatches">{sentimentOrder.map(key=><div key={key}><span className={key==='unknown'?'pu-swatch-hatch':undefined} style={{background:key==='unknown'?undefined:sentimentColor[key]}}/><strong>{sentimentLabels[key]}</strong><code>--ps-sent-{key}</code></div>)}</div>
       <div className="pu-swatch-strip" aria-label="Warna platform">{['instagram','tiktok','x','youtube','facebook','threads','news','web'].map(key=><span key={key} title={platformLabel(key)} style={{background:platformColor(key)}}><PlatformIcon platform={key} size={14}/></span>)}</div>
-      <div className="pu-swatch-strip" aria-label="Seri kategorikal">{chartSeries.map((color,index)=><span key={color} style={{background:color}}>{index+1}</span>)}</div>
+      <div className="pu-swatch-strip pu-swatch-numbered" aria-label="Seri kategorikal">{chartSeries.map((color,index)=><span key={color}><i style={{background:color}}/>{index+1}</span>)}</div>
     </section>
     <section aria-label="Tag"><h3>Tag</h3><p>Satu anatomi untuk sentimen, platform, status, keyword dan filter. Tinggi 24px, radius 6px, selalu berlabel teks.</p>
       <div className="pu-example-row">{sentimentOrder.map(key=><SentimentTag key={key} value={key}/>)}</div>

@@ -30,7 +30,7 @@ The PULSE wordmark is lowercase, drawn with one uniform stroke on a geometric sk
 
 The spike-and-wave trace on its own is the symbol. Use it where the wordmark cannot fit: favicon, app tile, avatar.
 
-- Component: `PulseSymbol`. Tile version: `public/pulse-icon.svg` (lavender tile, accent-ink trace, corner radius 24% of the tile).
+- Component: `PulseSymbol`. Tile version: `public/pulse/brand/icon.svg` (lavender tile, accent-ink trace, corner radius 24% of the tile).
 - The symbol never sits beside the wordmark. The trace is already inside the word; repeating it is noise.
 
 ### Sizes and space
@@ -66,7 +66,7 @@ The strategy is restrained: violet-tinted neutrals, one lavender accent for acti
 | Ink | `--ps-ink` | `oklch(26% 0.012 285)` | Titles, values, body |
 | Muted | `--ps-muted` | `oklch(47% 0.016 285)` | Labels, dates, context |
 | Line | `--ps-line` | `oklch(85% 0.012 285)` | Dividers, panel borders |
-| Control line | `--ps-control-line` | `oklch(67% 0.018 285)` | Borders of things you can press |
+| Control line | `--ps-control-line` | `oklch(62% 0.018 285)` | Borders of things you can press |
 | Accent fill | `--ps-lavender` | `oklch(88% 0.055 295)` | Primary button, active nav, pressed chip |
 | Accent ink | `--ps-accent-ink` | `oklch(29% 0.045 295)` | Text on lavender only |
 | Accent | `--ps-accent` | `oklch(43% 0.10 295)` | Focus ring, small icons |

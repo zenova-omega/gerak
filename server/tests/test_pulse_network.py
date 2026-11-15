@@ -44,3 +44,42 @@ def test_repetition_and_burst_are_explained_signals_not_probability():
 def test_empty_input_and_description_mentions_do_not_create_relationships():
     assert analyze_network([])['nodes'] == []
     assert analyze_network([post('1', 'Channel', 'subscribe @someone', platform='youtube')])['edges'] == []
+
+
+def test_repeated_content_adds_up_the_numbers_its_posts_report():
+    text = 'laporan investigasi penting tentang keamanan komunikasi publik sedang dibahas bersama'
+    rows = [post('1', 'Early', text), post('2', 'Later', text, '2026-11-10T12:00:00'), post('3', 'Third', text, '2026-11-10T13:00:00')]
+    rows[0]['metrics'] = {'engagement': 130, 'likes': 100, 'comments': 20, 'shares': 10, 'views': 5000}
+    rows[1]['metrics'] = {'engagement': 7, 'likes': 5, 'comments': 2, 'shares': None}      # this source reports no shares or views
+    rows[2]['metrics'] = {}
+    narrative = analyze_network(rows)['narratives'][0]
+    assert narrative['metrics'] == {'likes': 105, 'comments': 22, 'shares': 10, 'views': 5000}
+    assert narrative['engagement'] == 137 and narrative['post_count'] == 3
+    # A group whose sources report nothing (news) says so instead of showing zeros.
+    quiet = analyze_network([post(str(i), f'Media {i}', text, platform='news') | {'metrics': {}} for i in range(3)])['narratives'][0]
+    assert quiet['metrics'] == {'likes': None, 'comments': None, 'shares': None, 'views': None}
+
+
+def test_accounts_carry_the_largest_follower_count_their_posts_report():
+    rows = [post('1', 'Big', 'halo @Quiet'), post('2', 'Big', 'lagi'), post('3', 'Big', 'terakhir'), post('4', 'Media', 'berita', platform='news')]
+    rows[0]['metrics'] = {'author_followers': 1200}
+    rows[1]['metrics'] = {'author_followers': 5400}      # the same account, seen later with more followers
+    rows[2]['metrics'] = {'author_followers': None}
+    rows[3]['metrics'] = None                              # news carries no follower count
+    data = analyze_network(rows)
+    nodes = {node['id']: node for node in data['nodes']}
+    accounts = {account['id']: account for account in data['accounts']}
+    assert nodes['x:big']['followers'] == 5400 and accounts['x:big']['followers'] == 5400
+    # Unknown stays unknown: not zero, for a source without the figure and for an account that was only mentioned.
+    assert nodes['news:Media']['followers'] is None and accounts['news:Media']['followers'] is None
+    assert nodes['x:quiet']['observed'] is False and nodes['x:quiet']['followers'] is None
+
+
+def test_follower_counts_that_are_not_counts_are_ignored():
+    rows = [post(str(i), 'A', 'teks') for i in range(5)]
+    for row, value in zip(rows, [True, -3, float('nan'), float('inf'), '9000']):
+        row['metrics'] = {'author_followers': value}
+    assert analyze_network(rows)['nodes'][0]['followers'] is None
+    rows[0]['metrics'] = {'author_followers': 0}          # a reported zero is a count
+    assert analyze_network(rows)['nodes'][0]['followers'] == 0
+

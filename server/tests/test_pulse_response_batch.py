@@ -116,7 +116,7 @@ def test_batch_answer_is_validated_entry_by_entry():
         'not an object']}
     parsed = s.parse_batch(json.dumps(answer), [False, True], TARGET)
     assert list(parsed) == [1]
-    assert parsed[1]['stance']['label'] == 'unclear' and parsed[1]['stance']['review_needed']   # the target was judged too vague to take a side on
+    assert parsed[1]['stance']['label'] == 'unclear' and parsed[1]['stance']['review_needed'] is False   # the target was judged too vague to take a side on: nothing to review
     assert parsed[1]['sentiment']['label'] == 'positive' and 'kind' not in parsed[1]['sentiment']
     with pytest.raises(ValueError):
         s.parse_batch(json.dumps({'results': []}), [False], TARGET)

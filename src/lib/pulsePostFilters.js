@@ -1,6 +1,8 @@
 import { postMedia } from './pulseMedia.js';
 import { postInteractions } from './pulseEngagement.js';
-export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
+// `province` is applied by the Posting page with `namesProvince` (pulsePlaces.js), not by filterPosts: the place reader
+// depends on this module's neighbours, and a filter here would close an import circle.
+export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',province:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
 export const sentimentLabels = {positive:'Positif',neutral:'Netral',negative:'Negatif',unknown:'Belum dianalisis'};
 export function postSentiment(post) {
   const raw = post.metrics?.sentiment;

@@ -1,8 +1,8 @@
 import { PlatformLabel } from './PlatformIcon';
 import InfoTip from '../../../pulse/InfoTip';
 
-const names={rss:'Berita',xpoz:'Xpoz (X + Instagram + TikTok)',youtube:'YouTube'};
-const platforms={rss:'news',xpoz:'x'};
+const names={rss:'Berita',social:'X, Instagram, TikTok',youtube:'YouTube'};
+const platforms={rss:'news',social:'x'};
 export default function QuotaBreakdown({ data }) {
   return <section className="pm-quota" aria-label="Pembagian kuota global">
     <h3>Pemakaian kuota per project & platform <InfoTip label="Tentang pembagian kuota">Ini pemakaian aktual, bukan jatah terjamin. Antrean otomatis diproses berdasarkan waktu siap paling awal; sisa kuota tidak dijamin terbagi rata. Percobaan gagal dan retry tetap terhitung. Crawl manual umum dan komentar berada di luar batas ini. Angka ini bukan kredit atau biaya vendor. IG/TikTok otomatis mengambil maksimal 20 posting per percobaan.</InfoTip></h3>

@@ -24,4 +24,4 @@
 .pulse-standalone .pf-sentiments button.pu-tag[aria-pressed=false] { --tag-ink:var(--ps-muted); --tag-line:var(--ps-line); border-style:solid; }
 .pulse-standalone .pf-sentiments button.pu-tag[aria-pressed=false] .pu-tag-dot { opacity:.45; }
 .pf-drawer .pf-link { padding:0; border:0; background:none; font:inherit; color:var(--ps-ink); font-weight:600; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
-.pf-drawer .pf-link:focus-visible { outline:2px solid var(--ps-accent-ink); outline-offset:2px; border-radius:2px; }
+.pf-drawer .pf-link:focus-visible { outline:2px solid var(--ps-accent, #5b4a8a); outline-offset:2px; border-radius:2px; }

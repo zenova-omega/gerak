@@ -82,8 +82,9 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
       else { const created = await resource.createTopic(payload); savedId = created.id; onCreated(created.id); }
       // Pull the chosen range once: for a new project, and whenever the range or the query changed.
       const pull = !topic || savedLookback !== lookback || topic.query !== payload.query || String(topic.sources) !== String(payload.sources);
-      if (pull) { try { const state = await api.put('/admin/pulse/topics/' + encodeURIComponent(savedId) + '/lookback', { days: lookback }); setSavedLookback(lookback); setLookbackRun(state); } catch { /* the project is saved; the pull can be repeated from here */ } }
-      setNotice({ text: pull ? `Pengaturan tersimpan. Posting ${lookback} hari terakhir sedang ditarik; angka akan bertambah dalam beberapa menit.` : 'Pengaturan project tersimpan.' });
+      // A new project also gets each source's schedule switched on, so collection goes on after the first pull.
+      if (pull) { try { const path = '/admin/pulse/topics/' + encodeURIComponent(savedId); const state = topic ? await api.put(path + '/lookback', { days: lookback }) : await api.post(path + '/start', { days: lookback }); setSavedLookback(lookback); setLookbackRun(state); } catch { /* the project is saved; the pull can be repeated from here */ } }
+      setNotice({ text: pull ? `Pengaturan tersimpan. Semua posting ${lookback} hari terakhir sedang ditarik dari tiap sumber; angka akan bertambah dalam beberapa menit.` : 'Pengaturan project tersimpan.' });
     } catch (error) { setNotice({ error: true, text: error.status ? 'Project gagal disimpan. Periksa izin dan coba lagi.' : error.message }); }
     finally { setBusy(false); }
   }
@@ -115,7 +116,7 @@ export function ProjectEditor({ topic, resource, onCreated, onDeleted, readOnly 
         <SmartKeywords fields={{main:query.replace(/["()]/g,' ').replace(/\b(AND|OR|NOT)\b/g,',')}} topicId={topic?.id} onAdd={added=>setQuery(current=>appendToQuery(current,added))}/></>}
       </section>
       <section className="ps-set" aria-labelledby="ps-set-sources"><h3 id="ps-set-sources">Sumber dan rentang</h3><p>Dari mana posting diambil dan seberapa jauh ke belakang.</p>
-      <fieldset className="ps-source-options"><legend>Sumber pencarian</legend>{[['rss','Berita'],['xpoz','X'],['instagram','Instagram'],['tiktok','TikTok'],['youtube','YouTube']].map(([value,title])=><label key={value}><input type="checkbox" checked={sources.includes(value)} onChange={e=>setSources(e.target.checked?[...sources,value]:sources.filter(s=>s!==value))}/>{title}</label>)}</fieldset>
+      <fieldset className="ps-source-options"><legend>Sumber pencarian</legend>{[['rss','Berita'],['social','X'],['instagram','Instagram'],['tiktok','TikTok'],['youtube','YouTube']].map(([value,title])=><label key={value}><input type="checkbox" checked={sources.includes(value)} onChange={e=>setSources(e.target.checked?[...sources,value]:sources.filter(s=>s!==value))}/>{title}</label>)}</fieldset>
       {effectiveQuery.length > 250 && <PulseNotice tone="warning">Query ini lebih dari 250 karakter. Pendekkan agar X, Instagram, dan TikTok bisa diambil.</PulseNotice>}
       <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e => setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select><small>{lookbackRun?.running ? 'Penarikan sedang berjalan.' : lookbackRun?.last_run ? `Terakhir ditarik ${lookbackRun.last_run.days} hari: ${lookbackRun.last_run.results.reduce((sum, row) => sum + row.ingested, 0)} posting baru.` : 'Dijalankan sekali saat disimpan, untuk tiap sumber yang dicentang. Setelah itu jadwal hanya mengambil posting terbaru.'}</small></label>
       </section>
@@ -139,7 +140,7 @@ export default function ProjectBar({ readOnly = false }) {
   const id = params.get('topic') || '';
   const [platforms,setPlatforms]=useProjectPlatforms(id);
   const topic = resource.topics.find(t => t.id === id);
-  function select(next) { setMode(''); const search=new URLSearchParams(projectSearch(params,next));for(const key of ['platforms','platform','author','sentiment','day','find'])search.delete(key);setParams(search); }
+  function select(next) { setMode(''); const search=new URLSearchParams(projectSearch(params,next));for(const key of ['platforms','platform','author','sentiment','province','day','day_to','find','post','acc_platforms','acc_find','c'])search.delete(key);setParams(search); }
   const platformChoices=[...new Set([...projectPlatformOptions,...(platforms||[])])];
   // From "Semua", one click narrows to that platform. Clearing the last one, or picking every one, returns to "Semua".
   function togglePlatform(platform){ const current=platforms||[]; const next=current.includes(platform)?current.filter(p=>p!==platform):[...current,platform]; setPlatforms(!next.length||platformChoices.every(p=>next.includes(p))?null:next); }

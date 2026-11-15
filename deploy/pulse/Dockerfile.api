@@ -2,6 +2,11 @@ FROM python:3.12-slim
 WORKDIR /app
 COPY server/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+# Chromium renders the report PDF (services/pulse_report_pdf.py). It runs without network and without its own
+# sandbox inside the container; the document it renders is checked first. Fonts: a clean sans for Latin text.
+RUN apt-get update && apt-get install -y --no-install-recommends chromium fonts-inter fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+ENV PULSE_CHROMIUM=/usr/bin/chromium PULSE_CHROMIUM_NO_SANDBOX=true
 COPY server/app ./app
 RUN useradd --uid 10001 --create-home pulse && mkdir /data && chown pulse:pulse /data
 USER pulse

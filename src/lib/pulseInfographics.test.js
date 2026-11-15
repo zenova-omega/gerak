@@ -115,3 +115,16 @@ test('panel shows words and hours, and no longer carries the Jakarta map', async
     assert.doesNotMatch(html, /data-active="true"/);
   } finally { await server.close(); }
 });
+
+test('posts that carry a date without a clock are left out of the hour chart', async () => {
+  const { publicationHours } = await import('./pulseInfographics.js');
+  const hours = publicationHours([
+    { id: 'a', published_at: '2026-11-12T00:00:00' },          // Instagram: date only
+    { id: 'b', published_at: '2026-11-12T00:00:00Z' },
+    { id: 'c', published_at: '2026-11-12T03:15:00' },          // 10.15 WIB
+    { id: 'd', published_at: null },
+  ]);
+  assert.equal(hours.bins[7], 0, 'nothing is invented at 07.00 WIB');
+  assert.equal(hours.bins[10], 1);
+  assert.deepEqual([hours.total, hours.dated, hours.unknown], [4, 1, 3]);
+});

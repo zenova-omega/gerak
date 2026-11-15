@@ -44,6 +44,16 @@ export function postInteractions(metrics) {
   if (parts.length) return parts.reduce((sum, value) => sum + value, 0);
   return finite(metrics?.engagement) ? metrics.engagement : null;
 }
+/** How often one piece of content was shared, for posts that carry the same text.
+ * A repost has no shares of its own and brings the original post's count as `metrics.original_shares`.
+ * That count belongs to one post, so it is taken once (the largest observation), and only where it
+ * exceeds what the collected posts add up to themselves. Null when no post carries a share figure. */
+export function contentShares(posts) {
+  const own = posts.map(post => post.metrics?.shares).filter(finite);
+  const carried = Math.max(0, ...posts.map(post => (post.metrics?.repost && finite(post.metrics.original_shares) ? post.metrics.original_shares : 0)));
+  if (!own.length && !carried) return null;
+  return Math.max(own.reduce((sum, value) => sum + value, 0), carried);
+}
 export function percentLabel(value, digits = 0) {
   return finite(value) ? (value * 100).toLocaleString('id-ID', { maximumFractionDigits: digits }) + '%' : null;
 }
