@@ -29,6 +29,13 @@ const postQuestions = [
   'Seberapa besar interaksi posting ini dibanding posting lain?',
   'Kelompok percakapan mana yang memuat posting ini?',
 ];
+// "Rencana respons": the same evidence, answered as options for the team (honest communication only, each with its risk).
+const responseQuestions = [
+  'Isu negatif mana yang paling mendesak, dan apa pilihan responsnya?',
+  'Bagaimana cara menjelaskan isu terbesar kepada publik tanpa memperkeruh?',
+  'Tema positif apa yang sudah mendapat sambutan dan bisa kita angkat?',
+  'Apa yang sebaiknya dipantau dulu tanpa bereaksi?',
+];
 const conversationPath = id => '/admin/pulse/chat/conversations/' + encodeURIComponent(id);
 const noThread = { id: '', turns: [], full: false };
 
@@ -187,14 +194,14 @@ function Chat({ topicId }) {
     address(next => next.delete('c'), { replace: true });
   }
 
-  async function ask(question) {
+  async function ask(question, mode = 'answer') {
     const text = question.trim();
     if (!text || pending || view.state === 'opening' || view.full) return;
     const askedIn = open;
     setPending({ in: askedIn }); setError(''); setDraft(''); setSpoken(true);
     try {
       // A conversation that is not on screen (it would not open) is not continued: the question starts a new one.
-      const data = await api.post('/admin/pulse/chat', askBody({ topicId, question: text, turns: view.turns, conversationId: view.state === 'ready' ? open : '', period, platforms, postId }));
+      const data = await api.post('/admin/pulse/chat', askBody({ topicId, question: text, turns: view.turns, conversationId: view.state === 'ready' ? open : '', period, platforms, postId, mode }));
       setHistory(current => withAnswered(current, data.conversation));
       // The reader moved to another conversation while waiting: the answer is kept in its own, and its row says so.
       if (now.current.open !== askedIn) return;
@@ -224,10 +231,11 @@ function Chat({ topicId }) {
         {view.state === 'failed' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan ini tidak dapat dibuka. Periksa koneksi lalu coba lagi.</span><PulseButton size="sm" onClick={() => setFailure(null)}>Coba lagi</PulseButton></PulseNotice></div>}
         <div className="pc-thread" aria-live={spoken ? 'polite' : 'off'}>
           {view.state === 'opening' && <div className="pc-pending" ref={mark}><PulseLoader inline label="Membuka percakapan…" /></div>}
-          {view.state === 'ready' && !view.turns.length && !waitingHere && ready && <div className="pc-starters"><p>Coba salah satu pertanyaan ini</p><div className="pu-tag-group">{(postId ? postQuestions : generalQuestions).map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question)}>{question}</PulseTag>)}</div></div>}
+          {view.state === 'ready' && !view.turns.length && !waitingHere && ready && <div className="pc-starters"><p>Coba salah satu pertanyaan ini</p><div className="pu-tag-group">{(postId ? postQuestions : generalQuestions).map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question)}>{question}</PulseTag>)}</div>{!postId && <><p className="pc-starters-plan">Rencana respons <small>usulan dari data, perlu ditinjau tim sebelum dipakai</small></p><div className="pu-tag-group">{responseQuestions.map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question, 'respons')}>{question}</PulseTag>)}</div></>}</div>}
           {view.turns.map((turn, index) => <article className="pc-turn" key={index} ref={index === view.turns.length - 1 ? last : undefined}>
             <p className="pc-question"><span className="pu-sr">Pertanyaan: </span>{turn.question}</p>
             <div className="pc-answer">
+              {turn.mode === 'respons' && <p className="pc-answer-meta pc-plan-note"><strong>Rencana respons</strong> · usulan dari data, perlu ditinjau tim sebelum dipakai.</p>}
               <ChatAnswer turn={turn} index={index} />
               <p className="pc-answer-meta">Dari {formatCount(turn.scope?.posts)} posting tersimpan{turn.scope?.truncated ? ' (dibatasi 3.000 posting terbaru)' : ''} · {pulseDate(turn.answered_at)}</p>
               {turn.unsaved && <p className="pc-answer-meta pch-unsaved">Jawaban ini tidak tersimpan di riwayat.</p>}

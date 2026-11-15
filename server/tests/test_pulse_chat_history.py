@@ -84,7 +84,7 @@ async def test_an_answer_is_stored_as_a_conversation_that_reads_back_as_it_was_s
     assert {key: kept[key] for key in ('id', 'topic_id', 'title', 'full')} == {'id': data['conversation_id'], 'topic_id': 'riwayat-a', 'title': QUESTION, 'full': False}
     assert kept['created_at'] == kept['updated_at'] == data['answered_at']
     # The stored turn is the answer as the page received it, plus the question.
-    assert kept['turns'] == [{'question': QUESTION, **{key: data[key] for key in ('answer', 'sources', 'groups', 'charts', 'scope', 'answered_at')}}]
+    assert kept['turns'] == [{'question': QUESTION, **{key: data[key] for key in ('answer', 'sources', 'groups', 'charts', 'scope', 'mode', 'answered_at')}}]
     assert data['groups'] == [] and data['charts'] == []      # this answer cites no group and asks for no chart
 
 

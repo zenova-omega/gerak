@@ -57,12 +57,12 @@ export function threadView({ open, thread, failure }) {
 
 /** One answered question as the page keeps it. `unsaved` when the server could not keep it (or does not keep conversations). */
 export function turnFrom(question, data) {
-  return { question, answer: data.answer, sources: data.sources || [], groups: data.groups || [], charts: data.charts || [], scope: data.scope, answered_at: data.answered_at, unsaved: !data.conversation_id };
+  return { question, answer: data.answer, sources: data.sources || [], groups: data.groups || [], charts: data.charts || [], scope: data.scope, ...(data.mode === 'respons' ? { mode: 'respons' } : {}), answered_at: data.answered_at, unsaved: !data.conversation_id };
 }
 
 /** The request for one question. Earlier exchanges give the model its thread; `conversation_id` goes along only
  * when the open conversation is stored, so a first question starts a new one. */
-export function askBody({ topicId, question, turns, conversationId, period, platforms, postId }) {
+export function askBody({ topicId, question, turns, conversationId, period, platforms, postId, mode }) {
   const history = turns.flatMap(turn => [{ role: 'user', content: turn.question }, { role: 'assistant', content: turn.answer }])
     .filter(entry => entry.content).map(entry => ({ ...entry, content: entry.content.slice(0, 4000) })).slice(-12);
   const body = { topic_id: topicId, question: question.trim(), history };
@@ -71,5 +71,6 @@ export function askBody({ topicId, question, turns, conversationId, period, plat
   if (period?.to) body.to = period.to;
   if (platforms) body.platforms = platforms;
   if (postId) body.post_id = postId;
+  if (mode === 'respons') body.mode = mode;
   return body;
 }

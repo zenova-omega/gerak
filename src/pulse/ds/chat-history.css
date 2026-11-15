@@ -67,3 +67,8 @@
 }
 @media (prefers-reduced-motion: reduce) { .pch-skeleton i { animation: none; } }
 @media print { .pch-panel, .pch-main .pu-notice { display: none; } }
+
+/* Rencana respons: a second group of starter questions, and the note that every plan is a proposal for the team. */
+.pc-starters > p.pc-starters-plan { margin-top: 18px; }
+.pc-starters-plan small { font-weight: 400; margin-left: 6px; }
+.pc-plan-note { margin: 0 0 8px; }

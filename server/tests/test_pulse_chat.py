@@ -442,6 +442,41 @@ async def test_data_block_groups_count_accounts_by_account_v1(db):
     assert context['conversation_groups_in_scope'][0]['accounts'] == 2
 
 
+def test_response_mode_has_its_own_prompt_that_only_offers_honest_communication_and_needs_review():
+    prompt = chat.system_prompt('respons')
+    assert prompt != chat.system_prompt() and chat.system_prompt('answer') == chat.system_prompt()
+    assert 'DILARANG mengusulkan buzzer, akun palsu' in prompt and 'perlu ditinjau tim sebelum dipakai' in prompt
+    assert 'Tulis HANYA dari blok DATA' in prompt and '{zone}' not in prompt
+    assert chat.answer_tokens('respons') > chat.answer_tokens('answer') == chat.ANSWER_TOKENS
+
+
+@pytest.mark.asyncio
+async def test_a_response_plan_question_uses_the_response_prompt_and_stores_its_mode(db, client, admin_token, monkeypatch):
+    from app.services import ai
+    await seeded(db)
+    seen = {}
+
+    class Model:
+        async def generate_text(self, prompt, **kwargs):
+            seen.update(kwargs)
+            return '**Situasi:** ramai [P1].\n\n**Pilihan respons**\n- **Klarifikasi**: jelaskan [P1]. Risiko: salah paham.\n\nUsulan ini perlu ditinjau tim sebelum dipakai.'
+    monkeypatch.setattr(ai, 'get_ai_service', lambda settings=None: Model())
+
+    async def keep(*args, **kwargs):
+        return None
+    monkeypatch.setattr(db, 'commit', keep)
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    body = (await client.post('/api/admin/pulse/chat', headers=headers, json={'topic_id': 'chat-topic', 'question': 'Apa pilihan respons?', 'mode': 'respons'})).json()
+    assert seen['system'] == chat.system_prompt('respons') and seen['max_tokens'] == chat.RESPONSE_TOKENS
+    assert body['mode'] == 'respons'
+    turn = (await client.get(f"/api/admin/pulse/chat/conversations/{body['conversation_id']}", headers=headers)).json()['turns'][0]
+    assert turn['mode'] == 'respons'
+    plain = (await client.post('/api/admin/pulse/chat', headers=headers, json={'topic_id': 'chat-topic', 'question': 'Apa isu utama?'})).json()
+    assert plain['mode'] == 'answer' and seen['system'] == chat.system_prompt() and seen['max_tokens'] == chat.ANSWER_TOKENS
+    bad = await client.post('/api/admin/pulse/chat', headers=headers, json={'topic_id': 'chat-topic', 'question': 'Apa isu utama?', 'mode': 'x'})
+    assert bad.status_code == 422
+
+
 
 @pytest.mark.asyncio
 async def test_data_block_reads_a_post_tone_by_tone_share_v1_in_either_stored_form(db):

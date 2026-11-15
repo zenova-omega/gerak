@@ -22,3 +22,8 @@ Chart dates, accounts, narratives, top posts, sentiment categories, and growth r
 Local diagnostic run (2026-11-12): installed qwen2.5:14b evaluated 15 synthetic examples, with 11/12 gold labels matched and 3 ambiguous examples requiring review. The error was a quotation labeled negative instead of neutral. This diagnostic uses its own prompt, not the production worker prompt, and is not evidence of real-project accuracy. No paid API or model download was used.
 
 Semantic near-duplicate/syndication classifier; calibration on a representative manually labeled sample; reviewed exclusions consistently applied to standalone PDF exports. These are not presented as completed capabilities. Standalone conversation groups now share the project's platform and period scope.
+
+## Tanya AI: rencana respons (15 Nov 2026)
+
+Tanya AI has a second group of starter questions, "Rencana respons". They are sent with `mode: "respons"` and answered by a separate instruction (`_RESPONSE_SYSTEM` in `server/app/services/pulse_chat.py`) from the same data block as every other answer: a situation line, two or three response options each tied to evidence codes and carrying its risk, one decision for the team, and the fixed line that the proposal needs team review. Only honest communication is offered (verifiable clarification, spokesperson, real third parties, own content, dialogue, or watching first); the instruction forbids buzzers, fake accounts, coordinated engagement, personal attacks, unverified claims and mass takedown requests. Facts on the figure's side are written as "perlu diverifikasi tim", never invented. The answer is stored with `mode` and the page labels it as a proposal.
+

@@ -111,3 +111,10 @@ test('a question carries the last six exchanges, the scope, and its conversation
   assert.deepEqual(askBody({ topicId: 'topic-a', question: 'Apa isu utama?', turns: [], conversationId: '', period: {}, platforms: null, postId: '' }),
     { topic_id: 'topic-a', question: 'Apa isu utama?', history: [] });
 });
+
+test('a response-plan question says so, and an ordinary one never carries a mode', () => {
+  const plan = askBody({ topicId: 'topic-a', question: 'Apa pilihan responsnya?', turns: [], conversationId: '', period: {}, platforms: null, postId: '', mode: 'respons' });
+  assert.equal(plan.mode, 'respons');
+  assert.equal('mode' in askBody({ topicId: 'topic-a', question: 'Apa isu utama?', turns: [], conversationId: '', period: {}, platforms: null, postId: '', mode: 'answer' }), false);
+  assert.equal(turnFrom('Q', { answer: 'A', mode: 'respons', conversation_id: 'c' }).mode, 'respons');
+});
