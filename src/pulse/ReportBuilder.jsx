@@ -1,9 +1,12 @@
 // The panel beside the report preview: which pages are printed, in what order, and under whose name.
 // Screen only. Every change shows in the preview at once; saving is the caller's job.
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ImageUp, RotateCcw, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ImageUp, RotateCcw, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-react';
 import { PulseButton } from '../components/ui/PulseUI';
-import { defaultAccent, descriptionMax, logoProblem, logoTypes, moveSection, organisationMax, sectionPageLabel, sectionTitle, switchSection } from '../lib/pulseReportPages';
+import { aiStatus, defaultAccent, descriptionMax, logoProblem, logoTypes, moveSection, organisationMax, sectionPageLabel, sectionTitle, summaryFormats, switchSection } from '../lib/pulseReportPages';
+import { pulseDate } from '../lib/pulseData';
+import { rangeText } from './projectPeriodPresets';
+import { cardScope } from './summaryModel';
 
 const saveText = {
   loading: 'Memuat…',
@@ -15,8 +18,10 @@ const saveText = {
 
 /** @param {{sections: {key: string, on: boolean}[], brand: {logo: string|null, accent: string|null, organisation: string, description: string},
  *   pages: object[], status: 'loading'|'idle'|'pending'|'saving'|'saved'|'error', onSections: (next: object[]) => void,
- *   onBrand: (patch: object) => void, onRetry: () => void}} props */
-export default function ReportBuilder({ sections, brand, pages, status, onSections, onBrand, onRetry }) {
+ *   onBrand: (patch: object) => void, onRetry: () => void, ai?: AiProps|null}} props
+ * @typedef {{choice: string|null, status: ReturnType<typeof aiStatus>, busy: ''|'summary'|'insights', error: string,
+ *   onChoice: (choice: string|null) => void, onWrite: (kind: 'summary'|'insights') => void}} AiProps */
+export default function ReportBuilder({ sections, brand, pages, status, onSections, onBrand, onRetry, ai = null }) {
   const [open, setOpen] = useState(false);
   const [logoError, setLogoError] = useState('');
   const [moved, setMoved] = useState(null);
@@ -74,6 +79,8 @@ export default function ReportBuilder({ sections, brand, pages, status, onSectio
         <p className="pu-sr" role="status">{moved?.text}</p>
       </section>
 
+      {ai && <AiChoices ai={ai} sections={sections} pages={pages} locked={locked} onSections={onSections} />}
+
       <section aria-labelledby="rb-brand-title">
         <h3 id="rb-brand-title">Merek</h3>
         <div className="rb-field">
@@ -114,4 +121,56 @@ export default function ReportBuilder({ sections, brand, pages, status, onSectio
       </p>
     </div>
   </aside>;
+}
+
+const formatLabel = Object.fromEntries(summaryFormats.map(format => [format.key, format.label]));
+/** What the stored written summary is, in one line. */
+function summaryLine(status) {
+  const { summary } = status;
+  if (!status.loaded) return 'Memuat teks AI tersimpan…';
+  if (status.failed) return 'Teks AI tersimpan belum dapat dimuat.';
+  if (status.archived) return 'Arsip dicetak tanpa teks AI.';
+  if (!summary.format) return 'Halaman memakai kalimat yang disusun dari angka.';
+  if (summary.stored) return `Ditulis ${pulseDate(summary.stored.createdAt)} · ${cardScope(summary.stored.scope).text}`;
+  if (!status.available) return 'AI belum aktif di instalasi ini.';
+  return `Belum ada ringkasan ${formatLabel[summary.format]}. Sampai ditulis, halaman memakai kalimat dari angka.`;
+}
+/** What the stored AI Insights are, in one line. */
+function insightsLine(status) {
+  const { insights } = status;
+  if (!status.loaded) return 'Memuat teks AI tersimpan…';
+  if (status.failed) return 'Teks AI tersimpan belum dapat dimuat.';
+  if (status.archived) return 'Arsip dicetak tanpa teks AI.';
+  if (!insights.stored) return status.available ? 'Belum ada AI Insights.' : 'AI belum aktif di instalasi ini.';
+  const when = `Ditulis ${pulseDate(insights.stored.createdAt)}`, scope = insights.stored.scope;
+  return insights.differs ? `${when} untuk ${rangeText({ from: scope.from || '', to: scope.to || '' }).replace(/^[A-Z]/, letter => letter.toLowerCase())}${scope.platforms?.length ? ', sebagian platform' : ''}; dicetak dengan catatan cakupan.` : `${when} untuk periode laporan ini.`;
+}
+
+/** The written texts the report can carry: which stored summary the summary page prints, and the AI Insights page.
+ * Opening the report never writes; a button offers to write only what is missing, or AI Insights for another period. */
+function AiChoices({ ai, sections, pages, locked, onSections }) {
+  const { status, choice, busy } = ai;
+  const shown = choice ?? status.summary.format ?? 'off';
+  const insights = sections.find(section => section.key === 'insights');
+  return <section aria-labelledby="rb-ai-title" className="rb-ai">
+    <h3 id="rb-ai-title">Isi AI</h3>
+    <fieldset className="rb-field">
+      <legend className="rb-label">Ringkasan AI di halaman Ringkasan eksekutif</legend>
+      <div className="rb-choices">{[['off', 'Mati'], ...summaryFormats.map(format => [format.key, format.label])].map(([value, label]) => <label key={value} className="rb-choice">
+        <input type="radio" name="rb-ai-summary" value={value} checked={shown === value} disabled={locked} onChange={() => ai.onChoice(value)} /><span>{label}</span>
+      </label>)}</div>
+      <p className="rb-hint" role="status">{summaryLine(status)}</p>
+      {status.summary.canWrite && <PulseButton size="sm" busy={busy === 'summary'} busyLabel="Menulis ringkasan…" disabled={Boolean(busy)} onClick={() => ai.onWrite('summary')}><Sparkles aria-hidden="true" />Tulis ringkasan {formatLabel[status.summary.format]}</PulseButton>}
+    </fieldset>
+    {insights && <div className="rb-field">
+      <label className="rb-switch">
+        <input type="checkbox" role="switch" className="pu-switch-input" checked={insights.on} disabled={locked} onChange={event => onSections(switchSection(sections, 'insights', event.target.checked))} />
+        <span><span className="rb-name">AI Insights</span><span className="rb-where">{sectionPageLabel(pages, 'insights') || 'tidak dicetak'}</span></span>
+      </label>
+      <p className="rb-hint" role="status">{insightsLine(status)}</p>
+      {status.insights.canWrite && <PulseButton size="sm" busy={busy === 'insights'} busyLabel="Menulis insight…" disabled={Boolean(busy)} onClick={() => ai.onWrite('insights')}><Sparkles aria-hidden="true" />Tulis untuk periode laporan</PulseButton>}
+    </div>}
+    {ai.error && <p className="rb-error" role="alert">{ai.error}</p>}
+    <p className="rb-hint">Membuka laporan tidak menulis apa pun. Menulis butuh ±1 menit dan memakai kredit AI.</p>
+  </section>;
 }

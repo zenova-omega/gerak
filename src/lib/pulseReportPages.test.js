@@ -1,9 +1,10 @@
+import { trendSeries } from './pulseTrendSeries.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildReport } from './pulseReport.js';
 import {
   accountRowsThatFit, axisTicks, defaultAccent, fallbackSummary, logoProblem, moveSection, periodLabel, reportData, reportPages, reportSections, reportSettings,
-  resolveSections, sectionPageLabel, settingsPayload, splitPosts, storedSummary, summaryScopeNote, switchSection, trendBuckets,
+  resolveSections, sectionPageLabel, settingsPayload, splitPosts, storedSummary, summaryScopeNote, switchSection, trendBuckets, aiStatus, summaryFormats,
 } from './pulseReportPages.js';
 
 const keys = list => list.map(item => item.key);
@@ -16,8 +17,8 @@ const platformName = key => names[key] || key;
 
 test('the default report has every section on, cover first and the fine print last', () => {
   const sections = resolveSections([]);
-  assert.deepEqual(keys(sections), ['cover', 'summary', 'trend', 'voices', 'opinion', 'sources', 'places', 'posts', 'narratives', 'method']);
-  assert.ok(sections.every(section => section.on));
+  assert.deepEqual(keys(sections), ['cover', 'summary', 'insights', 'trend', 'voices', 'opinion', 'sources', 'places', 'posts', 'narratives', 'method']);
+  assert.ok(sections.every(section => section.on === (section.key !== 'insights')), 'AI Insights waits until it is chosen');
   assert.deepEqual(resolveSections(undefined), sections);
   assert.deepEqual(resolveSections('nonsense'), sections);
   assert.deepEqual(keys(sections), keys(reportSections));
@@ -26,10 +27,10 @@ test('the default report has every section on, cover first and the fine print la
 test('a saved order is kept; unknown keys are dropped and sections it does not know join after their neighbour', () => {
   const saved = [{ key: 'posts', on: false }, { key: 'made_up', on: true }, { key: 'cover' }, { key: 'posts', on: true }, null];
   const sections = resolveSections(saved);
-  assert.deepEqual(keys(sections), ['posts', 'narratives', 'method', 'cover', 'summary', 'trend', 'voices', 'opinion', 'sources', 'places']);
+  assert.deepEqual(keys(sections), ['posts', 'narratives', 'method', 'cover', 'summary', 'insights', 'trend', 'voices', 'opinion', 'sources', 'places']);
   assert.equal(sections[0].on, false, 'the first mention of a section wins');
   assert.equal(sections.find(section => section.key === 'cover').on, true, 'a row without `on` is on');
-  assert.ok(sections.slice(1).every(section => section.on), 'a section the saved list did not know is switched on');
+  assert.ok(sections.slice(1).every(section => section.on === (section.key !== 'insights')), 'a section the saved list did not know is switched on, except AI Insights');
   // A section missing from the front of the default order goes to the front.
   assert.deepEqual(keys(resolveSections([{ key: 'method', on: true }, { key: 'summary', on: true }])).slice(0, 3), ['cover', 'method', 'summary']);
   assert.deepEqual(resolveSections(sections), sections, 'a complete list comes back unchanged');
@@ -38,7 +39,7 @@ test('a saved order is kept; unknown keys are dropped and sections it does not k
 test('sections move one place at a time and stop at the edges', () => {
   const sections = resolveSections([]);
   const down = moveSection(sections, 'cover', 1);
-  assert.deepEqual(keys(down).slice(0, 3), ['summary', 'cover', 'trend']);
+  assert.deepEqual(keys(down).slice(0, 3), ['summary', 'cover', 'insights']);
   assert.deepEqual(keys(moveSection(down, 'cover', -1)), keys(sections));
   assert.equal(moveSection(sections, 'cover', -1), sections);
   assert.equal(moveSection(sections, 'method', 1), sections);
@@ -147,15 +148,22 @@ test('comments are read over what has been analysed and the most liked come firs
   assert.deepEqual(data.opinion.liked.map(comment => comment.id), ['c2', 'c1', 'c3'], 'a comment without text is not quoted');
 });
 
-test('the trend axis has no gaps and long ranges are drawn per week', () => {
-  const day = (date, total) => ({ date, positive: total, neutral: 0, negative: 0, unknown: 0, total });
-  const short = trendBuckets([day('2026-11-01', 2), day('2026-11-04', 5), day('2026-11-05', 5)]);
+test('the trend is the series of the trend chart on Ikhtisar: no gaps, stretched to the chosen period, per week when long', () => {
+  const at = (id, date, likes) => ({ id, platform: 'x', author: 'a' + id, published_at: `${date}T03:00:00Z`, metrics: { sentiment: { label: 'positive' }, ...(likes == null ? {} : { likes }) } });
+  const many = (date, count, likes) => Array.from({ length: count }, (_, index) => at(`${date}-${index}`, date, likes));
+  const posts = [...many('2026-11-01', 2, 3), ...many('2026-11-04', 5), ...many('2026-11-05', 5)];
+  const short = trendBuckets(posts);
   assert.equal(short.unit, 'day');
   assert.deepEqual(short.rows.map(row => [row.date, row.total]), [['2026-11-01', 2], ['2026-11-02', 0], ['2026-11-03', 0], ['2026-11-04', 5], ['2026-11-05', 5]]);
+  assert.deepEqual(short.rows.map(row => row.key), trendSeries(posts, 'day').map(row => row.key), 'the buckets the server is asked about');
+  assert.deepEqual(short.rows.map(row => row.interactions), [6, 0, 0, null, null], 'interactions_v1 per bucket, unknown is never 0');
   assert.equal(short.peak.date, '2026-11-04', 'the earliest of the largest days');
   assert.equal(short.max, 5);
 
-  const long = trendBuckets([day('2026-01-01', 1), day('2026-01-03', 2), day('2026-06-30', 4)]);
+  const stretched = trendBuckets(posts, { from: '2026-10-30', to: '2026-11-07' });
+  assert.deepEqual([stretched.rows.length, stretched.rows[0].date, stretched.rows.at(-1).end], [9, '2026-10-30', '2026-11-07'], 'a chosen period is drawn whole, as on Ikhtisar');
+
+  const long = trendBuckets([...many('2026-01-01', 1), ...many('2026-01-03', 2), ...many('2026-06-30', 4)]);
   assert.equal(long.unit, 'week');
   // Weeks run Monday to Sunday (day_v1); they used to start on the first day with data (1 Jan, a Thursday, to 7 Jan).
   assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total], ['2026-01-01', '2026-01-04', 3]);
@@ -261,10 +269,10 @@ test('the place figures of the report: provinces the posts name, and where the X
 });
 
 test('long reports count weeks from Monday to Sunday, clipped to the days with data', () => {
-  const day = (date, total) => ({ date, positive: 0, neutral: 0, negative: 0, unknown: total, total });
-  const long = trendBuckets([day('2026-01-01', 1), day('2026-01-03', 2), day('2026-01-05', 4), day('2026-06-30', 4)]);
+  const many = (date, count) => Array.from({ length: count }, (_, index) => ({ id: `${date}-${index}`, platform: 'x', published_at: `${date}T03:00:00Z`, metrics: {} }));
+  const long = trendBuckets([...many('2026-01-01', 1), ...many('2026-01-03', 2), ...many('2026-01-05', 4), ...many('2026-06-30', 4)]);
   assert.equal(long.unit, 'week');
-  assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total], ['2026-01-01', '2026-01-04', 3], 'Thursday to Sunday');
+  assert.deepEqual([long.rows[0].date, long.rows[0].end, long.rows[0].total, long.rows[0].unknown], ['2026-01-01', '2026-01-04', 3, 3], 'Thursday to Sunday');
   assert.deepEqual([long.rows[1].date, long.rows[1].end, long.rows[1].total], ['2026-01-05', '2026-01-11', 4]);
   assert.deepEqual([long.rows.at(-1).date, long.rows.at(-1).end], ['2026-06-29', '2026-06-30']);
 });
@@ -299,4 +307,62 @@ test('the report counts a channel whose posts have no name as one account, and a
     { ...post('n4', 'x', 11, { author: '' }) },
   ];
   assert.equal(reportData(buildReport({ posts }, { id: 't', label: 'Uji' }, {}, '2026-11-14T00:00:00Z')).accounts, 2);
+});
+
+test('the report keeps which written summary it prints: the first stored, one format, or none', () => {
+  assert.deepEqual(reportSettings(null).ai, { summary: null });
+  for (const choice of ['off', 'executive', 'brief', 'timeline']) assert.deepEqual(reportSettings({ ai: { summary: choice } }).ai, { summary: choice });
+  for (const wrong of [{ summary: 'insights' }, { summary: 7 }, 'brief', null]) assert.deepEqual(reportSettings({ ai: wrong }).ai, { summary: null });
+  assert.deepEqual(settingsPayload({ sections: [], brand: {}, ai: { summary: 'timeline' } }).ai, { summary: 'timeline' });
+  assert.deepEqual(settingsPayload({ sections: [], brand: {} }).ai, { summary: null });
+  assert.deepEqual(summaryFormats.map(row => [row.key, row.label]), [['executive', 'Eksekutif'], ['brief', 'Ringkas'], ['timeline', 'Kronologi']]);
+
+  const made = (format, at) => ({ created_at: at, scope: { posts: 9 }, sections: [{ title: format, kind: 'text', paragraphs: [`${format} [P1].`], bullets: [] }] });
+  const payload = { summaries: { brief: made('brief', '2026-11-13T02:00:00Z'), timeline: made('timeline', '2026-11-12T02:00:00Z') } };
+  assert.equal(storedSummary(payload).format, 'brief', 'nothing chosen: executive, then brief');
+  assert.equal(storedSummary(payload, 'timeline').format, 'timeline');
+  assert.deepEqual(storedSummary(payload, 'timeline').sections[0].paragraphs, ['timeline.']);
+  assert.equal(storedSummary(payload, 'executive'), null, 'a chosen format that is not written yet is not swapped for another');
+  assert.equal(storedSummary(payload, 'off'), null);
+});
+
+test('the concentration lines take the room of two account rows on the sources page', () => {
+  assert.equal(accountRowsThatFit(6), 9);
+  assert.equal(accountRowsThatFit(6, { concentration: true }), 7);
+  assert.equal(accountRowsThatFit(12, { concentration: true }), 3, 'a long platform table leaves at least three accounts');
+});
+
+test('the AI choices say what is stored, for which scope, and offer to write only what is missing or for another period', () => {
+  const report = { period: { from: '2026-11-01', to: '2026-11-07' }, selectedPlatforms: null };
+  const insights = (scope) => ({ created_at: '2026-11-08T02:00:00Z', scope, sections: [{ title: 'Judul', kind: 'headline', paragraphs: ['Isu naik.'], bullets: [] }] });
+  const executive = { created_at: '2026-11-14T02:00:00Z', scope: { posts: 40 }, sections: [{ title: 'Ringkasan', kind: 'overview', paragraphs: ['Ringkas.'], bullets: [] }] };
+
+  const loading = aiStatus(null, { report });
+  assert.equal(loading.loaded, false);
+  assert.equal(loading.summary.canWrite, false);
+
+  const none = aiStatus({ available: true, summaries: {} }, { report });
+  assert.deepEqual([none.summary.format, none.summary.stored, none.summary.canWrite], ['executive', null, true]);
+  assert.deepEqual([none.insights.stored, none.insights.canWrite], [null, true]);
+
+  const stored = aiStatus({ available: true, summaries: { executive, insights: insights({ posts: 30, from: '2026-11-01', to: '2026-11-07', platforms: null }) } }, { report });
+  assert.deepEqual([stored.summary.format, stored.summary.stored.createdAt, stored.summary.canWrite], ['executive', '2026-11-14T02:00:00Z', false]);
+  assert.deepEqual([stored.insights.stored.createdAt, stored.insights.differs, stored.insights.canWrite], ['2026-11-08T02:00:00Z', false, false]);
+
+  const elsewhere = aiStatus({ available: true, summaries: { insights: insights({ posts: 90, from: '2026-10-01', to: '2026-10-31', platforms: ['x'] }) } }, { report });
+  assert.deepEqual([elsewhere.insights.differs, elsewhere.insights.canWrite], [true, true], 'insights for another period can be written for this one');
+  assert.equal(aiStatus({ available: true, summaries: {} }, { report, choice: 'off' }).summary.canWrite, false, 'nothing to write when the summary is off');
+
+  const unavailable = aiStatus({ available: false, summaries: {} }, { report });
+  assert.deepEqual([unavailable.available, unavailable.summary.canWrite, unavailable.insights.canWrite], [false, false, false]);
+  const failed = aiStatus({ failed: true, summaries: {} }, { report });
+  assert.deepEqual([failed.loaded, failed.failed, failed.summary.canWrite, failed.insights.canWrite], [true, true, false, false], 'a failed read offers nothing to write');
+  const archived = aiStatus({ available: true, summaries: {} }, { report, archived: true });
+  assert.deepEqual([archived.summary.canWrite, archived.insights.canWrite], [false, false], 'an archive is printed as it was filed');
+});
+
+test('insights written for another scope say so in the report, in the words of the summary note', () => {
+  const report = { period: { from: '2026-11-01', to: '2026-11-07' }, selectedPlatforms: null };
+  assert.equal(summaryScopeNote({ posts: 30, from: '2026-10-01', to: '2026-10-31', platforms: null }, report, 30, 'AI Insights itu'),
+    'AI Insights itu ditulis untuk periode 1–31 Okt 2026, bukan untuk cakupan laporan ini.');
 });

@@ -2,6 +2,7 @@ import { ArrowDownRight, ArrowUpRight, Minus, X } from 'lucide-react';
 import { PlatformIcon, platformLabel } from '../admin/pulse/PlatformIcon';
 import { sentimentLabels } from '../../lib/pulsePostFilters';
 import { platformColor, sentimentTone } from '../../lib/pulseChartTheme';
+import { deltaText } from '../../lib/pulseTrend';
 
 /** Base tag. Static by default; becomes a toggle with `pressed`, a removable chip with `onRemove`,
  * or a link with `href`. Always carries a text label: colour and dot only reinforce it.
@@ -49,7 +50,7 @@ export function PulseDelta({ value, unit = '%', intent = 'neutral', label }) {
   if (value == null || !Number.isFinite(value)) return null;
   const direction = value > 0 ? 'up' : value < 0 ? 'down' : 'flat';
   const Icon = direction === 'up' ? ArrowUpRight : direction === 'down' ? ArrowDownRight : Minus;
-  const text = `${value > 0 ? '+' : ''}${value.toLocaleString('id-ID', { maximumFractionDigits: 1 })}${unit}`;
+  const text = deltaText(value, unit);
   const words = direction === 'up' ? 'naik' : direction === 'down' ? 'turun' : 'tetap';
   return <span className="pu-delta" data-direction={direction} data-intent={direction === 'flat' ? 'neutral' : intent} aria-label={label || `${words} ${text.replace(/^[+-]/, '')}`}><Icon size={14} aria-hidden="true" />{text}</span>;
 }

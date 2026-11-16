@@ -35,7 +35,8 @@ test('the report is a stack of A4 pages, each with the period, the brand mark an
     // Conclusions first: without a stored summary the page writes plain sentences from the data.
     const summary = sheet(html, 'summary');
     assert.match(summary, /Terkumpul 1 posting dari 1 akun dan sumber di 1 platform, semuanya terbit pada 3 Nov 2026\./);
-    assert.match(summary, /<dt>Posting<\/dt>[\s\S]*<dt>Akun dan sumber<\/dt>[\s\S]*<dt>Interaksi<\/dt><dd>8<\/dd>[\s\S]*<dt>Komentar dianalisis<\/dt>/);
+    // The six figures of Ikhtisar (report-analytics.test.mjs has the rest); the period before is still on its way.
+    assert.match(summary, /<dt>Penyebutan<\/dt><dd class="rp-kpi-value"><strong>1<\/strong><\/dd><dd class="rp-kpi-note">Memuat perbandingan…<\/dd>[\s\S]*<dt>Interaksi<\/dt><dd class="rp-kpi-value"><strong>8<\/strong>/);
     assert.doesNotMatch(summary, /Batasan|bukan seluruh percakapan/, 'the caveats moved out of the summary');
     // The honest fine print has its own page.
     const method = sheet(html, 'method');
@@ -65,7 +66,7 @@ test('the report is a stack of A4 pages, each with the period, the brand mark an
     assert.doesNotMatch(printed(html), /style="[^"]*url\(/);
 
     // The builder: a switch and two real buttons per section, and the brand fields.
-    assert.equal((html.match(/role="switch"/g) || []).length, 10);
+    assert.equal((html.match(/role="switch"/g) || []).length, 12, 'eleven sections, and AI Insights again under Isi AI');
     assert.match(html, /aria-label="Naikkan Ringkasan eksekutif"/);
     assert.match(html, /aria-label="Turunkan Ringkasan eksekutif"/);
     assert.match(html, /10 bagian dicetak, 10 halaman/);
@@ -89,7 +90,7 @@ test('a page without data says so in one sentence instead of drawing an empty ch
     assert.match(sheet(html, 'narratives'), /<p class="rp-empty">Belum ada konten berulang/);
     assert.doesNotMatch(printed(html), /<svg class="rp-trend"|class="rp-bar/);
     assert.equal((printed(html).match(/<table/g) || []).length, 1, 'only the coverage table is left');
-    assert.match(sheet(html, 'method'), /<th scope="row">Seluruh laporan<\/th><td class="rp-num">0<\/td><td class="rp-num">—<\/td><td>Tidak ada posting pada periode ini<\/td>/);
+    assert.match(sheet(html, 'method'), /<th scope="row">Seluruh laporan<\/th><td class="rp-num">0<\/td>(<td class="rp-num">—<\/td>){3}<td>Tidak ada posting pada periode ini<\/td>/, 'the three coverage_v1 shares are unknown, not 0%');
   } finally { await server.close(); }
 });
 

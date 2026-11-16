@@ -64,7 +64,10 @@ test('the report, the platform lines and the growth panel use the same names', a
     const pages = lib.reportPages(lib.resolveSections([]), { topPosts: report.topPosts });
     const printed = renderToStaticMarkup(React.createElement(ReportPages, { report, pages, data: lib.reportData(report), summary: null, brand: { logo: null, accent: null, organisation: '', description: '' } }));
     assert.match(printed, /<text class="rp-peak"[^>]*>Teramai: 3 posting, 2 Nov<\/text>/);
-    assert.doesNotMatch(printed, /[Pp]uncak|[Ll]onjakan/);
+    // "Lonjakan" heads only the list of what spike_v1 found (the server's answer); nothing else on the report uses it.
+    const outsideSpikes = printed.replace(/<section class="rp-block"><h3>Lonjakan<\/h3>[\s\S]*?<\/section>/g, '');
+    assert.match(printed, /<h3>Lonjakan<\/h3>/);
+    assert.doesNotMatch(outsideSpikes, /[Pp]uncak|[Ll]onjakan/);
 
     // The panel of interaction growth speaks of growth.
     const { default: GrowthEvidence } = await server.ssrLoadModule('/src/pulse/GrowthEvidence.jsx');

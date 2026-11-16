@@ -139,12 +139,14 @@ async def test_report_settings_are_kept_per_project_and_checked(db):
     topic = WatchTopic(label='Laporan', query='laporan')
     db.add(topic)
     await db.flush()
-    assert await settings_service.read(db, topic.id) == {'sections': [], 'brand': {'logo': None, 'accent': None, 'organisation': '', 'description': ''}}
+    assert await settings_service.read(db, topic.id) == {'sections': [], 'brand': {'logo': None, 'accent': None, 'organisation': '', 'description': ''},
+                                                         'ai': {'summary': None}}
     saved = await settings_service.save(db, topic.id, {
         'sections': [{'key': 'cover', 'on': True}, {'key': 'method', 'on': False}],
         'brand': {'logo': PIXEL, 'accent': '#1A2B3C', 'organisation': '  Biro Humas  ', 'description': 'Ringkasan mingguan.'}})
     assert saved['sections'] == [{'key': 'cover', 'on': True}, {'key': 'method', 'on': False}]
     assert saved['brand'] == {'logo': PIXEL, 'accent': '#1a2b3c', 'organisation': 'Biro Humas', 'description': 'Ringkasan mingguan.'}
+    assert saved['ai'] == {'summary': None}, 'a save without a choice of summary keeps the automatic one'
     assert await settings_service.read(db, topic.id) == saved
     for wrong in ({'brand': {'logo': 'data:image/svg+xml;base64,AAAA'}}, {'brand': {'logo': 'https://example.com/logo.png'}},
                   {'brand': {'logo': 'data:image/png;base64,' + 'A' * 500000}}, {'brand': {'accent': 'red'}},
@@ -153,3 +155,18 @@ async def test_report_settings_are_kept_per_project_and_checked(db):
         with pytest.raises(ValueError):
             await settings_service.save(db, topic.id, wrong)
     assert await settings_service.read(db, topic.id) == saved            # a refused save changes nothing
+
+
+@pytest.mark.asyncio
+async def test_the_report_keeps_which_written_summary_it_prints(db):
+    topic = WatchTopic(label='Laporan AI', query='laporan')
+    db.add(topic)
+    await db.flush()
+    for choice in ('executive', 'brief', 'timeline', 'off', None):
+        saved = await settings_service.save(db, topic.id, {'sections': [{'key': 'insights', 'on': True}], 'ai': {'summary': choice}})
+        assert saved['ai'] == {'summary': choice}
+        assert (await settings_service.read(db, topic.id))['ai'] == {'summary': choice}
+    for wrong in ({'ai': {'summary': 'insights'}}, {'ai': {'summary': 'model-x'}}, {'ai': 'executive'}, {'ai': {'summary': 3}}):
+        with pytest.raises(ValueError):
+            await settings_service.save(db, topic.id, wrong)
+    assert (await settings_service.read(db, topic.id))['ai'] == {'summary': None}            # a refused save changes nothing

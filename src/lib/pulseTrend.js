@@ -40,3 +40,14 @@ export function deltaIntent(metric, delta) {
   if (rule === 'neutral' || !delta) return 'neutral';
   return (rule === 'good-when-up') === (delta > 0) ? 'good' : 'bad';
 }
+
+/** A change as it is printed everywhere: a sign when it rose, Indonesian grouping, at most one decimal, then the unit. */
+export function deltaText(value, unit = '%') {
+  return `${value > 0 ? '+' : ''}${value.toLocaleString('id-ID', { maximumFractionDigits: 1 })}${unit}`;
+}
+
+/** A share of a meter (0 to 100) as it is printed: "<1%" for a sliver, whole percent otherwise, never past 100. */
+export function shareText(share) {
+  const percent = Math.max(0, Math.min(100, share));
+  return `${percent < 1 && percent > 0 ? '<1' : Math.round(percent)}%`;
+}

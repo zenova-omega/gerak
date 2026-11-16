@@ -1,6 +1,7 @@
 import { formatCount } from '../../lib/pulseData';
 import { sharePercent } from '../../lib/pulseChartTheme';
 import { toneShares } from '../../lib/pulseMeasures';
+import { shareText as meterText } from '../../lib/pulseTrend';
 import { PulseDelta } from './PulseTag';
 import AccountAvatar from '../admin/pulse/AccountAvatar';
 
@@ -43,7 +44,7 @@ export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUn
   const text = typeof value === 'string';
   const hasShare = Number.isFinite(share);
   const percent = hasShare ? Math.max(0, Math.min(100, share)) : 0;
-  const printed = shareText || `${percent < 1 && percent > 0 ? '<1' : Math.round(percent)}%`;
+  const printed = shareText || meterText(percent);
   const body = <>
     {media && <span className="pu-stat-media">{media}</span>}
     <span className="pu-stat-label">{tone ? <i aria-hidden="true" /> : Icon && <Icon size={14} aria-hidden="true" />}{label}</span>

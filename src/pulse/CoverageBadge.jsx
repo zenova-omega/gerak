@@ -67,3 +67,6 @@ export default function CoverageBadge({ reading, to }) {
     </aside>
   </span>;
 }
+
+// The report's data page states the same reading, so it names the level and writes a share the way the badge does.
+export { LEVELS as coverageLevels, SHARES as coverageShares, percent as coveragePercent };

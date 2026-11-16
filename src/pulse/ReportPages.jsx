@@ -8,15 +8,21 @@ import AccountAvatar from '../components/admin/pulse/AccountAvatar';
 import { PlatformIcon, platformLabel } from '../components/admin/pulse/PlatformIcon';
 import { ProjectPostsContext } from './projectPosts';
 import RegionMiniMap from './RegionMiniMap';
+import { concentrationShareText } from './AccountConcentration';
+import { coverageLevels, coveragePercent, coverageShares } from './CoverageBadge';
 import { formatCount, pulseDate, pulseDay, safeSourceUrl } from '../lib/pulseData';
 import { zone } from '../lib/pulseMeasures';
 import { sentimentColor, sentimentOrder } from '../lib/pulseChartTheme';
 import { postSentiment, sentimentLabels } from '../lib/pulsePostFilters';
-import { postInteractions } from '../lib/pulseEngagement';
+import { percentLabel, postInteractions } from '../lib/pulseEngagement';
 import { kindLabels, kindOrder, shares } from '../lib/pulseVoice';
 import { stanceLabels } from '../lib/pulseResponse';
+import { deltaText, shareText } from '../lib/pulseKpis';
+import { spikeFacts, spikeLines } from '../lib/pulseTrendSpikes';
+import { bucketLabel } from '../lib/pulseTrendSeries';
 import { sourceText } from '../lib/pulseOverview';
-import { accountRowsThatFit, axisTicks, fallbackSummary, maxTopPosts, periodLabel } from '../lib/pulseReportPages';
+import { accountRowsThatFit, axisTicks, fallbackSummary, maxTopPosts, periodLabel, summaryScopeNote } from '../lib/pulseReportPages';
+import { insightView } from './summaryModel';
 
 const tones = ['positive', 'neutral', 'negative'];
 const stances = ['supports', 'opposes', 'unclear'];
@@ -93,11 +99,28 @@ function CoverPage({ page, frame }) {
   </Sheet>;
 }
 
+/** The six figures of Ikhtisar, worked out by `projectKpis` (pulseKpis.js) and written as Ikhtisar writes them: the value,
+ * its change and what it is compared with, the meter of a share, and the note under it. */
+function Kpis({ kpis = [] }) {
+  if (!kpis.length) return null;
+  return <dl className="rp-kpis" aria-label="Angka utama">{kpis.map(kpi => {
+    const changed = Number.isFinite(kpi.delta), direction = !changed ? null : kpi.delta > 0 ? 'up' : kpi.delta < 0 ? 'down' : 'flat';
+    const share = Number.isFinite(kpi.share) ? Math.max(0, Math.min(100, kpi.share)) : null;
+    return <div key={kpi.key} data-kpi={kpi.key}><dt>{kpi.label}</dt>
+      <dd className="rp-kpi-value"><strong>{typeof kpi.value === 'string' ? kpi.value : formatCount(kpi.value)}</strong>{changed && <span className="rp-kpi-delta" data-direction={direction} data-intent={direction === 'flat' ? 'neutral' : kpi.deltaIntent || 'neutral'}>{deltaText(kpi.delta, kpi.deltaUnit)}</span>}</dd>
+      {changed && kpi.deltaNote && <dd className="rp-kpi-compare">{kpi.deltaNote}</dd>}
+      {share !== null && <dd className="rp-kpi-share"><span className="rp-meter" aria-hidden="true"><i style={{ width: `${share}%` }} /></span><span>{shareText(share)}{kpi.shareLabel ? ` ${kpi.shareLabel}` : ''}</span></dd>}
+      {kpi.note && <dd className="rp-kpi-note">{kpi.note}</dd>}
+    </div>;
+  })}</dl>;
+}
+
 function SummaryPage({ page, frame }) {
   const { data, summary } = frame;
   const sentences = summary ? [] : fallbackSummary(data, { platformName });
+  const scopeNote = summary ? summaryScopeNote(summary.scope, frame.report, data.total) : '';
   const lede = summary
-    ? `Ringkasan AI, ditulis ${pulseDate(summary.createdAt)}.`
+    ? `Ringkasan AI, ditulis ${pulseDate(summary.createdAt)}.${scopeNote ? ' ' + scopeNote : ''}`
     : null;
   return <Sheet page={page} frame={frame} title={page.title} lede={lede}>
     {summary ? <div className="rp-brief">{summary.sections.map((section, index) => <section key={index}>
@@ -112,17 +135,55 @@ function SummaryPage({ page, frame }) {
       <p>{sentences[0]}</p>
       {sentences.length > 1 && <p>{sentences.slice(1).join(' ')}</p>}
     </div>}
-    <dl className="rp-figures" aria-label="Angka utama">
-      <div><dt>Posting</dt><dd>{formatCount(data.total)}</dd><dd>{data.total ? `${formatCount(data.days)} hari dengan data, ${formatCount(data.platforms.length)} platform` : 'tidak ada pada periode ini'}</dd></div>
-      <div><dt>Akun dan sumber</dt><dd>{formatCount(data.accounts)}</dd><dd>dihitung per platform</dd></div>
-      <div><dt>Interaksi</dt><dd>{formatCount(data.interactions)}</dd><dd>{data.interactions == null ? 'tidak ada angka dari sumber' : `suka, komentar, dan bagikan pada ${formatCount(data.interactionPosts)} posting`}</dd></div>
-      <div><dt>Komentar dianalisis</dt><dd>{data.opinion.loaded ? formatCount(data.opinion.analysed) : '—'}</dd><dd>{data.opinion.loaded ? `dari ${formatCount(data.opinion.total)} komentar tersimpan` : 'analisis komentar belum termuat'}</dd></div>
-    </dl>
+    <Kpis kpis={frame.kpis} />
+  </Sheet>;
+}
+
+/** A reference to a piece of evidence, as a small number after the words it supports. */
+const Ref = ({ number }) => <sup className="rp-ref">{number}</sup>;
+/** Text and references in reading order; references side by side share one mark, "1,2", so they never read as "12". */
+function InsightParts({ parts }) {
+  const out = [];
+  parts.forEach((part, index) => {
+    if (!part.number) out.push(part.text);
+    else if (Array.isArray(out.at(-1))) out.at(-1).push(part.number);
+    else out.push([part.number]);
+  });
+  return out.map((item, index) => (Array.isArray(item) ? <Ref key={index} number={item.join(',')} /> : item));
+}
+/** The stored AI Insights of the project (written on the AI Insights page or from the builder, never here): the headline,
+ * the points with their references, and the evidence they cite, numbered as on the AI Insights page (`insightView`). */
+function InsightsPage({ page, frame }) {
+  const { insights, report, data } = frame;
+  if (frame.archived || !insights) return <Sheet page={page} frame={frame} title={page.title}>
+    <Empty>{frame.archived ? 'AI Insights tidak disimpan dalam arsip.' : 'Belum ada AI Insights tersimpan untuk cakupan ini.'}</Empty>
+  </Sheet>;
+  const view = insightView(insights), scope = insights.scope || {};
+  const note = summaryScopeNote(scope, report, data.total, 'AI Insights itu');
+  return <Sheet page={page} frame={frame} title={page.title}
+    lede={`Ditulis AI pada ${pulseDate(insights.created_at)} dari ${formatCount(scope.posts)} posting${scope.truncated ? ' terbaru' : ''} dan ${formatCount(scope.comments)} komentar.${note ? ' ' + note : ''}`}>
+    {view.headline && <p className="rp-insight-headline">{view.headline}</p>}
+    {view.insights.length > 0 ? <ol className="rp-insights">{view.insights.map((item, index) => <li className="rp-insight" key={index}>
+      <p><strong><InsightParts parts={item.lead} /></strong>{item.body.length > 0 && ' '}<InsightParts parts={item.body} /></p>
+    </li>)}</ol> : <Empty>Tidak ada butir insight.</Empty>}
+    {view.evidence.length > 0 && <section className="rp-block">
+      <h3>Bukti yang dirujuk</h3>
+      <ol className="rp-evidence">{view.evidence.map(({ number, source }) => {
+        const url = safeSourceUrl(source.url);
+        return <li className="rp-evidence-row" key={number}>
+          <span className="rp-evidence-no">{number}</span>
+          <div>
+            <p className="rp-quote-head"><strong>{source.author || 'Nama tidak tersedia'}</strong><span>{source.comment ? 'Komentar · ' : ''}{platformName(source.platform)}{source.published_at ? ` · ${pulseDate(source.published_at)}` : ''}{typeof source.interactions === 'number' ? ` · ${formatCount(source.interactions)} ${source.comment ? 'suka' : 'interaksi'}` : ''}</span>{url && <a className="rp-source" href={url}>{url.replace(/^https?:\/\/(www\.)?/, '')}</a>}</p>
+            <p className="rp-evidence-text">{source.text || 'Teks tidak tersedia'}</p>
+          </div>
+        </li>;
+      })}</ol>
+    </section>}
   </Sheet>;
 }
 
 /** Posts per day (or week), stacked by sentiment, as inline SVG. The largest column carries the accent mark. */
-function TrendChart({ trend }) {
+function TrendChart({ trend, marked = new Set() }) {
   const width = 672, height = 310, left = 40, right = 6, top = 34, bottom = 26;
   const ticks = axisTicks(trend.max), ceiling = ticks.at(-1);
   const plotWidth = width - left - right, plotHeight = height - top - bottom;
@@ -134,7 +195,7 @@ function TrendChart({ trend }) {
   const peakAnchor = peakX < left + 70 ? 'start' : peakX > width - right - 70 ? 'end' : 'middle';
   const unit = trend.unit === 'day' ? 'hari' : 'minggu';
   return <svg className="rp-trend" viewBox={`0 0 ${width} ${height}`} role="img"
-    aria-label={`Grafik batang jumlah posting per ${unit} dari ${pulseDay(trend.rows[0].date)} sampai ${pulseDay(trend.rows.at(-1).end)}, dibagi menurut sentimen.${trend.peak ? ` Terbanyak ${formatCount(trend.peak.total)} posting pada ${pulseDay(trend.peak.date)}.` : ''}`}>
+    aria-label={`Grafik batang jumlah posting per ${unit} dari ${pulseDay(trend.rows[0].date)} sampai ${pulseDay(trend.rows.at(-1).end)}, dibagi menurut sentimen.${trend.peak ? ` Terbanyak ${formatCount(trend.peak.total)} posting pada ${pulseDay(trend.peak.date)}.` : ''}${marked.size ? ` ${marked.size} lonjakan ditandai.` : ''}`}>
     <defs><pattern id="rp-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect className="rp-hatch-ground" width="5" height="5" /><line className="rp-hatch-line" x1="1.25" y1="0" x2="1.25" y2="5" /></pattern></defs>
     {ticks.map(tick => <g key={tick}>
       <line className={tick ? 'rp-grid' : 'rp-grid rp-grid-base'} x1={left} x2={width - right} y1={y(tick)} y2={y(tick)} />
@@ -154,11 +215,32 @@ function TrendChart({ trend }) {
         {index % every === 0 && <text className="rp-axis" x={x + bar / 2} y={height - 8} textAnchor="middle">{shortDay(row.date)}</text>}
       </g>;
     })}
+    {/* A spike (spike_v1, the server's answer) is a small triangle over its column; the peak keeps its label above it. */}
+    {trend.rows.map((row, index) => {
+      if (!marked.has(row.key)) return null;
+      const x = left + band * index + band / 2, top = y(row.total) - 3;
+      return <path key={row.key} className="rp-spike-mark" d={`M${x - 4} ${top - 7}L${x + 4} ${top - 7}L${x} ${top}Z`} />;
+    })}
     {trend.peak && <g>
-      <line className="rp-peak-mark" x1={peakX - bar / 2} x2={peakX + bar / 2} y1={y(trend.peak.total) - 5} y2={y(trend.peak.total) - 5} />
-      <text className="rp-peak" x={peakX} y={y(trend.peak.total) - 13} textAnchor={peakAnchor}>Teramai: {formatCount(trend.peak.total)} posting, {shortDay(trend.peak.date)}</text>
+      {!marked.has(trend.peak.key) && <line className="rp-peak-mark" x1={peakX - bar / 2} x2={peakX + bar / 2} y1={y(trend.peak.total) - 5} y2={y(trend.peak.total) - 5} />}
+      <text className="rp-peak" x={peakX} y={y(trend.peak.total) - (marked.has(trend.peak.key) ? 15 : 13)} textAnchor={peakAnchor}>Teramai: {formatCount(trend.peak.total)} posting, {shortDay(trend.peak.date)}</text>
     </g>}
   </svg>;
+}
+
+const spikeEmpty = { answered: 'Tidak ada lonjakan pada periode ini.', failed: 'Lonjakan belum dapat diperiksa.' };
+/** The spikes of the drawn series as rows of the "Lonjakan" table, oldest first: which bucket, which line, and the first
+ * sentence the trend chart writes for it (`spikeLines`). Which buckets are spikes is only the server's answer
+ * (spike_v1, through `useTrendSpikes`); a spike outside the drawn buckets is left out. */
+function spikeRows(spikes, trend, posts) {
+  const status = spikes?.status || 'waiting', byKey = new Map(trend.rows.map(row => [row.key, row])), rows = [];
+  for (const line of ['posts', 'interactions']) for (const spike of spikes?.[line] || []) {
+    const bucket = byKey.get(spike.key);
+    const [text] = bucket ? spikeLines(spikeFacts(posts, bucket), spike, line, { unit: trend.unit, platformName }) : [];
+    if (text) rows.push({ key: spike.key, line, label: bucketLabel(bucket, trend.unit), text });
+  }
+  rows.sort((a, b) => a.key.localeCompare(b.key) || (a.line === 'posts' ? -1 : 1));
+  return { rows, empty: spikeEmpty[status] || 'Lonjakan sedang diperiksa…' };
 }
 
 function TrendPage({ page, frame }) {
@@ -166,10 +248,11 @@ function TrendPage({ page, frame }) {
   if (!trend.rows.length) return <Sheet page={page} frame={frame} title={page.title}>
     <Empty>{data.total ? 'Tidak ada tanggal terbit.' : 'Belum ada posting.'}</Empty>
   </Sheet>;
-  const busiest = [...report.days].sort((a, b) => b.total - a.total || a.date.localeCompare(b.date)).slice(0, 5);
+  const spikes = spikeRows(frame.spikes, trend, report.posts);
+  const busiest = [...report.days].sort((a, b) => b.total - a.total || a.date.localeCompare(b.date)).slice(0, spikes.rows.length ? 3 : 5);
   return <Sheet page={page} frame={frame} title={page.title}
     lede={`Posting per ${trend.unit === 'day' ? 'hari' : 'minggu'} menurut tanggal terbit (${zone().name}).`}>
-    <TrendChart trend={trend} />
+    <TrendChart trend={trend} marked={new Set(spikes.rows.filter(row => row.line === 'posts').map(row => row.key))} />
     <Legend label="Keterangan warna grafik" items={[
       ...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: data.counts[key], share: data.analysed ? data.shares[key] : null, shareText: data.analysed ? data.shareText[key] : null })),
       { key: 'unknown', label: sentimentLabels.unknown, hatch: true, value: data.counts.unknown },
@@ -186,6 +269,14 @@ function TrendPage({ page, frame }) {
           {sentimentOrder.map(key => <td className="rp-num" key={key}>{formatCount(day[key])}</td>)}
         </tr>)}</tbody>
       </table>
+    </section>
+    <section className="rp-block">
+      <h3>Lonjakan</h3>
+      {spikes.rows.length ? <table className="rp-table rp-table-tight rp-spikes">
+        <thead><tr><th scope="col">{trend.unit === 'day' ? 'Tanggal' : 'Minggu'}</th><th scope="col">Ukuran</th><th scope="col">Keterangan</th></tr></thead>
+        <tbody>{spikes.rows.map(row => <tr key={row.line + row.key}><th scope="row">{row.label}</th><td>{row.line === 'posts' ? 'Posting' : 'Interaksi'}</td><td>{row.text}</td></tr>)}</tbody>
+      </table> : <p className="rp-note">{spikes.empty}</p>}
+      {spikes.rows.length > 0 && <p className="rp-note">Ditandai dengan aturan lonjakan yang sama dengan grafik tren di Ikhtisar.</p>}
     </section>
   </Sheet>;
 }
@@ -288,7 +379,7 @@ function SourcesPage({ page, frame }) {
   const { data, report } = frame;
   if (!data.total) return <Sheet page={page} frame={frame} title={page.title}><Empty>Belum ada posting.</Empty></Sheet>;
   // The sheet has a fixed height: with more than five platforms the accounts table gives up a row for each extra one.
-  const accounts = report.accounts.slice(0, accountRowsThatFit(data.platforms.length));
+  const accounts = report.accounts.slice(0, accountRowsThatFit(data.platforms.length, { concentration: data.concentration?.topAccountShare != null }));
   const accountsTitle = accounts.length === 10 ? 'Sepuluh akun dengan interaksi terbanyak' : accounts.length < report.accounts.length ? `${formatCount(accounts.length)} akun dengan interaksi terbanyak` : 'Akun dengan interaksi terbanyak';
   return <Sheet page={page} frame={frame} title={page.title}>
     <section className="rp-block rp-block-first">
@@ -317,7 +408,20 @@ function SourcesPage({ page, frame }) {
       </table> : <Empty>Posting pada periode ini tidak membawa nama akun.</Empty>}
       <p className="rp-note">“—” berarti angka tidak tersedia.</p>
     </section>
+    <Concentration reading={data.concentration} />
   </Sheet>;
+}
+
+/** concentration_v1 in two sentences, as Akun & sumber writes them: the share of the three most active accounts, and how
+ * many accounts it takes to reach 80% of the posts. It says nothing about intent. */
+function Concentration({ reading }) {
+  if (reading?.topAccountShare == null) return null;
+  const reach = reading.reading.posts.reach80;
+  return <section className="rp-block rp-concentration">
+    <h3>Konsentrasi akun</h3>
+    <p><strong>{percentLabel(reading.topAccountShare)}</strong> posting berasal dari 3 akun teratas, dari {formatCount(reading.accounts)} akun.{reach ? ` ${formatCount(reach.accounts)} dari ${formatCount(reading.accounts)} akun (${concentrationShareText(reach.account_share)}) menulis 80% posting.` : ''}</p>
+    <p className="rp-note">Konsentrasi bukan bukti koordinasi.</p>
+  </section>;
 }
 
 /** Where the conversation is named: the provinces in the posts' own words, drawn and listed, then the provinces X
@@ -408,10 +512,11 @@ function NarrativesPage({ page, frame }) {
   </Sheet>;
 }
 
+const coverageColumns = ['analysed', 'measured', 'clocked'];
 const coverageNotes = { observed: 'Data tersimpan, bukan seluruh isi platform', empty: 'Tidak ada data pada periode ini', excluded: 'Tidak dipilih untuk laporan ini' };
 function MethodPage({ page, frame }) {
   const { report, data, summary } = frame;
-  const analysedOn = Object.fromEntries(data.platforms.map(row => [row.platform, row.analysed]));
+  const cover = data.completeness, byPlatform = new Map(cover.platforms.map(row => [row.platform, row]));
   // Platforms without a single post in the period are named on one line under the table: the sheet has a fixed height.
   const listed = report.sourceCoverage.filter(row => row.platform !== 'unknown' || row.count > 0);
   const rows = listed.filter(row => row.count > 0), empty = listed.filter(row => !row.count);
@@ -425,18 +530,23 @@ function MethodPage({ page, frame }) {
     </dl>
     <section className="rp-block rp-block-tight">
       <h3>Cakupan per platform</h3>
+      {/* coverage_v1: the level and the share that set it, then the shares per platform, as the project bar's badge reads them. */}
+      {cover.level && <p className="rp-coverage-says"><b>{coverageLevels[cover.level][0]}</b>: {coverageShares[cover.lowest][2]} {coveragePercent(cover[cover.lowest])} posting.</p>}
       <table className="rp-table rp-table-tight">
-        <thead><tr><th scope="col">Platform</th><th scope="col" className="rp-num">Posting dalam laporan</th><th scope="col" className="rp-num">Sudah dianalisis</th><th scope="col">Keterangan</th></tr></thead>
-        <tbody>{rows.map(row => <tr key={row.platform}>
-          <th scope="row"><span className="rp-platform"><PlatformIcon platform={row.platform} size={14} />{platformName(row.platform)}</span></th>
-          <td className="rp-num">{formatCount(row.count)}</td>
-          <td className="rp-num">{row.count ? `${formatCount(analysedOn[row.platform] || 0)} (${percent(analysedOn[row.platform] || 0, row.count)}%)` : '—'}</td>
-          <td>{coverageNotes[row.status]}</td>
-        </tr>)}</tbody>
+        <thead><tr><th scope="col">Platform</th><th scope="col" className="rp-num">Posting</th>{coverageColumns.map(key => <th scope="col" className="rp-num" key={key}>{coverageShares[key][0]}</th>)}<th scope="col">Keterangan</th></tr></thead>
+        <tbody>{rows.map(row => {
+          const shares = byPlatform.get(row.platform);
+          return <tr key={row.platform}>
+            <th scope="row"><span className="rp-platform"><PlatformIcon platform={row.platform} size={14} />{platformName(row.platform)}</span></th>
+            <td className="rp-num">{formatCount(row.count)}</td>
+            {coverageColumns.map(key => <td className="rp-num" key={key}>{shares ? coveragePercent(shares[key]) : '—'}</td>)}
+            <td>{coverageNotes[row.status]}</td>
+          </tr>;
+        })}</tbody>
         <tfoot><tr>
           <th scope="row">Seluruh laporan</th>
           <td className="rp-num">{formatCount(data.total)}</td>
-          <td className="rp-num">{data.total ? `${formatCount(data.analysed)} (${data.coverage}%)` : '—'}</td>
+          {coverageColumns.map(key => <td className="rp-num" key={key}>{cover.total ? coveragePercent(cover[key]) : '—'}</td>)}
           <td>{data.unknown > 0 ? `${formatCount(data.unknown)} posting belum dianalisis` : data.total ? 'Semua posting sudah dianalisis' : 'Tidak ada posting pada periode ini'}</td>
         </tr></tfoot>
       </table>
@@ -454,20 +564,20 @@ function MethodPage({ page, frame }) {
         <li>Yang belum dianalisis tidak dihitung netral.</li>
         <li>Tayangan bukan jumlah orang; tidak ada perkiraan jangkauan.</li>
         <li>“—” berarti angka tidak tersedia.</li>
-        {summary && <li>Ringkasan ditulis AI; periksa buktinya sebelum dikutip.</li>}
+        {(summary || frame.printsInsights) && <li>{summary && frame.printsInsights ? 'Ringkasan dan insight' : summary ? 'Ringkasan' : 'Insight'} ditulis AI; periksa buktinya sebelum dikutip.</li>}
         <li>Kebenaran klaim tidak diperiksa.</li>
       </ul>
     </section>
   </Sheet>;
 }
 
-const pageComponents = { cover: CoverPage, summary: SummaryPage, trend: TrendPage, voices: VoicesPage, opinion: OpinionPage, sources: SourcesPage, places: PlacesPage, posts: PostsPage, narratives: NarrativesPage, method: MethodPage };
+const pageComponents = { cover: CoverPage, summary: SummaryPage, insights: InsightsPage, trend: TrendPage, voices: VoicesPage, opinion: OpinionPage, sources: SourcesPage, places: PlacesPage, posts: PostsPage, narratives: NarrativesPage, method: MethodPage };
 
 /** The pages, and nothing else, inside the element `rootRef` points at: that element is what gets printed.
  * @param {{rootRef: import('react').Ref<HTMLDivElement>, report: object, pages: object[], data: object, summary: object|null,
- *   brand: {logo: string|null, accent: string|null, organisation: string, description: string}}} props */
-export default function ReportPages({ rootRef, report, pages, data, summary, brand }) {
-  const frame = { report, data, summary, brand, period: periodLabel(report.period, report.days), chosenPeriod: Boolean(report.period?.from || report.period?.to) };
+ *   insights?: object|null, archived?: boolean, kpis?: ReturnType<typeof import('../lib/pulseKpis').projectKpis>, spikes?: ReturnType<typeof import('./useTrendSpikes').default>|null, brand: {logo: string|null, accent: string|null, organisation: string, description: string}}} props */
+export default function ReportPages({ rootRef, report, pages, data, summary, brand, kpis = [], spikes = null, insights = null, archived = false }) {
+  const frame = { report, data, summary, brand, kpis, spikes, insights, archived, printsInsights: !archived && Boolean(insights) && pages.some(page => page.key === 'insights'), period: periodLabel(report.period, report.days), chosenPeriod: Boolean(report.period?.from || report.period?.to) };
   return <ProjectPostsContext.Provider value={report.posts}>
     <div className="rp-doc pr-document" ref={rootRef} style={brand.accent ? { '--rp-accent': brand.accent } : undefined}>
       {pages.map(page => {

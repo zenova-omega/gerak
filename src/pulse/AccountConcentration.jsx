@@ -102,3 +102,6 @@ export default function AccountConcentration({posts=[],onOpen}){
   </div>:<PulsePanelEmpty title="Belum ada akun">Belum ada posting dengan nama akun.</PulsePanelEmpty>}
  </AnalyticsPanel>;
 }
+
+// The report prints the same reading in a sentence, so it writes a share the way this page does.
+export { part as concentrationShareText };

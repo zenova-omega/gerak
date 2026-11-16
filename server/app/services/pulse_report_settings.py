@@ -1,7 +1,9 @@
 """How a project's report is put together: which pages, in what order, and under whose name.
 
 Stored with the project's other settings. A save is checked as a whole and refused as a whole: a logo must be a small
-embedded PNG, JPEG or WebP (never a link, never SVG, which can carry script), the accent a plain hex colour."""
+embedded PNG, JPEG or WebP (never a link, never SVG, which can carry script), the accent a plain hex colour. `ai.summary`
+names the stored written summary the report prints: one of the summary card's formats, 'off' for sentences worked out
+from the figures, or None for the first one stored (executive, then brief)."""
 import re
 
 from ..models.pulse_settings import PulseProjectSettings
@@ -9,7 +11,8 @@ from ..models.pulse_settings import PulseProjectSettings
 LOGO = re.compile(r'data:image/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+')
 MAX_LOGO = 420_000          # characters of the data URL: about 300 KB of image
 MAX_SECTIONS = 24
-EMPTY = {'sections': [], 'brand': {'logo': None, 'accent': None, 'organisation': '', 'description': ''}}
+SUMMARY_CHOICES = (None, 'off', 'executive', 'brief', 'timeline')
+EMPTY = {'sections': [], 'brand': {'logo': None, 'accent': None, 'organisation': '', 'description': ''}, 'ai': {'summary': None}}
 
 
 def _clean(payload):
@@ -36,14 +39,18 @@ def _clean(payload):
     organisation, description = brand.get('organisation') or '', brand.get('description') or ''
     if not isinstance(organisation, str) or len(organisation) > 80 or not isinstance(description, str) or len(description) > 600:
         raise ValueError('Nama organisasi paling panjang 80 karakter dan deskripsi 600 karakter.')
+    ai = payload.get('ai') if payload.get('ai') is not None else {}
+    if not isinstance(ai, dict) or ai.get('summary') not in SUMMARY_CHOICES:
+        raise ValueError('Pilihan ringkasan AI tidak sah.')
     return {'sections': cleaned, 'brand': {'logo': logo, 'accent': accent.lower() if accent else None,
-                                           'organisation': organisation.strip(), 'description': description.strip()}}
+                                           'organisation': organisation.strip(), 'description': description.strip()},
+            'ai': {'summary': ai.get('summary')}}
 
 
 async def read(db, topic_id):
     row = await db.get(PulseProjectSettings, topic_id)
     saved = (row.data or {}).get('report') if row else None
-    return _clean(saved) if isinstance(saved, dict) else {'sections': [], 'brand': dict(EMPTY['brand'])}
+    return _clean(saved) if isinstance(saved, dict) else {'sections': [], 'brand': dict(EMPTY['brand']), 'ai': dict(EMPTY['ai'])}
 
 
 async def save(db, topic_id, payload):
