@@ -18,7 +18,7 @@
 .rb-name { font-size: .875rem; font-weight: var(--ps-weight-label); line-height: 1.35; overflow-wrap: anywhere; }
 .rb-where { font-size: .75rem; line-height: 1.4; color: var(--ps-muted); }
 .rb-sections > li[data-off] .rb-name { font-weight: var(--ps-weight-body); color: var(--ps-muted); }
-.rb-moves { flex: 0 0 auto; display: inline-flex; gap: 2px; }
+.rb-moves { flex: 0 0 auto; display: inline-flex; gap: var(--ps-space-1); }
 
 .rb-field { display: grid; gap: 6px; margin-top: 16px; }
 .rb-body > section > h3 + .rb-field { margin-top: 0; }

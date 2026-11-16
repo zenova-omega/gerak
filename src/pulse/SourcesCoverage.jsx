@@ -8,6 +8,10 @@ import { useTopics } from '../hooks/usePulse';
 import { balanceAgeHours, canManageSources, collectionBlock, collectionResult, formatSourceCount as count, formatSourceTime as time, lookbackRange, safeSourceError, threadsStatus } from './sourcesCoverage.js';
 import './sources-coverage.css';
 import { PulseBadge, PulseButton, PulseNotice } from '../components/ui/PulseUI';
+import { PulseStat, PulseStatGrid } from '../components/ui/PulseAnalytics';
+
+/** A figure the source reported, or null (PulseStat prints it as unavailable, never as zero). */
+const known = value => (typeof value === 'number' && Number.isFinite(value) ? value : null);
 import SourceDisclosure from './SourceDisclosure';
 import { CoverageDetail } from './CoverageBadge';
 import useProjectSelection from './useProjectSelection';
@@ -95,7 +99,11 @@ export default function SourcesCoverage({ user, readOnly = false, projectPicker 
     {action && <p role="status">{action === 'check' ? 'Membaca saldo…' : `Mengumpulkan posting ${names[action]}…`}</p>}
     {visible.loading ? <div className="sc-loading" role="status"><span>Memuat cakupan…</span><div className="sc-skeleton" aria-hidden="true" /><div className="sc-skeleton" aria-hidden="true" /><div className="sc-skeleton" aria-hidden="true" /></div> : visible.error ? <PulseNotice tone="warning" role="alert"><p>{visible.error}</p><PulseButton onClick={reload}>Coba lagi</PulseButton></PulseNotice> : data && <>
       <section className="sc-account" aria-label="Akun dan batas penggunaan">
-        <div className="sc-account-overview"><div><h2>Saldo sumber data</h2><PulseBadge tone={data.account?.status === 'verified' ? 'success' : data.account?.status === 'error' ? 'warning' : 'neutral'}>{data.account?.status === 'verified' ? 'Terverifikasi' : 'Belum terverifikasi'}</PulseBadge></div><dl><div><dt>Paket</dt><dd>{data.account?.plan || 'Tidak diketahui'}</dd></div><div><dt>Sisa kredit</dt><dd>{count(data.account?.credits_remaining)}<small>dibaca {time(data.checked_at)}</small></dd></div><div><dt>Permintaan hari ini</dt><dd>{count(data.budget?.used)}<small>{data.budget?.daily_limit<0?'tanpa batas harian':`dari ${count(data.budget?.daily_limit)} per hari`}</small></dd></div></dl></div>
+        <div className="sc-account-overview"><div><h2>Saldo sumber data</h2><PulseBadge tone={data.account?.status === 'verified' ? 'success' : data.account?.status === 'error' ? 'warning' : 'neutral'}>{data.account?.status === 'verified' ? 'Terverifikasi' : 'Belum terverifikasi'}</PulseBadge></div><PulseStatGrid compact label="Saldo dan pemakaian" className="sc-account-figures">
+          <PulseStat label="Paket" value={data.account?.plan || 'Tidak diketahui'} />
+          <PulseStat label="Sisa kredit" value={known(data.account?.credits_remaining)} note={`dibaca ${time(data.checked_at)}`} />
+          <PulseStat label="Permintaan hari ini" value={known(data.budget?.used)} note={data.budget?.daily_limit<0?'tanpa batas harian':`dari ${count(data.budget?.daily_limit)} per hari`} />
+        </PulseStatGrid></div>
         <details className="sc-account-detail"><summary>Rincian saldo</summary><div><p className="sc-small">Terakhir dibaca {time(data.checked_at)}. Kredit tambahan: {count(data.account?.extra_credits_remaining)}. Reset kredit: {data.account?.credit_reset_frequency === 'never' ? 'tidak berkala' : data.account?.credit_reset_frequency || 'tidak diketahui'}.</p><PulseButton disabled={busy || isReadOnly} onClick={() => runAction()}>Baca saldo sekarang</PulseButton></div></details>
         {balanceAgeHours(data.checked_at) >= 24 && <PulseNotice tone="warning">Saldo terakhir dibaca {Math.floor(balanceAgeHours(data.checked_at) / 24)} hari lalu.</PulseNotice>}
         {data.account?.error && <PulseNotice tone="warning">Metadata akun belum terverifikasi.</PulseNotice>}

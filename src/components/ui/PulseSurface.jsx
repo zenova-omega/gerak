@@ -49,10 +49,11 @@ export function PulseFilterBar({ label, activeCount = 0, onReset, resetLabel = '
   </div>;
 }
 
-/** One labelled set of choices inside a filter bar (platform, sentiment, period). The label is read by assistive technology. */
-export function PulseFilterGroup({ label, hideLabel = false, className = '', children }) {
+/** One labelled set of choices inside a filter bar (platform, sentiment, period). The label is read by assistive technology.
+ * `inline` puts the name beside the choices, in a column every inline group and select shares, so stacked rows line up. */
+export function PulseFilterGroup({ label, hideLabel = false, inline = false, className = '', children }) {
   const id = useId();
-  return <div role="group" aria-labelledby={id} className={`pu-filter-group ${className}`.trim()}>
+  return <div role="group" aria-labelledby={id} className={`pu-filter-group ${className}`.trim()} data-layout={inline ? 'inline' : undefined}>
     <span id={id} className="pu-filter-label" data-visually-hidden={hideLabel ? '' : undefined}>{label}</span>
     <div className="pu-tag-group">{children}</div>
   </div>;
@@ -64,9 +65,10 @@ export function PulseFilterChip({ active = false, tone = 'accent', count, childr
 }
 
 /** A labelled native select that takes its size, edge and caret from the control tokens.
- * `options` is `[{value, label}]`. Uses the platform select so it works with every keyboard and screen reader. */
-export function PulseFilterSelect({ label, value, onChange, options, className = '', ...props }) {
-  return <label className={`pu-filter-select ${className}`.trim()}>
+ * `options` is `[{value, label}]`. Uses the platform select so it works with every keyboard and screen reader.
+ * `inline` puts the label beside the select, in the same column as an inline PulseFilterGroup. */
+export function PulseFilterSelect({ label, value, onChange, options, inline = false, className = '', ...props }) {
+  return <label className={`pu-filter-select ${className}`.trim()} data-layout={inline ? 'inline' : undefined}>
     <span className="pu-filter-label">{label}</span>
     <select {...props} value={value} onChange={event => onChange(event.target.value, event)}>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
   </label>;

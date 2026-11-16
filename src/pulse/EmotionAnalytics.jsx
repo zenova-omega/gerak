@@ -12,6 +12,7 @@ import { sourceText } from '../lib/pulseOverview';
 import { allRange, rangeBounds, resolveRange, withinRange } from '../lib/pulseRange';
 import { sentimentDate } from '../lib/pulseSentiment';
 import { bucketLabel } from '../lib/pulseTrendSeries';
+import { PulseStat, PulseStatGrid } from '../components/ui/PulseAnalytics';
 import AnalyticsPanel from './AnalyticsPanel';
 import InfoTip from './InfoTip';
 import './emotion-analytics.css';
@@ -101,14 +102,13 @@ export default function EmotionAnalytics({ posts = [] }) {
 
     {data.analyzed > 0 && <div className="pea-pick">
       <h3>Emosi yang dinyatakan</h3>
-      <div className="pea-emotions">{summary.ranked.map(({ key, count, share }) =>
-        <button type="button" key={key} className={'pea-emotion ' + key} aria-pressed={selected === key && !day} aria-label={`${emotionLabels[key]}: ${count} posting. Lihat sumber`} onClick={() => choose(selected === key && !day ? null : key)}>
-          <span className="pea-face" aria-hidden="true">{emotionFaces[key]}</span>
-          <span className="pea-label"><i aria-hidden="true" />{emotionLabels[key]}</span>
-          <strong>{count.toLocaleString('id-ID')}</strong>
-          <small>{summary.emotional ? `${percent(share)} dari yang beremosi` : 'belum ada'}</small>
-          <span className="pea-bar" aria-hidden="true"><i style={{ width: `${share * 100}%` }} /></span>
-        </button>)}</div>
+      {/* The product's KPI tiles (PulseStat): the emotion's colour marks its label and meter; pressing one shows its posts. */}
+      <PulseStatGrid label="Emosi yang dinyatakan" className="pea-emotions">{summary.ranked.map(({ key, count, share }) =>
+        <PulseStat key={key} className={'pea-emotion ' + key} label={emotionLabels[key]} value={count} mark={`var(--emotion-${key})`}
+          media={<span className="pea-face" aria-hidden="true">{emotionFaces[key]}</span>}
+          share={summary.emotional ? share * 100 : null} shareText={summary.emotional ? percent(share) : undefined} shareLabel="dari yang beremosi" note={summary.emotional ? undefined : 'belum ada'}
+          pressed={selected === key && !day} ariaLabel={`${emotionLabels[key]}: ${count} posting. Lihat sumber`} onClick={() => choose(selected === key && !day ? null : key)} />)}
+      </PulseStatGrid>
     </div>}
 
     {data.days.length > 0 && <details className="pea-data"><summary>Data harian · {zone().name}</summary><div className="pea-table"><table>

@@ -2,22 +2,18 @@ import { RefreshCw, Search } from 'lucide-react';
 import { PlatformIcon } from '../components/admin/pulse/PlatformIcon';
 import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import { PulseSkeleton } from '../components/ui/PulsePatterns';
-import { PulseFilterChip } from '../components/ui/PulseSurface';
+import { PulseFilterChip, PulseFilterGroup, PulseFilterSelect } from '../components/ui/PulseSurface';
 import { attemptNotice, briefText, categoryCounts, freshnessText, offeredPlatforms, provinceName, provinceRanking, radarCategories, matchingIssues, visibleIssues } from '../lib/pulseRadar';
 import AnalyticsPanel from './AnalyticsPanel';
 import InfoTip from './InfoTip';
 import RadarFigures from './RadarFigures';
 import './ds/radar-issues.css';
 
-/** A row of chips that set one choice. Pressed shows the choice; the count, where there is one, is set apart from the name. */
-function Chips({ label, choices, value, onChange }) {
-  return <div className="rdl-chips" role="group" aria-label={label}>{choices.map(({ id, text, count, mark }) =>
-    <PulseFilterChip key={id} active={value === id} leading={mark} count={count} onClick={() => onChange(id)}>{text}</PulseFilterChip>)}</div>;
-}
-
-/** One choice the page makes, with its name in words beside the options. The group keeps its own accessible name. */
-function FilterRow({ name, children }) {
-  return <div className="rdl-row"><span className="rdl-row-name" aria-hidden="true">{name}</span><div className="rdl-row-body">{children}</div></div>;
+/** One choice the page makes: its name beside a row of chips (the shared PulseFilterGroup and PulseFilterChip). Pressed
+ * shows the choice; the count, where there is one, is set apart from the name. */
+function Chips({ name, choices, value, onChange }) {
+  return <PulseFilterGroup inline label={name}>{choices.map(({ id, text, count, mark }) =>
+    <PulseFilterChip key={id} active={value === id} leading={mark} count={count} onClick={() => onChange(id)}>{text}</PulseFilterChip>)}</PulseFilterGroup>;
 }
 
 /** The facts of the freshness line, one each, so "when" and "what could not be read" are not run together by semicolons. */
@@ -65,16 +61,12 @@ export default function RadarLead({ payload, filters, onFilters, canCreate = fal
     {brief && <p className="rdl-brief">{brief}</p>}
     <RadarFigures payload={payload} />
     <div className="rdl-filters">
-      <FilterRow name="Kategori"><Chips label="Kategori isu" choices={categories} value={category} onChange={id => onFilters({ ...filters, category: id })} /></FilterRow>
-      <FilterRow name="Platform"><Chips label="Platform" choices={platforms} value={platform} onChange={id => onFilters({ ...filters, platform: id })} /></FilterRow>
-      <FilterRow name="Wilayah">
-        <select className="rdl-select" aria-label="Wilayah" value={province} onChange={event => onFilters({ ...filters, province: event.target.value })}>
-          <option value="">Seluruh Indonesia</option>
-          {provinces.map(([code, label]) => <option key={code} value={code}>{label}</option>)}
-        </select>
-        {(category || platform) && <p className="rdl-active" role="status">Menampilkan <b>{matchingIssues(payload.issues, filters).length}</b> dari <b>{counts['']}</b> isu
-          <button type="button" className="rdl-clear" onClick={() => onFilters({ ...filters, category: '', platform: '' })}>Tampilkan semua isu</button></p>}
-      </FilterRow>
+      <Chips name="Kategori" choices={categories} value={category} onChange={id => onFilters({ ...filters, category: id })} />
+      <Chips name="Platform" choices={platforms} value={platform} onChange={id => onFilters({ ...filters, platform: id })} />
+      <PulseFilterSelect inline label="Wilayah" value={province} onChange={value => onFilters({ ...filters, province: value })}
+        options={[{ value: '', label: 'Seluruh Indonesia' }, ...provinces.map(([code, label]) => ({ value: code, label }))]} />
+      {(category || platform) && <p className="rdl-active" role="status">Menampilkan <b>{matchingIssues(payload.issues, filters).length}</b> dari <b>{counts['']}</b> isu
+        <PulseButton variant="quiet" size="sm" className="rdl-clear" onClick={() => onFilters({ ...filters, category: '', platform: '' })}>Tampilkan semua isu</PulseButton></p>}
     </div>
   </AnalyticsPanel>;
 }

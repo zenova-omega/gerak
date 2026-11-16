@@ -21,7 +21,7 @@ test('the daily chart comes first, and the emotions under it are its key and its
   const stated = (id, label, day) => ({ id, published_at: `2026-11-${day}T05:00:00Z`, platform: 'x', author: 'akun_' + id, text: 'Isi ' + id, metrics: { emotion: { label, confidence: 0.9, reason: 'alasan' } } });
   const posts = [stated('a', 'anger', '10'), stated('b', 'anger', '10'), stated('c', 'anger', '11'), stated('d', 'joy', '11'), stated('e', 'none', '10'), stated('f', 'none', '11'), { id: 'g', metrics: {} }];
   const html = renderToStaticMarkup(React.createElement(Panel, { posts }));
-  assert.ok(html.indexOf('Perkembangan emosi') > 0 && html.indexOf('Perkembangan emosi') < html.indexOf('class="pea-emotions"'), 'the chart is above the emotions');
+  assert.ok(html.indexOf('Perkembangan emosi') > 0 && html.indexOf('Perkembangan emosi') < html.indexOf('pea-emotions"'), 'the chart is above the emotions');
   const order = [...html.matchAll(/aria-label="([A-Za-z]+): (\d+) posting\. Lihat sumber"/g)].map(match => match[1] + ' ' + match[2]);
   assert.deepEqual(order, ['Marah 3', 'Senang 1', 'Sedih 0', 'Takut 0', 'Jijik 0', 'Kagum 0']);
   assert.match(html, /75% dari yang beremosi/, 'a share is of the posts that state an emotion');
@@ -32,7 +32,7 @@ test('the daily chart comes first, and the emotions under it are its key and its
   assert.match(html, /Tanpa emosi jelas <strong>2<\/strong>/);
   assert.match(html, /1 belum dianalisis/);
   // Every emotion keeps one colour, shared by its tile and its bars.
-  assert.match(html, /class="pea-emotion anger"/);
+  assert.match(html, /<button type="button" class="pu-stat pea-emotion anger"[^>]*style="--stat-mark:var\(--emotion-anger\)"/, 'the product\'s KPI tile, marked with the emotion');
   assert.doesNotMatch(html, /11-10/, 'days are written as dates a reader says: 10 Nov');
   assert.match(html, /<th[^>]*>10 Nov<\/th>/);
  } finally { await server.close(); }

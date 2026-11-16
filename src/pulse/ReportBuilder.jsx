@@ -101,7 +101,7 @@ export default function ReportBuilder({ sections, brand, pages, status, onSectio
             <input id="rb-accent" type="color" disabled={locked} value={brand.accent || defaultAccent}
               onChange={event => { const value = event.target.value.toLowerCase(); onBrand({ accent: value === defaultAccent ? null : value }); }} />
             <code>{(brand.accent || defaultAccent).toUpperCase()}</code>
-            <PulseButton variant="quiet" size="sm" disabled={locked || !brand.accent} onClick={() => onBrand({ accent: null })}><RotateCcw aria-hidden="true" />Warna PULSE</PulseButton>
+            <PulseButton variant="quiet" disabled={locked || !brand.accent} onClick={() => onBrand({ accent: null })}><RotateCcw aria-hidden="true" />Warna PULSE</PulseButton>
           </div>
         </div>
         <div className="rb-field">

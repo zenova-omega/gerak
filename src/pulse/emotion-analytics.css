@@ -35,24 +35,18 @@
 
 /* The six emotions: the chart's key and its filter. Largest first; the bar is the share among posts that state one. */
 .pea-pick{margin-top:1.75rem}
-.pea-emotions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.5rem;margin-top:1rem}
-.pulse-standalone button.pea-emotion{display:grid;justify-items:start;gap:.15rem;padding:.9rem .9rem 1rem;border:1px solid var(--ps-line);border-radius:12px;background:transparent;color:var(--ps-ink);min-width:0;text-align:left;box-shadow:none;cursor:pointer}
-.pulse-standalone button.pea-emotion:hover{background:var(--ps-soft)}
-.pulse-standalone button.pea-emotion[aria-pressed=true]{background:var(--ps-soft);border-color:var(--emotion-color)}
+/* The emotions are the product's KPI tiles (PulseStatGrid, PulseStat with the emotion as `mark`); six across. */
+.pulse-standalone .pu-stat-grid.pea-emotions{grid-template-columns:repeat(6,minmax(0,1fr));margin-top:1rem}
+/* Six tiles across are narrow: the meter's words go under the bar instead of being cut (as on Ikhtisar's summary card). */
+.pulse-standalone .pea-emotions .pu-stat-meter{flex-wrap:wrap;row-gap:2px}.pulse-standalone .pea-emotions .pu-stat-meter>small{flex-basis:100%;white-space:normal;overflow:visible}
 .pea-emotion.joy{--emotion-color:var(--emotion-joy)}.pea-emotion.anger{--emotion-color:var(--emotion-anger)}.pea-emotion.sadness{--emotion-color:var(--emotion-sadness)}.pea-emotion.fear{--emotion-color:var(--emotion-fear)}.pea-emotion.disgust{--emotion-color:var(--emotion-disgust)}.pea-emotion.admiration{--emotion-color:var(--emotion-admiration)}
 .pea-face{display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin-bottom:.5rem;border-radius:50%;background:color-mix(in oklab,var(--emotion-color) 20%,var(--ps-panel));font-size:1.625rem;line-height:1}
 .pulse-standalone .pea-face svg{width:28px;height:28px;flex-shrink:0}
-.pea-label{display:inline-flex;align-items:center;gap:.4rem;font-size:.875rem;font-weight:600}
-.pea-label i{flex:none;width:10px;height:10px;border-radius:3px;background:var(--emotion-color)}
-.pea-emotion strong{font-size:1.5rem;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
-.pea-emotion small{font-size:.75rem;color:var(--ps-muted);font-weight:400}
-.pea-bar{height:6px;width:100%;margin-top:.6rem;border-radius:3px;background:var(--ps-line);overflow:hidden}
-.pea-bar i{display:block;height:100%;min-width:0;border-radius:3px;background:var(--emotion-color)}
 
 .pea-data{margin-top:1.25rem}
 .pea-data summary{font-size:.8125rem;color:var(--ps-muted);cursor:pointer}
 .pea-table{overflow:auto}.pea-table table{border-collapse:collapse;width:100%;font-size:.8125rem}.pea-table th,.pea-table td{padding:.5rem;text-align:left;border-bottom:1px solid var(--ps-line)}
 .pea-evidence{margin-top:1.5rem;border-top:1px solid var(--ps-line);padding-top:1rem}.pea-evidence header{display:flex;gap:1rem;justify-content:space-between;align-items:center}.pea-evidence h3 span{font-size:.8125rem;color:var(--ps-muted);font-weight:400}.pea-evidence ol{list-style:none;padding:0;margin:0}.pea-evidence li{padding:1.25rem 0;border-bottom:1px solid var(--ps-line)}.pea-identity{display:flex;gap:.75rem;align-items:center}.pea-identity>div{display:grid;gap:.25rem}.pea-identity span{font-size:.75rem;color:var(--ps-muted)}.pea-evidence p{font-size:.9rem;line-height:1.65;max-width:70ch;white-space:pre-wrap;overflow-wrap:anywhere}.pea-evidence .pea-reason{font-size:.8125rem;color:var(--ps-muted)}.pea-evidence a{font-size:.8125rem;color:var(--ps-accent)}.pea-review{font-size:.75rem;background:var(--ps-peach);color:var(--ps-warning-ink);padding:.25rem .5rem;margin-right:.75rem}
 
-@media(max-width:1100px){.pea-emotions{grid-template-columns:repeat(3,minmax(0,1fr))}.pea-lede{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:480px){.pea-emotions{grid-template-columns:repeat(2,minmax(0,1fr))}.pea-aside{margin-left:0}.pea-chart{height:220px}}
+@media(max-width:1100px){.pulse-standalone .pu-stat-grid.pea-emotions{grid-template-columns:repeat(3,minmax(0,1fr))}.pea-lede{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.pulse-standalone .pu-stat-grid.pea-emotions{grid-template-columns:repeat(2,minmax(0,1fr))}.pea-aside{margin-left:0}.pea-chart{height:220px}}

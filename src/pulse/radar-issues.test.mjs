@@ -40,12 +40,13 @@ const lead = props => render(props, '/src/pulse/RadarLead.jsx');
 // A row of the list, card or not: the three highest carry "rdi-row rdi-feature".
 const rows = html => (html.match(/<ol[^>]*class="rdi-list"[\s\S]*?<\/ol>/)?.[0] || '').split(/(?=<li[^>]*class="rdi-row[" ])/).slice(1);
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
-const group = (html, name) => html.match(new RegExp(`<div[^>]*role="group"[^>]*aria-label="${name}"[^>]*>[\\s\\S]*?</div>`))?.[0] || '';
+// A filter row by its visible name (PulseFilterGroup): the name, then its chips.
+const group = (html, name) => html.match(new RegExp(`<div role="group"[^>]*class="pu-filter-group[^"]*"[^>]*><span[^>]*class="pu-filter-label"[^>]*>${name}</span><div class="pu-tag-group">[\\s\\S]*?</div></div>`))?.[0] || '';
 const buttons = markup => [...markup.matchAll(/<button[^>]*>([^<]*)</g)].map(match => match[1]);
 // A chip of the first card: its name and, apart from it, its count.
 const chips = markup => [...markup.matchAll(/<button[^>]*class="pu-tag"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
-// The figures of the refresh, one entry of the line each.
-const figures = html => [...html.matchAll(/<div><dt>[\s\S]*?<\/dd><\/div>/g)].map(match => text(match[0]));
+// The figures of the refresh, one KPI tile (PulseStat) each.
+const figures = html => [...html.matchAll(/<div class="pu-stat"[^>]*>[\s\S]*?<\/div>/g)].map(match => text(match[0]));
 
 // ── The first card: what the page answers, when it was made, and the choices that apply to the whole page ────────────
 
@@ -54,8 +55,8 @@ test('the first card names the scope, says when the list was made, carries the b
   assert.match(html, /<h2[^>]*>Isu yang ramai di Indonesia</);
   assert.match(text(html), /Diperbarui 08\.10 WIB, tiap 30 menit/);
   assert.match(text(html), /Pengunduran diri Wapres mendominasi \[1\]\./);
-  const categories = group(html, 'Kategori isu');
-  assert.match(categories, /class="rdl-chips"/);
+  const categories = group(html, 'Kategori');
+  assert.match(categories, /data-layout="inline"/, 'the shared filter group, its name beside the chips');
   assert.deepEqual(chips(categories), ['Semua 12', 'Politik 11', 'Olahraga 1'], 'a category with nothing in it is not offered');
   assert.deepEqual(chips(group(html, 'Platform')), ['Semua platform', 'Berita', 'Google'], 'a platform with no issue in this refresh is not offered');
   assert.match(html, /<button[^>]*>(?:<svg[\s\S]*?<\/svg>)?Perbarui sekarang<\/button>/);
@@ -65,14 +66,14 @@ test('the first card names the scope, says when the list was made, carries the b
 
 test('a filter is shown as pressed, takes the row numbers out of the brief, and a province is chosen from a list that can go back to the whole country', async () => {
   const filtered = await lead({ payload, filters: { ...none, category: 'politik' } });
-  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*aria-pressed="true"[^>]*><span class="pu-tag-label">Politik<\/span><span class="pu-tag-count">11</);
+  assert.match(group(filtered, 'Kategori'), /<button[^>]*aria-pressed="true"[^>]*><span class="pu-tag-label">Politik<\/span><span class="pu-tag-count">11</);
   assert.match(text(filtered), /Pengunduran diri Wapres mendominasi\./);
   assert.doesNotMatch(text(filtered), /\[1\]/);
   const province = await lead({ payload, filters: { ...none, province: 'ID-JI' } });
   assert.match(province, /<h2[^>]*>Isu yang ramai di Jawa Timur</);
-  assert.match(province, /<select[^>]*aria-label="Wilayah"[^>]*><option value="">Seluruh Indonesia<\/option>[\s\S]*?<option value="ID-JI" selected="">Jawa Timur · 2 isu<\/option>/);
+  assert.match(province, /<span class="pu-filter-label">Wilayah<\/span><select[^>]*><option value="">Seluruh Indonesia<\/option>[\s\S]*?<option value="ID-JI" selected="">Jawa Timur · 2 isu<\/option>/);
   assert.doesNotMatch(text(province), /mendominasi/, 'the national brief is not shown over a province list');
-  assert.deepEqual(chips(group(province, 'Kategori isu')), ['Semua 4', 'Politik 1', 'Hukum 1', 'Olahraga 2']);
+  assert.deepEqual(chips(group(province, 'Kategori')), ['Semua 4', 'Politik 1', 'Hukum 1', 'Olahraga 2']);
 });
 
 test('each state of the radar has its own words in the first card', async () => {
@@ -101,9 +102,9 @@ test('the figures of the refresh, one line in the first card, count the refresh 
   assert.equal(cells.length, 4);
   assert.match(cells[0], /^Isu tersusun 14 12 nasional, 2 lokal$/);
   assert.match(cells[1], /^Sinyal dibaca 227 berita 122, pencarian 54, video 51$/);
-  assert.match(cells[2], /^Daftar provinsi terbaca 2 dari 34 6% terbaca$/);
-  assert.match(cells[3], /^Isu teratas dipantau 1 dari 10 10% dicakup project$/);
-  assert.match(html, /<dl class="rdf" aria-label="Angka pembaruan ini">/);
+  assert.match(cells[2], /^Daftar provinsi terbaca 2 6% terbaca dari 34 provinsi$/);
+  assert.match(cells[3], /^Isu teratas dipantau 1 10% dicakup project dari 10 isu teratas$/);
+  assert.match(html, /<div class="pu-stat-grid rdf" role="group" aria-label="Angka pembaruan ini" data-size="compact">/, 'the product\'s KPI tiles, at their compact step');
   const bare = await render({ payload: { ...payload, signals: {}, provinces_read: null } }, '/src/pulse/RadarFigures.jsx');
   assert.match(text(bare), /Sinyal dibaca —/, 'a figure the refresh did not report is unavailable, not zero');
 });
@@ -360,13 +361,13 @@ test('a column of the top ten per platform carries the same small picture, wide 
 
 test('the first card names each choice in words, breaks the freshness line into facts, and says how much a filter hides', async () => {
   const html = await lead({ payload });
-  assert.match(html, /class="rdl-row-name"[^>]*>Kategori</);
-  assert.match(html, /class="rdl-row-name"[^>]*>Platform</);
+  assert.match(html, /class="pu-filter-label"[^>]*>Kategori</);
+  assert.match(html, /class="pu-filter-label"[^>]*>Platform</);
   assert.match(html, /class="rdl-facts"><span>Diperbarui 08\.10 WIB, tiap 30 menit<\/span>/);
   assert.doesNotMatch(html, /rdl-active/, 'with nothing chosen there is nothing to say about what is hidden');
   const filtered = await lead({ payload, filters: { ...none, category: 'politik' } });
   assert.match(text(filtered), /Menampilkan 11 dari 12 isu Tampilkan semua isu/);
-  assert.match(filtered, /<button[^>]*class="rdl-clear"[^>]*>Tampilkan semua isu<\/button>/);
+  assert.match(filtered, /<button[^>]*class="[^"]*\brdl-clear\b[^"]*"[^>]*>Tampilkan semua isu<\/button>/);
   const province = await lead({ payload, filters: { ...none, province: 'ID-JI' } });
-  assert.match(province, /class="rdl-row-name"[^>]*>Wilayah</);
+  assert.match(province, /class="pu-filter-label"[^>]*>Wilayah</);
 });

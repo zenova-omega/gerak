@@ -36,19 +36,21 @@ async function render(path, name, props) {
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 const view = props => render('/src/pulse/Home.jsx', 'HomeView', { radar, projects, filters: none, canCreate: true, now, onFilters() {}, onSelect() {}, onRefresh() {}, ...props });
 const lead = props => render('/src/pulse/RadarLead.jsx', 'default', { payload: radar, filters: none, canCreate: true, now, onFilters() {}, ...props });
-const group = (html, name) => html.match(new RegExp(`<div[^>]*role="group"[^>]*aria-label="${name}"[^>]*>[\\s\\S]*?</div>`))?.[0] || '';
+// A filter row by its visible name (PulseFilterGroup): the name, then its chips.
+const group = (html, name) => html.match(new RegExp(`<div role="group"[^>]*class="pu-filter-group[^"]*"[^>]*><span[^>]*class="pu-filter-label"[^>]*>${name}</span><div class="pu-tag-group">[\\s\\S]*?</div></div>`))?.[0] || '';
 const chips = markup => [...markup.matchAll(/<button[^>]*class="pu-tag"[^>]*>([\s\S]*?)<\/button>/g)].map(match => text(match[1]));
 const source = name => readFileSync(new URL('./' + name, import.meta.url), 'utf8');
 
 test('Beranda reads top to bottom: the answer with its figures and filters, the list beside the map, the projects, then the columns per platform', async () => {
   const html = await view({});
-  const marks = ['aria-label="Isu yang ramai di Indonesia"', 'aria-label="Angka pembaruan ini"', 'aria-label="Kategori isu"', 'aria-label="Isu teratas"',
+  const marks = ['aria-label="Isu yang ramai di Indonesia"', 'aria-label="Angka pembaruan ini"', '>Kategori</span><div class="pu-tag-group">', 'aria-label="Isu teratas"',
     'aria-label="Peta sebaran isu"', 'aria-label="Provinsi paling ramai"', 'aria-label="Jejak platform"', 'id="hm-projects"', 'aria-label="Isu teratas per platform"'];
   const order = marks.map(mark => html.indexOf(mark));
   assert.ok(order.every((at, index) => at > 0 && (index === 0 || at > order[index - 1])), `in this order: ${order}`);
   const first = html.slice(order[0], order[3]);
   assert.match(first, /aria-label="Angka pembaruan ini"/, 'the figures of the refresh sit in the first card, not in a strip of their own');
-  assert.doesNotMatch(html, /pu-stat-grid/);
+  assert.equal((html.match(/class="pu-stat-grid[^"]*"/g) || []).length, 1, 'one set of figures, the compact one in the first card: no strip of KPI tiles of its own');
+  assert.match(first, /class="pu-stat-grid rdf"[^>]*data-size="compact"/);
   assert.equal((html.match(/class="lay-8"/g) || []).length, 1, 'one wide column: the list; the map and rankings are its side column');
   assert.doesNotMatch(html, /Komposisi isu/, 'the categories and their counts are the switches themselves');
 });
@@ -68,19 +70,19 @@ test('explanations sit behind info buttons, and their words are kept there', asy
 
 test('the filters: categories and platforms as chips with their counts and marks, a province picked from a list, and what a filter hides', async () => {
   const html = await lead({});
-  assert.deepEqual(chips(group(html, 'Kategori isu')), ['Semua 12', 'Politik 11', 'Olahraga 1']);
-  assert.match(group(html, 'Kategori isu'), /<span class="pu-tag-count">11<\/span>/, 'the count is set apart from the name');
+  assert.deepEqual(chips(group(html, 'Kategori')), ['Semua 12', 'Politik 11', 'Olahraga 1']);
+  assert.match(group(html, 'Kategori'), /<span class="pu-tag-count">11<\/span>/, 'the count is set apart from the name');
   const platforms = [...group(html, 'Platform').matchAll(/<button[^>]*class="pu-tag"[^>]*>([\s\S]*?)<\/button>/g)].map(match => match[1]);
   assert.deepEqual(platforms.map(text), ['Semua platform', 'Berita', 'YouTube', 'Google']);
   assert.ok(platforms.slice(1).every(chip => /<svg/.test(chip)), 'each platform carries its mark');
-  const select = html.match(/<select[^>]*aria-label="Wilayah"[^>]*>[\s\S]*?<\/select>/)?.[0] || '';
+  const select = html.match(/<span class="pu-filter-label">Wilayah<\/span><select[^>]*>[\s\S]*?<\/select>/)?.[0] || '';
   assert.deepEqual([...select.matchAll(/<option[^>]*>([^<]*)<\/option>/g)].map(match => match[1]), ['Seluruh Indonesia', 'Jawa Timur · 2 isu', 'DKI Jakarta · 1 isu'],
     'only provinces where an issue is loud, the busiest first');
   const chosen = await lead({ filters: { ...none, province: 'ID-JI' } });
   assert.match(chosen, /<option value="ID-JI" selected="">/);
   assert.match(chosen, /<h2[^>]*>Isu yang ramai di Jawa Timur/);
   const filtered = await lead({ filters: { ...none, category: 'olahraga' } });
-  assert.match(group(filtered, 'Kategori isu'), /<button[^>]*class="pu-tag"[^>]*aria-pressed="true"[^>]*>(?:<svg[\s\S]*?<\/svg>)?<span class="pu-tag-label">Olahraga/);
+  assert.match(group(filtered, 'Kategori'), /<button[^>]*class="pu-tag"[^>]*aria-pressed="true"[^>]*>(?:<svg[\s\S]*?<\/svg>)?<span class="pu-tag-label">Olahraga/);
   assert.match(text(filtered), /Menampilkan 1 dari 12 isu Tampilkan semua isu/);
 });
 

@@ -21,9 +21,10 @@ export function Sparkline({ values = [], width = 84, height = 36 }) {
   </svg>;
 }
 
-/** One strip of stats on a single surface. Children are PulseStat cells. */
-export function PulseStatGrid({ label, children, className = '' }) {
-  return <div className={`pu-stat-grid ${className}`.trim()} role="group" aria-label={label}>{children}</div>;
+/** One strip of stats on a single surface. Children are PulseStat cells. `compact` is the same tile one step smaller, for
+ * figures that sit inside a card as one quiet line (Beranda's refresh figures), not a strip of their own. */
+export function PulseStatGrid({ label, children, className = '', compact = false }) {
+  return <div className={`pu-stat-grid ${className}`.trim()} role="group" aria-label={label} data-size={compact ? 'compact' : undefined}>{children}</div>;
 }
 
 /** One observed figure: the KPI card. A null value renders as unavailable, never as zero. Pass a string
@@ -38,25 +39,27 @@ export function PulseStatGrid({ label, children, className = '' }) {
  * @param {{label: string, value: number|string|null, note?: import('react').ReactNode, icon?: import('react').ElementType,
  *   tone?: 'positive'|'negative'|'neutral-sentiment'|'unknown', delta?: number|null, deltaUnit?: string,
  *   deltaIntent?: 'neutral'|'good'|'bad', deltaNote?: string, share?: number|null, shareText?: string, shareLabel?: string,
- *   trend?: number[], href?: string, onClick?: Function}} props
+ *   trend?: number[], href?: string, onClick?: Function, mark?: string, pressed?: boolean, ariaLabel?: string, className?: string}} props
+ * - `mark` is a categorical colour (an emotion, a platform) for the label's square and the meter, where `tone` is a
+ *   sentiment; `pressed` makes an `onClick` tile a toggle; `ariaLabel` names the tile when its words are not enough.
  */
-export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareText, shareLabel, trend, media, href, onClick, as: Link, to }) {
+export function PulseStat({ label, value, note, icon: Icon, tone, delta, deltaUnit, deltaIntent, deltaNote, share, shareText, shareLabel, trend, media, href, onClick, as: Link, to, mark, pressed, ariaLabel, className = '' }) {
   const text = typeof value === 'string';
   const hasShare = Number.isFinite(share);
   const percent = hasShare ? Math.max(0, Math.min(100, share)) : 0;
   const printed = shareText || meterText(percent);
   const body = <>
     {media && <span className="pu-stat-media">{media}</span>}
-    <span className="pu-stat-label">{tone ? <i aria-hidden="true" /> : Icon && <Icon size={14} aria-hidden="true" />}{label}</span>
+    <span className="pu-stat-label">{tone || mark ? <i aria-hidden="true" /> : Icon && <Icon size={14} aria-hidden="true" />}{label}</span>
     <span className="pu-stat-value"><strong data-kind={text ? 'text' : undefined}>{text ? value : value == null ? <span aria-label="Tidak tersedia">—</span> : formatCount(value)}</strong><PulseDelta value={delta} unit={deltaUnit} intent={deltaIntent} />{deltaNote && Number.isFinite(delta) && <small className="pu-stat-delta-note">{deltaNote}</small>}</span>
     {hasShare && <span className="pu-stat-meter" role="img" aria-label={`${shareText || `${Math.round(percent)}%`}${shareLabel ? ' ' + shareLabel : ''}`}><span className="pu-stat-meter-track"><i style={{ width: `${percent}%` }} /></span><b>{printed}</b>{shareLabel && <small>{shareLabel}</small>}</span>}
     {note && <span className="pu-stat-note">{note}</span>}
     {trend && <span className="pu-stat-spark"><Sparkline values={trend} /></span>}
   </>;
-  const shared = { className: 'pu-stat', 'data-tone': tone, 'data-has-meter': hasShare ? '' : undefined, 'data-has-media': media ? '' : undefined };
+  const shared = { className: `pu-stat ${className}`.trim(), 'data-tone': tone, 'data-has-meter': hasShare ? '' : undefined, 'data-has-media': media ? '' : undefined, style: mark ? { '--stat-mark': mark } : undefined, 'aria-label': ariaLabel };
   if (Link && to) return <Link {...shared} to={to}>{body}</Link>;
   if (href) return <a {...shared} href={href}>{body}</a>;
-  if (onClick) return <button type="button" {...shared} onClick={onClick}>{body}</button>;
+  if (onClick) return <button type="button" {...shared} aria-pressed={pressed} onClick={onClick}>{body}</button>;
   return <div {...shared}>{body}</div>;
 }
 

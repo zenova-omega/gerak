@@ -61,7 +61,5 @@
   .pulse-standalone .ps-project-period form button { grid-column: 1 / -1; }
   .pulse-standalone :is(.po-executive, .pqs-builder) { padding: 16px; }
   .pulse-standalone :is(.pulse-chart-grid, .pulse-detail-grid, .pi-layout) { gap: 20px; }
-  .pulse-standalone .sc-account-overview dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pulse-standalone .sc-account-overview dl > :last-child { grid-column: 1 / -1; }
 }
 @media print { .ps-menu-toggle { display: none !important; } }

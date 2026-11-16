@@ -39,4 +39,10 @@ h2.pu-card-title { font-size: var(--ps-title-panel); }
 .pu-filter-select { display: grid; gap: var(--ps-space-2); min-width: 0; }
 /* The select itself is styled by the shared dropdown rule in ds/analytics-kit.css (44px, keycap edge, caret). */
 .pu-filter-select > select { min-width: 160px; max-width: 100%; }
-@media (max-width: 700px) { .pu-filter-select > select { width: 100%; } .pu-filter-bar, .pu-filter-controls { align-items: stretch; } .pu-filter-select { flex: 1 1 100%; } }
+/* inline: the name beside its choices. Every inline group and select shares one label column, so stacked rows line up,
+   and the name is centred on the first row of controls (chips 36px, a select 44px), never on a wrapped second row. */
+.pu-filter-group[data-layout=inline], .pu-filter-select[data-layout=inline] { grid-template-columns: var(--pu-filter-label-width, 88px) minmax(0, 1fr); align-items: start; column-gap: var(--ps-space-4); }
+:is(.pu-filter-group, .pu-filter-select)[data-layout=inline] > .pu-filter-label { display: flex; align-items: center; min-height: var(--ps-control-sm); }
+.pu-filter-select[data-layout=inline] > .pu-filter-label { min-height: var(--ps-control-md); }
+.pu-filter-select[data-layout=inline] > select { justify-self: start; }
+@media (max-width: 700px) { .pu-filter-group[data-layout=inline], .pu-filter-select[data-layout=inline] { grid-template-columns: minmax(0, 1fr); } :is(.pu-filter-group, .pu-filter-select)[data-layout=inline] > .pu-filter-label { min-height: 0; } .pu-filter-select > select { width: 100%; } .pu-filter-bar, .pu-filter-controls { align-items: stretch; } .pu-filter-select { flex: 1 1 100%; } }
