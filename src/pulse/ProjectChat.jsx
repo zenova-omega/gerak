@@ -230,6 +230,7 @@ function Chat({ topicId }) {
       <div className="pch-main">
         {view.state === 'missing' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan tidak ditemukan.</span><PulseButton size="sm" onClick={() => startNew({ replace: true })}>Mulai percakapan baru</PulseButton></PulseNotice></div>}
         {view.state === 'failed' && <div ref={mark}><PulseNotice tone="warning" role="alert"><span>Percakapan tidak dapat dibuka.</span><PulseButton size="sm" onClick={() => setFailure(null)}>Coba lagi</PulseButton></PulseNotice></div>}
+        <h2 className="pu-sr">Percakapan</h2>
         <div className="pc-thread" aria-live={spoken ? 'polite' : 'off'}>
           {view.state === 'opening' && <div className="pc-pending" ref={mark}><PulseLoader inline label="Membuka percakapan…" /></div>}
           {view.state === 'ready' && !view.turns.length && !waitingHere && ready && <div className="pc-starters"><p>Coba salah satu pertanyaan ini</p><div className="pu-tag-group">{(postId ? postQuestions : generalQuestions).map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question)}>{question}</PulseTag>)}</div>{!postId && <><p className="pc-starters-plan">Rencana respons</p><div className="pu-tag-group">{responseQuestions.map(question => <PulseTag key={question} size="lg" variant="outline" onClick={() => ask(question, 'respons')}>{question}</PulseTag>)}</div></>}</div>}

@@ -63,3 +63,8 @@
   .pulse-standalone :is(.pulse-chart-grid, .pulse-detail-grid, .pi-layout) { gap: 20px; }
 }
 @media print { .ps-menu-toggle { display: none !important; } }
+
+/* Small inline links (citation chips, card footers, source links) are 17-22px tall. Their drawn size stays; the hit area grows
+   to 44px high through an invisible pseudo-element, so a finger or a pointer lands on them without the layout changing. */
+.pulse-standalone :is(.pc-cite, .pse-foot > a, .pi-source, .phl-mention-link, .ped-who a) { position: relative; }
+.pulse-standalone :is(.pc-cite, .pse-foot > a, .pi-source, .phl-mention-link, .ped-who a)::after { content: ''; position: absolute; inset: -12px -4px; }

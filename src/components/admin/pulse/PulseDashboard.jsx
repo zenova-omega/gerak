@@ -205,6 +205,9 @@ function Analytics({ data, view = 'all', period, onPeriodChange, topic, selected
   </>;
 }
 
+// The standalone workspace wraps every page in its own <main>; a second one inside it would nest landmarks.
+function PageMain({ standalone, ...props }) { return standalone ? <div {...props} /> : <main {...props} />; }
+
 export default function PulseDashboard({ standalone = false, view = 'all' }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -300,7 +303,7 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
       {!standalone && <div><TopicManager resource={topics} onSelectTopic={selectTopic} selectedTopicId={topicId} disabled={!!action || needsLogin} onChanged={refresh} />
         {!standalone && <div className="pulse-bootstrap"><Database size={20} /><strong>Mulai dari topik awal</strong><PulseButton variant="secondary" className="pulse-button" disabled={!!action || needsLogin || topics.loading} onClick={() => run('bootstrap')}>{action === 'bootstrap' ? 'Menyiapkan…' : 'Siapkan topik awal'}</PulseButton></div>}
       </div>}
-      <main className="pulse-main">
+      <PageMain standalone={standalone} className="pulse-main">
         {view === 'posts' && <div className="ps-content-switch" role="group" aria-label="Jenis konten"><PulseButton aria-pressed={contentMode === 'posts'} onClick={()=>setContentMode('posts')}>Posting individual</PulseButton><PulseButton aria-pressed={contentMode === 'issues'} onClick={()=>setContentMode('issues')}>Kelompok percakapan</PulseButton></div>}
         {!standalone && <details className="ps-data-tools"><summary>Pengaturan pengumpulan</summary>
         <div className="pulse-scope"><div><h2>{selected ? selected.label : 'Ikhtisar semua topik'}</h2></div><PulseButton variant="primary" className="pulse-button primary" disabled={!topicId || !!action || needsLogin || topics.loading} onClick={() => run('crawl')}><Download size={15} />{action === 'crawl' ? 'Mengumpulkan sumber…' : 'Crawl manual'}</PulseButton></div>
@@ -322,7 +325,7 @@ export default function PulseDashboard({ standalone = false, view = 'all' }) {
           {issues.loading ? <p className="pulse-loading" role="status">Memuat isu…</p> : issues.error ? <ErrorNotice standalone={standalone} error={issues.error} retry={issues.refetch} /> : filtered.length ? <div className="pulse-issue-list">{filtered.map(issue => <IssueCard key={issue.id + ':' + issue.last_seen_at + ':' + issue.item_count} issue={issue} platformFilter={platform ?? "all"} dateMode="absolute" />)}</div> : <Empty>{issues.issues.length ? 'Tidak ada isu yang cocok dengan filter platform.' : 'Belum ada isu.'}</Empty>}
         </section>}
         <footer className="pulse-footer"><ShieldCheck size={14} />Sampel percakapan publik</footer>
-      </main>
+      </PageMain>
     </div>
   </div></ProjectPostsContext.Provider>;
 }

@@ -37,13 +37,13 @@ export default function SourceDisclosure({ source, budget, topicId, readOnly, bu
           {!source.public_search && <PulseButton disabled={readOnly || busy} onClick={() => onCollect(source)}>Periksa koneksi Threads</PulseButton>}
         </div>
       </div>}
-      <div className="sc-field-section"><h3>Kelengkapan data</h3>
+      <div className="sc-field-section"><h3>Kelengkapan data<span className="sr-only"> {names[source.platform] || source.platform}</span></h3>
         <dl className="sc-fields">{fields.map(([key, title]) => {
           const field = coverageField(source.fields?.[key], source.stored_posts);
           return <div key={key}><dt>{title}</dt><dd><span className="sc-field-track" aria-hidden="true"><span style={{ width: `${field?.percent || 0}%` }} /></span><span>{field ? `${count(field.count)} / ${count(field.total)}` : 'Tidak diketahui'}</span></dd></div>;
         })}</dl>
       </div>
-      <div className="sc-evidence-section"><h3>Akses & riwayat</h3><dl className="sc-history">
+      <div className="sc-evidence-section"><h3>Akses & riwayat<span className="sr-only"> {names[source.platform] || source.platform}</span></h3><dl className="sc-history">
         <div><dt>Koneksi</dt><dd>{source.configured ? 'Dikonfigurasi' : 'Belum dikonfigurasi'}</dd></div>
         {source.provider === 'social' && <div><dt>Alat pada akun</dt><dd>{source.tool_available === true ? 'Tersedia' : source.tool_available === false ? 'Tidak tersedia' : 'Belum diperiksa'}</dd></div>}
         <div><dt>Berhasil terakhir</dt><dd>{time(source.last_success_at)}</dd></div>

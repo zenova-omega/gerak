@@ -48,9 +48,11 @@ function SearchWorkspace({params}){
  return <section className="ps-quick-search pqs-workspace"><PulsePageHead icon={pageMeta.search.icon} title={pageMeta.search.title} tagline={pageMeta.search.tagline} guide={pageMeta.search.guide}/>
   {error&&<PulseNotice tone="warning" role="alert">{error}</PulseNotice>}
   <form className="pqs-builder" onSubmit={start}><fieldset disabled={busy||!!project} className="pqs-fields">
+   <h2>Kata kunci</h2>
    <KeywordChips label="Kata utama" value={main} onChange={setMain} placeholder="calon wakil presiden, cawapres" help="Pisahkan dengan koma. OR: cukup satu cocok."/>
    <SmartKeywords fields={{main,required,excluded}} onAdd={added=>{setMain(value=>mergeTerms(value,added.variation));setRequired(value=>mergeTerms(value,added.context));setExcluded(value=>mergeTerms(value,added.exclude));if(added.context.length||added.exclude.length)setRefine(true);}}/>
    <details open={refine||Boolean(params.get('required')||params.get('excluded'))} onToggle={event=>setRefine(event.currentTarget.open)}><summary>Konteks &amp; pengecualian</summary><div className="pqs-refinements"><KeywordChips label="Konteks wajib" value={required} onChange={setRequired} placeholder="Indonesia" help="AND: semua wajib muncul."/><KeywordChips label="Pengecualian" value={excluded} onChange={setExcluded} placeholder="promo, jualan" help="NOT: posting dengan istilah ini diabaikan."/></div></details>
+   <h2>Sumber dan rentang waktu</h2>
    <PlatformCheckboxes platforms={platforms} value={selected} onChange={setSelected}/>
    <label className="ps-lookback">Tarik posting berapa hari ke belakang<select value={lookback} onChange={e=>setLookback(Number(e.target.value))}><option value={7}>7 hari terakhir</option><option value={14}>14 hari terakhir</option><option value={30}>30 hari terakhir (maksimal)</option></select></label>
    <div className="pqs-actions"><PulseButton type="submit" variant="primary" busy={busy} busyLabel="Mengumpulkan…">Cari &amp; buat project</PulseButton></div>
