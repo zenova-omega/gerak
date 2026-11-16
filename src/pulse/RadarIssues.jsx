@@ -62,6 +62,7 @@ export default function RadarIssues({ payload, filters, onFilters, selectedKey =
   // A plus sign is a lower bound (searches, and posts counted on X). Said once, behind the list's info button.
   const bounded = rows.some(issue => issue.platforms?.search || Number.isFinite(issue.platforms?.x?.count));
   const title = <>Isu teratas<InfoTip label="Tentang urutan isu"><p>Urutan menggabungkan posisi isu di tiap platform; isu di lebih banyak platform berada lebih atas.</p>
+    <p>Baru, Naik, dan Turun dibandingkan dengan daftar sehari sebelumnya.</p>
     <p>Garis di samping angka dibandingkan dengan isu paling ramai pada daftar di platform itu. TikTok dan Instagram berupa sampel, jadi hanya disebut jumlah yang ditemukan.</p>
     {bounded && <p>Tanda + berarti batas bawah: sedikitnya sebanyak itu yang tercatat.</p>}</InfoTip></>;
   return <AnalyticsPanel title={title} label="Isu teratas" description={description} className="rdi">

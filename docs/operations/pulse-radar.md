@@ -17,7 +17,7 @@ On an installation that runs the local model (`AI_PROVIDER=ollama`) step 2 is sk
 
 ## Switching it on
 
-The switch is **Radar isu Indonesia** in Monitor, with the other collection switches. It is **off** after installation. While it is on, the job checks once a minute and refreshes when the last refresh started 30 minutes ago or more.
+The switch is **Radar isu Indonesia** in Monitor, with the other collection switches. It is **off** after installation. While it is on, the job checks once a minute and makes the list **once a day at 08.00 WIB** (from 16 Nov 2026; before that every 30 minutes). The time is `PULSE_RADAR_DAILY_AT` (`HH:MM`, default `08:00`) on the installation's clock (`PULSE_ZONE_OFFSET_MINUTES`); both live in the server's settings, so the schedule is the same after every restart. A morning missed while the API was stopped or the laptop asleep is made up the minute the job runs again. A day's refresh that gives no list (nothing read, or no issues composed) is tried again every 30 minutes until the day has one. Movement on the page ("Baru", "Naik 3", "Turun 2") is told against the list of about a day earlier.
 
 Someone who may change settings can also start one refresh from Beranda ("Perbarui sekarang", or "Jalankan sekarang" on a radar that never ran). That works with the switch off.
 
@@ -90,14 +90,16 @@ A search that matches no post is answered with `status: no_data` and a sentence,
 
 In that first round one TikTok search and one X search gave no answer, and under the rule of that hour the platform was then left alone: six issues went without a TikTok sample and two without an X sample. Both searches answered in under 8 seconds when repeated. The rule was changed to the one above.
 
-A day with the switch on, at 48 refreshes: the search of X about USD 0.39 (one search a day), plus USD 0.39 for each press of the refresh button, and up to eleven more tries on a day when every search gives nothing; on top of about USD 3.60 for grouping. Counts about 1,600 to 2,100 credits (ten issues, and up to twelve more that X found); samples about 2,300 to 2,600 credits when each of ten issues is sampled again every three hours, more on a day when the ten highest change often. Roughly **USD 4 and 4,000 to 4,700 credits a day**, against USD 3.60 and no credits with the switch off. (With the hourly search of the first design it was USD 12 to 13.) The supplier plan read on 15 Nov had 225,000 credits a month, shared with every project's collection.
+**Once a day (from 16 Nov 2026).** Every daily refresh is a first round: the search of X is due again and the samples of the day before are over three hours old. So a day costs what the first whole round above cost: about **USD 0.45 and 320 credits** with both switches on (USD 0.39 search, about USD 0.07 grouping, about 17 counts at 2 credits and ten samples at about 29), plus USD 0.39 and the same credits for each press of the refresh button. With only the first switch on, about USD 0.07 a day. The search of X is made at the day's refresh unless one was made in the last 20 hours (a press of the button the evening before); a refresh within those 20 hours carries its issues.
+
+The figures below are for the half-hourly schedule before 16 Nov. A day with the switch on, at 48 refreshes: the search of X about USD 0.39 (one search a day), plus USD 0.39 for each press of the refresh button, and up to eleven more tries on a day when every search gives nothing; on top of about USD 3.60 for grouping. Counts about 1,600 to 2,100 credits (ten issues, and up to twelve more that X found); samples about 2,300 to 2,600 credits when each of ten issues is sampled again every three hours, more on a day when the ten highest change often. Roughly **USD 4 and 4,000 to 4,700 credits a day**, against USD 3.60 and no credits with the switch off. (With the hourly search of the first design it was USD 12 to 13.) The supplier plan read on 15 Nov had 225,000 credits a month, shared with every project's collection.
 
 ## Reading the page's states
 
 | Beranda says | Meaning | Look at |
 |---|---|---|
 | "Radar belum pernah berjalan" | No run is stored. | Is the switch on? Run the check with `--save`. |
-| "Data terakhir …" | The newest composed list is over an hour old. | The API log, lines starting `radar:`. |
+| "Data terakhir …" | The newest composed list was made before the last 08.00 WIB, and that morning's refresh is over an hour late. | The API log, lines starting `radar:`. |
 | "Daftar mentah per platform" | Lists were read but no issues were composed for six hours. | Is the hosted AI reachable (`AI_PROVIDER`, the key, the balance)? |
 | "… tidak terbaca" in the freshness line | A source or a province list failed in that refresh. | Usually passes by the next refresh. |
 | "X belum lengkap", "TikTok belum lengkap", "Instagram belum lengkap" | Paid switch on, and that platform could not be asked everything: the search of X gave nothing and the last one is over 26 hours old, the supplier's lane is blocked or has no key, or answers were lost. | Monitor (is the supplier's lane blocked?), and the `radar:` lines of the API log. |
@@ -109,7 +111,7 @@ Each refresh writes one log line: `radar: <state>, <n> signals, <n> issues, <n> 
 
 On 15 Nov every refresh failed for four hours with only "37 missing" in the log. The hosted AI (whose client ignores the environment's network settings) kept answering, so the cause was in what the list and supplier clients read from the environment (proxy or certificate settings, which on macOS include the system proxy), most likely around the laptop's sleep, not in the sources themselves. The exact cause was not confirmed; a restart of the API cleared it. A line full of `ProxyError` or `ConnectError` while the AI lane is fine points there: restart the API.
 
-The final write is tried up to four times (2, 5 and 10 seconds apart) when the database is busy: the installation's database has one writer at a time, and on 15 Nov a refresh lost its whole list to "database is locked". Each retry writes `radar: the list could not be stored (database busy), trying again`. A refresh that still stores nothing is not started again by the schedule until the next interval, and a lock left by a stopped process is taken over the minute it runs out.
+The final write is tried up to four times (2, 5 and 10 seconds apart) when the database is busy: the installation's database has one writer at a time, and on 15 Nov a refresh lost its whole list to "database is locked". Each retry writes `radar: the list could not be stored (database busy), trying again`. A refresh that still stores nothing is not started again by the schedule for 30 minutes, and a lock left by a stopped process is taken over the minute it runs out.
 
 ## Where things are
 

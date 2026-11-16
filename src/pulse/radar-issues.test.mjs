@@ -19,7 +19,7 @@ const issues = [
   issue(13, 'Polda Jawa Timur', 'hukum', { search: { searches: 200 } }, { scope: 'local', regions: [region('ID-JI', 200)] }),
   issue(14, 'Kosovo lawan Israel', 'olahraga', { search: { searches: 500 } }, { scope: 'local', regions: [region('ID-JI', 500), region('ID-BA', 200), region('ID-SU', 200)] }),
 ];
-const payload = { state: 'ok', updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, running: false, missing: [], provinces_read: ['ID-JK', 'ID-JI'],
+const payload = { state: 'ok', updated_at: '2026-11-15T01:10:00', daily_at: '08:00', enabled: true, running: false, missing: [], provinces_read: ['ID-JK', 'ID-JI'],
   signals: { news: 122, search: 54, youtube: 51 }, last_attempt: { state: 'ok', at: '2026-11-15T01:10:00' }, brief: 'Pengunduran diri Wapres mendominasi [1].', issues, raw: null };
 const now = new Date('2026-11-15T01:30:00Z');
 const none = { category: '', platform: '', province: '' };
@@ -53,7 +53,7 @@ const figures = html => [...html.matchAll(/<div class="pu-stat"[^>]*>[\s\S]*?<\/
 test('the first card names the scope, says when the list was made, carries the brief and the page-wide switches', async () => {
   const html = await lead({ payload });
   assert.match(html, /<h2[^>]*>Isu yang ramai di Indonesia</);
-  assert.match(text(html), /Diperbarui 08\.10 WIB, tiap 30 menit/);
+  assert.match(text(html), /Diperbarui 08\.10 WIB, otomatis setiap hari pukul 08.00 WIB/);
   assert.match(text(html), /Pengunduran diri Wapres mendominasi \[1\]\./);
   const categories = group(html, 'Kategori');
   assert.match(categories, /data-layout="inline"/, 'the shared filter group, its name beside the chips');
@@ -363,7 +363,7 @@ test('the first card names each choice in words, breaks the freshness line into 
   const html = await lead({ payload });
   assert.match(html, /class="pu-filter-label"[^>]*>Kategori</);
   assert.match(html, /class="pu-filter-label"[^>]*>Platform</);
-  assert.match(html, /class="rdl-facts"><span>Diperbarui 08\.10 WIB, tiap 30 menit<\/span>/);
+  assert.match(html, /class="rdl-facts"><span>Diperbarui 08\.10 WIB, otomatis setiap hari pukul 08.00 WIB<\/span>/);
   assert.doesNotMatch(html, /rdl-active/, 'with nothing chosen there is nothing to say about what is hidden');
   const filtered = await lead({ payload, filters: { ...none, category: 'politik' } });
   assert.match(text(filtered), /Menampilkan 11 dari 12 isu Tampilkan semua isu/);

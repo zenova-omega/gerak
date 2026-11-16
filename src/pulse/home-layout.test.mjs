@@ -20,7 +20,7 @@ const issues = [
   issue(3, 'Timnas Indonesia', 'olahraga', { search: { searches: 2000 } }, [region('ID-JI', 500)]),
   ...Array.from({ length: 9 }, (_, index) => issue(index + 4, 'Isu politik ' + (index + 4), 'politik', { news: { count: 4 - index / 10 } })),
 ];
-const radar = { state: 'ok', updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, running: false, missing: [], provinces_read: ['ID-JI', 'ID-JK'],
+const radar = { state: 'ok', updated_at: '2026-11-15T01:10:00', daily_at: '08:00', enabled: true, running: false, missing: [], provinces_read: ['ID-JI', 'ID-JK'],
   signals: { news: 122, search: 54, youtube: 51 }, last_attempt: { state: 'ok', at: '2026-11-15T01:10:00' }, brief: 'Wapres mundur mendominasi [1].', issues, raw: null };
 const projects = [{ id: 't1', label: 'Isu Gibran', collecting: true, posts_total: 10, posts_24h: 2, posts_prev_24h: 1, alerts_unread: 0, last_collected_at: null,
   series_7d: [1, 2], sentiment_7d: { positive: 1, neutral: 1, negative: 0, unknown: 0 } }];

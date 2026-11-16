@@ -6,6 +6,9 @@ no database session open. One refresh at a time, held by a lease on the radar's 
 
 Behind a second, paid switch (off by default) a refresh also asks what is loud on X, counts the highest issues there,
 and samples posts from X, TikTok and Instagram as evidence. With that switch off none of it is asked.
+
+While the first switch is on the list is made once a day, at PULSE_RADAR_DAILY_AT on the installation's clock (08.00 WIB
+by default), and by hand with the refresh button.
 """
 import asyncio
 import collections
@@ -33,7 +36,7 @@ from .pulse_radar_x import discover, handle_of
 PROVIDER = 'radar'
 SOCIAL = 'radar_social'    # the paid switch: issues found on X, and figures from X, TikTok and Instagram. Off by default
 SUPPLIER = 'xpoz'          # the social supplier's own lane; while it is blocked the radar does not ask it either
-INTERVAL_MINUTES = 30
+AGAIN_MINUTES = 30         # a day's refresh that gave no list is tried again this much later, until the day has one
 KEEP_DAYS = 30
 COLLECT_SECONDS = 240      # reading every list took 20 s on a real round; a source that hangs must not outlast the lock
 DISCOVERY_SECONDS = 240    # the live search of X took 72 s on a real round, after two answers of "at capacity"
@@ -41,7 +44,8 @@ COMPOSE_SECONDS = 300      # the answer engine needed 115 s on a real round (15 
 FALLBACK_SECONDS = 120     # the faster engine, asked only when the first gave nothing; it needed 20 s
 MEASURE_SECONDS = 300      # counting and sampling ten issues that have no samples yet took about 170 s
 LEASE_SECONDS = 1500       # longer than every wait above together
-DISCOVERY_MINUTES = 24 * 60 - 5   # X is searched once a day (about USD 0.39 a search), or when someone presses the refresh button; the refreshes between carry its issues
+DISCOVERY_MINUTES = 20 * 60       # X is searched at the day's refresh (about USD 0.39 a search), or when someone presses the refresh button; a refresh
+                                  # within this long of the last search carries its issues. Under a day, so a morning after one made up late still searches
 CARRY_MINUTES = 26 * 60           # a search that gave nothing is covered by the last one for this long
 RETRY_MINUTES = 120               # and is tried again this much later, not at the next refresh: a search can be billed although its answer could not be used
 EVIDENCE_PER_PLATFORM = 5
@@ -450,25 +454,41 @@ async def refresh(session_factory, settings=None, *, ai=None, client=None, now=N
         await _release(session_factory, token)
 
 
+def slot(now, settings=None):
+    """The last moment at or before `now` the day's refresh was due, as naive UTC: PULSE_RADAR_DAILY_AT on the
+    installation's clock (PULSE_ZONE_OFFSET_MINUTES east of UTC)."""
+    settings = settings or get_settings()
+    shift = timedelta(minutes=settings.PULSE_ZONE_OFFSET_MINUTES)
+    hour, minute = (int(part) for part in settings.PULSE_RADAR_DAILY_AT.split(':'))
+    clock = now + shift
+    due = clock.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return (due if due <= clock else due - timedelta(days=1)) - shift
+
+
 _ticked = {'at': None}      # when this process last started a scheduled refresh
 
 
 async def radar_tick(now=None):
-    """The scheduled check: refresh when the switch is on and the last refresh started an interval or more ago.
-    The last start is read from the stored runs and also remembered here: a refresh that broke before it could store its
-    run must not be started again a minute later, with its search and samples paid for again."""
+    """The scheduled check, once a minute: refresh when the switch is on and no list has been made since the day's
+    moment (`slot`). A morning missed while the server was asleep or stopped is made up as soon as it runs again; a
+    refresh that gave no list is tried again AGAIN_MINUTES after it started. The last start is read from the stored runs
+    and also remembered here: a refresh that broke before it could store its run must not be started again a minute
+    later, with its search and samples paid for again."""
     now = now or datetime.utcnow()
     try:
+        settings = get_settings()
+        due = slot(now, settings)
         async with async_session() as db:
             await ensure_policy(db)
             policy = await db.get(WorkerPolicy, PROVIDER, populate_existing=True)
             last = await db.scalar(select(func.max(RadarRun.started_at)))
+            made = await db.scalar(select(func.count()).select_from(RadarRun).where(RadarRun.state.in_(COMPOSED), RadarRun.started_at >= due, RadarRun.started_at <= now))
             await db.commit()
         last = max((when for when in (last, _ticked['at']) if when is not None), default=None)
-        if policy.daily_limit == 0 or (last is not None and timedelta(0) <= now - last < timedelta(minutes=INTERVAL_MINUTES)):
+        if policy.daily_limit == 0 or made or (last is not None and last >= due and timedelta(0) <= now - last < timedelta(minutes=AGAIN_MINUTES)):
             return
         before, _ticked['at'] = _ticked['at'], now
-        if (await refresh(async_session, get_settings(), now=now))['run_id'] is None:
+        if (await refresh(async_session, settings, now=now))['run_id'] is None:
             _ticked['at'] = before        # told busy or off: nothing was started, so the next minute may try again
     except Exception:
         log.exception('radar: tick failed')
@@ -476,12 +496,11 @@ async def radar_tick(now=None):
 
 # ── What the page reads ─────────────────────────────────────────────────────────────────────────────────────────────
 
-STALE_MINUTES = 60          # a composed list older than this is shown with a notice
+STALE_MINUTES = 60          # a list made before the day's moment is shown with a notice once that moment is this long past
 RAW_AFTER_HOURS = 6         # with no composed list this recent, the raw lists are shown instead
-MOVE_HOURS = 3              # movement is told against the list of about this long ago
-MOVE_GAP_MINUTES = 90       # and never against one closer than this
+MOVE_HOURS = 24             # movement is told against the list of about a day earlier: the list is made once a day
+MOVE_GAP_HOURS = 12         # and never against one closer than this (the refresh button makes lists in between)
 MOVE_PLACES = 2
-NEW_HOURS = 6
 
 
 def _covering(issue, topics):
@@ -507,21 +526,22 @@ async def _issues(db, run):
 
 
 async def _movements(db, shown, issues):
-    """Movement of the national issues: new, or up or down against the list of about three hours earlier."""
+    """Movement of the national issues against the list of about a day earlier: new (not on that list), or up or down.
+    Without a list of about a day earlier nothing moves: on the very first list every issue would be new, which says nothing."""
     target = shown.started_at - timedelta(hours=MOVE_HOURS)
-    earlier = (await db.execute(select(RadarRun).where(RadarRun.state.in_(COMPOSED), RadarRun.started_at <= shown.started_at - timedelta(minutes=MOVE_GAP_MINUTES),
+    earlier = (await db.execute(select(RadarRun).where(RadarRun.state.in_(COMPOSED), RadarRun.started_at <= shown.started_at - timedelta(hours=MOVE_GAP_HOURS),
                                                        RadarRun.started_at >= target - timedelta(hours=MOVE_HOURS)))).scalars().all()
     base = min(earlier, key=lambda run: abs((run.started_at - target).total_seconds()), default=None)
-    before = {row.key: row.rank for row in await _issues(db, base) if row.scope != 'local'} if base is not None else {}
-    # "New" needs a list it was absent from: on the very first list every issue would be new, which says nothing.
-    first_list = await db.scalar(select(func.min(RadarRun.started_at)).where(RadarRun.state.in_(COMPOSED)))
+    if base is None:
+        return {}
+    before = {row.key: row.rank for row in await _issues(db, base) if row.scope != 'local'}
     moves = {}
     for issue in issues:
         if issue.scope == 'local':
             continue
-        if issue.first_seen_at > shown.started_at - timedelta(hours=NEW_HOURS) and first_list is not None and first_list < issue.first_seen_at:
+        if issue.key not in before:
             moves[issue.key] = {'kind': 'new', 'places': 0}
-        elif issue.key in before and abs(before[issue.key] - issue.rank) >= MOVE_PLACES:
+        elif abs(before[issue.key] - issue.rank) >= MOVE_PLACES:
             moves[issue.key] = {'kind': 'up' if before[issue.key] > issue.rank else 'down', 'places': abs(before[issue.key] - issue.rank)}
     return moves
 
@@ -553,7 +573,9 @@ async def latest(db, now):
     from ..models.pulse import WatchTopic
     policy = await _switch(db)
     newest = (await db.execute(select(RadarRun).order_by(RadarRun.started_at.desc()).limit(1))).scalars().first()
-    out = {'state': 'empty', 'updated_at': None, 'interval_minutes': INTERVAL_MINUTES, 'enabled': policy.daily_limit != 0,
+    settings = get_settings()
+    # When the list is made: the zone's clock time of the day's refresh, and the next moment it is due.
+    out = {'state': 'empty', 'updated_at': None, 'daily_at': settings.PULSE_RADAR_DAILY_AT, 'next_at': slot(now, settings) + timedelta(days=1), 'enabled': policy.daily_limit != 0,
            # The newest attempt, whatever came of it: a refresh that failed must not look like one that never ran.
            'last_attempt': {'state': newest.state, 'at': newest.started_at} if newest is not None else None,
            'running': bool(policy.lease_until and policy.lease_until > now), 'missing': [], 'provinces_read': [], 'signals': {}, 'x_searched_at': None,
@@ -569,7 +591,8 @@ async def latest(db, now):
     issues = await _issues(db, shown)
     moves = await _movements(db, shown, issues)
     topics = (await db.execute(select(WatchTopic).order_by(WatchTopic.created_at))).scalars().all()
-    return {**out, 'state': 'stale' if now - shown.started_at > timedelta(minutes=STALE_MINUTES) else shown.state, 'updated_at': shown.started_at,
+    stale = shown.started_at < slot(now - timedelta(minutes=STALE_MINUTES), settings)      # the day's refresh is an hour late, or more
+    return {**out, 'state': 'stale' if stale else shown.state, 'updated_at': shown.started_at,
             'missing': shown.missing or [], 'provinces_read': shown.provinces_read or [], 'signals': _signals(shown), 'x_searched_at': _x_searched(shown), 'brief': shown.brief,
             'issues': [_for_reader(issue, moves.get(issue.key), _covering(issue, topics)) for issue in issues]}
 

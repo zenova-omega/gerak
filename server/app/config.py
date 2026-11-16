@@ -70,6 +70,7 @@ class Settings(BaseSettings):
     PULSE_RETENTION_DAYS: int = 0   # stored posts older than this many days are deleted once a day; 0 deletes nothing (services/pulse_retention.py)
     PULSE_ZONE_OFFSET_MINUTES: int = Field(420, ge=0, lt=1440)   # fixed offset east of UTC the days of every figure are counted in; west of UTC is not supported in this version (services/pulse_measures.py)
     PULSE_ZONE_NAME: str = "WIB"           # its short name, sent to the browser with the offset
+    PULSE_RADAR_DAILY_AT: str = Field("08:00", pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")   # the zone's clock time of the issue radar's one refresh a day (services/pulse_radar.py)
     BROWSERLESS_ALLOWLIST: list[str] = []
 
     class Config:

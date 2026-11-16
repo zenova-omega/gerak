@@ -160,11 +160,17 @@ function clockText(value, now) {
   const time = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
   return (wibDay(date) === wibDay(now) ? time : `${wibDay(date)}, ${time}`) + ' WIB';
 }
+/** When the list is made by itself, in words: "setiap hari pukul 08.00 WIB". Empty when the payload does not say. */
+export function scheduleText(payload) {
+  const at = payload?.daily_at;
+  return typeof at === 'string' && /^\d\d:\d\d$/.test(at) ? `setiap hari pukul ${at.replace(':', '.')} WIB` : '';
+}
 /** When the list on screen was made, how often it is made, and what could not be read that time. */
 export function freshnessText(payload, now = new Date()) {
   const when = updatedText(payload, now);
   if (!when) return '';
-  let text = `Diperbarui ${when}` + (payload.enabled === false ? '; pembaruan otomatis mati' : `, tiap ${payload.interval_minutes} menit`);
+  const schedule = scheduleText(payload);
+  let text = `Diperbarui ${when}` + (payload.enabled === false ? '; pembaruan otomatis mati' : schedule ? `, otomatis ${schedule}` : '');
   const missing = payload.missing || [], provinces = missing.filter(name => name.startsWith('ID-'));
   if (provinces.length === 1) text += `; ${provinceName(provinces[0])} tidak terbaca`;
   if (provinces.length > 1) text += `; ${provinces.length} provinsi tidak terbaca`;

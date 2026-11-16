@@ -10,7 +10,7 @@ import pytest
 from app.models.pulse import WatchTopic
 from app.models.pulse_monitor import WorkerPolicy
 from app.models.pulse_radar import RadarIssue, RadarRun
-from app.services.pulse_radar import PROVIDER
+from app.services.pulse_radar import PROVIDER, latest
 
 API = '/api/admin/pulse'
 
@@ -67,7 +67,7 @@ async def test_the_latest_composed_run_is_returned_with_everything_the_page_filt
     issue(db, newer, 'k-l', 3, 'Polda Jawa Timur', scope='local', regions=[{'code': 'ID-JI', 'searches': 200}])
     await db.flush()
     data = await read(client, admin_token)
-    assert data['state'] == 'partial' and data['updated_at'] == newer.started_at.isoformat() and data['interval_minutes'] == 30
+    assert data['state'] == 'partial' and data['updated_at'] == newer.started_at.isoformat() and data['daily_at'] == '08:00' and 'interval_minutes' not in data
     assert data['missing'] == ['ID-PA'] and data['provinces_read'] == ['ID-JK', 'ID-JI'] and data['brief'] == 'Dua isu menonjol [1][2].'
     assert data['running'] is False and data['enabled'] is False and data['raw'] is None
     assert data['signals'] == {'news': 3}, 'how many signals the refresh read, per platform'
@@ -80,7 +80,7 @@ async def test_the_latest_composed_run_is_returned_with_everything_the_page_filt
 
 
 @pytest.mark.asyncio
-async def test_a_failed_compose_keeps_the_last_composed_run_and_marks_it_stale_after_an_hour(client, db, admin_token, now):
+async def test_a_failed_compose_keeps_the_last_composed_run(client, db, admin_token, now):
     composed = run(db, now - timedelta(minutes=20))
     run(db, now - timedelta(minutes=5), state='raw')
     run(db, now - timedelta(minutes=2), state='failed')
@@ -90,9 +90,31 @@ async def test_a_failed_compose_keeps_the_last_composed_run_and_marks_it_stale_a
     data = await read(client, admin_token)
     assert data['state'] == 'ok' and [row['title'] for row in data['issues']] == ['Isu A'] and data['updated_at'] == composed.started_at.isoformat()
     assert data['last_attempt'] == {'state': 'failed', 'at': (now - timedelta(minutes=2)).isoformat()}, 'the newest attempt is told even when its list is not the one shown'
-    composed.started_at = now - timedelta(minutes=61)
+
+
+MORNING = datetime(2026, 11, 15, 1, 0)      # 08.00 WIB, when the day's refresh is due
+
+
+@pytest.mark.asyncio
+async def test_a_list_is_current_all_day_and_stale_once_the_next_morning_s_refresh_is_an_hour_late(db):
+    shown = run(db, MORNING - timedelta(days=1) + timedelta(minutes=3))      # yesterday 08.03 WIB
     await db.flush()
-    assert (await read(client, admin_token))['state'] == 'stale'
+    issue(db, shown, 'k-a', 1, 'Isu A')
+    await db.flush()
+    assert (await latest(db, MORNING - timedelta(minutes=1)))['state'] == 'ok', 'yesterday\'s list is the list of the day until 08.00'
+    assert (await latest(db, MORNING + timedelta(minutes=59)))['state'] == 'ok', 'the day\'s refresh takes minutes and may be on its way'
+    assert (await latest(db, MORNING + timedelta(minutes=61)))['state'] == 'stale'
+    shown.started_at = MORNING + timedelta(minutes=3)
+    await db.flush()
+    assert (await latest(db, MORNING + timedelta(hours=23, minutes=59)))['state'] == 'ok', 'a list made this morning is not old in the evening'
+    assert (await latest(db, MORNING + timedelta(days=1, minutes=61)))['state'] == 'stale'
+
+
+@pytest.mark.asyncio
+async def test_the_page_is_told_when_the_radar_refreshes_and_when_it_next_will(db):
+    for moment, coming in ((MORNING - timedelta(minutes=1), MORNING), (MORNING, MORNING + timedelta(days=1)), (MORNING + timedelta(hours=5), MORNING + timedelta(days=1))):
+        data = await latest(db, moment)
+        assert data['daily_at'] == '08:00' and data['next_at'] == coming, moment
 
 
 @pytest.mark.asyncio
@@ -110,7 +132,7 @@ async def test_after_six_hours_without_a_composed_run_the_raw_lists_are_returned
     raw.started_at = now - timedelta(hours=8)      # the raw lists are older than the composed list: the composed list is still the newest thing known
     await db.flush()
     data = await read(client, admin_token)
-    assert data['state'] == 'stale' and [row['title'] for row in data['issues']] == ['Isu A']
+    assert data['state'] != 'raw' and [row['title'] for row in data['issues']] == ['Isu A'] and data['updated_at'] == composed.started_at.isoformat()
 
 
 @pytest.mark.asyncio
@@ -141,18 +163,19 @@ async def test_reading_writes_nothing_once_the_switch_exists(client, admin_token
 
 
 @pytest.mark.asyncio
-async def test_movement_compares_with_three_hours_earlier_and_needs_two_places(client, db, admin_token, now):
+async def test_movement_compares_with_the_list_of_a_day_earlier_and_needs_two_places(client, db, admin_token, now):
     shown = run(db, now - timedelta(minutes=10))
-    recent = run(db, shown.started_at - timedelta(minutes=30))        # too close to say anything about movement
-    earlier = run(db, shown.started_at - timedelta(hours=3, minutes=5))
+    recent = run(db, shown.started_at - timedelta(hours=3))        # the button pressed earlier today: too close to say anything about a day
+    earlier = run(db, shown.started_at - timedelta(days=1, minutes=5))
     await db.flush()
     issue(db, shown, 'k-a', 1, 'A')
-    issue(db, shown, 'k-c', 2, 'C', first_seen=shown.started_at - timedelta(hours=2))
+    issue(db, shown, 'k-c', 2, 'C')
     issue(db, shown, 'k-d', 3, 'D')
     issue(db, shown, 'k-b', 4, 'B')
     issue(db, shown, 'k-e', 5, 'E')
     issue(db, shown, 'k-l', 6, 'Lokal', scope='local', first_seen=shown.started_at - timedelta(hours=1))
     issue(db, recent, 'k-a', 3, 'A')
+    issue(db, recent, 'k-c', 2, 'C')        # on today's earlier list, not on yesterday's: new since yesterday
     for key, rank in (('k-e', 1), ('k-x', 2), ('k-b', 3), ('k-d', 4), ('k-a', 5)):
         issue(db, earlier, key, rank, key)
     await db.flush()
@@ -175,15 +198,20 @@ async def test_an_issue_a_project_covers_names_that_project(client, db, admin_to
 
 
 @pytest.mark.asyncio
-async def test_on_the_very_first_list_nothing_is_called_new(client, db, admin_token, now):
+async def test_without_a_list_of_a_day_earlier_nothing_is_called_new(client, db, admin_token, now):
     shown = run(db, now - timedelta(minutes=10))
     await db.flush()
     issue(db, shown, 'k-a', 1, 'A', first_seen=shown.started_at)
     await db.flush()
     assert (await read(client, admin_token))['issues'][0]['movement'] is None, 'with no earlier list there is nothing to be new against'
-    earlier = run(db, shown.started_at - timedelta(hours=1))
+    hour = run(db, shown.started_at - timedelta(hours=1))
     await db.flush()
-    issue(db, earlier, 'k-z', 1, 'Z')
+    issue(db, hour, 'k-z', 1, 'Z')
+    await db.flush()
+    assert (await read(client, admin_token))['issues'][0]['movement'] is None, 'a list of an hour earlier says nothing about a day'
+    yesterday = run(db, shown.started_at - timedelta(hours=23))
+    await db.flush()
+    issue(db, yesterday, 'k-z', 1, 'Z')
     await db.flush()
     assert (await read(client, admin_token))['issues'][0]['movement'] == {'kind': 'new', 'places': 0}
 

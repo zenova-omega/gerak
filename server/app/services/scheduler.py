@@ -25,7 +25,8 @@ def start_scheduler():
         scheduler.add_job(account_tick, 'interval', seconds=ACCOUNT_SECONDS, id='pulse_account', replace_existing=True, max_instances=1, coalesce=True,
                           next_run_time=datetime.now() + timedelta(seconds=45))
         from .pulse_radar import radar_tick
-        # Checks once a minute whether a refresh is due; the refresh itself runs every half hour while its switch is on.
+        # Checks once a minute whether a refresh is due; while its switch is on the refresh runs once a day at PULSE_RADAR_DAILY_AT
+        # (08.00 WIB), and a morning missed while the server was stopped is made up when it starts.
         scheduler.add_job(radar_tick, 'interval', seconds=60, id='pulse_radar', replace_existing=True, max_instances=1, coalesce=True)
         from .pulse_threads_auto import threads_tick, TICK_SECONDS as THREADS_SECONDS
         # Checks every few minutes which projects are due; does nothing without the search key or with the interval at 0.

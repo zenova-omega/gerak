@@ -3,7 +3,7 @@ import { PlatformIcon } from '../components/admin/pulse/PlatformIcon';
 import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
 import { PulseSkeleton } from '../components/ui/PulsePatterns';
 import { PulseFilterChip, PulseFilterGroup, PulseFilterSelect } from '../components/ui/PulseSurface';
-import { attemptNotice, briefText, categoryCounts, freshnessText, offeredPlatforms, provinceName, provinceRanking, radarCategories, matchingIssues, visibleIssues } from '../lib/pulseRadar';
+import { attemptNotice, briefText, categoryCounts, freshnessText, offeredPlatforms, provinceName, provinceRanking, radarCategories, matchingIssues, scheduleText, visibleIssues } from '../lib/pulseRadar';
 import AnalyticsPanel from './AnalyticsPanel';
 import InfoTip from './InfoTip';
 import RadarFigures from './RadarFigures';
@@ -32,7 +32,8 @@ const mark = id => id === 'search' ? <Search size={14} aria-hidden="true" /> : <
 export default function RadarLead({ payload, filters, onFilters, canCreate = false, onRefresh = () => {}, refreshing = false, now = new Date() }) {
   const { category, platform, province } = filters;
   const name = `Isu yang ramai di ${province ? provinceName(province) : 'Indonesia'}`;
-  const title = <>{name}<InfoTip label="Tentang radar isu"><p>Isu disusun dari berita, pencarian populer, video tren, dan X, lalu diperbarui berkala. Membaca halaman ini tidak memulai pengumpulan.</p>
+  const schedule = scheduleText(payload);
+  const title = <>{name}<InfoTip label="Tentang radar isu"><p>Isu disusun dari berita, pencarian populer, video tren, dan X, lalu diperbarui {schedule ? `otomatis ${schedule}` : 'berkala'}. Membaca halaman ini tidak memulai pengumpulan.</p>
     <p>Pilih kategori, platform, atau provinsi untuk menyaring seluruh halaman. Buka satu isu untuk melihat buktinya.</p></InfoTip></>;
   if (!payload) return <AnalyticsPanel title={name} className="rdl"><PulseSkeleton label="Memuat isu…" stats={0} panels={0} rows={2} /></AnalyticsPanel>;
   const busy = payload.running || refreshing;

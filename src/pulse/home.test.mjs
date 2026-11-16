@@ -23,7 +23,7 @@ const projects = [
 const region = (code, searches) => ({ code, searches });
 const issue = (rank, title, category, platforms, regions = [], more = {}) => ({ key: 'k' + rank, scope: 'national', rank, title, category, reason: 'Ramai.', platforms, regions,
   evidence_titles: [], query: { q: title }, movement: null, project: null, ...more });
-const radar = { state: 'ok', updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, running: false, missing: [], provinces_read: ['ID-JI', 'ID-JK'],
+const radar = { state: 'ok', updated_at: '2026-11-15T01:10:00', daily_at: '08:00', enabled: true, running: false, missing: [], provinces_read: ['ID-JI', 'ID-JK'],
   signals: { news: 122, search: 54, youtube: 51 }, last_attempt: { state: 'ok', at: '2026-11-15T01:10:00' }, brief: 'Wapres mundur mendominasi [1].',
   issues: [issue(1, 'Pengunduran diri Wapres', 'politik', { news: { count: 15 }, youtube: { count: 3, views: 9000000 } }, [region('ID-JI', 1000), region('ID-JK', 2000)]),
     issue(2, 'Pertemuan di Bogor', 'politik', { news: { count: 5 } }), issue(3, 'Timnas Indonesia', 'olahraga', { search: { searches: 2000 } }, [region('ID-JI', 500)])], raw: null };

@@ -17,12 +17,14 @@ from app.models.pulse_radar import RadarIssue, RadarRun
 from app.services import pulse_radar
 import asyncio
 
-from app.services.pulse_radar import (COLLECT_SECONDS, COMPOSE_SECONDS, DISCOVERY_SECONDS, FALLBACK_SECONDS, INTERVAL_MINUTES, LEASE_SECONDS, MEASURE_SECONDS,
-                                      PROVIDER, SOCIAL, attach, brief_with_ranks, rank, refresh, with_social)
+from app.services.pulse_radar import (AGAIN_MINUTES, COLLECT_SECONDS, COMPOSE_SECONDS, DISCOVERY_SECONDS, FALLBACK_SECONDS, LEASE_SECONDS, MEASURE_SECONDS,
+                                      PROVIDER, SOCIAL, attach, brief_with_ranks, rank, refresh, slot, with_social)
 
-NOW = datetime(2026, 11, 15, 1, 10)
-HOSTED = SimpleNamespace(AI_PROVIDER='grok', XAI_API_KEY='fake', YOUTUBE_API_KEY='')
-LOCAL = SimpleNamespace(AI_PROVIDER='ollama', XAI_API_KEY='', YOUTUBE_API_KEY='')
+NOW = datetime(2026, 11, 15, 1, 10)        # 08.10 WIB, ten minutes after the day's refresh is due
+MORNING = datetime(2026, 11, 15, 1, 0)     # 08.00 WIB
+ZONE = {'PULSE_ZONE_OFFSET_MINUTES': 420, 'PULSE_RADAR_DAILY_AT': '08:00'}
+HOSTED = SimpleNamespace(AI_PROVIDER='grok', XAI_API_KEY='fake', YOUTUBE_API_KEY='', **ZONE)
+LOCAL = SimpleNamespace(AI_PROVIDER='ollama', XAI_API_KEY='', YOUTUBE_API_KEY='', **ZONE)
 
 
 def signal(number, platform, title, figure=None, provinces=None, related=(), url=None, source=None):
@@ -277,11 +279,75 @@ async def test_the_switch_decides_whether_a_scheduled_refresh_runs(store, monkey
         (await db.get(WorkerPolicy, PROVIDER)).daily_limit = -1
         await db.commit()
     await pulse_radar.radar_tick(now=NOW)
+    assert calls.count('collect') == 1, 'switched on with no list of today yet: the refresh starts at once'
+
+
+async def scheduled(store, monkeypatch, **options):
+    """The scheduled tick on `store`, with the switch on and yesterday's list made at 08.00 WIB. Returns the stand-in calls."""
+    calls = stand_ins(monkeypatch, **options)
+    monkeypatch.setattr(pulse_radar, 'async_session', store, raising=False)
+    monkeypatch.setattr(pulse_radar, 'get_settings', lambda: HOSTED, raising=False)
+    monkeypatch.setattr(pulse_radar, 'get_ai_service', lambda settings=None: object())
+    monkeypatch.setattr(pulse_radar, 'get_bulk_ai_service', lambda settings=None: None)
+    async with store() as db:
+        await pulse_radar.ensure_policy(db)
+        (await db.get(WorkerPolicy, PROVIDER)).daily_limit = -1
+        await db.commit()
+    assert (await refresh(store, HOSTED, ai=object(), now=MORNING - timedelta(days=1), force=True))['state'] == 'ok'
+    calls.clear()
+    return calls
+
+
+@pytest.mark.asyncio
+async def test_the_scheduled_refresh_runs_once_a_day_at_eight_in_the_zone_of_the_installation(store, monkeypatch):
+    calls = await scheduled(store, monkeypatch)
+    for moment in (MORNING - timedelta(hours=12), MORNING - timedelta(minutes=1)):
+        await pulse_radar.radar_tick(now=moment)
+    assert calls == [], 'before 08.00 WIB yesterday\'s list is the list of the day'
+    await pulse_radar.radar_tick(now=MORNING)
     assert calls.count('collect') == 1
-    await pulse_radar.radar_tick(now=NOW + timedelta(minutes=INTERVAL_MINUTES - 1))
-    assert calls.count('collect') == 1, 'not yet due'
-    await pulse_radar.radar_tick(now=NOW + timedelta(minutes=INTERVAL_MINUTES))
+    for moment in (MORNING + timedelta(minutes=1), MORNING + timedelta(minutes=30), MORNING + timedelta(hours=12), MORNING + timedelta(hours=23, minutes=59)):
+        await pulse_radar.radar_tick(now=moment)
+    assert calls.count('collect') == 1, 'once a day, not every half hour'
+    await pulse_radar.radar_tick(now=MORNING + timedelta(days=1))
     assert calls.count('collect') == 2
+    runs = await rows_of(store, RadarRun, RadarRun.started_at)
+    assert [run.started_at for run in runs] == [MORNING - timedelta(days=1), MORNING, MORNING + timedelta(days=1)]
+
+
+@pytest.mark.asyncio
+async def test_a_morning_the_server_was_asleep_or_stopped_is_made_up_as_soon_as_it_runs_again(store, monkeypatch):
+    calls = await scheduled(store, monkeypatch)
+    await pulse_radar.radar_tick(now=MORNING + timedelta(hours=2, minutes=30))
+    await pulse_radar.radar_tick(now=MORNING + timedelta(hours=2, minutes=31))
+    assert calls.count('collect') == 1, 'the day\'s refresh is due from 08.00 until it is made, and made once'
+    pulse_radar._ticked['at'] = None        # a restart forgets what the process remembered; the stored run still counts
+    await pulse_radar.radar_tick(now=MORNING + timedelta(hours=3))
+    assert calls.count('collect') == 1
+
+
+@pytest.mark.asyncio
+async def test_a_morning_refresh_that_gave_no_list_is_tried_again_every_half_hour_until_one_is_made(store, monkeypatch):
+    calls = await scheduled(store, monkeypatch)
+    stand_ins(monkeypatch, composed=None, calls=calls)
+    await pulse_radar.radar_tick(now=MORNING)
+    await pulse_radar.radar_tick(now=MORNING + timedelta(minutes=AGAIN_MINUTES - 1))
+    assert calls.count('collect') == 1, 'the lists were read but no issues were composed: not again a minute later'
+    stand_ins(monkeypatch, calls=calls)
+    await pulse_radar.radar_tick(now=MORNING + timedelta(minutes=AGAIN_MINUTES))
+    assert calls.count('collect') == 2
+    await pulse_radar.radar_tick(now=MORNING + timedelta(minutes=2 * AGAIN_MINUTES))
+    assert calls.count('collect') == 2, 'the day has its list'
+    assert [run.state for run in await rows_of(store, RadarRun, RadarRun.started_at)] == ['ok', 'raw', 'ok']
+
+
+def test_the_day_s_moment_is_read_in_the_zone_of_the_installation():
+    assert slot(MORNING - timedelta(minutes=1), HOSTED) == MORNING - timedelta(days=1), '07.59 WIB: the moment due is yesterday\'s'
+    assert slot(MORNING, HOSTED) == MORNING and slot(NOW, HOSTED) == MORNING
+    assert slot(MORNING + timedelta(hours=16, minutes=59), HOSTED) == MORNING, '23.59 WIB'
+    late = SimpleNamespace(PULSE_ZONE_OFFSET_MINUTES=0, PULSE_RADAR_DAILY_AT='23:30')
+    assert slot(datetime(2026, 11, 15, 23, 29), late) == datetime(2026, 11, 14, 23, 30)
+    assert slot(datetime(2026, 11, 15, 23, 30), late) == datetime(2026, 11, 15, 23, 30)
 
 
 @pytest.mark.asyncio
@@ -302,7 +368,7 @@ async def test_first_seen_is_carried_by_key_and_runs_older_than_thirty_days_are_
 
 # ── Stage 2: issues found on X and the social figures, behind their own paid switch ─────────────────────────────────
 
-PAID = SimpleNamespace(AI_PROVIDER='grok', XAI_API_KEY='fake', YOUTUBE_API_KEY='', XPOZ_API_KEY='fake')
+PAID = SimpleNamespace(AI_PROVIDER='grok', XAI_API_KEY='fake', YOUTUBE_API_KEY='', XPOZ_API_KEY='fake', **ZONE)
 X_FOUND = [{'platform': 'x', 'title': 'Tagar soal BBM', 'url': 'https://x.com/akun_a/status/11111', 'source': None, 'figure': None, 'provinces': {}, 'section': None,
             'related': [{'title': 'Posting di X', 'url': 'https://x.com/akun_b/status/22222', 'source': None}]}]
 POST = {'platform': 'x', 'title': 'Skor akhir imbang', 'url': 'https://x.com/i/status/33333', 'source': 'bola_id', 'figure': 80}
@@ -378,6 +444,17 @@ async def test_issues_found_on_x_join_the_list_with_their_posts_as_evidence(stor
                             {'platform': 'x', 'title': 'Posting dari @akun_b', 'url': 'https://x.com/akun_b/status/22222', 'source': None, 'figure': None}]
     assert run.usage['signals'] == {'news': 2, 'x': 1, 'youtube': 1, 'search': 3} and run.usage['discovery'] == {'at': NOW.isoformat(), 'signals': X_FOUND}
     assert run.raw['x'] == [{'title': 'Tagar soal BBM', 'url': 'https://x.com/akun_a/status/11111', 'source': None, 'figure': None}] and run.missing == []
+
+
+@pytest.mark.asyncio
+async def test_a_day_s_refresh_searches_x_although_yesterday_s_ran_late(store, monkeypatch):
+    # Yesterday's refresh was made up at 09.30 WIB (the laptop was asleep at 08.00); today's at 08.00 is 22.5 hours later.
+    seen = social_stand_ins(monkeypatch)
+    await refresh(store, PAID, ai=object(), now=MORNING - timedelta(hours=22, minutes=30), force=True, social=True)
+    await refresh(store, PAID, ai=object(), now=MORNING, social=True, force=True)
+    assert seen.calls.count('discover') == 2, 'a list made once a day is made with what X talks about that day'
+    await refresh(store, PAID, ai=object(), now=MORNING + timedelta(hours=6), social=True, force=True)
+    assert seen.calls.count('discover') == 2, 'a refresh later the same day carries the morning\'s search'
 
 
 @pytest.mark.asyncio
@@ -627,10 +704,10 @@ async def test_a_refresh_that_left_no_run_is_not_started_again_a_minute_later(st
         (await db.get(WorkerPolicy, PROVIDER)).daily_limit = -1
         await db.commit()
     monkeypatch.setattr(pulse_radar, 'refresh', broken)
-    for minutes in (0, 1, 2, INTERVAL_MINUTES - 1):
+    for minutes in (0, 1, 2, AGAIN_MINUTES - 1):
         await pulse_radar.radar_tick(now=NOW + timedelta(minutes=minutes))
     assert started == [NOW], 'with no run stored the schedule would otherwise pay for the search and the samples every minute'
-    await pulse_radar.radar_tick(now=NOW + timedelta(minutes=INTERVAL_MINUTES))
+    await pulse_radar.radar_tick(now=NOW + timedelta(minutes=AGAIN_MINUTES))
     assert len(started) == 2
 
 

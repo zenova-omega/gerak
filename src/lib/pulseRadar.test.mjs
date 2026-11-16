@@ -4,7 +4,7 @@ import {
   categoryCounts, figureLine, freshnessText, issueFootprint, movementText, projectHref, provinceCounts, provinceRows, radarCategories,
   radarPlatforms, searchHref, shadeOf, shadeRanges, updatedText, visibleIssues,
   categoryRows, homeHref, platformCoverage, platformMeters, provinceRanking, radarFigures,
-  attemptNotice, briefText, projectChange, projectTones, offeredPlatforms, platformFigure, platformTops, issueImage,
+  attemptNotice, briefText, projectChange, projectTones, offeredPlatforms, platformFigure, platformTops, issueImage, scheduleText,
 } from './pulseRadar.js';
 
 const issue = (rank, title, category, platforms, more = {}) => ({
@@ -91,13 +91,17 @@ test('movement and freshness are said in words, in WIB, naming what could not be
   assert.equal(movementText({ kind: 'down', places: 2 }), 'Turun 2');
   assert.equal(movementText(null), null);
   const now = new Date('2026-11-15T01:30:00Z');
-  const payload = { updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, missing: [] };
-  assert.equal(freshnessText(payload, now), 'Diperbarui 08.10 WIB, tiap 30 menit');
-  assert.equal(freshnessText({ ...payload, missing: ['ID-PA'] }, now), 'Diperbarui 08.10 WIB, tiap 30 menit; Papua tidak terbaca');
-  assert.equal(freshnessText({ ...payload, missing: ['ID-PA', 'ID-MA', 'ID-GO', 'youtube'] }, now), 'Diperbarui 08.10 WIB, tiap 30 menit; 3 provinsi tidak terbaca; YouTube tidak terbaca');
+  const payload = { updated_at: '2026-11-15T01:10:00', daily_at: '08:00', enabled: true, missing: [] };
+  assert.equal(freshnessText(payload, now), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB');
+  assert.equal(freshnessText({ ...payload, missing: ['ID-PA'] }, now), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB; Papua tidak terbaca');
+  assert.equal(freshnessText({ ...payload, missing: ['ID-PA', 'ID-MA', 'ID-GO', 'youtube'] }, now), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB; 3 provinsi tidak terbaca; YouTube tidak terbaca');
   assert.equal(freshnessText({ ...payload, enabled: false }, now), 'Diperbarui 08.10 WIB; pembaruan otomatis mati');
-  assert.equal(freshnessText({ ...payload, updated_at: '2026-11-13T20:05:00' }, now), 'Diperbarui 14 Nov 2026, 03.05 WIB, tiap 30 menit', 'another day is named');
+  assert.equal(freshnessText({ ...payload, updated_at: '2026-11-13T20:05:00' }, now), 'Diperbarui 14 Nov 2026, 03.05 WIB, otomatis setiap hari pukul 08.00 WIB', 'another day is named');
   assert.equal(freshnessText({ ...payload, updated_at: null }, now), '');
+  assert.equal(freshnessText({ ...payload, daily_at: undefined }, now), 'Diperbarui 08.10 WIB', 'a payload that does not say when the list is made says nothing about it');
+  assert.equal(scheduleText(payload), 'setiap hari pukul 08.00 WIB');
+  assert.equal(scheduleText({ daily_at: '8 pagi' }), '');
+  assert.equal(scheduleText(null), '');
   assert.equal(updatedText(payload, now), '08.10 WIB');
   assert.equal(updatedText({ updated_at: '2026-11-13T20:05:00' }, now), '14 Nov 2026, 03.05 WIB');
   assert.equal(updatedText({ updated_at: 'entah' }, now), '');
@@ -247,12 +251,12 @@ test('social figures say what they are: a count since yesterday, or what a sampl
 
 test('signals found on X are counted with the rest, and a social platform that was not read in full is said so', () => {
   assert.deepEqual(radarFigures({ issues: social, signals: { news: 122, search: 54, youtube: 51, x: 7 }, provinces_read: [] }).signals, { total: 234, news: 122, search: 54, youtube: 51, x: 7 });
-  const payload = { updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, missing: ['ID-PA', 'x', 'tiktok'] };
-  assert.equal(freshnessText(payload, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, tiap 30 menit; Papua tidak terbaca; X belum lengkap; TikTok belum lengkap');
-  const carried = { updated_at: '2026-11-15T01:10:00', interval_minutes: 30, enabled: true, missing: [], x_searched_at: '2026-11-15T00:40:00' };
-  assert.equal(freshnessText(carried, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, tiap 30 menit; isu dari X dicari 07.40 WIB', 'X is searched once a day: its issues can be older than the list');
-  assert.equal(freshnessText({ ...carried, x_searched_at: '2026-11-14T02:00:00' }, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, tiap 30 menit; isu dari X dicari 14 Nov 2026, 09.00 WIB');
-  assert.equal(freshnessText({ ...carried, x_searched_at: null }, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, tiap 30 menit');
+  const payload = { updated_at: '2026-11-15T01:10:00', daily_at: '08:00', enabled: true, missing: ['ID-PA', 'x', 'tiktok'] };
+  assert.equal(freshnessText(payload, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB; Papua tidak terbaca; X belum lengkap; TikTok belum lengkap');
+  const carried = { updated_at: '2026-11-15T01:10:00', daily_at: '08:00', enabled: true, missing: [], x_searched_at: '2026-11-15T00:40:00' };
+  assert.equal(freshnessText(carried, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB; isu dari X dicari 07.40 WIB', 'X is searched once a day: its issues can be older than the list');
+  assert.equal(freshnessText({ ...carried, x_searched_at: '2026-11-14T02:00:00' }, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB; isu dari X dicari 14 Nov 2026, 09.00 WIB');
+  assert.equal(freshnessText({ ...carried, x_searched_at: null }, new Date('2026-11-15T01:30:00Z')), 'Diperbarui 08.10 WIB, otomatis setiap hari pukul 08.00 WIB');
 });
 
 // ── A top ten per platform ──────────────────────────────────────────────────────────────────────────────────────────
