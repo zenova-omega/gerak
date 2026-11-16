@@ -720,8 +720,8 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .ps-project-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .pulse-standalone .ps-project-toolbar > .ps-project-pick { display: flex; flex: 0 1 320px; align-items: center; gap: 8px; min-width: 200px; max-width: 360px; margin: 0; }
 .pulse-standalone .ps-project-pick > svg { flex: 0 0 auto; color: var(--ps-muted); }
-.pulse-standalone .ps-project-bar .ps-project-pick select { min-height: 44px; font-size: 1rem; font-weight: 650; background: var(--ps-panel); }
-.pulse-standalone .ps-scope-toggle { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; min-height: 44px; padding: 6px 14px; border: 1px solid var(--ps-control-line); border-radius: var(--ps-radius-control, 8px); background: var(--ps-panel); color: var(--ps-ink); font: inherit; font-size: .8125rem; font-weight: 600; text-align: left; cursor: pointer; box-shadow: none; transition: background-color var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
+.pulse-standalone .ps-project-bar .ps-project-pick select { font-size: 1rem; font-weight: 650; background: var(--ps-panel); }
+.pulse-standalone .ps-scope-toggle { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; min-height: var(--ps-control-md); padding: 6px 14px; border: 1px solid var(--ps-control-line); border-radius: var(--ps-radius-control, 8px); background: var(--ps-panel); color: var(--ps-ink); font: inherit; font-size: .8125rem; font-weight: 600; text-align: left; cursor: pointer; box-shadow: none; transition: background-color var(--ps-motion, 160ms) var(--ps-ease, ease-out); }
 .pulse-standalone .ps-scope-toggle:hover { background: var(--ps-selected); }
 .pulse-standalone .ps-scope-toggle:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
 .pulse-standalone .ps-scope-toggle > span { display: inline-flex; align-items: center; gap: 6px; }
@@ -959,7 +959,14 @@ div.pu-hover-label { margin-bottom: 2px; }
    Every interactive control takes its height, padding, type and radius from the --ps-control-*
    tokens in pulse-tokens.css. md (44px) is the default; sm (36px) is for filter chips and
    segmented items; xs (32px) is only the inline info button. Do not set heights per page. */
-.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-pick select { font-size: 1rem; font-weight: 650; }
+/* sm (data-size="sm"): a dropdown or a text field in a compact row (the project bar), the height of a size="sm" button
+   and a filter chip. Under 700px --ps-control-sm is 44px, so it stays a touch target. */
+.pulse-standalone.pulse-standalone.pulse-standalone :is(select:not([multiple], [size]), input:is([type=text], [type=search], [type=url], [type=email], [type=number], [type=date], [type=password], :not([type])))[data-size=sm] { height: var(--ps-control-sm); min-height: var(--ps-control-sm); padding-left: var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
+.pulse-standalone.pulse-standalone.pulse-standalone select:not([multiple], [size])[data-size=sm] { padding-right: 36px; background-position: right 17px top 50%, right 12px top 50%; }
+.pulse-standalone.pulse-standalone.pulse-standalone .pu-search > input[data-size=sm] { padding-left: calc(var(--ps-field-icon-inset) + var(--ps-field-icon) + 10px); }   /* room for the search icon */
+.pulse-standalone.pulse-standalone .ps-scope-toggle[data-size=sm] { min-height: var(--ps-control-sm); padding-block: 0; font-size: var(--ps-control-font-sm); }
+/* The project picker names the working context: its type is the one exception, at any size. */
+.pulse-standalone.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-pick select { font-size: 1rem; font-weight: 650; }
 
 /* Text inputs share the dropdown's box. */
 .pulse-standalone.pulse-standalone.pulse-standalone input:is([type=text], [type=search], [type=url], [type=email], [type=number], [type=date], [type=password], :not([type])) {
@@ -980,7 +987,7 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone.pulse-standalone .pm-view-switch .pu-button { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
 
 /* Button-like links and toggles that are not PulseButton. */
-.pulse-standalone.pulse-standalone :is(.ps-scope-toggle, .ps-project-search-link) { min-height: var(--ps-control-md); border-radius: var(--ps-radius-control); font-size: var(--ps-control-font-md); font-weight: var(--ps-control-weight); }
+.pulse-standalone.pulse-standalone .ps-scope-toggle { min-height: var(--ps-control-md); border-radius: var(--ps-radius-control); font-size: var(--ps-control-font-md); font-weight: var(--ps-control-weight); }
 .pulse-standalone .ps-info-trigger { width: var(--ps-control-xs); height: var(--ps-control-xs); }
 .pulse-standalone.pulse-standalone .pm-quick-filters .pp-actions .pu-button, .pulse-standalone.pulse-standalone .pulse-platform-picker .pp-actions .pu-button { min-height: var(--ps-control-sm); padding: 0 var(--ps-control-pad-sm); font-size: var(--ps-control-font-sm); }
 /* One type size per control size, whatever panel the button sits in. Page CSS must not restyle buttons. */
@@ -2141,11 +2148,7 @@ div.pu-hover-label { margin-bottom: 2px; }
 
 /* Project bar: compact and frozen at the top so the chosen project stays in view while scrolling. */
 .pulse-standalone.pulse-standalone .ps-project-bar { position: sticky; top: 0; z-index: 20; margin: 0 0 12px; padding: 8px 0 6px; background: var(--ps-bg); border-radius: 0; border-inline: 0; border-top: 0; border-bottom: 1px solid var(--ps-line); max-height: 100dvh; overflow-y: auto; }
-.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-pick select,
-.pulse-standalone.pulse-standalone .ps-project-bar .ps-scope-toggle,
-.pulse-standalone.pulse-standalone .ps-project-bar .ps-global-search input { min-height: 36px; padding-block: 4px; }
-.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-actions button,
-.pulse-standalone.pulse-standalone .ps-project-bar .ps-project-actions a { min-height: 36px; }
+/* Its controls are all the sm control size (ProjectBar passes size="sm" / data-size="sm"), so they share one height. */
 .pulse-standalone.pulse-standalone .ps-project-bar .pcv-band { margin-top: 4px; font-size: 12px; line-height: 1.3; }
 .pulse-standalone.pulse-standalone .ps-project-bar .pcv-band :is(svg) { width: 14px; height: 14px; }
 @media (max-width: 700px) { .pulse-standalone.pulse-standalone .ps-project-bar { position: static; } }

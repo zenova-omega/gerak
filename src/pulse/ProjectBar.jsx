@@ -3,7 +3,7 @@ import { Link, useInRouterContext, useNavigate, useSearchParams } from 'react-ro
 import { FolderOpen, SlidersHorizontal, Plus, Search, ArrowRight, CalendarDays, Layers, ChevronDown } from 'lucide-react';
 import { useTopics } from '../hooks/usePulse';
 import api from '../lib/api';
-import { PulseButton, PulseNotice } from '../components/ui/PulseUI';
+import { PulseButton, PulseButtonLink, PulseNotice } from '../components/ui/PulseUI';
 import { buildProjectQuery, explainProjectQuery, projectSearch, parseProjectQuery } from './projectQuery';
 import KeywordChips from './KeywordChips';
 import SmartKeywords from './SmartKeywords';
@@ -167,17 +167,17 @@ export default function ProjectBar({ readOnly = false }) {
   const available = resource.topics.filter(t => t.label.toLocaleLowerCase('id').includes(projectFilter.toLocaleLowerCase('id')));
   return <section className="ps-project-bar" aria-label="Project aktif" data-selected={Boolean(topic)}>
     <div className="ps-project-toolbar">
-      <label className="ps-project-pick"><span className="pu-sr">Project aktif</span><FolderOpen size={18} aria-hidden="true" /><select value={id} onChange={e => select(e.target.value)} disabled={resource.loading}>
+      <label className="ps-project-pick"><span className="pu-sr">Project aktif</span><FolderOpen size={18} aria-hidden="true" /><select data-size="sm" value={id} onChange={e => select(e.target.value)} disabled={resource.loading}>
         <option value="">Pilih project</option>{id && !topic && <option value={id}>{resource.loading ? 'Memuat project…' : 'Project tidak tersedia'}</option>}{resource.topics.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
       </select></label>
-      {topic && <button type="button" className="ps-scope-toggle" aria-expanded={scopeOpen} aria-controls="ps-scope" data-filtered={filtered ? '' : undefined} onClick={() => setScopeOpen(value => !value)}>
+      {topic && <button type="button" className="ps-scope-toggle" data-size="sm" aria-expanded={scopeOpen} aria-controls="ps-scope" data-filtered={filtered ? '' : undefined} onClick={() => setScopeOpen(value => !value)}>
         <span className="pu-sr">Cakupan: </span><span><CalendarDays size={16} aria-hidden="true" />{periodLabel(period)}</span><span><Layers size={16} aria-hidden="true" />{platformSummary}</span>
         <span className="ps-scope-toggle-action">{scopeOpen ? 'Tutup' : 'Ubah'}<ChevronDown size={16} aria-hidden="true" /></span>
       </button>}
       {topic && <form className="pu-search ps-global-search" role="search" aria-label="Cari posting atau akun di project ini" onSubmit={findInProject}>
-        <Search aria-hidden="true" /><input type="search" name="find" key={id + ':' + (params.get('find') || '')} defaultValue={params.get('find') || ''} maxLength={120} placeholder="Cari posting atau akun…" aria-label="Cari posting atau akun di project ini" />
+        <Search aria-hidden="true" /><input type="search" data-size="sm" name="find" key={id + ':' + (params.get('find') || '')} defaultValue={params.get('find') || ''} maxLength={120} placeholder="Cari posting atau akun…" aria-label="Cari posting atau akun di project ini" />
       </form>}
-      <div className="ps-project-actions">{topic && <PulseButton aria-expanded={mode === 'edit'} onClick={() => setMode(mode === 'edit' ? '' : 'edit')}><SlidersHorizontal size={16} />Pengaturan</PulseButton>}{!topic && <Link className="ps-project-search-link" to={'/pulse/search' + (params.get('q') ? '?' + new URLSearchParams({q:params.get('q')}) : '')}><Search size={16} aria-hidden="true"/>Pencarian cepat</Link>}{!readOnly && <PulseButton aria-expanded={mode === 'new'} onClick={() => setMode(mode === 'new' ? '' : 'new')}><Plus size={16} />Project baru</PulseButton>}</div>
+      <div className="ps-project-actions">{topic && <PulseButton size="sm" aria-expanded={mode === 'edit'} onClick={() => setMode(mode === 'edit' ? '' : 'edit')}><SlidersHorizontal size={16} />Pengaturan</PulseButton>}{!topic && <PulseButtonLink size="sm" className="ps-project-search-link"><Link to={'/pulse/search' + (params.get('q') ? '?' + new URLSearchParams({q:params.get('q')}) : '')}><Search size={16} aria-hidden="true"/>Pencarian cepat</Link></PulseButtonLink>}{!readOnly && <PulseButton size="sm" aria-expanded={mode === 'new'} onClick={() => setMode(mode === 'new' ? '' : 'new')}><Plus size={16} />Project baru</PulseButton>}</div>
     </div>
     {topic && <div className="pcv-band"><CoverageBadge reading={coverageReading} to={'/pulse/sources?' + new URLSearchParams({ topic: id })} /></div>}
     {resource.error ? <PulseNotice role="alert" tone="warning">Gagal memuat project. <PulseButton onClick={resource.refetch}>Coba lagi</PulseButton></PulseNotice> : topic ? null : <div className="ps-project-start">

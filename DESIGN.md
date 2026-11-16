@@ -276,7 +276,7 @@ Buttons (`PulseButton`):
 
 `size="sm"` gives the 36px button; `iconOnly` gives a square one and requires `aria-label`.
 
-Dropdown: a native `select` styled as a secondary button: 44px, keycap edge, caret drawn 16px from the right edge in the text colour. The project picker is the one exception in type (16px, weight 650) because it names the working context. Text inputs share the same box without the edge.
+Dropdown: a native `select` styled as a secondary button: 44px, keycap edge, caret drawn 16px from the right edge in the text colour. The project picker is the one exception in type (16px, weight 650) because it names the working context. Text inputs share the same box without the edge. A dropdown, a text field and the scope toggle take `data-size="sm"` (16 Nov 2026) for the 36px step a `size="sm"` button has; the project bar uses it for every control (picker, scope toggle, search, Pengaturan, Project baru, Pencarian cepat), so the row is one height. Page CSS never sets those heights.
 
 Filter chips: any pressable `PulseTag` is 36px with the control radius. Selected is a tinted fill; unselected is an outline. Static tags (sentiment, platform labels) keep their own smaller sizes because they are not controls.
 

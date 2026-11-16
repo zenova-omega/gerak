@@ -28,8 +28,6 @@
 .pulse-standalone .ps-project-toolbar>svg {align-self:center;color:var(--ps-muted);width:18px}
 .pulse-standalone .ps-project-toolbar>label {flex:1 1 240px;max-width:480px}
 .pulse-standalone .ps-project-actions {margin-left:auto;align-items:center}
-.pulse-standalone .ps-project-search-link {display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;color:var(--ps-ink);font-size:.875rem;text-decoration:none;border-radius:var(--ps-radius-control, 8px)}
-.pulse-standalone .ps-project-search-link:hover {background:var(--ps-soft);text-decoration:underline}
 .pulse-standalone .ps-project-start {margin-top:16px;border-top:1px solid var(--ps-line);padding-top:12px}
 .pulse-standalone .ps-project-help {margin:0 0 12px}
 .pulse-standalone .ps-project-shortcuts {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:8px}
