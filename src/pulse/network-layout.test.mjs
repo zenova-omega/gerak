@@ -16,7 +16,7 @@ test('network timeline precedes canvas and empty states retain accessible contro
  }finally{await server.close();}
 });
 
-test('an evidence card reads its post\'s tone by tone_share_v1: either stored form, any letter case; no tag before analysis',async()=>{
+test('an evidence card reads its post\'s tone by tone_share_v2: either stored form, any letter case; no tag before analysis',async()=>{
  const server=await createServer({optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,ws:false,watch:null},appType:'custom'});
  try{
   const {default:Explorer}=await server.ssrLoadModule('/src/components/admin/pulse/NetworkExplorer.jsx');

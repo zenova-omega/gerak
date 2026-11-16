@@ -1,6 +1,6 @@
 // The strongest negative and positive mentions of a project's chosen scope, for Ikhtisar: posts from every platform,
 // news included, whose tone has been analysed. A post's tone and interactions are the calculation dictionary's
-// (tone_share_v1, interactions_v1 through postMeasures), and the order is the one every list by interactions uses
+// (tone_share_v2, interactions_v1 through postMeasures), and the order is the one every list by interactions uses
 // (byInteractions: known first, most first, then the earlier post). News reports no interactions, so an article comes
 // after the posts whose interactions are known. A platform filter lists one platform at a time, news included.
 import { byInteractions, postMeasures } from './pulseMeasures.js';

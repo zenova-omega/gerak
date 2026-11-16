@@ -7,7 +7,7 @@ Read only: the SQLite file is opened in SQLite's read-only mode and nothing is w
 file; it exists so the owner can see what moved before the live API is restarted.
 
 Per project it prints posts per day of the installation's zone for the last 14 days, total interactions and how many
-posts report them, accounts per platform (with Monitor's "days with posts"), and the three tone percentages with the
+posts report them, accounts per platform (with Monitor's "days with posts"), and the tone percentages with the
 analysed and "belum dianalisis" counts: for the whole project, for warganet and berita apart (the Sentimen page), and
 for Beranda's last seven times 24 hours. Across the database it prints, per platform, the names seen both with and
 without a provider id.
@@ -17,7 +17,10 @@ work, which live here and nowhere else:
   day           Monitor's "days with posts" counted UTC dates; the day chart already added 7 hours to every time
   interactions  likes + comments + shares over the figures stored as numbers, a missing one read as 0, no stand-in
   account       the platform with the provider id, else the author text as written
-  tone base     all posts, "belum dianalisis" a fourth part of the 100 (largest remainder)
+  tone base     tone_share_v1 (15 to 16 Nov 2026): the analysed posts only, "belum dianalisis" given beside as a count.
+                tone_share_v2 replaced it on the owner's choice, which is the rule from before 15 Nov again: all posts,
+                "belum dianalisis" the fourth part of the 100. v1 is pulse_measures.sample_tone_shares, the reading
+                comments keep, so it is not written a second time here.
 `--compare` prints both as one markdown table per project, only the figures that moved, each with a short note.
 
 Exit status 1 when a platform keyed by provider id has a name seen both with and without an id (account_v1 would
@@ -95,19 +98,6 @@ def _old_account(post):
     return post['platform'], post['metrics'].get('author_id') or post['author']
 
 
-def _old_shares(counts) -> dict | None:
-    """Before tone_share_v1: shares of all posts, "belum dianalisis" a fourth part, whole numbers adding up to 100."""
-    keys = (*TONES, 'unknown')
-    total = sum(counts.get(key, 0) for key in keys)
-    if not total:
-        return None
-    percent = {key: counts.get(key, 0) * 100 // total for key in keys}
-    left = 100 - sum(percent.values())
-    for key in sorted(keys, key=lambda k: -(counts.get(k, 0) * 100 % total))[:left]:
-        percent[key] += 1
-    return percent
-
-
 # ---- one project's figures ------------------------------------------------------------------------------------------
 def keyed_by_id(platform) -> bool:
     """Whether account_v1 keys a platform by provider id: asked of the module, not written here a second time."""
@@ -118,13 +108,13 @@ def _tone(posts, old: bool) -> dict:
     counts = Counter(measures.tone(post['metrics']) for post in posts)
     counts = {key: counts.get(key, 0) for key in (*TONES, 'unknown')}
     analysed = sum(counts[key] for key in TONES)
-    if old:
-        percent = _old_shares(counts)
-        text = {key: f'{value}%' for key, value in percent.items()} if percent else None
-        return {'counts': counts, 'analysed': analysed, 'unknown': counts['unknown'], 'base': len(posts),
-                'percent': percent, 'text': text}
+    if old:   # tone_share_v1: the three tones over the analysed posts, "belum dianalisis" a count beside them
+        shares = measures.sample_tone_shares(counts)
+        only = (lambda value: {key: value[key] for key in TONES} if value else None)
+        return {'counts': counts, 'analysed': analysed, 'unknown': counts['unknown'], 'base': analysed,
+                'percent': only(shares['percent']), 'text': only(shares['text'])}
     shares = measures.tone_shares(counts)
-    return {'counts': counts, 'analysed': analysed, 'unknown': counts['unknown'], 'base': analysed,
+    return {'counts': counts, 'analysed': analysed, 'unknown': counts['unknown'], 'base': len(posts),
             'percent': shares['percent'], 'text': shares['text']}
 
 
@@ -226,13 +216,13 @@ def _zone_text(zone) -> str:
 
 def _tone_line(tone, old: bool) -> str:
     if not tone['text']:
-        return f"no tone: nothing analysed; belum dianalisis {number(tone['unknown'])}"
-    keys = (*TONES, 'unknown') if old else TONES
+        return f"no tone: nothing analysed; belum dianalisis {number(tone['unknown'])}" if old else 'no posts'
+    keys = TONES if old else (*TONES, 'unknown')
     shares = ' · '.join(f"{WORDS[key]} {tone['text'][key]}" for key in keys)
     counts = ' · '.join(number(tone['counts'][key]) for key in keys)
     if old:
-        return f"{shares} ({counts}) of all {number(tone['base'])} posts"
-    return f"{shares} ({counts}) of {number(tone['analysed'])} analysed; belum dianalisis {number(tone['unknown'])}"
+        return f"{shares} ({counts}) of {number(tone['analysed'])} analysed; belum dianalisis {number(tone['unknown'])}"
+    return f"{shares} ({counts}) of all {number(tone['base'])} posts"
 
 
 def text(result) -> str:
@@ -312,22 +302,25 @@ def _account_note(platform) -> str:
 
 
 def _tone_text(tone) -> str:
-    return ' · '.join(f"{WORDS[key]} {tone['text'][key]}" for key in TONES) if tone['text'] else 'nothing analysed'
+    return ' · '.join(f"{WORDS[key]} {tone['text'][key]}" for key in (*TONES, 'unknown')) if tone['text'] else 'no posts'
 
 
 def _tone_rows(where, before, after, same):
+    """`before` is tone_share_v1 (of the analysed posts, "belum dianalisis" a count), `after` tone_share_v2."""
     rows = []
-    for key in TONES:
-        b = before['text'][key] if before['text'] else '—'
+    for key in (*TONES, 'unknown'):
+        if key == 'unknown':
+            b = f"{number(before['unknown'])} posting"
+        else:
+            b = before['text'][key] if before['text'] else '—'
         a = after['text'][key] if after['text'] else '—'
-        if b != a:
+        if b != a and not (key == 'unknown' and not before['unknown']):   # none waiting: nothing moved
             rows.append((f'{where}, {WORDS[key]}', b, a,
-                         f"Before, a share of all {number(before['base'])} posts, belum dianalisis "
-                         f"({number(before['unknown'])}) a fourth part of the 100; now of the {number(after['analysed'])} "
-                         "analysed posts only, the rest given beside as a count. The rounding then gives the last point to "
-                         "another tone." if before['unknown'] * 200 < before['base'] else
-                         f"Before, a share of all {number(before['base'])} posts, belum dianalisis ({number(before['unknown'])}) "
-                         f"a fourth part of the 100; now of the {number(after['analysed'])} analysed posts only."))
+                         f"Before, beside the shares as a count; now the fourth part of the 100, of all {number(after['base'])} posts."
+                         if key == 'unknown' else
+                         f"Before, a share of the {number(before['analysed'])} analysed posts only; now of all {number(after['base'])} "
+                         f"posts, belum dianalisis ({number(after['unknown'])}) included." if after['unknown'] else
+                         "Every post is analysed: the same base, so only the rounding with a fourth part of 0 could move it."))
     if not rows:
         same.append(f"{where} ({_tone_text(after)})")
     return rows

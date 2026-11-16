@@ -13,7 +13,13 @@ test('overview and trigger graphics come from counted facts', async () => {
   const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'silent' });
   try {
     const { Overview, conclusion, default: Graphic } = await vite.ssrLoadModule('/src/pulse/SummaryInfographics.jsx');
-    assert.match(conclusion(facts), /1\.329 posting dari 400 akun dalam 5 hari · teramai 12 Nov \(90 posting\) · sentimen dominan netral 73%/);
+    // tone_share_v2: the share is of all 1.329 posts (was 73% of the 1.040 analysed).
+    assert.match(conclusion(facts), /1\.329 posting dari 400 akun dalam 5 hari · teramai 12 Nov \(90 posting\) · sentimen dominan netral 57%/);
+    const tone = renderToStaticMarkup(React.createElement(Graphic, { kind: 'sentiment', facts }));
+    assert.match(tone, /aria-label="Negatif 20%, Netral 57%, Positif 1%, Belum dianalisis 22%"/, 'the four parts of every post add up to 100');
+    assert.match(tone, /<strong>22%<\/strong><span>belum dianalisis<\/span>/);
+    assert.match(tone, /dari 1\.329 posting/);
+    assert.doesNotMatch(tone, /yang sudah dianalisis/);
     const overview = renderToStaticMarkup(React.createElement(Overview, { facts }));
     assert.match(overview, /Platform/); assert.match(overview, /detikNews/); assert.match(overview, /anger/);
     assert.match(renderToStaticMarkup(React.createElement(Graphic, { kind: 'anger', facts })), /Mengkritik DPR/);

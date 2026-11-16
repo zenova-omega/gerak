@@ -69,7 +69,7 @@ test('the other five figures are the shared readings, written as Ikhtisar writes
   const net = Math.round(netSentiment(evidence.counts));
   assert.equal(kpis.net.value, `${net > 0 ? '+' : net < 0 ? '−' : ''}${Math.abs(net)}`);
   assert.equal(kpis.net.deltaUnit, ' poin');
-  assert.equal(kpis.net.note, `dari ${evidence.analyzed} posting dianalisis · skala −100 sampai +100`);
+  assert.equal(kpis.net.note, `dari ${evidence.posts.length} posting · skala −100 sampai +100`, 'tone_share_v2: the base is every post');
   const reading = accountConcentration(evidence.posts);
   assert.equal(kpis.concentration.value, `${Math.round(reading.topAccountShare * 100)}%`);
   assert.equal(kpis.concentration.note, `posting dari 3 akun teratas · dari ${reading.accounts} akun`);

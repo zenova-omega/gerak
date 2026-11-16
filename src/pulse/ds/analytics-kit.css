@@ -213,6 +213,7 @@ div.pu-hover-card > .pu-hover-foot { margin: 10px 0 0; }
 .pu-hover-bar { display: flex; gap: 2px; height: 6px; margin-bottom: 10px; }
 .pu-hover-bar > i { flex-basis: 0; min-width: 3px; border-radius: 2px; background: var(--swatch, var(--ps-muted)); }
 .pu-hover-bar > i[data-hatch] { background: repeating-linear-gradient(135deg, var(--ps-sent-unknown) 0 2px, transparent 2px 4px); outline: 1px solid var(--ps-control-line); outline-offset: -1px; }
+.pu-hover-bar > i[data-gap] { min-width: 0; background: transparent; }   /* tone_share_v2: the hidden "belum dianalisis" keeps its room */
 .pu-hover-rows { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .pu-hover-rows > li { display: flex; align-items: center; gap: 8px; }
 .pu-hover-rows > li > small { font-size: inherit; color: var(--ps-muted); }
@@ -1947,6 +1948,8 @@ div.pu-hover-label { margin-bottom: 2px; }
 .pulse-standalone .pvo-voice[data-primary] .pvo-bar { height: 14px; border-radius: 7px; }
 .pulse-standalone .pvo-bar > span { flex-basis: 0; min-width: 4px; }
 .pulse-standalone .pvo-bar > span[data-hatch] { background: repeating-linear-gradient(45deg, var(--ps-sent-unknown) 0 3px, transparent 3px 6px); }
+/* tone_share_v2: with "belum dianalisis" hidden, its room stays empty so each segment is still its share of all posts. */
+.pulse-standalone .pvo-bar > span[data-gap] { min-width: 0; background: transparent; }
 .pulse-standalone :is(.pvo-legend, .pvo-kinds > ul, .pvo-stance > ul) { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
 .pulse-standalone .pvo-legend > li { display: inline-flex; align-items: center; gap: 6px; font-size: .8125rem; color: var(--ps-muted); white-space: nowrap; }
 .pulse-standalone :is(.pvo-legend, .pvo-kinds, .pvo-stance) b { color: var(--ps-ink); font-weight: 700; font-variant-numeric: tabular-nums; }

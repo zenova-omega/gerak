@@ -17,7 +17,7 @@ EPOCH = datetime(1970, 1, 1)
 EXPECTED_RULES = [
     ('day', 'day_v1'), ('clock', 'clock_v1'), ('interactions', 'interactions_v1'),
     ('shares_total', 'shares_total_v1'), ('content_shares', 'content_shares_v1'),
-    ('tone_share', 'tone_share_v1'), ('account', 'account_v1'),
+    ('tone_share', 'tone_share_v2'), ('account', 'account_v1'),
 ]
 
 
@@ -162,6 +162,11 @@ def test_tone(case):
 @pytest.mark.parametrize('case', cases('tone_shares'))
 def test_tone_shares(case):
     assert m.tone_shares(case['in']) == case['out']
+
+
+@pytest.mark.parametrize('case', cases('sample_tone_shares'))
+def test_sample_tone_shares(case):
+    assert m.sample_tone_shares(case['in']) == case['out']
 
 
 @pytest.mark.parametrize('case', cases('account'))

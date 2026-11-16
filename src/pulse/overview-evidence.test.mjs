@@ -247,15 +247,18 @@ test('an account picture is found by name on platforms whose account_v1 key is t
  } finally {await server.close();}
 });
 
-test('the tone of a drawer\'s posts is tone_share_v1: shares of the analysed posts that add up to 100, one of 300 is <1%', async () => {
+test('the tone of a drawer\'s posts is tone_share_v2: shares of every post that add up to 100 with belum dianalisis, one of 301 is <1%', async () => {
  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
  try {
   const { EvidencePosts } = await server.ssrLoadModule('/src/pulse/EvidencePosts.jsx');
   const post = (id, sentiment) => ({ id, platform: 'x', author: 'a' + id, text: 'teks ' + id, published_at: '2026-11-10T03:00:00Z', metrics: sentiment ? { sentiment } : {} });
   const sliver = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(EvidencePosts, { posts: [post('p', 'negative'), ...Array.from({ length: 299 }, (_, index) => post('n' + index, { label: 'neutral' })), post('u')] })));
-  assert.match(sliver, /aria-label="Negatif &lt;1%, Netral 100%"/);
+  assert.match(sliver, /aria-label="Negatif &lt;1%, Netral 100%, Belum dianalisis &lt;1%"/);
   assert.match(sliver, /<strong>&lt;1%<\/strong><span>negatif<\/span>/);
   const thirds = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(EvidencePosts, { posts: [post('a', 'negative'), post('b', 'neutral'), post('c', 'positive')] })));
   assert.match(thirds, /aria-label="Negatif 33%, Netral 33%, Positif 34%"/, 'whole numbers that add up to 100');
+  const quarters = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(EvidencePosts, { posts: [post('a', 'negative'), post('b', 'neutral'), post('c', 'positive'), post('d')] })));
+  assert.match(quarters, /aria-label="Negatif 25%, Netral 25%, Positif 25%, Belum dianalisis 25%"/, 'the waiting post is the fourth part, not left out of the base');
+  assert.match(quarters, /<strong>25%<\/strong><span>belum dianalisis<\/span>/);
  } finally { await server.close(); }
 });

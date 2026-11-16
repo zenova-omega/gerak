@@ -207,16 +207,16 @@ test('the leaders are the largest real groups of the scope, whatever the list is
  assert.deepEqual(leadingGroups(filterConversationGroups(built.groups,{minPosts:1}).groups).map(group=>group.id),['big','mid','duo'],'never a single post');
 });
 
-test('the sentiment mix is a share of analysed posts in whole numbers that add up to 100',()=>{
- // tone_share_v1: every part also carries the text to print (toneShares), so a sliver reads "<1%"; the percentages are unchanged.
- assert.deepEqual(sentimentShares({positive:1,neutral:1,negative:1,unknown:4}),{total:7,analysed:3,unknown:4,parts:[{key:'positive',count:1,percent:34,text:'34%'},{key:'neutral',count:1,percent:33,text:'33%'},{key:'negative',count:1,percent:33,text:'33%'}]});
- assert.deepEqual(sentimentShares({positive:0,neutral:1,negative:3,unknown:1}).parts,[{key:'neutral',count:1,percent:25,text:'25%'},{key:'negative',count:3,percent:75,text:'75%'}]);
- assert.deepEqual(sentimentShares({positive:0,neutral:0,negative:0,unknown:2}),{total:2,analysed:0,unknown:2,parts:[]});
- for(const mix of [{positive:1,neutral:2,negative:4},{positive:7,neutral:11,negative:13},{positive:1,neutral:0,negative:5}])assert.equal(sentimentShares(mix).parts.reduce((sum,part)=>sum+part.percent,0),100);
+test('the sentiment mix is a share of every post of the group in whole numbers that add up to 100, belum dianalisis included',()=>{
+ // tone_share_v2: the base is every post; "belum dianalisis" is the fourth part when the group has any (was 34/33/33 of the 3 analysed).
+ assert.deepEqual(sentimentShares({positive:1,neutral:1,negative:1,unknown:4}),{total:7,analysed:3,unknown:4,parts:[{key:'positive',count:1,percent:15,text:'15%'},{key:'neutral',count:1,percent:14,text:'14%'},{key:'negative',count:1,percent:14,text:'14%'},{key:'unknown',count:4,percent:57,text:'57%'}]});
+ assert.deepEqual(sentimentShares({positive:0,neutral:1,negative:3,unknown:1}).parts,[{key:'neutral',count:1,percent:20,text:'20%'},{key:'negative',count:3,percent:60,text:'60%'},{key:'unknown',count:1,percent:20,text:'20%'}]);
+ assert.deepEqual(sentimentShares({positive:0,neutral:0,negative:0,unknown:2}),{total:2,analysed:0,unknown:2,parts:[{key:'unknown',count:2,percent:100,text:'100%'}]});
+ for(const mix of [{positive:1,neutral:2,negative:4},{positive:7,neutral:11,negative:13},{positive:1,neutral:0,negative:5},{positive:3,neutral:5,negative:1,unknown:8}])assert.equal(sentimentShares(mix).parts.reduce((sum,part)=>sum+part.percent,0),100);
 });
 
-test('the sentiment mix of a group is tone_share_v1: a tone with one post of 300 prints <1%, never 0%',()=>{
- assert.deepEqual(sentimentShares({positive:1,neutral:299,negative:0,unknown:5}).parts,[{key:'positive',count:1,percent:0,text:'<1%'},{key:'neutral',count:299,percent:100,text:'100%'}]);
+test('the sentiment mix of a group is tone_share_v2: a tone with one post of 305 prints <1%, never 0%',()=>{
+ assert.deepEqual(sentimentShares({positive:1,neutral:299,negative:0,unknown:5}).parts,[{key:'positive',count:1,percent:0,text:'<1%'},{key:'neutral',count:299,percent:98,text:'98%'},{key:'unknown',count:5,percent:2,text:'2%'}]);
  assert.deepEqual(sentimentShares({positive:'2',neutral:2,negative:3}).parts.map(part=>part.percent),[29,28,43],'counts read as the module reads them');
 });
 

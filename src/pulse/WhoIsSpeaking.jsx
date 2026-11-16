@@ -27,9 +27,11 @@ const titleOf = row => TITLES[row.key] || `Akun dengan ${row.label} pengikut`;
 
 /** The percentages of a sentence in bold, so the answer can be read at a glance. */
 const emphasise = sentence => sentence.split(/(<1%|\d+%)/).map((part, index) => (index % 2 ? <b key={index}>{part}</b> : part));
-const toneWords = tone => TONES.map(key => `${sentimentLabels[key].toLowerCase()} ${tone.text[key]}`).join(', ');
+/** tone_share_v2: the three tones, then "belum dianalisis" when some posts wait; every share is of the row's posts. */
+const toneKeys = tone => [...TONES, ...(tone.unknown > 0 ? ['unknown'] : [])];
+const toneWords = tone => toneKeys(tone).map(key => `${sentimentLabels[key].toLowerCase()} ${tone.text[key]}`).join(', ');
 /** A tone with its base, for the name a row is read by. */
-const toneSaid = tone => (tone.analysed ? `Nada ${toneWords(tone)}, dari ${formatCount(tone.analysed)} dianalisis.` : 'Nada belum dianalisis.');
+const toneSaid = tone => (tone.analysed ? `Nada ${toneWords(tone)}, dari ${formatCount(tone.total)} posting.` : 'Nada belum dianalisis.');
 
 // The readings of one list of posts, kept with that list: opening the drawer redraws the page, not the readings.
 const readings = new WeakMap();
@@ -63,17 +65,17 @@ function meter(share, color) {
   return <span className="pws-meter"><span className="pws-track" aria-hidden="true">{share > 0 && <i style={{ width: `${share * 100}%`, background: color }} />}</span><b>{shareText(share)}</b></span>;
 }
 
-/** tone_share_v1 of a row as a proportion bar in the sentiment colours, every share in words under it, and the posts it
- * rests on when some are still waiting. The cell sits in a button, which is read by its own name (`toneSaid`), so the bar
+/** tone_share_v2 of a row as a proportion bar in the sentiment colours, every share in words under it (of all the row's
+ * posts, "belum dianalisis" the fourth part when some wait), and the posts it rests on when some are still waiting. The cell sits in a button, which is read by its own name (`toneSaid`), so the bar
  * is hidden from assistive technology rather than given a label nobody hears. */
 function toneCell(tone) {
   if (!tone.analysed) return <span className="pws-cell" data-cell="tone"><span className="pws-label">Nada</span><small>{sentimentLabels.unknown}</small></span>;
   return <span className="pws-cell" data-cell="tone"><span className="pws-label">Nada</span>
     <span className="pws-tone-bar" aria-hidden="true">
-      {TONES.filter(key => tone.text[key] !== '0%').map(key => <i key={key} style={{ flexGrow: tone.percent[key], background: sentimentColor[key] }} />)}
+      {toneKeys(tone).filter(key => tone.text[key] !== '0%').map(key => <i key={key} style={{ flexGrow: tone.percent[key], background: sentimentColor[key] }} />)}
     </span>
-    <span className="pws-tone-text">{TONES.map((key, index) => <span key={key}>{index > 0 && ' · '}{sentimentLabels[key].toLowerCase()} <b>{tone.text[key]}</b></span>)}</span>
-    {tone.unknown > 0 && <small>dari {formatCount(tone.analysed)} posting yang dianalisis</small>}
+    <span className="pws-tone-text">{toneKeys(tone).map((key, index) => <span key={key}>{index > 0 && ' · '}{sentimentLabels[key].toLowerCase()} <b>{tone.text[key]}</b></span>)}</span>
+    {tone.unknown > 0 && <small>dari {formatCount(tone.total)} posting</small>}
   </span>;
 }
 
@@ -106,12 +108,12 @@ function tierRow(row, { showTone, onOpen, members }) {
 }
 
 /** The donut of a place tile, a picture of what the tile's name already says (so hidden from assistive technology).
- * With tone: one arc per tone that has posts, in the order negative, neutral, positive, sized by tone_share_v1's own
- * percents, a 2px gap of surface between arcs. Without tone (the page shows one sentiment, or nothing is analysed yet):
+ * With tone: one arc per tone that has posts, in the order negative, neutral, positive, then "belum dianalisis", sized
+ * by tone_share_v2's own percents (so the arcs close the ring), a 2px gap of surface between arcs. Without tone (the page shows one sentiment, or nothing is analysed yet):
  * one ring of the accounts series, as long as the place's share of every X account. The arcs start at twelve o'clock. */
 const RING = 31.5, GAP = 1.2;
 function donut(tone, share) {
-  const parts = tone ? TONES.filter(key => tone.text[key] !== '0%').map(key => ({ key, value: tone.percent[key], color: sentimentColor[key] })) : [];
+  const parts = tone ? toneKeys(tone).filter(key => tone.text[key] !== '0%').map(key => ({ key, value: tone.percent[key], color: sentimentColor[key] })) : [];
   const gap = parts.length > 1 ? GAP : 0;
   let start = 0;
   return <svg className="pws-donut" viewBox="0 0 72 72" aria-hidden="true" focusable="false">
@@ -141,8 +143,8 @@ function placeTile({ key, label, standing, origin, showTone, open }) {
       <strong>{label}</strong>
       <span className="pws-tile-share"><b>{shareText(share)}</b> akun X</span>
       <small className="pws-tile-counts">{formatCount(standing.accounts)} akun · {formatCount(standing.posts)} posting</small>
-      {toned && <span className="pws-tile-tone">{TONES.map(key => <span key={key}><i className="psa-dot" data-tone={key} aria-hidden="true" />{tone.text[key]}</span>)}</span>}
-      {toned && tone.unknown > 0 && <small className="pws-tile-base">dari {formatCount(tone.analysed)} posting yang dianalisis</small>}
+      {toned && <span className="pws-tile-tone">{toneKeys(tone).map(key => <span key={key}><i className="psa-dot" data-tone={key} aria-hidden="true" />{tone.text[key]}</span>)}</span>}
+      {toned && tone.unknown > 0 && <small className="pws-tile-base">dari {formatCount(tone.total)} posting</small>}
     </span>
   </button></li>;
 }
@@ -156,7 +158,7 @@ function originBlock({ origin, posts, showTone, onOpen, mapLink }) {
   const parts = [['Menulis lokasi', origin.with_location], ['Tanpa lokasi', origin.no_location], ['Profil belum diambil', origin.unasked]].filter(([, count]) => count > 0);
   const tip = <InfoTip label="Tentang asal akun X">
     <p>Lokasi dan negara akun hanya tersedia dari profil X; profil TikTok, Instagram, dan YouTube tidak memberikannya.</p>
-    <p>Angka besar: bagian dari {formatCount(origin.accounts)} akun X dalam pilihan ini. {showTone ? 'Lingkaran: nada negatif, netral, positif, dari posting yang dianalisis.' : 'Lingkaran: bagian yang sama, dari semua akun X.'}</p>
+    <p>Angka besar: bagian dari {formatCount(origin.accounts)} akun X dalam pilihan ini. {showTone ? 'Lingkaran: nada negatif, netral, positif dan belum dianalisis, dari total posting.' : 'Lingkaran: bagian yang sama, dari semua akun X.'}</p>
     <p>Negara menurut X: negara yang dicantumkan X pada akun.{origin.country.region_only.accounts > 0 && ' Hanya wilayah: X menyebut kawasan, misalnya Asia Tenggara, yang bisa mencakup Indonesia.'}</p>
     <p>Provinsi menurut lokasi profil: dari lokasi yang ditulis pemilik akun, provinsi terbaca pada {formatCount(origin.province_read)} dari {formatCount(origin.accounts)} akun X ({shareText(provinceReadShare(origin))}).
       {parts.map(([name, count]) => ` ${name}: ${formatCount(count)} akun.`).join('')}</p>
@@ -197,7 +199,7 @@ export default function WhoIsSpeaking({ posts, onOpen, sentimentFiltered = false
   // Everything that explains the figures sits behind the title's tip, so the panel opens on its answer.
   const tip = <InfoTip label="Tentang siapa yang bicara">
     <p>Golongan akun menurut jumlah pengikut, dan asal akun X. Pilih baris atau kotak untuk melihat postingnya.</p>
-    <p>Posting: bagian dari semua posting. Interaksi: bagian dari interaksi yang tercatat.{showTone && ' Nada: negatif, netral, positif, dari posting yang dianalisis.'}</p>
+    <p>Posting: bagian dari semua posting. Interaksi: bagian dari interaksi yang tercatat.{showTone && ' Nada: negatif, netral, positif dan belum dianalisis, dari total posting.'}</p>
     {postsKnown !== null && <p>Pengikut diketahui pada {shareText(postsKnown)} posting media sosial
       {interactionsKnown !== null && ` dan ${shareText(interactionsKnown)} interaksi media sosial yang tercatat`}.</p>}
     <p>Pengikut adalah angka terakhir yang tercatat pada posting akun. Posting berita membentuk baris Pemberitaan. Usia, jenis kelamin, dan pekerjaan tidak dilaporkan sumber.</p>

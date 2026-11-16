@@ -4,18 +4,21 @@ import { netSentiment, netSentimentChange, narrativeBubbles, accountConcentratio
 
 const post = (id, sentiment, likes, author = 'a', platform = 'x') => ({ id, author, platform, metrics: { ...(sentiment ? { sentiment: { label: sentiment, confidence: 0.9 } } : {}), ...(likes == null ? {} : { likes }) } });
 
-test('net sentiment is positive minus negative over the analysed posts, and unknown posts stay out of the base', () => {
-  assert.equal(netSentiment({ positive: 6, neutral: 2, negative: 2, unknown: 90 }), 40);
+test('net sentiment is positive minus negative over every post (tone_share_v2), the ones not analysed yet included', () => {
+  assert.equal(netSentiment({ positive: 6, neutral: 2, negative: 2, unknown: 90 }), 4, 'of 100 posts (was +40 of the 10 analysed)');
+  assert.equal(netSentiment({ positive: 3, negative: 1, unknown: 4 }), 25, 'the same as the positive share minus the negative share');
   assert.equal(netSentiment({ positive: 0, neutral: 0, negative: 4 }), -100);
   assert.equal(netSentiment({ positive: 0, neutral: 0, negative: 0, unknown: 5 }), null, 'nothing analysed is no score, not zero');
   assert.equal(netSentiment(), null);
 });
 
 test('net sentiment change is the move of the positive share minus the move of the negative share', () => {
-  const week = (positive, negative) => Array.from({ length: 7 }, () => ({ positive, neutral: 0, negative }));
+  const week = (positive, negative, unknown = 0) => Array.from({ length: 7 }, () => ({ positive, neutral: 0, negative, unknown }));
   assert.equal(netSentimentChange([...week(1, 3), ...week(3, 1)]).delta, 100);
   assert.equal(netSentimentChange([...week(5, 5), ...week(10, 10)]).delta, 0, 'more volume at the same mix is no change');
+  assert.equal(netSentimentChange([...week(1, 1, 2), ...week(2, 0, 2)]).delta, 50, 'shares of every post: net 0 of 4, then +50 of 4');
   assert.equal(netSentimentChange([...week(0, 0), ...week(1, 1)]), null);
+  assert.equal(netSentimentChange([...week(0, 0, 3), ...week(1, 1)]), null, 'a window where nothing is analysed has no reading');
 });
 
 test('a narrative bubble is its posts, its net sentiment and the interactions its sources reported', () => {
@@ -44,14 +47,14 @@ test('concentration is the share of posts by the top three accounts and of inter
   assert.equal(none.topPostShare, null);
 });
 
-test('a diverging bar splits neutral across the centre and says nothing when nothing is analysed', async () => {
+test('a diverging bar splits neutral across the centre, in shares of every post, and says nothing when nothing is analysed', async () => {
   const { divergingSplit, divergingScale } = await import('./pulseInsightMetrics.js');
-  const split = divergingSplit({ positive: 2, neutral: 4, negative: 4, unknown: 50 });
-  assert.deepEqual(split.left.map(row => [row.key, row.share]), [['neutral', 20], ['negative', 40]]);
-  assert.deepEqual(split.right.map(row => [row.key, row.share]), [['neutral', 20], ['positive', 20]]);
-  assert.equal(split.leftTotal, 60);
-  assert.equal(split.rightTotal, 40);
-  assert.equal(split.net, -20);
+  const split = divergingSplit({ positive: 2, neutral: 4, negative: 4, unknown: 10 });
+  assert.deepEqual(split.left.map(row => [row.key, row.share]), [['neutral', 10], ['negative', 20]]);
+  assert.deepEqual(split.right.map(row => [row.key, row.share]), [['neutral', 10], ['positive', 10]]);
+  assert.equal(split.leftTotal, 30, 'the waiting half of the platform is not drawn, so its bar is shorter');
+  assert.equal(split.rightTotal, 20);
+  assert.equal(split.net, -10);
   assert.equal(divergingSplit({ unknown: 9 }), null);
   assert.equal(divergingScale([split, null, divergingSplit({ positive: 1 })]), 100, 'one scale for every bar');
 });

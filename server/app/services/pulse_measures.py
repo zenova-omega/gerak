@@ -8,7 +8,7 @@ from ..config import get_settings
 
 RULES: dict[str, str] = {
     'day': 'day_v1', 'clock': 'clock_v1', 'interactions': 'interactions_v1', 'shares_total': 'shares_total_v1',
-    'content_shares': 'content_shares_v1', 'tone_share': 'tone_share_v1', 'account': 'account_v1',
+    'content_shares': 'content_shares_v1', 'tone_share': 'tone_share_v2', 'account': 'account_v1',
 }
 RULE_TEXT: dict[str, str] = {
     'day': 'Sebuah postingan masuk ke tanggal kalender menurut zona waktu instalasi; periode dihitung per hari penuh dan minggu berjalan dari Senin sampai Minggu.',
@@ -16,10 +16,11 @@ RULE_TEXT: dict[str, str] = {
     'interactions': 'Interaksi adalah suka ditambah komentar ditambah bagikan yang dilaporkan sumber; tayangan tidak dihitung, dan bila tak satu pun dilaporkan, angkanya tidak diketahui, bukan 0.',
     'shares_total': 'Jumlah dibagikan untuk sekumpulan postingan adalah jumlah bagikan milik tiap postingan yang melaporkannya, sehingga repost tidak dihitung dua kali.',
     'content_shares': 'Jumlah dibagikan untuk satu konten adalah jumlah bagikan postingannya, atau angka terbesar yang dibawa repost bila itu lebih besar.',
-    'tone_share': 'Persentase sentimen dihitung dari postingan yang sudah dianalisis saja, dibulatkan agar berjumlah 100; yang belum dianalisis ditampilkan terpisah.',
+    'tone_share': 'Persentase sentimen dihitung dari total postingan dalam cakupan, termasuk yang belum dianalisis; positif, netral, negatif dan belum dianalisis dibulatkan agar berjumlah 100.',
     'account': 'Satu akun dihitung per platform, dikenali dari handle, ID penyedia, atau nama penerbit sesuai platformnya.',
 }
 TONES = ('positive', 'neutral', 'negative')
+SHARE_KEYS = (*TONES, 'unknown')   # tone_share_v2: the four parts of 100, in the order a tie is settled
 # ASCII digits only and no surrounding spaces, exactly as the browser reads them.
 _TIME = re.compile(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?)?(Z|[+-][0-9]{2}:?[0-9]{2})?$', re.I)
 _DAY = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
@@ -210,18 +211,25 @@ def tone(metrics: dict | None) -> str:
 
 
 def tone_shares(counts: dict) -> dict:
-    """Shares of the analysed posts only, whole numbers adding up to 100 by the largest remainder."""
-    values = {key: reported((counts or {}).get(key)) or 0 for key in TONES}
-    unknown = reported((counts or {}).get('unknown')) or 0
-    analysed = sum(values.values())
-    if not analysed:
-        return {'analysed': 0, 'unknown': unknown, 'percent': None, 'text': None}
-    percent = {key: values[key] * 100 // analysed for key in TONES}
+    """tone_share_v2: shares of every post counted (`total`), the ones not analysed yet included, so positive, neutral,
+    negative and unknown (belum dianalisis) are four whole numbers adding up to 100 (largest remainder, ties in that
+    order). A part with posts that would print as 0 prints "<1%". No shares when there are no posts at all."""
+    values = {key: reported((counts or {}).get(key)) or 0 for key in SHARE_KEYS}
+    total = sum(values.values())
+    if not total:
+        return {'total': 0, 'analysed': 0, 'unknown': 0, 'percent': None, 'text': None}
+    percent = {key: values[key] * 100 // total for key in SHARE_KEYS}
     left = 100 - sum(percent.values())
-    for key in sorted(TONES, key=lambda k: -(values[k] * 100 % analysed))[:left]:
+    for key in sorted(SHARE_KEYS, key=lambda k: -(values[k] * 100 % total))[:left]:
         percent[key] += 1
-    text = {key: '<1%' if values[key] and not percent[key] else f'{percent[key]}%' for key in TONES}
-    return {'analysed': analysed, 'unknown': unknown, 'percent': percent, 'text': text}
+    text = {key: '<1%' if values[key] and not percent[key] else f'{percent[key]}%' for key in SHARE_KEYS}
+    return {'total': total, 'analysed': total - values['unknown'], 'unknown': values['unknown'], 'percent': percent, 'text': text}
+
+
+def sample_tone_shares(counts: dict) -> dict:
+    """Comments are read as a sample (the most-liked ones of the busiest posts), not a backlog that drains, so their
+    shares are tone_share_v2 over the analysed comments only: the waiting ones are coverage, said apart."""
+    return tone_shares({key: (counts or {}).get(key) for key in TONES})
 
 
 def _trim(value) -> str:

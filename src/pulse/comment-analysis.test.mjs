@@ -18,7 +18,7 @@ test('a comment shows its own sentiment and stated stance with reasons, not the 
  }finally{await server.close();}
 });
 
-test('the comment summary prints tone shares as tone_share_v1 writes them: of the analysed comments, one of 300 is <1%', async () => {
+test('the comment summary prints tone shares as sampleToneShares writes them: of the analysed comments (a sample), one of 300 is <1%', async () => {
  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
  try {
   const { CommentSummary } = await server.ssrLoadModule('/src/components/admin/pulse/CommentsPanel.jsx');

@@ -12,10 +12,11 @@ export function recentChange(values, window = 7) {
   return { delta: now - before, percent: before > 0 ? (now - before) / before * 100 : null, days };
 }
 
-/** Change in one sentiment's share of the analysed posts (positive + neutral + negative): the last `days` rows against the
- * `days` before them, in percentage points. A rise in volume lifts every count, so a count cannot say whether a tone grew;
- * its share can. Posts not analysed yet are outside both shares, so unanalysed backlog never moves the figure.
- * @param {{positive:number, neutral:number, negative:number}[]} rows oldest first
+/** Change in one sentiment's share of every post (tone_share_v2: positive + neutral + negative + not analysed yet): the
+ * last `days` rows against the `days` before them, in percentage points. A rise in volume lifts every count, so a count
+ * cannot say whether a tone grew; its share can. Posts not analysed yet are in both bases, so a backlog lowers the share
+ * it sits in, as it does on the cards.
+ * @param {{positive:number, neutral:number, negative:number, unknown?:number}[]} rows oldest first
  * @returns {{delta: number, days: number}|null} null when either window has no analysed post */
 export function recentShareChange(rows, key, window = 7) {
   const series = (rows || []).filter(row => row && ['positive', 'neutral', 'negative'].every(tone => Number.isFinite(row[tone])));
@@ -23,7 +24,8 @@ export function recentShareChange(rows, key, window = 7) {
   if (days < 1 || !['positive', 'neutral', 'negative'].includes(key)) return null;
   const share = list => {
     const analysed = list.reduce((sum, row) => sum + row.positive + row.neutral + row.negative, 0);
-    return analysed ? list.reduce((sum, row) => sum + row[key], 0) / analysed * 100 : null;
+    const total = analysed + list.reduce((sum, row) => sum + (Number.isFinite(row.unknown) ? row.unknown : 0), 0);
+    return analysed ? list.reduce((sum, row) => sum + row[key], 0) / total * 100 : null;
   };
   const now = share(series.slice(-days)), before = share(series.slice(-days * 2, -days));
   return now === null || before === null ? null : { delta: now - before, days };

@@ -72,20 +72,23 @@ export function PulseLegend({ items, label = 'Keterangan warna' }) {
  * The head carries the label and, with `total`, the sum of the rows. `percent` adds each row's share of the rows shown
  * and draws those shares as one bar. `top(label)` may return up to three `{id, author, platform, photo, text, value}`
  * rows to preview what is behind the bar; `topUnit` names what their `value` counts.
- * Tone rows (positive, neutral, negative) take tone_share_v1: shares of the analysed posts only, "<1%" for a sliver, and
- * an `unknown` row keeps its count without a share. */
+ * Tone rows (positive, neutral, negative, unknown) take tone_share_v2: shares of every post of the bucket, read from the
+ * row's own data (`payload`), so hiding the "belum dianalisis" row changes no percentage and its room on the bar stays
+ * empty; "<1%" for a sliver. */
 export function PulseChartTooltip({ active, payload, label, labelFormatter, total = false, note, top, percent = false, topTitle = 'Posting teratas', topUnit }) {
   if (!active || !payload?.length) return null;
   const rows = payload.filter(row => Number.isFinite(row.value));
   const sum = rows.reduce((value, row) => value + row.value, 0);
-  const isTone = key => ['positive', 'neutral', 'negative'].includes(key);
-  const tones = rows.some(row => isTone(row.dataKey)) ? toneShares(Object.fromEntries(rows.map(row => [row.dataKey, row.value]))) : null;
+  const isTone = key => ['positive', 'neutral', 'negative', 'unknown'].includes(key);
+  const datum = rows[0]?.payload, whole = datum && ['positive', 'neutral', 'negative', 'unknown'].every(key => Number.isFinite(datum[key]));
+  const tones = rows.some(row => isTone(row.dataKey)) ? toneShares(whole ? datum : Object.fromEntries(rows.map(row => [row.dataKey, row.value]))) : null;
+  const gap = tones && whole && !rows.some(row => row.dataKey === 'unknown') ? datum.unknown : 0;
   const share = row => (tones ? (isTone(row.dataKey) && tones.text ? tones.text[row.dataKey] : null) : `${Math.round(row.value / sum * 100)}%`);
   const hatched = row => row.payload?.__hatch === row.dataKey || row.dataKey === 'unknown' ? '' : undefined;
   const list = top ? top(label) : [];
   return <div className="pu-hover-card pu-chart-tooltip">
     <header className="pu-hover-head"><strong>{labelFormatter ? labelFormatter(label) : label}</strong>{total && rows.length > 1 && <span>Total <b>{formatCount(sum)}</b></span>}</header>
-    {percent && sum > 0 && <span className="pu-hover-bar" aria-hidden="true">{rows.filter(row => row.value > 0).map(row => <i key={row.dataKey} data-hatch={hatched(row)} style={{ flexGrow: row.value, '--swatch': row.color || row.fill }} />)}</span>}
+    {percent && sum > 0 && <span className="pu-hover-bar" aria-hidden="true">{rows.filter(row => row.value > 0).map(row => <i key={row.dataKey} data-hatch={hatched(row)} style={{ flexGrow: row.value, '--swatch': row.color || row.fill }} />)}{gap > 0 && <i data-gap="" style={{ flexGrow: gap }} />}</span>}
     <ul className="pu-hover-rows">{rows.map(row => <li key={row.dataKey}><span className="pu-swatch" data-hatch={hatched(row)} style={{ '--swatch': row.color || row.fill }} aria-hidden="true" />{row.name}<b>{formatCount(row.value)}</b>{percent && sum > 0 && share(row) && <em>{share(row)}</em>}</li>)}</ul>
     {note && <p className="pu-hover-foot">{note}</p>}
     {list.length > 0 && <section className="pu-chart-top-wrap">

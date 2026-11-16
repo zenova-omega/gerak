@@ -32,7 +32,7 @@ test('shares of a breakdown are read over what has been analysed, never over the
   assert.equal(waiting.percent('negative'), null);               // nothing analysed: no figure at all
 });
 
-test('tone shares of comments are tone_share_v1: whole numbers that add up to 100, a sliver is <1%; stances keep their own reading', async () => {
+test('tone shares of comments are sampleToneShares: of the analysed comments, whole numbers that add up to 100, a sliver is <1%; stances keep their own reading', async () => {
   const { analysedShares } = await import('./pulseResponse.js');
   const tones = analysedShares({ positive: 1, neutral: 1, negative: 1, unknown: 9 });
   assert.deepEqual(['positive', 'neutral', 'negative'].map(tones.percent), [34, 33, 33]);

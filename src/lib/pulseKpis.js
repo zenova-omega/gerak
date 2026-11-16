@@ -1,7 +1,7 @@
 // The six figures at the top of Ikhtisar, worked out once for one selection, so that Ikhtisar and the report print the
 // same numbers with the same comparison and the same words. Pure: no React, no clock, no network.
 // Every figure rests on a shared reading: the posts and their days (`overviewEvidence`), the net score
-// (`netSentiment`, tone_share_v1's base), how concentrated the speaking is (concentration_v1) and the change inside a
+// (`netSentiment`, tone_share_v2's base: every post), how concentrated the speaking is (concentration_v1) and the change inside a
 // series (`recentChange`, `recentShareChange`). Nothing is counted here; this file only chooses the baseline of each
 // figure and writes it down.
 import { formatCount } from './pulseData.js';
@@ -55,7 +55,7 @@ export function projectKpis(evidence, { period = {}, comparisonError = false, ar
     { key: 'net', label: 'Sentimen bersih', value: rounded === null ? null : `${rounded > 0 ? '+' : rounded < 0 ? '−' : ''}${Math.abs(rounded)}`,
       delta: netChange?.delta ?? null, deltaUnit: ' poin', deltaIntent: deltaIntent('positive', netChange?.delta),
       deltaNote: netChange ? `${netChange.days} hari terakhir vs ${netChange.days} hari sebelumnya` : undefined,
-      note: net === null ? 'Belum ada posting yang dianalisis' : `dari ${formatCount(evidence.analyzed)} posting dianalisis · skala −100 sampai +100` },
+      note: net === null ? 'Belum ada posting yang dianalisis' : `dari ${formatCount(total)} posting · skala −100 sampai +100` },
     { key: 'concentration', label: 'Konsentrasi akun', delta: null,
       value: concentration.topAccountShare === null ? null : percentLabel(concentration.topAccountShare),
       note: concentration.topAccountShare === null ? 'Belum ada akun bernama' : `posting dari 3 akun teratas · dari ${formatCount(concentration.accounts)} akun` },

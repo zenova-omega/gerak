@@ -44,7 +44,7 @@ async def evaluate_sentiment(db, topic_id, *, start=None, end=None, platforms=No
     try:
         async for post_id, metrics, text, manual in rows:
             reviewed += 1
-            machine = pulse_measures.tone(metrics)   # tone_share_v1: either stored form, any letter case
+            machine = pulse_measures.tone(metrics)   # tone_share_v2: either stored form, any letter case
             if machine not in LABELS:
                 continue
             paired += 1

@@ -7,17 +7,17 @@ import { byInteractions, interactionsTotal, postMeasures, reported, toneShares }
 import { concentration } from './pulseReadings.js';
 import { recentShareChange } from './pulseTrend.js';
 
-/** Net sentiment: (positive − negative) ÷ analysed posts, from −100 (all negative) to +100 (all positive).
- * Posts not analysed yet are outside the base. Null when none is analysed.
- * @param {{positive?: number, neutral?: number, negative?: number}} counts */
+/** Net sentiment: (positive − negative) ÷ every post, from −100 (all negative) to +100 (all positive): the positive
+ * share minus the negative share. The base is the one tone_share_v2 names, posts not analysed yet included, so a
+ * backlog pulls the score towards 0. Null when none is analysed: nobody has read the tone yet, which is not 0.
+ * @param {{positive?: number, neutral?: number, negative?: number, unknown?: number}} counts */
 export function netSentiment(counts = {}) {
-  // The base is the one tone_share_v1 names: the analysed posts.
-  const { analysed } = toneShares(counts);
-  return analysed ? ((reported(counts?.positive) ?? 0) - (reported(counts?.negative) ?? 0)) / analysed * 100 : null;
+  const { total, analysed } = toneShares(counts);
+  return analysed ? ((reported(counts?.positive) ?? 0) - (reported(counts?.negative) ?? 0)) / total * 100 : null;
 }
 
-/** Change of the net score, in points: the last `window` days of `rows` against the ones before, shares of analysed posts.
- * Null when either window has nothing analysed. @param {{positive:number, neutral:number, negative:number}[]} rows oldest first */
+/** Change of the net score, in points: the last `window` days of `rows` against the ones before, shares of every post
+ * (tone_share_v2). Null when either window has nothing analysed. @param {{positive:number, neutral:number, negative:number}[]} rows oldest first */
 export function netSentimentChange(rows, window = 7) {
   const positive = recentShareChange(rows, 'positive', window), negative = recentShareChange(rows, 'negative', window);
   return positive && negative ? { delta: positive.delta - negative.delta, days: positive.days } : null;
@@ -71,14 +71,15 @@ export function accountConcentration(posts = []) {
 }
 
 /** One platform's tone as a diverging bar: negative runs left of a centre line, positive right, and the neutral posts
- * are split evenly across the line, so a balanced platform is symmetrical. Shares are percent of the analysed posts.
+ * are split evenly across the line, so a balanced platform is symmetrical. Shares are percent of every post of the
+ * platform (tone_share_v2); the waiting ones are not drawn, so a platform with a backlog has shorter sides.
  * `left` and `right` list segments from the centre outwards. Null when nothing is analysed.
  * @returns {{left: {key: string, share: number}[], right: {key: string, share: number}[], leftTotal: number, rightTotal: number, net: number}|null} */
 export function divergingSplit(counts = {}) {
-  const { analysed } = toneShares(counts);
+  const { total, analysed } = toneShares(counts);
   if (!analysed) return null;
   const [positive, neutral, negative] = ['positive', 'neutral', 'negative'].map(key => reported(counts?.[key]) ?? 0);
-  const share = value => value / analysed * 100, half = share(neutral) / 2;
+  const share = value => value / total * 100, half = share(neutral) / 2;
   const left = [{ key: 'neutral', share: half }, { key: 'negative', share: share(negative) }].filter(row => row.share > 0);
   const right = [{ key: 'neutral', share: half }, { key: 'positive', share: share(positive) }].filter(row => row.share > 0);
   return { left, right, leftTotal: share(negative) + half, rightTotal: share(positive) + half, net: netSentiment(counts) };

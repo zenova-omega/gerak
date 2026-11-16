@@ -45,11 +45,11 @@ test('sentiment page reads public opinion from comments and keeps the press apar
     // The public's posts and the press are two separate readings; a neutral news item is a report.
     assert.match(html,/aria-label="Posting warganet: Negatif 33%, Netral 67%"/);
     assert.match(html,/data-kind="sarcasm"[^>]*>Sindiran <b>50%<\/b>/);
-    // tone_share_v1: a share is of the analysed posts; "belum dianalisis" is a count beside the three (was 67% and 33%).
-    assert.match(html,/aria-label="Pemberitaan: Netral 100%, Belum dianalisis 1 berita"/);
+    // tone_share_v2: a share is of every post; "belum dianalisis" is the fourth part of the 100.
+    assert.match(html,/aria-label="Pemberitaan: Netral 67%, Belum dianalisis 33%"/);
     assert.match(html,/data-kind="report"[^>]*>Berita <b>100%<\/b>/);
     assert.match(html,/aria-pressed="true"[^>]*>(?:<[^>]*>)*Suara warganet/);
-    assert.match(render('news',true),/aria-label="Pemberitaan: Netral 100%"/);
+    assert.match(render('news',true),/aria-label="Pemberitaan: Netral 67%"/,'the switch hides the fourth part; the share stays of every post');
     // Below the top card the page details one voice: the public's posts by default, so news does not drown it.
     const page=renderToStaticMarkup(React.createElement(MemoryRouter,{initialEntries:['/pulse/sentiment?topic=p1']},React.createElement(Page,{data:{posts}})));
     assert.match(page,/Jumlah posting per sentimen, suara warganet/);
@@ -61,7 +61,7 @@ test('sentiment page reads public opinion from comments and keeps the press apar
   }finally{await server.close();}
 });
 
-test('tone_share_v1 on the Sentimen page: the three shares are of the analysed posts, the same with the toggle on and off', async () => {
+test('tone_share_v2 on the Sentimen page: every share is of all posts, the same with the toggle on and off; the toggle only shows or hides belum dianalisis', async () => {
   const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
   try {
     const { default: Page } = await server.ssrLoadModule('/src/pulse/SentimentAnalytics.jsx');
@@ -77,29 +77,32 @@ test('tone_share_v1 on the Sentimen page: the three shares are of the analysed p
     };
     const stats = html => Object.fromEntries([...html.matchAll(/class="pu-stat-label"><i aria-hidden="true"><\/i>([^<]+)<\/span><span class="pu-stat-value">(?:(?!pu-stat-label).)*?<b>([^<]*)<\/b><small>([^<]*)<\/small>/g)].map(match => [match[1], `${match[2]} ${match[3]}`]));
     const off = stats(page(posts, false)), on = stats(page(posts, true));
-    assert.deepEqual(off, { Positif: '25% dari yang dianalisis', Netral: '25% dari yang dianalisis', Negatif: '50% dari yang dianalisis', 'Belum dianalisis': '50% dari seluruh posting' });
-    assert.deepEqual(on, { Positif: '25% dari yang dianalisis', Netral: '25% dari yang dianalisis', Negatif: '50% dari yang dianalisis' }, 'the toggle only removes the "belum dianalisis" figure');
+    assert.deepEqual(off, { Positif: '13% dari total posting', Netral: '12% dari total posting', Negatif: '25% dari total posting', 'Belum dianalisis': '50% dari total posting' }, 'the four add up to 100');
+    assert.deepEqual(on, { Positif: '13% dari total posting', Netral: '12% dari total posting', Negatif: '25% dari total posting' }, 'the toggle only removes the "belum dianalisis" figure');
     // One post of 300 is a sliver, never nothing.
     const sliver = stats(page([post('p', 'positive'), ...Array.from({ length: 299 }, (_, index) => post('n' + index, 'neutral'))], false));
-    assert.equal(sliver.Positif, '&lt;1% dari yang dianalisis');
-    assert.equal(sliver.Netral, '100% dari yang dianalisis');
-    // The voices on top: the same percentages with the toggle on and off; "belum dianalisis" is a count beside them.
+    assert.equal(sliver.Positif, '&lt;1% dari total posting');
+    assert.equal(sliver.Netral, '100% dari total posting');
+    // The voices on top: the same percentages with the toggle on and off; "belum dianalisis" is the fourth part, shown or hidden.
     const voices = hideUnknown => renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Voices, { posts, opinion: publicOpinion([]), loaded: true, hideUnknown, onHideUnknown() {}, voice: 'public', onVoice() {}, commentsLink: '/pulse/comments' })));
-    assert.match(voices(false), /aria-label="Posting warganet: Negatif 50%, Netral 25%, Positif 25%, Belum dianalisis 4 posting"/);
-    assert.match(voices(true), /aria-label="Posting warganet: Negatif 50%, Netral 25%, Positif 25%"/);
-    assert.match(voices(false), /<strong>50%<\/strong> negatif<small>dari 4 posting yang sudah dianalisis<\/small>/);
-    assert.match(voices(true), /<strong>50%<\/strong> negatif<small>dari 4 posting yang sudah dianalisis<\/small>/);
+    assert.match(voices(false), /aria-label="Posting warganet: Negatif 25%, Netral 12%, Positif 13%, Belum dianalisis 50%"/);
+    assert.match(voices(true), /aria-label="Posting warganet: Negatif 25%, Netral 12%, Positif 13%"/);
+    assert.match(voices(false), /<strong>25%<\/strong> negatif<small>dari 8 posting<\/small>/);
+    assert.match(voices(true), /<strong>25%<\/strong> negatif<small>dari 8 posting<\/small>/);
+    assert.match(voices(true), /<span data-gap="" style="flex-grow:4"><\/span><\/div>/, 'hidden, the waiting part keeps its room: each segment stays its share of all posts');
+    assert.doesNotMatch(voices(false), /data-gap/);
     assert.match(voices(false), /title="Sembunyikan posting yang belum dianalisis"/, 'the switch says what it does now');
     // Nothing analysed yet: no percentage at all, and the waiting posts carry the whole count.
     const waiting = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Voices, { posts: [post('u'), post('v')], opinion: publicOpinion([]), loaded: true, hideUnknown: false, onHideUnknown() {}, voice: 'public', onVoice() {}, commentsLink: '/pulse/comments' })));
     assert.doesNotMatch(waiting, /\d%|NaN/);
     assert.match(waiting, /2 posting menunggu analisis/);
     const empty = stats(page([post('u'), post('v')], false));
-    assert.deepEqual(empty, { 'Belum dianalisis': '100% dari seluruh posting' }, 'no tone share is printed, not 0% and not NaN%');
+    assert.deepEqual(empty, { Positif: '0% dari total posting', Netral: '0% dari total posting', Negatif: '0% dari total posting', 'Belum dianalisis': '100% dari total posting' },
+      'nothing analysed: 0% of every post for each tone, all of it belum dianalisis, never NaN%');
   } finally { await server.close(); }
 });
 
-test('the sentiment summary of the full dashboard prints tone shares of the analysed posts; "belum dianalisis" keeps its part of all posts', async () => {
+test('the sentiment summary of the full dashboard prints tone_share_v2: every share of all posts, "belum dianalisis" the fourth part', async () => {
   const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
   try {
     const { default: Summary } = await server.ssrLoadModule('/src/components/admin/pulse/SentimentSummary.jsx');
@@ -107,8 +110,9 @@ test('the sentiment summary of the full dashboard prints tone shares of the anal
     const rows = posts => Object.fromEntries([...renderToStaticMarkup(React.createElement(Summary, { posts, onSelect() {} }))
       .matchAll(/<span>([^<]+)<\/span><span class="ps-sentiment-track">.*?<strong>(\d+)<\/strong><small>([^<]*)<\/small>/g)].map(match => [match[1], `${match[2]} ${match[3]}`]));
     assert.deepEqual(rows([post('negative'), post({ label: 'negative' }), post('neutral'), post({ label: 'positive' }), post(), post(), post(), post()]),
-      { Positif: '1 25%', Netral: '1 25%', Negatif: '2 50%', 'Belum dianalisis': '4 50% dari seluruh posting' });
-    assert.deepEqual(rows([post(), post()]), { Positif: '0 ', Netral: '0 ', Negatif: '0 ', 'Belum dianalisis': '2 100% dari seluruh posting' }, 'nothing analysed: no tone percentage, not 0% and not NaN%');
+      { Positif: '1 13%', Netral: '1 12%', Negatif: '2 25%', 'Belum dianalisis': '4 50%' });
+    assert.deepEqual(rows([post(), post()]), { Positif: '0 0%', Netral: '0 0%', Negatif: '0 0%', 'Belum dianalisis': '2 100%' }, 'nothing analysed: all of it is belum dianalisis, never NaN%');
+    assert.deepEqual(rows([]), { Positif: '0 ', Netral: '0 ', Negatif: '0 ', 'Belum dianalisis': '0 ' }, 'no post at all: no percentage');
   } finally { await server.close(); }
 });
 

@@ -67,11 +67,12 @@ function GroupReach({ group }) {
   </ul>;
 }
 
-/** Sentiment mix of one group as a small bar. The caption says what the bar is a share of; posts still waiting are a count. */
+/** Sentiment mix of one group as a small bar (tone_share_v2). The caption says what the bar is a share of, every post of
+ * the group; posts still waiting are its fourth part, "belum dianalisis". */
 function GroupTone({ sentiment }) {
   const mix = sentimentShares(sentiment);
   if (!mix.analysed) return <div className="pcg-tone" data-empty=""><span className="pcg-tone-label">Sentimen</span><SentimentTag size="sm" value="unknown" /></div>;
-  const basis = mix.unknown ? `${formatCount(mix.analysed)} dari ${formatCount(mix.total)} posting dianalisis` : `${formatCount(mix.total)} posting`;
+  const basis = `${formatCount(mix.total)} posting`;
   const spoken = mix.parts.map(part => `${sentimentLabels[part.key].toLowerCase()} ${part.text}`).join(', ');
   return <div className="pcg-tone">
     <span className="pcg-tone-label">Sentimen <span>· {basis}</span></span>

@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from sqlalchemy import select
 from ..models.pulse import SourceItem
 from .pulse_chat import _engagement, _sentiment, _wib, _wib_day, build_context, render_context
-from .pulse_measures import interaction_sort_key, interactions_total
+from .pulse_measures import interaction_sort_key, interactions_total, tone_shares
 from .pulse_places import post_places
 
 CONTEXT_TOKENS = 8192
@@ -52,18 +52,6 @@ def answer_tokens(fmt):
 def card_formats():
     """The formats the summary card on Ikhtisar offers, in order."""
     return [{'key': key, 'label': label} for key, (label, _) in FORMATS.items() if key not in PAGE_FORMATS]
-
-
-def whole_shares(counts: dict) -> dict:
-    """Whole percentages that add up to 100 (largest remainder), so a split quoted in a sentence never reads 101%."""
-    total = sum(counts.values())
-    if not total:
-        return {key: 0 for key in counts}
-    exact = {key: value / total * 100 for key, value in counts.items()}
-    shares = {key: int(value) for key, value in exact.items()}
-    for key in sorted(counts, key=lambda key: -(exact[key] - shares[key]))[:100 - sum(shares.values())]:
-        shares[key] += 1
-    return shares
 
 
 # The formats of the summary card on Ikhtisar (every format without a page of its own). They always read every stored
@@ -172,9 +160,10 @@ async def build_summary_input(db, topic_id, now, *, start=None, end=None, platfo
 
     tone = Counter(_sentiment(item.metrics) for item in items)
     labelled = tone['positive'] + tone['neutral'] + tone['negative']
-    percent = whole_shares({key: tone[key] for key in ('negative', 'neutral', 'positive')})
-    share = lambda key: f"{tone[key]} ({percent[key]}%)" if labelled else str(tone[key])
-    lines.append(f"SENTIMEN UNTUK DIKUTIP (seluruh cakupan, {len(items)} posting): negatif {share('negative')}, netral {share('neutral')}, positif {share('positive')} dari {labelled} posting yang sudah dianalisis; {tone['unknown']} belum dianalisis.")
+    # tone_share_v2, the one rule: every share is of all the posts read, "belum dianalisis" the fourth part of the 100.
+    shares = tone_shares(dict(tone))['text']
+    share = lambda key: f"{tone[key]} ({shares[key]})" if shares else str(tone[key])
+    lines.append(f"SENTIMEN UNTUK DIKUTIP (seluruh cakupan, {len(items)} posting): negatif {share('negative')}, netral {share('neutral')}, positif {share('positive')}, belum dianalisis {share('unknown')}; persen dari total posting, termasuk yang belum dianalisis.")
     # Facts for the infographics: computed here, never taken from the model's text.
     context = built['context']
     by_day = Counter(_wib_day(item.published_at) for item in items if item.published_at)

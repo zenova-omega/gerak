@@ -10,7 +10,7 @@ A figure is consistent when one named rule produces it wherever it appears: page
 
 ## Goals
 
-1. Each of the four quantities has one definition with a name and a version (`day_v1`, `interactions_v1`, `tone_share_v1`, `account_v1`).
+1. Each of the four quantities has one definition with a name and a version (`day_v1`, `interactions_v1`, `tone_share_v1`, `account_v1`; the tone share is `tone_share_v2` since 16 Nov 2026).
 2. Every place that computes one of them today calls that definition instead of its own.
 3. The server and the browser cannot drift apart: both are tested against the same file of worked cases.
 4. A reader of the API can see which rule produced a number.
@@ -75,6 +75,20 @@ A is the owner's "one rule" with the product's "no fetch on view change" kept.
 - A share is always of the **analysed** posts. "Belum dianalisis" is given beside the three as a count (and its part of all posts), never inside them and never drawn as a tone.
 - Percentages are whole numbers that add up to 100 (largest remainder). A tone with at least one post that would print as 0 prints "<1%".
 - The toggle "Hanya yang sudah dianalisis" on the Sentimen page then no longer changes any percentage; it only shows or hides the "belum dianalisis" rows and segment.
+
+### `tone_share_v2`: the base of a sentiment percentage (16 Nov 2026, replaces `tone_share_v1`)
+
+The owner read "15% dari yang dianalisis" on the Positif card and chose the total instead ("mungkin \"dari yg dianalisis\" kurang jelas \"dari total posts\" lebih baik", then "Ganti ke total posting"; and: the toggle is the only difference, the base is always the total, so the four make 100 and the toggle decides whether "belum dianalisis" is shown inside it).
+
+- A post's tone is read as in v1: positif, netral or negatif when the stored label is one of the three, in either stored form; otherwise **belum dianalisis**.
+- A share is of **every post in scope**, the ones not analysed yet included. "Belum dianalisis" is the fourth part, so Positif + Netral + Negatif + Belum dianalisis = 100. While posts wait, the three tones add up to less than 100.
+- Whole numbers by largest remainder; a tie goes in the order positive, neutral, negative, belum dianalisis. A part with at least one post that would print as 0 prints "<1%". No posts at all: no shares (`percent` and `text` are null).
+- `tone_shares(counts)` / `toneShares(counts)` return `{total, analysed, unknown, percent, text}`, `percent` and `text` keyed by the four parts.
+- Labels say "dari total posting". The toggle "Hanya yang sudah dianalisis" only shows or hides the fourth part; hidden, its room on a bar stays empty, so each segment is still drawn at its share of all posts.
+- **Sentimen bersih** = (positif − negatif) ÷ total posting × 100, which is the positive share minus the negative share; it has no value while nothing is analysed (nobody has read the tone, which is not 0). A change in points, of one tone's share or of the net score, compares the same base in both windows, and a window with nothing analysed has no reading. A backlog therefore pulls the tone shares and the net score towards 0 until analysis catches up; that is the cost of this base, accepted by the owner.
+- **Comments are a sample** (the most-liked comments of the busiest posts), not a backlog that drains, so their tone is read over the analysed comments: `sample_tone_shares` / `sampleToneShares`, the same rounding over the three tones, the waiting comments shown as coverage beside it. This is exactly the v1 rule, kept for comments only.
+- Where it is printed: Beranda's project cards, Ikhtisar (Sentimen bersih), Sentimen (cards, daily chart tooltip, voices, per-platform bars), Siapa yang bicara (tiers, place tiles, "paling negatif" with its own `total`), evidence drawers, conversation groups, the report and its PDF, the AI summary ("SENTIMEN UNTUK DIKUTIP") and its pictures, Tanya AI's data block and charts, and every API payload carrying `tone`.
+- `server/app/pulse_measures_report.py --compare` prints v1 against v2 for each project of a database copy.
 
 ### `account_v1`: what counts as one account
 

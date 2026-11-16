@@ -102,14 +102,14 @@ export function groupDayRange(firstDay, lastDay) {
   return `${first.slice(0, 4) === last.slice(0, 4) ? pulseDay(first).replace(/\s+\d{4}$/, '') : pulseDay(first)} – ${pulseDay(last)}`;
 }
 
-/** The sentiment mix of one group, read over the posts that have been analysed (tone_share_v1, `toneShares`).
- * Percentages are whole numbers that add up to 100; `text` is what to print, "<1%" for a sliver. Posts still waiting
- * are a count, never a share.
+/** The sentiment mix of one group, read over every post of the group (tone_share_v2, `toneShares`): posts still waiting
+ * are the fourth part, "belum dianalisis", whenever the group has any. Percentages are whole numbers that add up to 100;
+ * `text` is what to print, "<1%" for a sliver. Only parts with posts are listed.
  * @returns {{total: number, analysed: number, unknown: number, parts: {key: string, count: number, percent: number, text: string}[]}} */
 export function sentimentShares(sentiment) {
-  const { analysed, unknown, percent, text } = toneShares(sentiment);
-  const rows = ['positive', 'neutral', 'negative'].map(key => ({ key, count: reported(sentiment?.[key]) ?? 0 })).filter(row => row.count > 0);
-  return { total: analysed + unknown, analysed, unknown, parts: rows.map(row => ({ ...row, percent: percent[row.key], text: text[row.key] })) };
+  const { total, analysed, unknown, percent, text } = toneShares(sentiment);
+  const rows = ['positive', 'neutral', 'negative', 'unknown'].map(key => ({ key, count: reported(sentiment?.[key]) ?? 0 })).filter(row => row.count > 0);
+  return { total, analysed, unknown, parts: rows.map(row => ({ ...row, percent: percent[row.key], text: text[row.key] })) };
 }
 
 /** A selection the data can answer: unknown values dropped; nothing or everything selected means all (`null`). */

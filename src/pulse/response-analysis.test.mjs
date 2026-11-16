@@ -12,7 +12,7 @@ test('response panel separates caption stance from comment emotion and shows inc
  }finally{await server.close();}
 });
 
-test('comment tone shares in the response panel are tone_share_v1: whole numbers of the analysed comments, one of 300 is <1%', async () => {
+test('comment tone shares in the response panel are sampleToneShares: whole numbers of the analysed comments (a sample), one of 300 is <1%', async () => {
  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
  try {
   const { ResponseAnalysisView } = await server.ssrLoadModule('/src/pulse/ResponseAnalysisPanel.jsx');

@@ -25,7 +25,8 @@ test('an archive filed under older calculation rules, or before rules were recor
  assert.equal(recounted({rules:{...RULES,day:'day_v0'}}),true,'one rule older');
  const {account,...withoutAccount}=RULES;
  assert.equal(recounted({rules:withoutAccount}),true,'a rule that did not exist when it was filed');
- assert.equal(recounted({rules:{...RULES,tone_share:'tone_share_v2'}}),false,'a newer version is not older');
+ assert.equal(recounted({rules:{...RULES,tone_share:'tone_share_v3'}}),false,'a newer version is not older');
+ assert.equal(recounted({rules:{...RULES,tone_share:'tone_share_v1'}}),true,'a report filed when tone shares were of the analysed posts is recounted');
 });
 
 test('an opened archive counts its posts by the rules in force today, never by the measures stored with them',()=>{

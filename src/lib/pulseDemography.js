@@ -287,15 +287,15 @@ function gapPlatforms(unknown, value, total) {
  * `interactions_gap` when the unknown row's count is above 0 and at least the leader's: its share (of every post, of
  * the known interactions) and the GAP_PLATFORMS platforms it mostly sits on, with their shares of the row's own.
  * `negative`: when at least COMPARE_MIN_ROWS nameable rows have NEGATIVE_MIN_ANALYSED analysed posts or more, the one
- * of them with the largest tone_share_v1 negative percent (`share`), ties by more analysed posts, then by TIERS order;
- * null when there is none or that row has no negative post. `unknown` is the unknown row's tone when it has
+ * of them with the largest tone_share_v2 negative percent (`share`, of the row's `total` posts), ties by more analysed posts,
+ * then by TIERS order; null when there is none or that row has no negative post. `unknown` is the unknown row's tone when it has
  * NEGATIVE_MIN_ANALYSED analysed posts (the comparison then leaves out the accounts whose follower count is unknown), with
  * `more_negative` when its negative percent is higher; else null. `where`: the first province of `origin` when at
  * least WHERE_MIN_ACCOUNTS accounts have a province, with `read_share` the share of X accounts whose province is read.
  * @returns {{carrier: {posts_row: string|null, interactions_row: string|null,
  *     posts_gap: {share: number, platforms: {platform: string, share: number}[]}|null,
  *     interactions_gap: {share: number, platforms: {platform: string, share: number}[]}|null}|null,
- *   negative: {row: string, share: number, analysed: number, unknown: {share: number, analysed: number, more_negative: boolean}|null}|null,
+ *   negative: {row: string, share: number, analysed: number, total: number, unknown: {share: number, analysed: number, total: number, more_negative: boolean}|null}|null,
  *   where: {code: string, name: string, accounts: number, read_share: number}|null}}
  */
 export function groupLead(tiers, origin) {
@@ -317,8 +317,8 @@ export function groupLead(tiers, origin) {
   }
   if (best && best.tone.text.negative !== '0%') {
     const gap = unknown && unknown.tone.analysed >= NEGATIVE_MIN_ANALYSED ? unknown.tone : null;
-    negative = { row: best.key, share: best.tone.percent.negative, analysed: best.tone.analysed,
-      unknown: gap && { share: gap.percent.negative, analysed: gap.analysed, more_negative: gap.percent.negative > best.tone.percent.negative } };
+    negative = { row: best.key, share: best.tone.percent.negative, analysed: best.tone.analysed, total: best.tone.total,
+      unknown: gap && { share: gap.percent.negative, analysed: gap.analysed, total: gap.total, more_negative: gap.percent.negative > best.tone.percent.negative } };
   }
   const province = origin?.provinces?.[0];
   const where = province && origin.province_read >= WHERE_MIN_ACCOUNTS
@@ -341,7 +341,7 @@ export function shareText(share) {
  * negative, province. A tier is "akun <label>", Pemberitaan "pemberitaan"; an interaction share is said to be of the
  * known interactions; a gap is "akun yang pengikutnya tidak diketahui", never a kind of speaker, with its platforms
  * named by `platformName` (how the page names a platform key). The tone percents of the negative sentence are
- * tone_share_v1's own, the other shares are cut. With `sentimentFiltered` (the page shows one sentiment only) the most
+ * tone_share_v2's own (of the group's posts, the ones not analysed yet included), the other shares are cut. With `sentimentFiltered` (the page shows one sentiment only) the most
  * negative group is not written.
  * @param {{sentimentFiltered?: boolean, platformName?: (platform: string) => string}} options
  * @returns {string[]}
@@ -373,8 +373,8 @@ export function leadSentences(lead, tiers, origin, { sentimentFiltered = false, 
   if (row) {
     const among = negative.unknown ? ' di luar akun yang pengikutnya tidak diketahui' : '';
     const unknown = negative.unknown?.more_negative
-      ? `; akun yang pengikutnya tidak diketahui lebih negatif (${rows.get('unknown')?.tone?.text?.negative ?? `${negative.unknown.share}%`} dari ${formatCount(negative.unknown.analysed)} posting yang dianalisis)` : '';
-    out.push(`Paling negatif${among}: ${name(row.key)}, ${row.tone.text.negative} dari ${formatCount(negative.analysed)} posting yang dianalisis${unknown}.`);
+      ? `; akun yang pengikutnya tidak diketahui lebih negatif (${rows.get('unknown')?.tone?.text?.negative ?? `${negative.unknown.share}%`} dari ${formatCount(negative.unknown.total)} posting)` : '';
+    out.push(`Paling negatif${among}: ${name(row.key)}, ${row.tone.text.negative} dari ${formatCount(negative.total)} posting${unknown}.`);
   }
   if (where) out.push(`Akun X paling banyak dari ${where.name} (${formatCount(where.accounts)} akun); provinsi terbaca pada ${shareText(where.read_share)} akun X.`);
   return out;

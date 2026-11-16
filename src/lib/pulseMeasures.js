@@ -4,9 +4,10 @@
 
 export const RULES = Object.freeze({
   day: 'day_v1', clock: 'clock_v1', interactions: 'interactions_v1', shares_total: 'shares_total_v1',
-  content_shares: 'content_shares_v1', tone_share: 'tone_share_v1', account: 'account_v1',
+  content_shares: 'content_shares_v1', tone_share: 'tone_share_v2', account: 'account_v1',
 });
 const TONES = ['positive', 'neutral', 'negative'];
+const SHARE_KEYS = [...TONES, 'unknown'];   // tone_share_v2: the four parts of 100, in the order a tie is settled
 // ASCII digits only and no surrounding spaces, exactly as the server reads them.
 const TIME = /^([0-9]{4})-([0-9]{2})-([0-9]{2})(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?)?(Z|[+-][0-9]{2}:?[0-9]{2})?$/i;
 const SPACE = /^[ \t\n\r\v\f]+|[ \t\n\r\v\f]+$/g; // trimmed the same way on the server; other spaces are kept
@@ -164,19 +165,26 @@ export function tone(post) {
   return TONES.includes(clean) ? clean : 'unknown';
 }
 
-/** tone_share_v1: shares of the analysed posts only, whole numbers adding up to 100 (largest remainder).
- * A tone with posts that would print as 0 prints "<1%". Null when nothing is analysed. */
+/** tone_share_v2: shares of every post counted (`total`), the ones not analysed yet included, so positive, neutral,
+ * negative and unknown (belum dianalisis) are four whole numbers adding up to 100 (largest remainder, ties in that
+ * order). A part with posts that would print as 0 prints "<1%". Null shares when there are no posts at all.
+ * `analysed` is the posts with a tone; whether "belum dianalisis" is shown is the page's choice, never the base's. */
 export function toneShares(counts) {
-  const values = Object.fromEntries(TONES.map(key => [key, reported(counts?.[key]) ?? 0]));
-  const unknown = reported(counts?.unknown) ?? 0;
-  const analysed = TONES.reduce((sum, key) => sum + values[key], 0);
-  if (!analysed) return { analysed: 0, unknown, percent: null, text: null };
-  const percent = Object.fromEntries(TONES.map(key => [key, Math.floor(values[key] * 100 / analysed)]));
-  const left = 100 - TONES.reduce((sum, key) => sum + percent[key], 0);
-  const order = [...TONES].sort((a, b) => (values[b] * 100 % analysed) - (values[a] * 100 % analysed));
+  const values = Object.fromEntries(SHARE_KEYS.map(key => [key, reported(counts?.[key]) ?? 0]));
+  const total = SHARE_KEYS.reduce((sum, key) => sum + values[key], 0), analysed = total - values.unknown;
+  if (!total) return { total: 0, analysed: 0, unknown: 0, percent: null, text: null };
+  const percent = Object.fromEntries(SHARE_KEYS.map(key => [key, Math.floor(values[key] * 100 / total)]));
+  const left = 100 - SHARE_KEYS.reduce((sum, key) => sum + percent[key], 0);
+  const order = [...SHARE_KEYS].sort((a, b) => (values[b] * 100 % total) - (values[a] * 100 % total));
   for (const key of order.slice(0, left)) percent[key] += 1;
-  const text = Object.fromEntries(TONES.map(key => [key, values[key] && !percent[key] ? '<1%' : `${percent[key]}%`]));
-  return { analysed, unknown, percent, text };
+  const text = Object.fromEntries(SHARE_KEYS.map(key => [key, values[key] && !percent[key] ? '<1%' : `${percent[key]}%`]));
+  return { total, analysed, unknown: values.unknown, percent, text };
+}
+
+/** Comments are read as a sample (the most-liked ones of the busiest posts), not a backlog that drains, so their shares
+ * are tone_share_v2 over the analysed comments only: the waiting ones are coverage, said apart, never a fourth part. */
+export function sampleToneShares(counts) {
+  return toneShares(Object.fromEntries(TONES.map(key => [key, counts?.[key]])));
 }
 
 const trim = value => (typeof value === 'string' ? value.replace(SPACE, '') : '');

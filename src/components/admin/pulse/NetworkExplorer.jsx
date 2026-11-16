@@ -51,7 +51,7 @@ function headline(row, full) {
 }
 /** One post, one card: when and where, what it says, then the numbers it carries. */
 function PostCard({ row, full, showAuthor = false }) {
-  // tone_share_v1: the post's tone in either stored form; a post not analysed yet carries no tag.
+  // tone_share_v2: the post's tone in either stored form; a post not analysed yet carries no tag.
   const href = safeSourceUrl(row.url), text = headline(row, full), tone = postSentiment(full), sentiment = tone === 'unknown' ? null : tone;
   const measured = ['likes', 'comments', 'shares', 'views', 'engagement'].some(key => Number.isFinite(full?.metrics?.[key]));
   return <li className="nxi-card">

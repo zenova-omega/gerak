@@ -1,7 +1,7 @@
 import { Sparkline } from '../components/ui/PulseAnalytics';
 import { PulseBeat, PulseLike } from '../components/ui/PulseMetricIcons';
 import { formatCount } from '../lib/pulseData';
-import { hasClock, localTime, readTime } from '../lib/pulseMeasures';
+import { hasClock, localTime, readTime, toneShares } from '../lib/pulseMeasures';
 import { sentimentColor } from '../lib/pulseChartTheme';
 import { sentimentLabels } from '../lib/pulsePostFilters';
 import AccountAvatar from '../components/admin/pulse/AccountAvatar';
@@ -44,18 +44,19 @@ function Talk({ facts }) {
 function Sentiment({ facts }) {
   const s = facts.sentiment;
   if (!s.analysed) return <p className="sig sig-note">Belum ada posting yang dianalisis sentimennya.</p>;
-  const keys = ['negative', 'neutral', 'positive'];
+  // tone_share_v2: every share is of all the posts read, "belum dianalisis" the fourth part when some wait.
+  const tone = toneShares(s), keys = ['negative', 'neutral', 'positive', ...(tone.unknown > 0 ? ['unknown'] : [])];
   return <div className="sig sig-sentiment">
-    <div className="sig-bar" role="img" aria-label={keys.map(key => `${sentimentLabels[key]} ${pct(s[key], s.analysed)}%`).join(', ')}>{keys.filter(key => s[key] > 0).map(key => <span key={key} style={{ flexGrow: s[key], background: sentimentColor[key] }} />)}</div>
-    <ul>{keys.map(key => <li key={key}><i style={{ background: sentimentColor[key] }} /><strong>{pct(s[key], s.analysed)}%</strong><span>{sentimentLabels[key].toLowerCase()}</span></li>)}</ul>
-    <small>dari {formatCount(s.analysed)} posting yang sudah dianalisis{s.unknown > 0 ? `; ${formatCount(s.unknown)} belum` : ''}</small>
+    <div className="sig-bar" role="img" aria-label={keys.map(key => `${sentimentLabels[key]} ${tone.text[key]}`).join(', ')}>{keys.filter(key => s[key] > 0).map(key => <span key={key} style={{ flexGrow: s[key], background: sentimentColor[key] }} />)}</div>
+    <ul>{keys.map(key => <li key={key}><i style={{ background: sentimentColor[key] }} /><strong>{tone.text[key]}</strong><span>{sentimentLabels[key].toLowerCase()}</span></li>)}</ul>
+    <small>dari {formatCount(tone.total)} posting</small>
   </div>;
 }
 
 function Anger({ facts }) {
   const quote = facts.quotes?.[0], s = facts.sentiment, triggers = (facts.triggers || []).filter(row => row.text);
   if (!quote && !s.analysed && !triggers.length) return null;
-  return <div className="sig sig-anger">{s.analysed > 0 && <Figure value={pct(s.negative, s.analysed) + '%'} label="posting bernada negatif" />}
+  return <div className="sig sig-anger">{s.analysed > 0 && <Figure value={toneShares(s).text.negative} label="posting bernada negatif" />}
     {triggers.length > 0 && <ul className="sig-triggers">{triggers.map(row => <li key={row.code}><span className="pu-account-line"><strong>{row.author || 'Nama tidak tersedia'}</strong><b>{formatCount(row.interactions)} interaksi</b></span><p>{row.reason || row.text}</p></li>)}</ul>}
     {quote && <blockquote><p>{quote.text}</p><footer>{quote.author || 'Komentar'} · <PulseLike size={13} /> {formatCount(quote.likes)}</footer></blockquote>}</div>;
 }
@@ -66,7 +67,7 @@ export function conclusion(facts) {
   const t = facts.totals, s = facts.sentiment, peak = facts.peak_day;
   const parts = [`${formatCount(t.posts)} posting dari ${formatCount(t.accounts)} akun dalam ${formatCount(t.days)} hari`];
   if (peak && t.days > 1) parts.push(`teramai ${day(peak.date)} (${formatCount(peak.posts)} posting)`);
-  if (s?.analysed) { const lead = ['negative', 'neutral', 'positive'].sort((a, b) => s[b] - s[a])[0]; parts.push(`sentimen dominan ${sentimentLabels[lead].toLowerCase()} ${pct(s[lead], s.analysed)}%`); }
+  if (s?.analysed) { const lead = ['negative', 'neutral', 'positive'].sort((a, b) => s[b] - s[a])[0]; parts.push(`sentimen dominan ${sentimentLabels[lead].toLowerCase()} ${toneShares(s).text[lead]}`); }
   return parts.join(' · ');
 }
 

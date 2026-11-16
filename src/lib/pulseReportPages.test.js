@@ -92,28 +92,32 @@ test('without a stored summary the report writes plain sentences from the data',
   assert.equal(data.accounts, 5);
   assert.equal(data.interactions, 15);
   assert.deepEqual([data.voices.public.total, data.voices.public.analysed, data.voices.news.total], [5, 4, 1]);
-  assert.deepEqual(data.voices.public.shares, { positive: 25, neutral: 25, negative: 50 });
+  // tone_share_v2: of the public's 5 posts, the one not analysed yet is the fourth part (was 25/25/50 of the 4 analysed).
+  assert.deepEqual(data.voices.public.shares, { positive: 20, neutral: 20, negative: 40, unknown: 20 });
   assert.deepEqual(data.platforms.map(row => [row.platform, row.total, row.share]), [['instagram', 3, 50], ['x', 2, 33], ['news', 1, 17]]);
   assert.deepEqual(fallbackSummary(data, { platformName }), [
     'Terkumpul 6 posting dari 5 akun dan sumber di 3 platform; hari paling ramai adalah 3 Nov 2026 dengan 3 posting.',
-    'Dari 4 posting warganet yang sudah dianalisis, nada negatif paling banyak (50%), disusul positif 25% dan netral 25%.',
+    'Dari 5 posting warganet, nada negatif paling banyak (40%), disusul positif 20% dan netral 20%; 20% belum dianalisis.',
     'Sumber terbesar adalah Instagram dengan 3 posting (50% dari seluruh posting).',
     'Konten yang paling banyak diulang muncul di 3 posting dari 2 akun: “Harga beras naik lagi”.',
   ]);
   for (const sentence of fallbackSummary(data, { platformName })) assert.doesNotMatch(sentence, /—|undefined|NaN|null/);
 });
 
-test('the report prints tone shares as tone_share_v1 writes them: of the analysed posts, a sliver is <1%', () => {
+test('the report prints tone shares as tone_share_v2 writes them: of every post, belum dianalisis included, a sliver is <1%', () => {
   const posts = [post('p', 'x', 3, { label: 'positive' }), ...Array.from({ length: 299 }, (_, index) => post('n' + index, 'x', 3, { label: 'neutral' })), post('u', 'x', 3)];
   const data = reportData(buildReport({ posts }, { id: 't', label: 'Uji' }, {}, '2026-11-14T00:00:00Z'));
-  assert.deepEqual(data.shares, { positive: 0, neutral: 100, negative: 0 });
-  assert.deepEqual(data.shareText, { positive: '<1%', neutral: '100%', negative: '0%' });
-  assert.deepEqual(data.voices.public.shareText, { positive: '<1%', neutral: '100%', negative: '0%' });
-  assert.deepEqual(data.platforms[0].shareText, { positive: '<1%', neutral: '100%', negative: '0%' });
-  assert.equal(fallbackSummary(data)[1], 'Dari 300 posting warganet yang sudah dianalisis, nada netral paling banyak (100%), disusul positif <1% dan negatif 0%.');
+  const sliver = { positive: '<1%', neutral: '100%', negative: '0%', unknown: '<1%' };
+  assert.deepEqual(data.shares, { positive: 0, neutral: 100, negative: 0, unknown: 0 });
+  assert.deepEqual(data.shareText, sliver);
+  assert.deepEqual(data.voices.public.shareText, sliver);
+  assert.deepEqual(data.platforms[0].shareText, sliver);
+  assert.equal(fallbackSummary(data)[1], 'Dari 301 posting warganet, nada netral paling banyak (100%), disusul positif <1% dan negatif 0%; <1% belum dianalisis.');
   const waiting = reportData(buildReport({ posts: [post('a', 'x', 2)] }, {}, {}, '2026-11-14T00:00:00Z'));
-  assert.equal(waiting.shareText, null, 'nothing analysed: no percentage to print');
-  assert.equal(waiting.voices.public.shareText, null);
+  assert.deepEqual(waiting.shareText, { positive: '0%', neutral: '0%', negative: '0%', unknown: '100%' }, 'nothing analysed: all of it is belum dianalisis');
+  assert.equal(waiting.voices.public.shareText.unknown, '100%');
+  const none = reportData(buildReport({ posts: [] }, {}, {}, '2026-11-14T00:00:00Z'));
+  assert.equal(none.shareText, null, 'no post at all: no percentage to print');
 });
 
 test('the fallback summary says what is missing instead of guessing', () => {
@@ -132,7 +136,7 @@ test('the fallback summary says what is missing instead of guessing', () => {
   assert.equal(fallbackSummary(waiting, { platformName }).length, 3, 'no sentence about repeated content when nothing repeats');
 });
 
-test('comments are read over what has been analysed and the most liked come first', () => {
+test('comments are a sample: their tone is read over what has been analysed (sampleToneShares), and the most liked come first', () => {
   const posts = [{ ...post('a', 'x', 2, { label: 'neutral' }), metrics: { comment_snapshot: { items: [
     { id: 'c1', author: 'satu', text: 'Setuju', likes: 3 }, { id: 'c2', author: 'dua', text: 'Tidak setuju', likes: 40 },
     { id: 'c3', author: 'tiga', text: 'Belum dibaca', likes: null }, { id: 'c4', author: 'empat', text: '   ', likes: 99 },

@@ -92,7 +92,7 @@ async def test_busy_lane_is_left_alone_and_answers_are_validated(store):
         kinds.parse_kinds('[]', 2)
 
 
-async def test_a_neutral_post_is_read_by_tone_share_v1_in_either_stored_form(store):
+async def test_a_neutral_post_is_read_by_tone_share_v2_in_either_stored_form(store):
     """A plain-string label or one in another letter case is neutral too (pulse_measures.tone), so it gets a form instead
     of staying "Belum dirinci"; a plain string is stored as an object that keeps the label as it was."""
     async with store() as db:

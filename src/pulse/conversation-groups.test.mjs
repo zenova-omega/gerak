@@ -25,7 +25,7 @@ test('conversation groups show only evidence inside the chosen scope and say wha
  }finally{await server.close();}
 });
 
-test('a group\'s tone prints the module\'s text: one post of 300 is <1%, never 0% (tone_share_v1)', async () => {
+test('a group\'s tone prints the module\'s text: one post of 300 is <1%, never 0% (tone_share_v2)', async () => {
  const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
  try {
   const { default: Groups } = await server.ssrLoadModule('/src/pulse/ConversationGroups.jsx');
@@ -34,5 +34,18 @@ test('a group\'s tone prints the module\'s text: one post of 300 is <1%, never 0
   assert.match(html, /aria-label="Sentimen 300 posting: positif &lt;1%, netral 100%"/);
   assert.match(html, /Positif <b>&lt;1%<\/b>/);
   assert.doesNotMatch(html, /Positif <b>0%<\/b>/);
+ } finally { await server.close(); }
+});
+
+test('a group\'s tone is of every post of the group: "belum dianalisis" is the fourth part of the bar (tone_share_v2)', async () => {
+ const server = await createServer({ optimizeDeps: { noDiscovery: true, include: [] }, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+ try {
+  const { default: Groups } = await server.ssrLoadModule('/src/pulse/ConversationGroups.jsx');
+  const tones = ['negative', 'negative', 'neutral', null];
+  const posts = tones.map((label, index) => ({ id: 'q' + index, issue_id: 'g', platform: 'x', author: 'akun' + index, text: 'Teks sama', metrics: label ? { sentiment: label } : {} }));
+  const html = renderToStaticMarkup(React.createElement(Groups, { posts, platforms: ['x'], period: {} }));
+  assert.match(html, /aria-label="Sentimen 4 posting: netral 25%, negatif 50%, belum dianalisis 25%"/);
+  assert.match(html, /Belum dianalisis <b>25%<\/b>/);
+  assert.doesNotMatch(html, /posting dianalisis/, 'the caption names the base, every post, not the analysed ones');
  } finally { await server.close(); }
 });

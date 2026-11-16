@@ -155,11 +155,24 @@ async def test_the_summary_card_always_reads_the_whole_project_whatever_the_bar_
     assert stored['from'] is None and stored['span'] == {'from': '2026-10-02', 'to': '2026-11-12'}
 
 
-def test_quoted_shares_are_whole_numbers_that_add_up_to_one_hundred():
-    from app.services.pulse_summary import whole_shares
-    assert whole_shares({'negative': 267, 'neutral': 757, 'positive': 16}) == {'negative': 26, 'neutral': 73, 'positive': 1}   # rounding each gave 101
-    assert whole_shares({'negative': 1, 'neutral': 1, 'positive': 1}) == {'negative': 34, 'neutral': 33, 'positive': 33}
-    assert whole_shares({'negative': 0, 'neutral': 0, 'positive': 0}) == {'negative': 0, 'neutral': 0, 'positive': 0}
+@pytest.mark.asyncio
+async def test_quoted_shares_are_tone_share_v2_of_every_post_the_waiting_ones_the_fourth_part(db):
+    """The summary quotes the one rule (pulse_measures.tone_shares): every share is of all the posts read, "belum
+    dianalisis" included, four whole numbers adding up to 100; there is no second copy of the rounding here."""
+    assert not hasattr(service, 'whole_shares')
+    topic = WatchTopic(label='Kutip', query='kutip')
+    db.add(topic)
+    await db.flush()
+    labels = ['negative'] * 2 + ['neutral'] + ['positive'] + [None] * 4
+    db.add_all([SourceItem(topic_id=topic.id, source='x', platform='x', url=f'https://x.com/a/status/{index}', author=f'akun{index}', text=f'Teks {index}',
+                           published_at=datetime(2026, 11, 1, 2), metrics={'likes': 1, **({'sentiment': {'label': label}} if label else {})})
+                for index, label in enumerate(labels)])
+    await db.flush()
+    built = await service.build_summary_input(db, topic.id, datetime(2026, 11, 5))
+    line = next(row for row in built['data'].splitlines() if row.startswith('SENTIMEN UNTUK DIKUTIP'))
+    assert line == ('SENTIMEN UNTUK DIKUTIP (seluruh cakupan, 8 posting): negatif 2 (25%), netral 1 (12%), positif 1 (13%), '
+                    'belum dianalisis 4 (50%); persen dari total posting, termasuk yang belum dianalisis.')
+    assert built['facts']['sentiment'] == {'positive': 1, 'neutral': 1, 'negative': 2, 'unknown': 4, 'analysed': 4}
 
 
 def test_a_summary_stored_before_the_clean_up_rule_is_cleaned_when_read():

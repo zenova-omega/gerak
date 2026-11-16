@@ -136,7 +136,7 @@ test('sections, order, brand and a stored summary shape the pages', async () => 
     const trend = sheet(html, 'trend');
     assert.match(trend, /<svg class="rp-trend"[^>]*role="img" aria-label="Grafik batang jumlah posting per hari dari 1 Nov 2026 sampai 6 Nov 2026/);
     for (const label of ['Positif', 'Netral', 'Negatif', 'Belum dianalisis']) assert.match(trend, new RegExp(`<ul class="rp-legend"[\\s\\S]*<span>${label}</span>`));
-    assert.match(trend, /Persentase dari 6 posting yang dianalisis \(100% dari 6\)/);
+    assert.match(trend, /Persentase dari 6 posting, semuanya sudah dianalisis\./);
     const groups = sheet(html, 'narratives');
     assert.match(groups, /<dt>Dibagikan<\/dt><dd>3\.600×<\/dd>/);
     assert.match(groups, /<dt>Interaksi<\/dt><dd>60<\/dd>/, 'the original post’s shares stay out of the interactions');
@@ -310,7 +310,7 @@ test('the account table keeps inside the A4 sheet: a long account name is cut, t
   } finally { await browser.close(); await server.close(); }
 });
 
-test('report pages print tone shares as tone_share_v1 writes them: of the analysed posts, one post of 300 is <1%, never 0%', async () => {
+test('report pages print tone shares as tone_share_v2 writes them: of every post, belum dianalisis the fourth part, one post of 301 is <1%, never 0%', async () => {
   const server = await vite();
   try {
     const { default: ReportPages } = await server.ssrLoadModule('/src/pulse/ReportPages.jsx');
@@ -323,10 +323,17 @@ test('report pages print tone shares as tone_share_v1 writes them: of the analys
     const html = renderToStaticMarkup(React.createElement(ReportPages, { report, pages, data: lib.reportData(report), brand: {} }));
     const trend = sheet(html, 'trend'), voices = sheet(html, 'voices');
     assert.match(trend, /<span>Positif<\/span><b>1<\/b><em>&lt;1%<\/em>/, 'the legend of the trend');
-    assert.match(voices, /aria-label="Posting warganet: Positif &lt;1%, Netral 100%, Negatif 0%, 1 belum dianalisis"/);
+    assert.match(trend, /<span>Belum dianalisis<\/span><b>1<\/b><em>&lt;1%<\/em>/, 'belum dianalisis has its part of the 100 in the legend');
+    assert.match(trend, /Persentase dari 301 posting, termasuk 1 yang belum dianalisis\./);
+    assert.match(voices, /aria-label="Posting warganet: Positif &lt;1%, Netral 100%, Negatif 0%, Belum dianalisis &lt;1%"/);
+    assert.match(voices, /bagian terbesar dari 301 posting</);
     assert.match(voices, /<span>Positif<\/span><b>1<\/b><em>&lt;1%<\/em>/, 'the legend of the voice');
-    assert.match(voices, /<td class="rp-num">&lt;1%<\/td><td class="rp-num">100%<\/td><td class="rp-num">0%<\/td>/, 'the platform row');
+    assert.match(voices, /<span>Belum dianalisis<\/span><b>1<\/b><em>&lt;1%<\/em>/, 'the voice legend has the fourth part');
+    assert.match(voices, /Bagian dari total posting/);
+    assert.match(voices, /<td class="rp-num">&lt;1%<\/td><td class="rp-num">100%<\/td><td class="rp-num">0%<\/td><td class="rp-num">&lt;1%<\/td>/, 'the platform row, belum dianalisis last');
     assert.doesNotMatch(trend + voices, /Positif<\/span><b>1<\/b><em>0%|Positif 0%/, 'a tone with a post never prints 0%');
+    assert.doesNotMatch(trend + voices, /yang dianalisis|tidak masuk persentase/, 'no share is said to be of the analysed posts');
+    assert.match(html, /persentase sentimen dari total posting/);
   } finally { await server.close(); }
 });
 

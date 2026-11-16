@@ -60,7 +60,7 @@ function Sheet({ page, frame, title, lede, cover = false, children }) {
 const Empty = ({ children }) => <p className="rp-empty">{children}</p>;
 
 /** A key that names every colour. `value` is a count, `share` a whole percentage; either may be left out. A tone's share
- * is printed from `shareText` (tone_share_v1), where a sliver reads "<1%". */
+ * is printed from `shareText` (tone_share_v2: of every post, "belum dianalisis" included), where a sliver reads "<1%". */
 function Legend({ items, label = 'Keterangan warna' }) {
   return <ul className="rp-legend" aria-label={label}>{items.map(item => <li key={item.key}>
     <i className="rp-swatch" data-hatch={item.hatch ? '' : undefined} style={item.hatch ? undefined : { '--seg': item.color }} aria-hidden="true" />
@@ -73,8 +73,14 @@ function Bar({ parts, label, slim = false }) {
     {parts.filter(part => part.value > 0).map(part => <span key={part.key} data-hatch={part.hatch ? '' : undefined} style={part.hatch ? { flexGrow: part.value } : { flexGrow: part.value, '--seg': part.color }} />)}
   </div>;
 }
-const toneParts = counts => tones.map(key => ({ key, label: sentimentLabels[key], value: counts[key], color: sentimentColor[key] }));
-const toneWords = (counts, text) => tones.map(key => `${sentimentLabels[key]} ${text[key]}`).join(', ') + (counts.unknown ? `, ${formatCount(counts.unknown)} belum dianalisis` : '');
+// tone_share_v2: the report has no switch, so "belum dianalisis" is always drawn and said as the fourth part of the 100.
+const toneParts = counts => [...tones.map(key => ({ key, label: sentimentLabels[key], value: counts[key], color: sentimentColor[key] })),
+  { key: 'unknown', label: sentimentLabels.unknown, value: counts.unknown, hatch: true }];
+const toneWords = (counts, text) => tones.map(key => `${sentimentLabels[key]} ${text[key]}`).join(', ') + (counts.unknown ? `, ${sentimentLabels.unknown} ${text.unknown}` : '');
+// A chart's legend names every colour it can draw (`always`); a voice's legend lists "belum dianalisis" only when it has posts.
+const toneLegend = (counts, shares, text, always = false) => [...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: counts[key], share: shares?.[key], shareText: text?.[key] })),
+  ...(counts.unknown || always ? [{ key: 'unknown', label: sentimentLabels.unknown, hatch: true, value: counts.unknown, share: shares?.unknown, shareText: text?.unknown }] : [])];
+const baseNote = (total, unknown) => `Persentase dari ${formatCount(total)} posting, ${unknown ? `termasuk ${formatCount(unknown)} yang belum dianalisis` : 'semuanya sudah dianalisis'}.`;
 
 function CoverPage({ page, frame }) {
   const { report, brand, data } = frame;
@@ -253,11 +259,8 @@ function TrendPage({ page, frame }) {
   return <Sheet page={page} frame={frame} title={page.title}
     lede={`Posting per ${trend.unit === 'day' ? 'hari' : 'minggu'} menurut tanggal terbit (${zone().name}).`}>
     <TrendChart trend={trend} marked={new Set(spikes.rows.filter(row => row.line === 'posts').map(row => row.key))} />
-    <Legend label="Keterangan warna grafik" items={[
-      ...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: data.counts[key], share: data.analysed ? data.shares[key] : null, shareText: data.analysed ? data.shareText[key] : null })),
-      { key: 'unknown', label: sentimentLabels.unknown, hatch: true, value: data.counts.unknown },
-    ]} />
-    <p className="rp-note">Persentase dari {formatCount(data.analysed)} posting yang dianalisis ({data.coverage}% dari {formatCount(data.total)}).{data.undated > 0 ? ` ${formatCount(data.undated)} posting tanpa tanggal tidak masuk grafik.` : ''}</p>
+    <Legend label="Keterangan warna grafik" items={toneLegend(data.counts, data.shares, data.shareText, true)} />
+    <p className="rp-note">{baseNote(data.total, data.unknown)}{data.undated > 0 ? ` ${formatCount(data.undated)} posting tanpa tanggal tidak masuk grafik.` : ''}</p>
     <section className="rp-block">
       <h3>Hari paling ramai</h3>
       <table className="rp-table">
@@ -265,7 +268,7 @@ function TrendPage({ page, frame }) {
         <tbody>{busiest.map(day => <tr key={day.date}>
           <th scope="row">{pulseDay(day.date)}</th>
           <td className="rp-num"><strong>{formatCount(day.total)}</strong></td>
-          <td className="rp-cell-bar"><Bar slim label={sentimentOrder.map(key => `${sentimentLabels[key]} ${formatCount(day[key])}`).join(', ')} parts={[...toneParts(day), { key: 'unknown', label: sentimentLabels.unknown, value: day.unknown, hatch: true }]} /></td>
+          <td className="rp-cell-bar"><Bar slim label={sentimentOrder.map(key => `${sentimentLabels[key]} ${formatCount(day[key])}`).join(', ')} parts={toneParts(day)} /></td>
           {sentimentOrder.map(key => <td className="rp-num" key={key}>{formatCount(day[key])}</td>)}
         </tr>)}</tbody>
       </table>
@@ -288,10 +291,10 @@ function Voice({ title, voice, none }) {
     {!voice.total ? <Empty>{none}</Empty> : <>
       <p className="rp-sub">{formatCount(voice.total)} posting, {voice.unknown ? `${formatCount(voice.analysed)} sudah dianalisis` : 'semuanya sudah dianalisis'}</p>
       {!voice.lead ? <Empty>Belum ada posting yang dianalisis.</Empty> : <>
-        <p className="rp-leading"><strong>{voice.shareText[voice.lead]}</strong><span>{sentimentLabels[voice.lead].toLowerCase()}, bagian terbesar dari {formatCount(voice.analysed)} posting yang dianalisis</span></p>
+        <p className="rp-leading"><strong>{voice.shareText[voice.lead]}</strong><span>{sentimentLabels[voice.lead].toLowerCase()}, bagian terbesar dari {formatCount(voice.total)} posting</span></p>
         <Bar label={`${title}: ${toneWords(voice.counts, voice.shareText)}`} parts={toneParts(voice.counts)} />
-        <Legend label={`Keterangan warna ${title.toLowerCase()}`} items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: voice.counts[key], share: voice.shares[key], shareText: voice.shareText[key] }))} />
-        {voice.unknown > 0 && <p className="rp-note">{formatCount(voice.unknown)} posting belum dianalisis dan tidak masuk persentase.</p>}
+        <Legend label={`Keterangan warna ${title.toLowerCase()}`} items={toneLegend(voice.counts, voice.shares, voice.shareText)} />
+        {voice.unknown > 0 && <p className="rp-note">{baseNote(voice.total, voice.unknown)}</p>}
         {neutral > 0 && <div className="rp-kinds">
           <h4>Netral terdiri dari</h4>
           <ul>{kinds.map(key => <li key={key}><span>{kindLabels[key]}</span><b>{formatCount(voice.kinds[key])}</b><em>{kindShare[key]}%</em></li>)}</ul>
@@ -314,16 +317,15 @@ function VoicesPage({ page, frame }) {
     <section className="rp-block">
       <h3>Nada per platform</h3>
       <table className="rp-table">
-        <thead><tr><th scope="col">Platform</th><th scope="col" className="rp-num">Posting</th><th scope="col" className="rp-num">Dianalisis</th><th scope="col" className="rp-cell-bar">Bagian dari yang dianalisis</th>{tones.map(key => <th scope="col" className="rp-num" key={key}>{sentimentLabels[key]}</th>)}</tr></thead>
+        <thead><tr><th scope="col">Platform</th><th scope="col" className="rp-num">Posting</th><th scope="col" className="rp-cell-bar">Bagian dari total posting</th>{sentimentOrder.map(key => <th scope="col" className="rp-num" key={key}>{key === 'unknown' ? 'Belum' : sentimentLabels[key]}</th>)}</tr></thead>
         <tbody>{data.platforms.map(row => <tr key={row.platform}>
           <th scope="row"><span className="rp-platform"><PlatformIcon platform={row.platform} size={14} />{platformName(row.platform)}</span></th>
           <td className="rp-num">{formatCount(row.total)}</td>
-          <td className="rp-num">{formatCount(row.analysed)}</td>
-          <td className="rp-cell-bar">{row.analysed ? <Bar slim label={`${platformName(row.platform)}: ${toneWords(row.counts, row.shareText)}`} parts={toneParts(row.counts)} /> : <span className="rp-muted">belum dianalisis</span>}</td>
-          {tones.map(key => <td className="rp-num" key={key}>{row.analysed ? row.shareText[key] : '—'}</td>)}
+          <td className="rp-cell-bar"><Bar slim label={`${platformName(row.platform)}: ${toneWords(row.counts, row.shareText)}`} parts={toneParts(row.counts)} /></td>
+          {sentimentOrder.map(key => <td className="rp-num" key={key}>{row.shareText[key]}</td>)}
         </tr>)}</tbody>
       </table>
-      <Legend items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key] }))} />
+      <Legend items={[...tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key] })), { key: 'unknown', label: `${sentimentLabels.unknown} (Belum)`, hatch: true }]} />
     </section>
   </Sheet>;
 }
@@ -344,7 +346,7 @@ function OpinionPage({ page, frame }) {
       <section className="rp-voice">
         <h3>Sentimen komentar</h3>
         <p className="rp-leading"><strong>{opinion.shareText[opinion.lead]}</strong><span>{sentimentLabels[opinion.lead].toLowerCase()}, bagian terbesar dari {formatCount(opinion.analysed)} komentar</span></p>
-        <Bar label={`Sentimen komentar: ${toneWords({ ...opinion.counts, unknown: 0 }, opinion.shareText)}`} parts={toneParts(opinion.counts)} />
+        <Bar label={`Sentimen komentar: ${toneWords({ ...opinion.counts, unknown: 0 }, opinion.shareText)}`} parts={toneParts({ ...opinion.counts, unknown: 0 })} />
         <Legend label="Keterangan warna sentimen komentar" items={tones.map(key => ({ key, label: sentimentLabels[key], color: sentimentColor[key], value: opinion.counts[key], share: opinion.shares[key], shareText: opinion.shareText[key] }))} />
       </section>
       <section className="rp-voice">
@@ -561,7 +563,7 @@ function MethodPage({ page, frame }) {
       <ul className="rp-limits">
         <li>Hanya posting tersimpan di PULSE, bukan seluruh percakapan platform.</li>
         <li>Sentimen menilai nada teks, bukan dukungan politik.</li>
-        <li>Yang belum dianalisis tidak dihitung netral.</li>
+        <li>Yang belum dianalisis tidak dihitung netral; persentase sentimen dari total posting.</li>
         <li>Tayangan bukan jumlah orang; tidak ada perkiraan jangkauan.</li>
         <li>“—” berarti angka tidak tersedia.</li>
         {(summary || frame.printsInsights) && <li>{summary && frame.printsInsights ? 'Ringkasan dan insight' : summary ? 'Ringkasan' : 'Insight'} ditulis AI; periksa buktinya sebelum dikutip.</li>}

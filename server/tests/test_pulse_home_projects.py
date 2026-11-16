@@ -79,7 +79,7 @@ async def test_a_project_without_any_schedule_is_listed_as_not_collecting(client
 
 
 @pytest.mark.asyncio
-async def test_a_project_week_of_tone_reads_each_post_by_tone_share_v1_in_either_stored_form(client, db, admin_token, now):
+async def test_a_project_week_of_tone_reads_each_post_by_tone_share_v2_in_either_stored_form(client, db, admin_token, now):
     """Both stored label forms, in any letter case, give the same tone; any other label is "belum dianalisis"."""
     topic = WatchTopic(label='Dua bentuk label', query='bentuk')
     db.add(topic)

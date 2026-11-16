@@ -114,8 +114,8 @@ function Plot({ rows, unit, series, tall, mini, axis = true, pick, selected, lab
 const netConfig = { net: { label: 'Sentimen bersih', color: 'var(--ps-ink)' } };
 const signedNet = value => Number.isFinite(value) ? `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(Math.round(value))}` : '—';
 
-/** Net sentiment per bucket, (positive − negative) ÷ analysed, from −100 to +100 around a zero line. A bucket with no
- * analysed post is a gap in the line, not a zero: nobody measured it. Sits under the tone lines, which show how many. */
+/** Net sentiment per bucket, (positive − negative) ÷ every post of the bucket (tone_share_v2), from −100 to +100 around a
+ * zero line. A bucket with no analysed post is a gap in the line, not a zero: nobody measured it. Sits under the tone lines, which show how many. */
 function NetPlot({ rows, unit }) {
   const data = rows.map(row => ({ ...row, net: netSentiment(row) })), byKey = new Map(rows.map(row => [row.key, row]));
   const lone = data.filter(row => row.net !== null).length === 1;
@@ -217,7 +217,7 @@ export default function TrendChart({ posts = [], period = {}, title = 'Tren perc
         {unknown > 0 && <p className="tc-note">{formatCount(unknown)} dari {formatCount(all)} posting belum dianalisis, tidak digambar.</p>}
       </figure>}
       {!volume && !platforms.length && <figure className="tc-chart">
-        <figcaption><strong>Sentimen bersih</strong><span>(positif − negatif) ÷ yang dianalisis</span></figcaption>
+        <figcaption><strong>Sentimen bersih</strong><span>(positif − negatif) ÷ total posting</span></figcaption>
         <NetPlot rows={rows} unit={unit} />
       </figure>}
       {marked && <p className="tc-note tc-spike-note"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><SpikeMark cx={9} cy={9} color="var(--ps-muted)" /></svg>

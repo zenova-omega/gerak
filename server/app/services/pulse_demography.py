@@ -316,8 +316,8 @@ def group_lead(tiers: dict, origin: dict) -> dict:
     `posts_gap` / `interactions_gap` when the unknown row's count is above 0 and at least the leader's: its share (of
     every post, of the known interactions) and the GAP_PLATFORMS platforms it mostly sits on, with their shares of the
     row's own. `negative`: when at least COMPARE_MIN_ROWS nameable rows have NEGATIVE_MIN_ANALYSED analysed posts or
-    more, the one of them with the largest tone_share_v1 negative percent (`share`), ties by more analysed posts, then
-    by TIERS order; None when there is none or that row has no negative post. `unknown` is the unknown row's tone when
+    more, the one of them with the largest tone_share_v2 negative percent (`share`, of the row's `total` posts), ties
+    by more analysed posts, then by TIERS order; None when there is none or that row has no negative post. `unknown` is the unknown row's tone when
     it has NEGATIVE_MIN_ANALYSED analysed posts (the comparison then leaves out the accounts whose follower count is unknown), with
     `more_negative` when its negative percent is higher; else None.
     `where`: the first province of `origin` when at least WHERE_MIN_ACCOUNTS accounts have a province, with
@@ -348,7 +348,8 @@ def group_lead(tiers: dict, origin: dict) -> dict:
     if best and best['tone']['text']['negative'] != '0%':
         gap = unknown['tone'] if unknown and unknown['tone']['analysed'] >= NEGATIVE_MIN_ANALYSED else None
         negative = {'row': best['key'], 'share': best['tone']['percent']['negative'], 'analysed': best['tone']['analysed'],
-                    'unknown': {'share': gap['percent']['negative'], 'analysed': gap['analysed'],
+                    'total': best['tone']['total'],
+                    'unknown': {'share': gap['percent']['negative'], 'analysed': gap['analysed'], 'total': gap['total'],
                                 'more_negative': gap['percent']['negative'] > best['tone']['percent']['negative']} if gap else None}
     provinces = (origin or {}).get('provinces') or []
     where = None

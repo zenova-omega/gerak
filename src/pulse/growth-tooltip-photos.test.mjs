@@ -129,21 +129,23 @@ test('tooltip: the shares are drawn as one bar and each row keeps its count and 
   assert.match(markup, /Positif<b>82<\/b><em>7%<\/em>/);
 });
 
-test('tooltip: tone shares are tone_share_v1, of the analysed posts; "belum dianalisis" keeps its count and has no share', async () => {
+test('tooltip: tone shares are tone_share_v2, of every post of the day; "belum dianalisis" is the fourth part, shown or hidden', async () => {
+  const day = { date: '2026-11-10', positive: 1, neutral: 299, negative: 0, unknown: 100 };
   const rows = [
-    { dataKey: 'positive', name: 'Positif', value: 1, color: 'green' },
-    { dataKey: 'neutral', name: 'Netral', value: 299, color: 'grey' },
-    { dataKey: 'negative', name: 'Negatif', value: 0, color: 'red' },
-    { dataKey: 'unknown', name: 'Belum dianalisis', value: 100, fill: 'url(#hatch)' },
+    { dataKey: 'positive', name: 'Positif', value: 1, color: 'green', payload: day },
+    { dataKey: 'neutral', name: 'Netral', value: 299, color: 'grey', payload: day },
+    { dataKey: 'negative', name: 'Negatif', value: 0, color: 'red', payload: day },
+    { dataKey: 'unknown', name: 'Belum dianalisis', value: 100, fill: 'url(#hatch)', payload: day },
   ];
   const markup = await tipHtml({ payload: rows, top: undefined });
-  assert.match(markup, /Positif<b>1<\/b><em>&lt;1%<\/em>/, 'one post of 300 is a sliver, not 0%');
-  assert.match(markup, /Netral<b>299<\/b><em>100%<\/em>/, 'the same with the unknown row shown or hidden');
-  assert.match(markup, /Belum dianalisis<b>100<\/b><\/li>/);
+  assert.match(markup, /Positif<b>1<\/b><em>&lt;1%<\/em>/, 'one post of 400 is a sliver, not 0%');
+  assert.match(markup, /Netral<b>299<\/b><em>75%<\/em>/);
+  assert.match(markup, /Belum dianalisis<b>100<\/b><em>25%<\/em>/, 'the four add up to 100');
   const hidden = await tipHtml({ payload: rows.slice(0, 3), top: undefined });
-  assert.match(hidden, /Netral<b>299<\/b><em>100%<\/em>/);
-  const waiting = await tipHtml({ payload: [{ ...rows[2] }, rows[3]], top: undefined });
-  assert.doesNotMatch(waiting, /<em>/, 'nothing analysed that day: no percentage at all');
+  assert.match(hidden, /Netral<b>299<\/b><em>75%<\/em>/, 'the same with the unknown row hidden: the day still counts its waiting posts');
+  assert.match(hidden, /<i data-gap="" style="flex-grow:100"><\/i><\/span>/, 'hidden, the waiting part keeps its room on the bar');
+  const waiting = await tipHtml({ payload: [{ ...rows[2], payload: { negative: 0, unknown: 7 } }, { ...rows[3], value: 7, payload: { negative: 0, unknown: 7 } }], top: undefined });
+  assert.match(waiting, /Belum dianalisis<b>7<\/b><em>100%<\/em>/, 'nothing analysed that day: all of it is belum dianalisis');
 });
 
 test('tooltip: without shares there is no bar and no percent', async () => {

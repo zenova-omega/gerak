@@ -18,8 +18,8 @@ test('a rise is bad for negative posts, good for positive posts, and neutral for
   assert.equal(deltaIntent('negative', 0), 'neutral');
 });
 
-test('share change compares a tone\'s share of analysed posts, so more volume alone is not a rise', () => {
-  const week = (positive, negative) => Array.from({ length: 7 }, () => ({ positive, neutral: 0, negative }));
+test('share change compares a tone\'s share of every post (tone_share_v2), so more volume alone is not a rise', () => {
+  const week = (positive, negative, unknown) => Array.from({ length: 7 }, () => ({ positive, neutral: 0, negative, ...(unknown === undefined ? {} : { unknown }) }));
   // Volume doubles, the mix stays 50/50: no change in share (counts would have said +100%).
   const doubled = recentShareChange([...week(5, 5), ...week(10, 10)], 'negative');
   assert.equal(doubled.delta, 0);
@@ -27,7 +27,11 @@ test('share change compares a tone\'s share of analysed posts, so more volume al
   // Negative goes from 25% to 50% of the analysed posts.
   assert.equal(recentShareChange([...week(3, 1), ...week(1, 1)], 'negative').delta, 25);
   assert.equal(recentShareChange([...week(3, 1), ...week(1, 1)], 'positive').delta, -25);
+  // The posts not analysed yet are in the base: negative goes from 1 of 4 posts (25%) to 1 of 2 (50%).
+  assert.equal(recentShareChange([...week(1, 1, 2), ...week(1, 1, 0)], 'negative').delta, 25);
+  assert.equal(recentShareChange([...week(1, 1, 0), ...week(1, 1, 2)], 'negative').delta, -25, 'a backlog lowers every tone\'s share');
   // Nothing analysed in one window, or a short series, or an unknown key: no figure rather than zero.
+  assert.equal(recentShareChange([...week(0, 0, 5), ...week(1, 1)], 'negative'), null, 'a window of waiting posts only has no reading');
   assert.equal(recentShareChange([...week(0, 0), ...week(1, 1)], 'negative'), null);
   assert.equal(recentShareChange([{ positive: 1, neutral: 0, negative: 0 }], 'positive'), null);
   assert.equal(recentShareChange(week(1, 1), 'unknown'), null);

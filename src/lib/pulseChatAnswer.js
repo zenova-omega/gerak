@@ -82,7 +82,7 @@ const dayLabel = date => `${Number(date.slice(8))} ${months[Number(date.slice(5,
  * @returns {{key: string, label: string, value: number, width: number, share: string|null, color: string, peak?: boolean}[]}
  *   `width` is the bar in percent of the longest. `share` is set only where the rows are parts of one whole
  *   (sentiment, platforms); provinces and groups are top lists that overlap, so they carry none. A sentiment share is
- *   tone_share_v1 (`toneShares`): of the analysed posts, "<1%" for a sliver; "belum dianalisis" is a count without a share.
+ *   tone_share_v2 (`toneShares`): of every post, "belum dianalisis" the fourth part of the 100, "<1%" for a sliver.
  */
 export function chartRows(chart, platformName = name => name) {
   const rows = chart?.rows || [], most = Math.max(0, ...rows.map(row => row.value || 0)), whole = rows.reduce((sum, row) => sum + (row.value || 0), 0);

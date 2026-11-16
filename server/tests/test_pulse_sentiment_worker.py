@@ -143,7 +143,7 @@ async def test_form_of_the_text_is_stored_with_the_label_and_an_answer_without_a
         await engine.dispose()
 
 
-def test_a_post_has_a_reading_by_tone_share_v1_in_either_stored_form():
+def test_a_post_has_a_reading_by_tone_share_v2_in_either_stored_form():
     """The worker's label reader is the module's tone: a plain string or an object, any letter case, is a reading; any
     other label is not, so the post is analysed again rather than counted as done."""
     from app.services.pulse_sentiment import has_sentiment

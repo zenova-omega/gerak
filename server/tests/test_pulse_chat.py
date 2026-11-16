@@ -304,7 +304,11 @@ async def test_the_answer_is_shaped_once_on_the_server_tags_out_charts_and_cited
         assert wanted in chat.SYSTEM, wanted
     # The data block names sentiment in the reader's words, so an answer never says "unknown" or "negative".
     block = chat.data_block(context)
-    assert 'sentimen: belum dianalisis 2' in block and 'unknown' not in block and 'negative' not in block
+    assert 'sentimen: belum dianalisis 2 (100%)' in block and 'unknown' not in block and 'negative' not in block
+    # tone_share_v2: the shares the model may quote are written beside the counts, of every post of the line.
+    assert chat._tones({'negative': 2, 'neutral': 1, 'positive': 1, 'unknown': 4}) == \
+        'negatif 2 (25%), netral 1 (12%), positif 1 (13%), belum dianalisis 4 (50%); persen dari total posting'
+    assert chat._tones({}) == '-'
 
 
 @pytest.mark.asyncio
@@ -495,8 +499,8 @@ async def test_the_account_location_line_counts_x_accounts_by_account_origin_v1(
 
 
 @pytest.mark.asyncio
-async def test_data_block_reads_a_post_tone_by_tone_share_v1_in_either_stored_form(db):
-    """tone_share_v1 on Tanya AI's data block: a label stored as a plain string or as an object, in any letter case, is
+async def test_data_block_reads_a_post_tone_by_tone_share_v2_in_either_stored_form(db):
+    """tone_share_v2 on Tanya AI's data block: a label stored as a plain string or as an object, in any letter case, is
     the same tone; anything else is "belum dianalisis"."""
     db.add(WatchTopic(id='tone-topic', label='Nada', query='nada', is_active=False)); await db.flush()
     def post(id, metrics, hours):

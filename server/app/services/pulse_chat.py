@@ -136,7 +136,7 @@ def _figure(value):
 
 
 def _sentiment(metrics):
-    """A post's tone by tone_share_v1: either stored form, any letter case; anything else is 'unknown'."""
+    """A post's tone by tone_share_v2: either stored form, any letter case; anything else is 'unknown'."""
     return pulse_measures.tone(metrics)
 
 
@@ -298,8 +298,14 @@ TONE_WORDS = {'positive': 'positif', 'neutral': 'netral', 'negative': 'negatif',
 
 
 def _tones(mapping):
-    """Sentiment counts in the reader's words: the model repeats what it reads, and "unknown 6" is not what people say."""
-    return _counts({TONE_WORDS.get(key, key): value for key, value in mapping.items()})
+    """Sentiment counts in the reader's words, each with its tone_share_v2 share (of every post of the line, "belum
+    dianalisis" the fourth part), so an answer quotes the figure the pages print instead of working one out: the model
+    repeats what it reads, and "unknown 6" is not what people say."""
+    shares = pulse_measures.tone_shares(mapping)['text']
+    if not shares:
+        return '-'
+    said = ', '.join(f"{TONE_WORDS[key]} {mapping[key]} ({shares[key]})" for key in ('negative', 'neutral', 'positive', 'unknown') if mapping.get(key))
+    return f'{said}; persen dari total posting'
 
 
 def spike_days_line(days):

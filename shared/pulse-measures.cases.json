@@ -184,34 +184,61 @@
   ],
   "tone_shares": [
     {
-      "note": "the base is the analysed posts only",
+      "note": "the base is every post, the ones not analysed yet included; the four parts add up to 100",
       "in": {"positive": 50, "neutral": 30, "negative": 20, "unknown": 900},
-      "out": {"analysed": 100, "unknown": 900, "percent": {"positive": 50, "neutral": 30, "negative": 20}, "text": {"positive": "50%", "neutral": "30%", "negative": "20%"}}
+      "out": {"total": 1000, "analysed": 100, "unknown": 900, "percent": {"positive": 5, "neutral": 3, "negative": 2, "unknown": 90}, "text": {"positive": "5%", "neutral": "3%", "negative": "2%", "unknown": "90%"}}
     },
     {
-      "note": "largest remainder adds up to 100, ties go in the order positive, neutral, negative",
-      "in": {"positive": 1, "neutral": 1, "negative": 1, "unknown": 2},
-      "out": {"analysed": 3, "unknown": 2, "percent": {"positive": 34, "neutral": 33, "negative": 33}, "text": {"positive": "34%", "neutral": "33%", "negative": "33%"}}
+      "note": "with every post analysed the three add up to 100 and belum dianalisis is 0%",
+      "in": {"positive": 1, "neutral": 1, "negative": 1},
+      "out": {"total": 3, "analysed": 3, "unknown": 0, "percent": {"positive": 34, "neutral": 33, "negative": 33, "unknown": 0}, "text": {"positive": "34%", "neutral": "33%", "negative": "33%", "unknown": "0%"}}
+    },
+    {
+      "note": "largest remainder adds up to 100, ties go in the order positive, neutral, negative, belum dianalisis",
+      "in": {"positive": 1, "neutral": 1, "negative": 1, "unknown": 3},
+      "out": {"total": 6, "analysed": 3, "unknown": 3, "percent": {"positive": 17, "neutral": 17, "negative": 16, "unknown": 50}, "text": {"positive": "17%", "neutral": "17%", "negative": "16%", "unknown": "50%"}}
     },
     {
       "note": "largest remainder goes to the larger fraction",
       "in": {"positive": 2, "neutral": 2, "negative": 3},
-      "out": {"analysed": 7, "unknown": 0, "percent": {"positive": 29, "neutral": 28, "negative": 43}, "text": {"positive": "29%", "neutral": "28%", "negative": "43%"}}
+      "out": {"total": 7, "analysed": 7, "unknown": 0, "percent": {"positive": 29, "neutral": 28, "negative": 43, "unknown": 0}, "text": {"positive": "29%", "neutral": "28%", "negative": "43%", "unknown": "0%"}}
     },
     {
       "note": "a tone with posts that rounds to 0 prints <1%, a tone without posts prints 0%",
       "in": {"positive": 1, "neutral": 299, "negative": 0, "unknown": 7},
-      "out": {"analysed": 300, "unknown": 7, "percent": {"positive": 0, "neutral": 100, "negative": 0}, "text": {"positive": "<1%", "neutral": "100%", "negative": "0%"}}
+      "out": {"total": 307, "analysed": 300, "unknown": 7, "percent": {"positive": 0, "neutral": 98, "negative": 0, "unknown": 2}, "text": {"positive": "<1%", "neutral": "98%", "negative": "0%", "unknown": "2%"}}
     },
     {
-      "note": "nothing analysed",
+      "note": "belum dianalisis with posts that rounds to 0 prints <1% too",
+      "in": {"positive": 300, "unknown": 1},
+      "out": {"total": 301, "analysed": 300, "unknown": 1, "percent": {"positive": 100, "neutral": 0, "negative": 0, "unknown": 0}, "text": {"positive": "100%", "neutral": "0%", "negative": "0%", "unknown": "<1%"}}
+    },
+    {
+      "note": "nothing analysed: every post is belum dianalisis, 100%",
       "in": {"positive": 0, "neutral": 0, "negative": 0, "unknown": 5},
-      "out": {"analysed": 0, "unknown": 5, "percent": null, "text": null}
+      "out": {"total": 5, "analysed": 0, "unknown": 5, "percent": {"positive": 0, "neutral": 0, "negative": 0, "unknown": 100}, "text": {"positive": "0%", "neutral": "0%", "negative": "0%", "unknown": "100%"}}
     },
     {
-      "note": "empty counts",
+      "note": "no posts at all: no share",
       "in": {},
-      "out": {"analysed": 0, "unknown": 0, "percent": null, "text": null}
+      "out": {"total": 0, "analysed": 0, "unknown": 0, "percent": null, "text": null}
+    }
+  ],
+  "sample_tone_shares": [
+    {
+      "note": "comments are a sample: shares of the analysed comments, the ones not analysed are left out of the base",
+      "in": {"positive": 50, "neutral": 30, "negative": 20, "unknown": 20000},
+      "out": {"total": 100, "analysed": 100, "unknown": 0, "percent": {"positive": 50, "neutral": 30, "negative": 20, "unknown": 0}, "text": {"positive": "50%", "neutral": "30%", "negative": "20%", "unknown": "0%"}}
+    },
+    {
+      "note": "the same rounding as tone_shares: ties in the order positive, neutral, negative, a sliver is <1%",
+      "in": {"positive": 1, "neutral": 299, "negative": 0, "unknown": 7},
+      "out": {"total": 300, "analysed": 300, "unknown": 0, "percent": {"positive": 0, "neutral": 100, "negative": 0, "unknown": 0}, "text": {"positive": "<1%", "neutral": "100%", "negative": "0%", "unknown": "0%"}}
+    },
+    {
+      "note": "nothing analysed: no share",
+      "in": {"positive": 0, "neutral": 0, "negative": 0, "unknown": 12},
+      "out": {"total": 0, "analysed": 0, "unknown": 0, "percent": null, "text": null}
     }
   ],
   "account": [

@@ -14,7 +14,7 @@ TONES = ('positive', 'neutral', 'negative')
 
 
 def _tones(counted):
-    """Tone counts of a project's last seven days, each post read by tone_share_v1 (`pulse_measures.tone`, either stored
+    """Tone counts of a project's last seven days, each post read by tone_share_v2 (`pulse_measures.tone`, either stored
     form, any letter case). A post without a reading is unknown, never neutral."""
     counted = counted or {}
     return {name: counted.get(name, 0) for name in (*TONES, 'unknown')}

@@ -5,7 +5,7 @@ import { byInteractions, inPeriod, localDay, postAccount, readTime, tone } from 
 // depends on this module's neighbours, and a filter here would close an import circle.
 export const defaultPostFilters = { platforms:null,sentiments:null,query:'',author:'',exactAuthor:'',account:'',province:'',from:'',to:'',minEngagement:'',media:'all',sort:'engagement' };
 export const sentimentLabels = {positive:'Positif',neutral:'Netral',negative:'Negatif',unknown:'Belum dianalisis'};
-/** A post's tone (tone_share_v1): the one the server sent in `measures`, else the module's reading of the stored label. */
+/** A post's tone (tone_share_v2): the one the server sent in `measures`, else the module's reading of the stored label. */
 export function postSentiment(post) {
   return post?.measures?.tone ?? tone(post);
 }

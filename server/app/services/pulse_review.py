@@ -27,7 +27,7 @@ async def list_reviews(db, topic_id):
         .where(PostReview.topic_id == topic_id).order_by(PostReview.post_id))).all()
     paired = correct = 0
     for review, metrics in rows:
-        label = pulse_measures.tone(metrics)   # tone_share_v1: either stored form, any letter case
+        label = pulse_measures.tone(metrics)   # tone_share_v2: either stored form, any letter case
         if label in LABELS and review.manual_sentiment in LABELS:
             paired += 1
             correct += int(label == review.manual_sentiment)

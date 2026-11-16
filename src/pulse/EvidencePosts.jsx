@@ -20,13 +20,14 @@ import {sumOf,dateRange} from './evidenceFigures';
 /** What a set of posts amounts to, before reading them one by one. `oneContent`: the posts are one piece of content
  * (a conversation group), so "dibagikan" is content_shares_v1; any other set takes shares_total_v1. */
 function EvidenceSummary({posts,oneContent=false}){
- const tone={positive:0,neutral:0,negative:0};
- for(const p of posts){const key=postSentiment(p);if(key in tone)tone[key]++;}
+ const tone={positive:0,neutral:0,negative:0,unknown:0};
+ for(const p of posts){const key=postSentiment(p);tone[key in tone?key:'unknown']++;}
  const analysed=tone.positive+tone.neutral+tone.negative,accounts=accountCount(posts);
  const interactions=interactionsTotal(posts);
  // Interactions always show: an unknown total reads "—" (formatCount), never a number or a missing figure.
  const figures=[['posting',posts.length],['akun',accounts],[interactions.posts?`interaksi dari ${formatCount(interactions.posts)} posting`:'interaksi',interactions.value,true],['dibagikan',oneContent?contentShares(posts):sharesTotal(posts)],['tayangan',sumOf(posts,'views')]].filter(([,value,always])=>always||value!=null);
- const tones=['negative','neutral','positive'].filter(key=>tone[key]>0),range=dateRange(posts),share=toneShares(tone).text;   // tone_share_v1
+ // tone_share_v2: shares of every post, "belum dianalisis" the fourth part (the drawer has no switch to hide it).
+ const tones=['negative','neutral','positive','unknown'].filter(key=>tone[key]>0),range=dateRange(posts),share=toneShares(tone).text;
  return <section className="ped-summary sig" aria-label="Ringkasan posting pilihan">
   <div className="sig-figures">{figures.map(([label,value])=><div className="sig-figure" key={label}><strong>{formatCount(value)}</strong><span>{label}</span></div>)}{range&&<div className="sig-figure"><strong data-kind="text">{range}</strong><span>terbit</span></div>}</div>
   {analysed>0&&(tones.length===1?<SentimentTag value={tones[0]}/>:<div className="ped-tone"><div className="sig-bar" role="img" aria-label={tones.map(key=>`${sentimentLabels[key]} ${share[key]}`).join(', ')}>{tones.map(key=><span key={key} style={{flexGrow:tone[key],background:sentimentColor[key]}}/>)}</div><ul>{tones.map(key=><li key={key}><i style={{background:sentimentColor[key]}}/><strong>{share[key]}</strong><span>{sentimentLabels[key].toLowerCase()}</span></li>)}</ul></div>)}

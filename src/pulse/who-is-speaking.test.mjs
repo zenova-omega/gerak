@@ -108,7 +108,7 @@ test('full data: the three sentences first, then one row per tier with posts, in
     const html = render(full);
     assert.deepEqual(lead(html), [
       'Paling banyak ditulis akun <1 rb (52% posting), tetapi interaksi terbesar dari akun ≥1 jt (47% dari interaksi yang tercatat).',
-      'Paling negatif: akun 10–100 rb, 60% dari 20 posting yang dianalisis.',
+      'Paling negatif: akun 10–100 rb, 60% dari 20 posting.',
       'Akun X paling banyak dari Jawa Barat (60 akun); provinsi terbaca pada 72% akun X.',
     ]);
     const rows = buttons(html, 'pws-row').map(cells);
@@ -120,7 +120,7 @@ test('full data: the three sentences first, then one row per tier with posts, in
     ]);
     assert.deepEqual(rows.map(row => row.tone), [
       'Nada negatif 0% · netral 100% · positif 0%', 'Nada negatif 0% · netral 0% · positif 100%', 'Nada negatif 60% · netral 0% · positif 40%',
-      'Nada negatif 0% · netral 100% · positif 0%', 'Nada negatif 0% · netral 100% · positif 0% dari 3 posting yang dianalisis',
+      'Nada negatif 0% · netral 100% · positif 0%', 'Nada negatif 0% · netral 60% · positif 0% · belum dianalisis 40% dari 5 posting',
     ]);
     // Coverage of the follower count on posts and on the known interactions of social media, both from the module,
     // said in the panel's tip rather than as a line of its own.
@@ -145,7 +145,7 @@ test('a gap the follower count leaves is said, with its platforms, instead of a 
     assert.deepEqual(lead(html), projectShaped.out, 'exactly what leadSentences writes, with the platforms named as the page names them');
     assert.deepEqual(lead(html), [
       'Sebanyak 69% dari interaksi yang tercatat berasal dari akun yang pengikutnya tidak diketahui; dari bagian ini, 68% di Instagram dan 31% di TikTok.',
-      'Paling negatif di luar akun yang pengikutnya tidak diketahui: akun <1 rb, 37% dari 68 posting yang dianalisis; akun yang pengikutnya tidak diketahui lebih negatif (55% dari 40 posting yang dianalisis).',
+      'Paling negatif di luar akun yang pengikutnya tidak diketahui: akun <1 rb, 37% dari 68 posting; akun yang pengikutnya tidak diketahui lebih negatif (50% dari 44 posting).',
     ]);
     assert.doesNotMatch(text(html), /Paling banyak ditulis|interaksi terbesar/, 'no group is named for posts or interactions');
     assert.match(tips(expand(projectShaped.in))[0].text, /Pengikut diketahui pada 87% posting media sosial dan 30% interaksi media sosial yang tercatat\./);
@@ -164,7 +164,7 @@ test('every bar has its number in words, and colour never stands alone', async (
     assert.match(head, /data-tone="negative"[\s\S]*data-tone="neutral"[\s\S]*data-tone="positive"[\s\S]*Nada/);
     assert.doesNotMatch(html, /class="pws-keys"/, 'no separate key line');
     const about = tips(full).find(tip => tip.label === 'Tentang siapa yang bicara').text;
-    for (const key of ['Posting: bagian dari semua posting.', 'Interaksi: bagian dari interaksi yang tercatat.', 'Nada: negatif, netral, positif, dari posting yang dianalisis.']) assert.ok(about.includes(key), key);
+    for (const key of ['Posting: bagian dari semua posting.', 'Interaksi: bagian dari interaksi yang tercatat.', 'Nada: negatif, netral, positif dan belum dianalisis, dari total posting.']) assert.ok(about.includes(key), key);
     assert.match(html, /--ps-chart-1/);
     assert.match(html, /--ps-chart-2/);
     // A tone bar is drawn in the sentiment colours, with its shares in words beside it; inside a button only the
@@ -175,11 +175,11 @@ test('every bar has its number in words, and colour never stands alone', async (
     assert.match(rows[2], /var\(--ps-sent-positive\)/);
     // A row's name starts with its visible label (WCAG 2.5.3) and carries every figure with its base.
     assert.deepEqual(rows.map(label), [
-      'Pemberitaan. 2 akun. 10 posting, 8% dari semua posting. Interaksi tidak dilaporkan. Nada negatif 0%, netral 100%, positif 0%, dari 10 dianalisis. Akun teratas: detik.com, kompas.com. Lihat postingnya.',
-      '≥1 jt pengikut. 20 akun. 20 posting, 17% dari semua posting. 80 interaksi, 47% dari interaksi yang tercatat. Nada negatif 0%, netral 0%, positif 100%, dari 20 dianalisis. Akun teratas: big0, big1, big10. Lihat postingnya.',
-      '10–100 rb pengikut. 20 akun. 20 posting, 17% dari semua posting. 20 interaksi, 11% dari interaksi yang tercatat. Nada negatif 60%, netral 0%, positif 40%, dari 20 dianalisis. Akun teratas: t0, t1, t10. Lihat postingnya.',
-      '<1 rb pengikut. 60 akun. 60 posting, 52% dari semua posting. 60 interaksi, 35% dari interaksi yang tercatat. Nada negatif 0%, netral 100%, positif 0%, dari 60 dianalisis. Akun teratas: s0, s1, s10. Lihat postingnya.',
-      'Pengikut tidak diketahui. 5 akun. 5 posting, 4% dari semua posting. 8 interaksi, 4% dari interaksi yang tercatat, diketahui pada 4 dari 5 posting. Nada negatif 0%, netral 100%, positif 0%, dari 3 dianalisis. Akun teratas: tk0, tk1, tk2. Lihat postingnya.',
+      'Pemberitaan. 2 akun. 10 posting, 8% dari semua posting. Interaksi tidak dilaporkan. Nada negatif 0%, netral 100%, positif 0%, dari 10 posting. Akun teratas: detik.com, kompas.com. Lihat postingnya.',
+      '≥1 jt pengikut. 20 akun. 20 posting, 17% dari semua posting. 80 interaksi, 47% dari interaksi yang tercatat. Nada negatif 0%, netral 0%, positif 100%, dari 20 posting. Akun teratas: big0, big1, big10. Lihat postingnya.',
+      '10–100 rb pengikut. 20 akun. 20 posting, 17% dari semua posting. 20 interaksi, 11% dari interaksi yang tercatat. Nada negatif 60%, netral 0%, positif 40%, dari 20 posting. Akun teratas: t0, t1, t10. Lihat postingnya.',
+      '<1 rb pengikut. 60 akun. 60 posting, 52% dari semua posting. 60 interaksi, 35% dari interaksi yang tercatat. Nada negatif 0%, netral 100%, positif 0%, dari 60 posting. Akun teratas: s0, s1, s10. Lihat postingnya.',
+      'Pengikut tidak diketahui. 5 akun. 5 posting, 4% dari semua posting. 8 interaksi, 4% dari interaksi yang tercatat, diketahui pada 4 dari 5 posting. Nada negatif 0%, netral 60%, positif 0%, belum dianalisis 40%, dari 5 posting. Akun teratas: tk0, tk1, tk2. Lihat postingnya.',
     ]);
     for (const row of rows) assert.ok(label(row).startsWith(text(row.match(/<strong>([^<]*)<\/strong>/)[1])), 'the visible label starts the name');
     // The news row has no interaction figure: the share is a dash, not a 0.
@@ -209,8 +209,8 @@ test('the origin of X accounts: a tile per place, country by what X says, provin
     assert.deepEqual(places.map(row => row.counts), ['60 akun · 60 posting', '20 akun · 20 posting', '12 akun · 12 posting', '8 akun · 8 posting', '60 akun · 60 posting', '12 akun · 12 posting']);
     // Tone in figures beside the donut (negative, neutral, positive), coloured by the dot before each.
     assert.deepEqual(places.map(row => row.tone), ['0% 100% 0%', '0% 0% 100%', '100% 0% 0%', '0% 0% 100%', '0% 100% 0%', '100% 0% 0%']);
-    assert.equal(label(placeButtons[2]), 'luar negeri. 12 akun X, 12% dari semua akun X. 12 posting. Nada negatif 100%, netral 0%, positif 0%, dari 12 dianalisis. Lihat postingnya.');
-    assert.equal(label(placeButtons[4]), 'Jawa Barat. 60 akun X, 60% dari semua akun X. 60 posting. Nada negatif 0%, netral 100%, positif 0%, dari 60 dianalisis. Lihat postingnya.');
+    assert.equal(label(placeButtons[2]), 'luar negeri. 12 akun X, 12% dari semua akun X. 12 posting. Nada negatif 100%, netral 0%, positif 0%, dari 12 posting. Lihat postingnya.');
+    assert.equal(label(placeButtons[4]), 'Jawa Barat. 60 akun X, 60% dari semua akun X. 60 posting. Nada negatif 0%, netral 100%, positif 0%, dari 60 posting. Lihat postingnya.');
     placeButtons.forEach((button, index) => assert.ok(label(button).startsWith(places[index].place + '.'), 'the visible name starts the name, with no second colon'));
     // The donut is a picture of what the name already says.
     assert.ok(placeButtons.every(button => /<svg class="pws-donut"[^>]*aria-hidden="true"/.test(button)));
@@ -244,6 +244,12 @@ test('a tile draws its tone as a donut: one arc per tone present, in the order n
     assert.deepEqual(arcs(province), [['negative', '50'], ['neutral', '25'], ['positive', '25']]);
     // A tone that is absent draws no arc.
     assert.deepEqual(arcs(buttons(render(full), 'pws-place')[0]), [['neutral', '100']]);
+    // tone_share_v2: a post not analysed yet is the fourth arc, so the arcs still close the ring, and its share is said.
+    const waiting = mixed.map((post, index) => (index === 3 ? { ...post, metrics: { ...post.metrics, sentiment: undefined } } : post));
+    const [partly] = buttons(render(waiting), 'pws-place');
+    assert.deepEqual(arcs(partly), [['negative', '50'], ['neutral', '25'], ['unknown', '25']]);
+    assert.equal(tile(partly).tone, '50% 25% 0% 25%');
+    assert.match(label(partly), /Nada negatif 50%, netral 25%, positif 0%, belum dianalisis 25%, dari 4 posting\./);
     // One key for every tile of the block, beside its heading, never one per tile.
     const html = render(mixed);
     assert.equal((html.match(/class="pws-legend"/g) || []).length, 1);

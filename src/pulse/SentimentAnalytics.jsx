@@ -82,8 +82,8 @@ export default function SentimentAnalytics({data,topicId}) {
   const platforms=[...new Set(posts.map(post=>post.platform||'unknown'))].map(platform=>({platform,counts:sentimentCounts(posts.filter(post=>(post.platform||'unknown')===platform))})).map(row=>({...row,total:Object.values(row.counts).reduce((a,b)=>a+b,0)})).sort((a,b)=>b.total-a.total);
   const [hideUnknown,setHideUnknown]=useHideUnknown();
   const shown=labels.filter(([key])=>!(hideUnknown&&key==='unknown'));
-  // tone_share_v1: a tone's share is always of the analysed posts. The switch only shows or hides "belum dianalisis",
-  // which is a count with its part of all posts, never a share beside the three.
+  // tone_share_v2: every share is of all posts, "belum dianalisis" the fourth part of the 100. The switch only shows or
+  // hides that fourth part; it never changes a percentage.
   const tone=toneShares(counts);
 
   const dayLabel=value=>{const d=new Date(value+'T00:00:00Z');return Number.isNaN(d.getTime())?value:d.toLocaleDateString('id-ID',{day:'numeric',month:'short',timeZone:'UTC'});};
@@ -95,7 +95,7 @@ export default function SentimentAnalytics({data,topicId}) {
     <VoiceOverview posts={allPosts} opinion={opinion} loaded={analysis.loaded||!topicId} hideUnknown={hideUnknown} onHideUnknown={setHideUnknown} voice={voice} onVoice={setVoice} commentsLink={'/pulse/comments?'+params}/>
     <p className="psa-scope-caption">Rincian: <strong>{voiceLabels[voice]}</strong></p>
     <PulseStatGrid label={`Jumlah posting per sentimen, ${voiceLabels[voice].toLowerCase()}`} className="psa-scope-stats">{shown.map(([key,label])=>{const change=key==='unknown'?null:recentShareChange(days,key);return <PulseStat key={key} as={Link} to={link({sentiment:key})} tone={sentimentTone[key]} label={label} value={counts[key]}
-        share={key==='unknown'?(posts.length?counts.unknown/posts.length*100:null):tone.percent?.[key]??null} shareText={key==='unknown'?undefined:tone.text?.[key]} shareLabel={key==='unknown'?'dari seluruh posting':'dari yang dianalisis'}
+        share={tone.percent?.[key]??null} shareText={tone.text?.[key]} shareLabel="dari total posting"
         delta={change?.delta??null} deltaUnit=" poin" deltaIntent={deltaIntent(key,change?.delta)} deltaNote={change?`${change.days} hari terakhir vs sebelumnya`:undefined} trend={days.map(row=>row[key])}/>;})}</PulseStatGrid>
     <div className="lay-grid"><div className="lay-8">
     <AnalyticsPanel title="Tren harian" actions={bounds&&<PulseRange chart="Tren harian" bounds={bounds} value={chartRange} onChange={setChartRange}/>} footer={posts.length-dated>0?`${formatCount(posts.length-dated)} posting tanpa tanggal tidak masuk grafik.`:null}>
@@ -104,10 +104,10 @@ export default function SentimentAnalytics({data,topicId}) {
       <details className="po-data"><summary>Data harian & tautan posting</summary><div className="psa-table"><table><thead><tr><th>Tanggal {zone().name}</th>{labels.map(([key,label])=><th key={key}>{label}</th>)}</tr></thead><tbody>{chartDays.map(row=><tr key={row.date}><th><button type="button" onClick={()=>setEvidenceRange({key:'custom',from:row.date,to:row.date})} aria-label={`Telusuri perubahan ${row.date}`}>{dayLabel(row.date)}</button></th>{labels.map(([key,label])=><td key={key}><Link aria-label={`${row.date}, ${label}: ${row[key]} posting`} to={link({day:row.date,sentiment:key})}>{row[key]} <PulseArrow/></Link></td>)}</tr>)}</tbody></table></div></details></>:<p className="po-empty">Belum ada posting bertanggal.</p>}
     </AnalyticsPanel>
     </div><div className="lay-4">
-    <AnalyticsPanel title={<span>Sentimen per platform <InfoTip label="Tentang sentimen per platform">Netral dibagi dua di sisi garis tengah. Bersih = (positif − negatif) ÷ yang dianalisis.</InfoTip></span>} label="Sentimen per platform">
+    <AnalyticsPanel title={<span>Sentimen per platform <InfoTip label="Tentang sentimen per platform">Netral dibagi dua di sisi garis tengah. Persen dan bersih dari total posting platform itu: bersih = (positif − negatif) ÷ total posting.</InfoTip></span>} label="Sentimen per platform">
       {platforms.length?<>{(()=>{const splits=platforms.map(row=>divergingSplit(row.counts)),scale=divergingScale(splits);return <ul className="psa-platforms">{platforms.map(({platform,counts:row,total},index)=>{const split=splits[index];return <li key={platform}>
         <span className="psa-platform-name"><PlatformIcon platform={platform}/> {platformLabel(platform)}<small>{formatCount(total)} posting{split?` · bersih ${split.net>0?'+':split.net<0?'−':''}${Math.abs(Math.round(split.net))}`:''}</small></span>
-        <span className="psa-diverge" role="img" aria-label={split?(text=>`${platformLabel(platform)}: negatif ${text.negative}, netral ${text.neutral}, positif ${text.positive} dari yang dianalisis`)(toneShares(row).text):'Belum dianalisis'}>
+        <span className="psa-diverge" role="img" aria-label={split?(text=>`${platformLabel(platform)}: negatif ${text.negative}, netral ${text.neutral}, positif ${text.positive}${row.unknown?`, belum dianalisis ${text.unknown}`:''} dari total posting`)(toneShares(row).text):'Belum dianalisis'}>
           {split?<><span className="psa-diverge-side" data-side="left">{[...split.left].reverse().map(seg=><i key={seg.key} style={{width:`${seg.share/scale*100}%`,background:colors[seg.key]}}/>)}</span><span className="psa-diverge-side" data-side="right">{split.right.map(seg=><i key={seg.key} style={{width:`${seg.share/scale*100}%`,background:colors[seg.key]}}/>)}</span></>:<span className="psa-diverge-empty"/>}
         </span>
         <span className="psa-platform-counts">{shown.map(([key,label])=><Link key={key} aria-label={`${platformLabel(platform)}, ${label}: ${row[key]} posting`} title={label} to={link({platform,sentiment:key})}><span className="psa-dot" data-tone={key} aria-hidden="true"/>{formatCount(row[key])}</Link>)}</span>

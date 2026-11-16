@@ -94,7 +94,7 @@ async def test_review_auth_csrf_and_viewer_read_only(reviews_env):
 
 
 @pytest.mark.asyncio
-async def test_evaluation_reads_the_machine_label_by_tone_share_v1(reviews_env):
+async def test_evaluation_reads_the_machine_label_by_tone_share_v2(reviews_env):
     """A label stored as a plain string or with another letter case is the same tone (pulse_measures.tone)."""
     client, db, headers = reviews_env
     db.add_all([SourceItem(id='plain', topic_id='a', source='rss', url='https://example.test/plain', metrics={'sentiment': 'negative'}),

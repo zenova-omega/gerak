@@ -58,7 +58,7 @@ export default function NarrativePanel({narratives=[],onOpen,postsLink}){
  const ranked=points.map(point=>({...point,rank:narratives.findIndex(group=>group.id===point.id)+1,size:point.interactions>0?point.interactions:1}));
  const open=point=>onOpen('Kelompok percakapan',point.posts,{oneContent:true});
  const maxCount=Math.max(2,...ranked.map(point=>point.count));
- return <AnalyticsPanel title={<span>Narasi utama <InfoTip label="Tentang narasi">Sentimen bersih = (positif − negatif) ÷ yang dianalisis. Ukuran gelembung mengikuti interaksi yang dilaporkan.</InfoTip></span>} label="Narasi utama">
+ return <AnalyticsPanel title={<span>Narasi utama <InfoTip label="Tentang narasi">Sentimen bersih = (positif − negatif) ÷ total posting narasi itu. Ukuran gelembung mengikuti interaksi yang dilaporkan.</InfoTip></span>} label="Narasi utama">
   {narratives.length?<>
    {ranked.length>0&&<div className="np-plot"><ChartContainer config={config} className="np-chart aspect-auto" role="img" aria-label={`Gelembung narasi: sumbu datar jumlah posting, sumbu tegak sentimen bersih. ${ranked.length} narasi. Daftar yang sama ada di bawah grafik.`}>
     <ScatterChart margin={{top:12,right:20,bottom:20,left:0}}>

@@ -65,12 +65,13 @@ export function leading(counts) {
 }
 
 /** Whole-number shares that add up to 100 (largest remainder), so a bar's legend never reads 99% or 101%.
- * Tone counts (keys holding positive, neutral and negative) are tone_share_v1 (`toneShares`): of the analysed posts only,
- * `unknown` has no share (null). To print a tone's share use `toneShares(counts).text`, which writes a sliver as "<1%". */
+ * Tone counts (keys holding positive, neutral and negative) are tone_share_v2 (`toneShares`): of every post, `unknown`
+ * (belum dianalisis) the fourth part of the 100 whether or not it is asked for. To print a tone's share use
+ * `toneShares(counts).text`, which writes a sliver as "<1%". */
 export function shares(counts, keys) {
   if (TONES.every(key => keys.includes(key))) {
     const { percent } = toneShares(counts);
-    return Object.fromEntries(keys.map(key => [key, TONES.includes(key) ? (percent ? percent[key] : 0) : null]));
+    return Object.fromEntries(keys.map(key => [key, percent?.[key] ?? 0]));
   }
   const total = keys.reduce((sum, key) => sum + (counts[key] || 0), 0);
   if (!total) return Object.fromEntries(keys.map(key => [key, 0]));

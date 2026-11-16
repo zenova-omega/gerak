@@ -34,7 +34,7 @@ BATCH_TEXT = 1500    # only a post this short rides in a batch; a longer one is 
 
 
 def has_sentiment(item):
-    """Whether a post has a reading: its tone by tone_share_v1 (either stored form, any letter case) is one of the three."""
+    """Whether a post has a reading: its tone by tone_share_v2 (either stored form, any letter case) is one of the three."""
     return pulse_measures.tone(item.metrics) != 'unknown'
 
 

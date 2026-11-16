@@ -304,13 +304,12 @@ export function projectChange(row) {
 
 const toneLabels = { positive: 'Positif', neutral: 'Netral', negative: 'Negatif', unknown: 'Belum dianalisis' };
 /** The tone of a project's last seven days as bar segments, always in the order positive, neutral, negative, unknown.
- * tone_share_v1 (`toneShares`): a tone's share is of the analysed posts; "belum dianalisis" has no share (null) and its
- * `shareText` is its count, so a project with nothing analysed prints no percentage at all. */
+ * tone_share_v2 (`toneShares`): every share is of all the week's posts, "belum dianalisis" the fourth part of the 100,
+ * so a project with nothing analysed is 100% belum dianalisis. */
 export function projectTones(row) {
   const counts = row?.sentiment_7d || {}, tone = toneShares(counts);
   return ['positive', 'neutral', 'negative', 'unknown'].filter(key => counts[key] > 0).map(key => ({
-    key, label: toneLabels[key], value: counts[key],
-    ...(key === 'unknown' ? { share: null, shareText: `${formatCount(counts.unknown)} posting` } : { share: tone.percent[key], shareText: tone.text[key] }),
+    key, label: toneLabels[key], value: counts[key], share: tone.percent[key], shareText: tone.text[key],
     color: `var(--ps-sent-${key})`, ...(key === 'unknown' ? { hatch: true } : {}),
   }));
 }

@@ -8,7 +8,7 @@ import { inVoice, leading, neutralBreakdown, publicOpinion, shares } from './pul
 import { responseEvidence } from './pulseResponse.js';
 import { buildConversationGroups, groupDayRange, leadingGroups } from './pulseConversationGroups.js';
 import { accountSpread, spreadByDay, spreadTotals } from './pulsePlaces.js';
-import { accountCount, toneShares } from './pulseMeasures.js';
+import { accountCount, sampleToneShares, toneShares } from './pulseMeasures.js';
 import { trendSeries } from './pulseTrendSeries.js';
 import { accountConcentration } from './pulseInsightMetrics.js';
 import { coverage } from './pulseReadings.js';
@@ -36,7 +36,7 @@ export const logoTypes = ['image/png', 'image/jpeg', 'image/webp'];
 export const organisationMax = 80;
 export const descriptionMax = 600;
 
-const tones = ['positive', 'neutral', 'negative'];
+const tones = ['positive', 'neutral', 'negative'], parts = [...tones, 'unknown'];   // tone_share_v2: the four parts of 100
 const titles = Object.fromEntries(reportSections.map(section => [section.key, section.title]));
 const defaultKeys = reportSections.map(section => section.key);
 /** Sections that wait until they are chosen: a page of stored AI text is printed only when someone asks for it. */
@@ -138,13 +138,15 @@ export function axisTicks(max, target = 4) {
   return Array.from({ length: Math.ceil(max / step) + 1 }, (_, index) => index * step);
 }
 
-/** One voice or one platform: how many posts, how many analysed, and the split of the analysed ones in whole
- * percentages that add up to 100 (tone_share_v1). `shareText` is what to print ("<1%" for a sliver), null until
- * something is analysed. `lead` is null until something is analysed. */
+/** One voice or one platform: how many posts, how many analysed, and the split of all of them in whole percentages that
+ * add up to 100 with "belum dianalisis" as the fourth part (tone_share_v2). `shareText` is what to print ("<1%" for a
+ * sliver), null only without posts. `lead` is null until something is analysed. */
 function reading(posts) {
   const counts = sentimentCounts(posts), analysed = posts.length - counts.unknown;
-  return { total: posts.length, analysed, unknown: counts.unknown, counts, shares: shares(counts, tones), shareText: toneShares(counts).text, lead: leading(counts), kinds: neutralBreakdown(posts) };
+  return { total: posts.length, analysed, unknown: counts.unknown, counts, shares: shares(counts, parts), shareText: toneShares(counts).text, lead: leading(counts), kinds: neutralBreakdown(posts) };
 }
+/** A sample's tone (comments): `sampleToneShares`, over what has been analysed; 0 for each tone until something is. */
+const sampleShares = counts => Object.fromEntries(tones.map(key => [key, sampleToneShares(counts).percent?.[key] ?? 0]));
 
 /** Everything the pages print, worked out once from a report made by `buildReport`. */
 const placeRows = 6, placeAccountRows = 3;   // what fits one A4 sheet under the map
@@ -182,7 +184,7 @@ export function reportData(report) {
     .sort((a, b) => (Number.isFinite(b.likes) ? b.likes : -1) - (Number.isFinite(a.likes) ? a.likes : -1)).slice(0, 4);
   const built = buildConversationGroups(posts);
   return {
-    total, analysed, unknown: counts.unknown, counts, shares: shares(counts, tones), shareText: toneShares(counts).text, lead: leading(counts),
+    total, analysed, unknown: counts.unknown, counts, shares: shares(counts, parts), shareText: toneShares(counts).text, lead: leading(counts),
     coverage: total ? Math.round(analysed / total * 100) : 0,
     accounts: accountCount(posts),   // account_v1
     interactions: engagement.interactions, interactionPosts: engagement.interactionPosts,
@@ -194,7 +196,7 @@ export function reportData(report) {
     completeness: coverage(posts),                 // coverage_v1, the reading behind the project bar's badge
     opinion: {
       ...opinion, target: evidence.target, loaded: Boolean(report?.responseAnalysis?.loaded) && !report?.responseAnalysis?.error,
-      shares: shares(opinion.counts, tones), shareText: toneShares(opinion.counts).text, stanceRead, stanceShares: shares(opinion.stance, ['supports', 'opposes', 'unclear']),
+      shares: sampleShares(opinion.counts), shareText: sampleToneShares(opinion.counts).text, stanceRead, stanceShares: shares(opinion.stance, ['supports', 'opposes', 'unclear']),
       liked,
     },
     groups: {
@@ -225,7 +227,7 @@ export function fallbackSummary(data, { platformName = key => key } = {}) {
   else if (!voice.lead) sentences.push(`Nada posting warganet belum dapat disimpulkan karena ${count(voice.total)} posting itu belum dianalisis.`);
   else {
     const rest = tones.filter(key => key !== voice.lead).sort((a, b) => voice.shares[b] - voice.shares[a]);
-    sentences.push(`Dari ${count(voice.analysed)} posting warganet yang sudah dianalisis, nada ${toneWords[voice.lead]} paling banyak (${voice.shareText[voice.lead]}), disusul ${rest.map(key => `${toneWords[key]} ${voice.shareText[key]}`).join(' dan ')}.`);
+    sentences.push(`Dari ${count(voice.total)} posting warganet, nada ${toneWords[voice.lead]} paling banyak (${voice.shareText[voice.lead]}), disusul ${rest.map(key => `${toneWords[key]} ${voice.shareText[key]}`).join(' dan ')}${voice.unknown ? `; ${voice.shareText.unknown} belum dianalisis` : ''}.`);
   }
   const top = data.platforms[0];
   if (top) sentences.push(data.platforms.length > 1

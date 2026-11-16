@@ -42,7 +42,7 @@ def parse_kinds(raw, count):
 
 
 def _neutral_without_kind(sentiment):
-    """Neutral by tone_share_v1 (`pulse_measures.tone`: either stored form, any letter case) and without a form yet."""
+    """Neutral by tone_share_v2 (`pulse_measures.tone`: either stored form, any letter case) and without a form yet."""
     return pulse_measures.tone({'sentiment': sentiment}) == 'neutral' and not (isinstance(sentiment, dict) and sentiment.get('kind') in KINDS)
 
 

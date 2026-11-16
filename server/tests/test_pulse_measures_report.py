@@ -87,13 +87,13 @@ def test_new_figures_follow_the_measures_module(database, zone_wib):
     # Monitor's "days with posts" counts days of the zone.
     assert {name: row['days_with_posts'] for name, row in platforms.items()} == {'news': 1, 'reddit': 1, 'threads': 2, 'x': 2, 'youtube': 2}
     assert (platforms['x']['first_day'], platforms['x']['last_day'], platforms['x']['span_days']) == ('2026-11-14', '2026-11-15', 2)
-    # tone_share_v1: shares of the analysed posts, adding up to 100; "belum dianalisis" beside them.
+    # tone_share_v2: shares of every post, "belum dianalisis" the fourth part of the 100.
     tone = project['tone']
-    assert (tone['analysed'], tone['unknown'], tone['percent']) == (6, 4, {'positive': 33, 'neutral': 50, 'negative': 17})
-    assert project['tone_voice']['public']['percent'] == {'positive': 50, 'neutral': 25, 'negative': 25}
-    assert project['tone_voice']['news']['percent'] == {'positive': 0, 'neutral': 100, 'negative': 0}
+    assert (tone['analysed'], tone['unknown'], tone['percent']) == (6, 4, {'positive': 20, 'neutral': 30, 'negative': 10, 'unknown': 40})
+    assert project['tone_voice']['public']['percent'] == {'positive': 25, 'neutral': 13, 'negative': 12, 'unknown': 50}
+    assert project['tone_voice']['news']['percent'] == {'positive': 0, 'neutral': 100, 'negative': 0, 'unknown': 0}
     # Beranda: seven times 24 hours back from `now`, posts without a date left out.
-    assert (project['tone_7d']['analysed'], project['tone_7d']['unknown'], project['tone_7d']['percent']) == (5, 4, {'positive': 20, 'neutral': 60, 'negative': 20})
+    assert (project['tone_7d']['analysed'], project['tone_7d']['unknown'], project['tone_7d']['percent']) == (5, 4, {'positive': 11, 'neutral': 33, 'negative': 11, 'unknown': 45})
 
 
 def test_old_mode_carries_the_rules_from_before(database, zone_wib):
@@ -108,9 +108,9 @@ def test_old_mode_carries_the_rules_from_before(database, zone_wib):
     # id-or-name: "budi" with an id and "@Budi" without are two; so are "Foo"/"foo" and "Kompas "/"kompas".
     assert {name: row['accounts'] for name, row in platforms.items()} == {'news': 2, 'reddit': 2, 'threads': 2, 'x': 1, 'youtube': 1}
     assert project['accounts'] == 8
-    # Base = all posts, "belum dianalisis" a fourth part of the 100.
-    assert project['tone']['percent'] == {'positive': 20, 'neutral': 30, 'negative': 10, 'unknown': 40}
-    assert project['tone_7d']['percent'] == {'positive': 11, 'neutral': 33, 'negative': 11, 'unknown': 45}
+    # tone_share_v1, the rule tone_share_v2 replaced: shares of the analysed posts only, "belum dianalisis" beside them.
+    assert project['tone']['percent'] == {'positive': 33, 'neutral': 50, 'negative': 17}
+    assert project['tone_7d']['percent'] == {'positive': 20, 'neutral': 60, 'negative': 20}
 
 
 def test_names_seen_with_and_without_an_id(database, tmp_path, zone_wib):
@@ -128,13 +128,14 @@ def test_text_and_compare_output_and_exit_status(database, tmp_path, zone_wib, c
     before = digest(database)
     assert report.main([str(database), '--today', TODAY, '--now', NOW]) == 0
     text = capsys.readouterr().out
-    assert 'Proyek Satu' in text and 'Interactions: 28 over 4 of 10 posts' in text and 'positif 33% · netral 50% · negatif 17%' in text
+    assert 'Proyek Satu' in text and 'Interactions: 28 over 4 of 10 posts' in text and 'positif 20% · netral 30% · negatif 10% · belum dianalisis 40% (2 · 3 · 1 · 4) of all 10 posts' in text
     assert report.main([str(database), '--old', '--today', TODAY, '--now', NOW]) == 0
     assert 'unknown read as 0' in capsys.readouterr().out
     assert report.main([str(database), '--compare', '--today', TODAY, '--now', NOW]) == 0
     table = capsys.readouterr().out
     assert '| Accounts, Threads | 2 | 1 |' in table and '| Interactions, total | 11 | 28 |' in table
     assert '| Accounts, YouTube |' not in table   # unchanged figures stay out of the table
+    assert '| Tone, all posts, positif | 33% | 20% |' in table and '| Tone, all posts, belum dianalisis | 4 posting | 40% |' in table
     assert '(+7 on 1 post)' in table and 'stands in where it reports none of the three (+10 on 1 post)' in table
     assert report.main([str(database), '--json', '--today', TODAY, '--now', NOW]) == 0
     assert json.loads(capsys.readouterr().out)['projects'][0]['accounts'] == 5
